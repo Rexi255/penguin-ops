@@ -12,7 +12,8 @@ in German. Do not start new work in this skill.
 ## 1. Git state
 
 - Run `git status` and `git log --oneline origin/main..HEAD`.
-- Note uncommitted changes, this session's commits and open pull requests of this session.
+- Note uncommitted changes, unpushed commits and this session's commits.
+- If possible, check the latest CI run on `main` (`gh run list --branch main --limit 1`).
 
 ## 2. Documentation check
 
@@ -34,13 +35,14 @@ For every work package of this session, check and fix where needed:
 ## 4. Commit leftovers
 
 - If there are uncommitted changes, show the user the proposed Conventional Commit message
-  (English), then commit and push.
-- Open or update the pull request. Merge only according to the rules in `CLAUDE.md`.
+  (English), then commit on `main` and push, following the Git rules in `CLAUDE.md`.
+- Push any unpushed commits. Afterwards the working tree is clean and `main` equals
+  `origin/main`, so the user can safely run `/clear` and continue with `/next`.
 
-## 5. Summary for the user (German, at most 10 lines)
+## 5. Summary for the user (German, terse, at most 8 lines)
 
 - What was done in this session.
 - What is still open or blocked.
 - The next step from `docs/STATUS.md`.
-- Anything the user has to do (for example: confirm a merge, test on Windows, decide
+- Anything the user has to do (for example: confirm a push, test on Windows, decide
   something).

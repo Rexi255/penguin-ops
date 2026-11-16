@@ -1,6 +1,7 @@
 # 0025. Claude Code setup and documentation system
 
-- Status: Accepted
+- Status: Accepted; partly superseded by [0027](0027-work-directly-on-main.md) (the
+  documentation duty check runs on pushes to `main`, not on pull requests)
 - Date: 2026-11-16
 - Supersedes: –
 

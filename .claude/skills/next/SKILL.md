@@ -11,11 +11,12 @@ German; everything written into the repository is English.
 ## 1. Read the state
 
 - Read `docs/STATUS.md` and `docs/ROADMAP.md`.
-- Check `git status`, the current branch and, if possible, open pull requests.
+- Check `git status`, unpushed commits (`git log --oneline origin/main..HEAD`) and, if
+  possible, the latest CI run on `main` (`gh run list --branch main --limit 1`).
 
 ## 2. Finish open work first
 
-- If there are uncommitted changes, an unmerged pull request or a red CI run from earlier
+- If there are uncommitted changes, unpushed commits or a red CI run on `main` from earlier
   work, propose finishing that before anything new.
 
 ## 3. Pick the package
@@ -26,7 +27,7 @@ German; everything written into the repository is English.
 - If the item is the user's task (for example GitHub settings), give step-by-step instructions
   instead.
 
-## 4. Present it (German, about 10–15 lines)
+## 4. Present it (German, terse, about 8–12 lines; reply style in `CLAUDE.md`)
 
 - **Was:** the package in one sentence, with its ROADMAP id.
 - **Warum jetzt:** why this is the right next step.
@@ -40,5 +41,5 @@ German; everything written into the repository is English.
 
 - Ask for the user's OK. Do not change any file before the user agrees.
 - If the user wants something else, adjust the proposal.
-- After the OK: create the branch (or use the cloud session's branch), do the work, and follow
-  the Definition of Done in `CLAUDE.md`.
+- After the OK: do the work on `main` and follow the Definition of Done and the Git rules in
+  `CLAUDE.md`.

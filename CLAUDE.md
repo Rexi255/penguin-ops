@@ -14,13 +14,23 @@ through questions and reviews and plays the game on Windows.
 
 - Talk to the user in German: explanations, questions, summaries.
 - Write everything that goes into the repository or onto GitHub in English: code, identifiers,
-  comments, commit messages, branch names, test names, config, all Markdown files, skills,
-  rules, issues, pull requests, release notes.
+  comments, commit messages, test names, config, all Markdown files, skills, rules, issues,
+  release notes.
 - The only exception: translation files for game content (`de.yaml` files in
   `content/levels/*/` and `content/ui/de.yaml`).
 - Inside the simulated Linux world everything is English in every language: folder and file
   names, paths, commands and options, user, group and host names, domains, configs, logs, and
   the output and error messages of simulated commands.
+
+## Reply style
+
+- Replies to the user are short and direct: no filler, no pleasantries, no repetition, no
+  narration of tool calls. Short sentences and fragments are fine. Facts, commands, numbers,
+  paths and error messages stay exact.
+- Clarity wins over brevity for explanations of new concepts, security warnings, irreversible
+  actions and step-by-step instructions for the user.
+- This applies to chat only. Everything written into the repository or onto GitHub is normal,
+  complete prose. Reasons: [ADR 0028](docs/decisions/0028-terse-replies.md).
 
 ## Session routine
 
@@ -41,8 +51,7 @@ through questions and reviews and plays the game on Windows.
   `/adr` once it exists).
 - Quality over speed: no shortcuts, no TODO hacks, no placeholder implementations that pretend
   to work.
-- In cloud sessions the user cannot run the app. Verify UI work with Playwright screenshots
-  and attach them to the pull request.
+- In cloud sessions the user cannot run the app. Verify UI work with Playwright screenshots.
 
 ## Definition of Done
 
@@ -52,13 +61,12 @@ A work package is done only when all of these are true:
 2. `npm run check` passes (from ROADMAP M0.6 on).
 3. New or changed behaviour has tests, including error cases. Every level has reference
    solutions that are tested in every language.
-4. The documentation duty below is fulfilled in the same pull request.
-5. The work is committed, pushed and in a pull request; it is merged when the merge rules
-   below allow it.
+4. The documentation duty below is fulfilled in the same commit.
+5. The work is committed on `main` and pushed.
 
 ## Documentation duty
 
-For every work package, without being asked, in the same pull request:
+For every work package, without being asked, in the same commit:
 
 - `docs/STATUS.md`: update Recently completed (last ~5 items), In progress, Next 3 steps
   (ROADMAP ids), Blockers and open questions. Keep it to one screen.
@@ -73,7 +81,7 @@ For every work package, without being asked, in the same pull request:
 - `docs/STORY.md`: update when characters, places, running gags or glossary terms are added.
 - `THIRD-PARTY-LICENSES.md`: add every hand-added third-party font, image, sound or copied code.
 
-From ROADMAP M0.9 on, CI rejects pull requests that change code or content without changing
+From ROADMAP M0.9 on, CI fails on pushes that change code or content without changing
 `docs/STATUS.md`.
 
 ## License rule
@@ -85,22 +93,29 @@ there (including GPL, AGPL, LGPL, MPL and CC-BY-SA) needs the user's approval fi
 Non-commercial licenses (CC-BY-NC) are never allowed. Record hand-added third-party content in
 `THIRD-PARTY-LICENSES.md`.
 
-## Git, pull requests and merging
+## Git
 
-- Never commit directly to `main`. Use one branch and one pull request per work package. In
-  cloud sessions, use the branch the session provides.
+Reasons: [ADR 0027](docs/decisions/0027-work-directly-on-main.md).
+
+- Work directly on `main`: no feature branches, no pull requests. Each work package ends with
+  one or a few commits on `main`, pushed to `origin/main`.
 - Commit messages: Conventional Commits in English (`feat: …`, `fix: …`, `docs: …`, `test: …`,
-  `refactor: …`, `chore: …`). Pull request titles use the same format.
-- You may create branches, commit, push, open and update pull requests and fix CI failures
-  without asking.
-- You may squash-merge a pull request once all required checks are green. Ask the user first
-  if the pull request changes `CLAUDE.md`, anything in `.claude/`, `.github/workflows/`,
-  `license-policy.json` or an accepted decision record, or deletes levels or story content.
+  `refactor: …`, `chore: …`).
+- Run `npm run check` before every commit (from ROADMAP M0.6 on). Never commit a red state.
+- You may commit, push to `main` and fix CI failures without asking. A red CI run on `main` is
+  fixed before any new work.
+- Ask the user before pushing a commit that changes `CLAUDE.md`, anything in `.claude/`,
+  `.github/workflows/`, `license-policy.json` or an accepted decision record, or that deletes
+  levels or story content, unless the user asked for exactly that change.
 - Never weaken a check to make CI green: no skipped, focused or deleted tests, no lowered
   coverage target, no removed CI jobs, no relaxed lint rules, no changes to branch protection.
   Fix the cause or ask.
-- After every merge, give the user a short German summary of what was merged.
-- For visual changes, put before/after screenshots into the pull request description.
+- Never force-push or rewrite published history on `main`.
+- After every push, give the user a short German summary of what was pushed.
+- For visual changes, show the user before/after screenshots before committing.
+- Cloud sessions also push to `main`. Only if the environment cannot push to `main`, push to the
+  session's branch, open a pull request with the screenshots and squash-merge it as soon as all
+  checks are green.
 
 ## Tech stack
 
@@ -111,8 +126,11 @@ Vitest, Testing Library, Playwright, axe-core, Stryker, ESLint, Prettier. Reason
 
 ## Commands
 
-The code skeleton does not exist yet; ROADMAP M0 creates it. Commands are defined only as npm
-scripts in `package.json`. Planned:
+Commands are defined only as npm scripts in `package.json`. Existing:
+
+- `npm run typecheck`: type-check all workspaces (`tsc --build`).
+
+Planned:
 
 - `npm run dev`: start the game in development mode.
 - `npm run check`: format check, lint, type check, all tests, license check. Run it before

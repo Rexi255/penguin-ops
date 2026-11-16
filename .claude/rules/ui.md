@@ -28,8 +28,8 @@ Reasons: ADR 0014, 0015, 0020.
   schemes.
 - Screenshots must be deterministic: bundled fonts, fixed game clock, animations off in test
   mode.
-- Update approved screenshots only for intentional changes, with before/after images in the
-  pull request description.
+- Update approved screenshots only for intentional changes, and show the user before/after
+  images before committing (ADR 0027).
 
 ## Keys and sound
 

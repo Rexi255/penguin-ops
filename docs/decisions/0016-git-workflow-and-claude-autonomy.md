@@ -1,6 +1,6 @@
 # 0016. Git workflow: pull requests, autonomous merging with guardrails
 
-- Status: Accepted
+- Status: Superseded by [0027](0027-work-directly-on-main.md)
 - Date: 2026-11-16
 - Supersedes: –
 

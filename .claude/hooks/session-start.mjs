@@ -39,8 +39,8 @@ if (branch === null) {
   }
 
   const ahead = git(["rev-list", "--count", "origin/main..HEAD"]);
-  if (ahead !== null && branch !== "main") {
-    lines.push(`- Commits on this branch not in origin/main: ${ahead}`);
+  if (ahead !== null && ahead !== "0") {
+    lines.push(`- Commits not pushed to origin/main: ${ahead}`);
   }
 
   const log = git(["log", "--oneline", "-n", "5"]);

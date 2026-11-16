@@ -2,10 +2,10 @@
 
 Milestones lead to version 0.1 (MVP: chapters 0–2 with the complete game frame, see
 [ADR 0022](decisions/0022-mvp-scope.md)). Milestones have acceptance criteria instead of dates.
-Each checkbox is one small work package (one branch, one pull request). If a package turns out
-too big, split it here first.
+Each checkbox is one small work package (one or a few commits on `main`, ADR 0027). If a
+package turns out too big, split it here first.
 
-Rules: tick a box in the same pull request that completes it. New ideas go to
+Rules: tick a box in the same commit that completes it. New ideas go to
 [Ideas](#ideas-not-planned), not into a milestone, unless the owner agrees.
 
 ## M0 Foundation
@@ -30,10 +30,11 @@ Rules: tick a box in the same pull request that completes it. New ideas go to
       baseline (ADR 0014), typed preload stub; `npm run dev` works on Windows.
 - [ ] M0.8 Packaging: electron-builder with NSIS installer wizard (install folder, shortcuts,
       uninstaller) and AppImage; `npm run package`.
-- [ ] M0.9 CI: Linux job (all checks), Windows job (unit and content tests, installer build),
-      documentation duty check, pull request template, Dependabot configuration.
-- [ ] M0.10 Branch protection on `main` (owner, guided by Claude): pull request required,
-      required checks, no force pushes, squash merge only.
+- [ ] M0.9 CI on every push to `main` and on outside pull requests: Linux job (all checks),
+      Windows job (unit and content tests, installer build), documentation duty check, pull
+      request template for outside contributors, Dependabot configuration.
+- [ ] M0.10 Branch protection on `main` (owner, guided by Claude): block force pushes and
+      deletion (ADR 0027).
 - [ ] M0.11 `/adr` skill: new decision record from `docs/decisions/template.md` with the next
       number and supersede handling.
 

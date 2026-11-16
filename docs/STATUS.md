@@ -4,13 +4,14 @@ _Last updated: 2026-11-16_
 
 ## Recently completed
 
+- Workflow change: all work happens directly on `main`, no branches or pull requests
+  (ADR 0027, supersedes ADR 0016); terse chat replies (ADR 0028).
 - M0.2 Monorepo skeleton: five npm workspaces, strict TypeScript configs with project
   references, Node.js 26 LTS and TypeScript 6.0 pinned (ADR 0026). `npm run typecheck` is green.
 - M0.1 Repository is public; GitHub email privacy is enabled.
 - Planning phase finished: 25 decision records in `docs/decisions/`.
 - Documentation system and Claude Code setup (skills `/next`, `/wrap-up`, path-scoped rules,
   SessionStart hook).
-- `LICENSE` holder set to Rexi255; `license-policy.json` created.
 
 ## In progress
 
@@ -26,8 +27,6 @@ _Last updated: 2026-11-16_
 
 - TypeScript does not enforce the dependency direction between workspaces for package-name
   imports (ADR 0026); M0.3 must close this with ESLint.
-- M0.2 was committed directly to `main` on the owner's explicit instruction, against ADR 0016.
-  Open: one-time exception or a changed workflow (would need a new ADR and a `CLAUDE.md` change)?
 - Linux was not verified locally (no WSL); CI covers it from M0.9.
 - Steam release is assumed to be "maybe later" (ADR 0002); confirm with the owner when it
   becomes relevant.

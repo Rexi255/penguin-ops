@@ -31,7 +31,11 @@ ones marked "planned" do not exist yet):
 
 ## Workflow
 
-1. One branch and one pull request per change.
+The maintainer and Claude Code commit directly to `main`
+([ADR 0027](docs/decisions/0027-work-directly-on-main.md)). Outside contributors use a fork
+and a pull request:
+
+1. One pull request per change.
 2. Commit messages and pull request titles follow
    [Conventional Commits](https://www.conventionalcommits.org/) in English, e.g.
    `feat: add wc command`, `fix: ls -l column width`, `docs: update roadmap`.
