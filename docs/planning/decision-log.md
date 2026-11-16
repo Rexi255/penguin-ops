@@ -8,7 +8,7 @@
 > Status values: **Decided** (owner confirmed), **Decided by Claude** (owner delegated or did
 > not object), **Assumed** (needs confirmation), **Open** (not yet discussed).
 
-Last updated: 2026-11-16 (after planning round 8)
+Last updated: 2026-11-16 (after planning round 9)
 
 ---
 
@@ -558,7 +558,14 @@ Every work package lands via its own pull request; CI must be green; merged as s
 The owner explicitly allowed Claude to do everything around it on its own, without asking:
 create branches, commit, push, open pull requests (English description, German summary in
 chat, before/after screenshots for visual changes), fix CI failures, update pull requests,
-prepare Dependabot updates. **Merging stays with the owner** (his review point).
+prepare Dependabot updates, and **merge** once all required checks are green (the owner
+explicitly extended the permission to merging in round 9). The owner reviews afterwards.
+Guardrails because no human checks before the merge:
+- Never weaken a check to get a merge through: no skipped or deleted tests, no lowered
+  coverage target, no removed CI jobs, no relaxed lint rules, no changed branch protection.
+- Ask before merging when a pull request changes `CLAUDE.md`, `.claude/`, CI workflows, the
+  license allowlist, an accepted decision record, or deletes content (levels, story).
+- After every merge, give the owner a short German summary of what was merged.
 
 **D-047 Quality gate: strict** (Decided)
 Every pull request must pass: format, lint, types, unit tests, content tests, UI tests,
@@ -566,6 +573,50 @@ end-to-end and screenshot tests, accessibility checks, license check, Windows bu
 minimum test coverage for the engine (target 90 %). Mutation testing of the engine (Stryker)
 is available as an npm script and runs before every release and on demand; no scheduled runs
 (owner considers weekly runs overkill).
+
+### Round 9: MVP, name, license
+
+**D-048 MVP scope and milestones** (Decided)
+MVP = version 0.1 = chapters 0–2 (about 25–30 tickets: navigation, reading files, tidying up)
+with the complete game frame. Milestones:
+
+| Milestone | Content |
+|---|---|
+| M0 Foundation | Repo setup (docs, public, email cleanup, branch protection), monorepo skeleton, tooling, CI on Linux and Windows, license check, empty Electron window, installer that builds |
+| M1 Engine core | File system (multi-host ready), permissions, parser and interpreter, the prototype's 18 commands, game clock, rule engine, all with tests |
+| M2 Level system | Schema, loader, translations, completeness and solvability tests, developer mode basics; the 5 prototype levels ported as test content |
+| M3 Game frame | Workplace layout, terminal, ticket, mail, handbook, start screen, save slots, settings, language switch, sounds, colour schemes, accessibility basics, screenshot tests |
+| M4 Content | Story workshop (company, characters, host names, mystery), then the tickets of chapters 0–2 with incidents, achievements, extra goals; `less`; the playground |
+| M5 Release v0.1 | Polish, logo and icon, player README, release pipeline, mutation test run, first published setup `.exe` |
+| Later | Differential tests vs. Debian 13, chapters 3+, `nano`, multi-host engine and SSH, music, screen reader support, ... |
+
+Rough estimate: 50–70 small work packages to v0.1; at 2–3 sessions per week with 1–2 packages
+each, roughly 4–8 months (very rough; review and play-testing take most of the owner's time).
+
+**D-049 Name and branding** (Decided)
+Game title **PenguinOps**; technical identifier `penguin-ops` (repo, packages, app id). "Linux"
+is not used in the name (trademark); descriptive use ("a Linux learning game") is fine. The
+logo is an own penguin, not Tux; Claude drafts it as SVG, the owner decides. "Sudo Ergo Sum"
+becomes the name of the achievement for the first `sudo`.
+
+**D-050 Copyright holder** (Decided)
+`LICENSE` reads "Copyright (c) 2026 Rexi255" (GitHub user name; a pseudonym is sufficient and
+fits the email cleanup in D-045).
+
+**D-051 License allowlist** (Decided)
+
+| Area | Allowed without asking |
+|---|---|
+| Code dependencies | MIT, ISC, BSD-2-Clause, BSD-3-Clause, Apache-2.0, 0BSD, Zlib, BlueOak-1.0.0, CC0-1.0, Python-2.0, CC-BY-4.0 |
+| Fonts | SIL OFL 1.1 |
+| Sounds, music, images | CC0-1.0, CC-BY-4.0 (attribution in the in-game credits and `THIRD-PARTY-LICENSES.md`) |
+| Approved exceptions | Electron's bundled ffmpeg library (LGPL-2.1+, separate DLL, unavoidable with Electron); axe-core (MPL-2.0, test-only, never shipped) |
+| Only after asking | GPL, AGPL, LGPL, MPL (except the exceptions above), CC-BY-SA, unlicensed code, custom licenses |
+| Never | CC-BY-NC and other non-commercial licenses (they contradict MIT's permission of commercial use) |
+
+Shipped (runtime) dependencies are held to a stricter standard than development-only tools.
+No DCO or CLA: GitHub's terms (D.6, inbound=outbound) suffice; `CONTRIBUTING.md` states it in
+one sentence.
 
 ---
 
@@ -600,15 +651,9 @@ is available as an npm script and runs before every release and on demand; no sc
 
 ## 5. Open questions (later rounds)
 
-- **Round 8, quality and workflow:** test strategy details, CI jobs, lint and format config,
-  visual regression, npm license checker tool, line endings, branching vs. cloud-session
-  branches, commit message convention, branch protection, repo visibility (private until MVP?).
-- **Round 9, wrap-up:** MVP scope and milestones; name and branding (name conflict check);
-  company name and host names (D-034);
-  copyright holder name in LICENSE; license allowlist contents; DCO/CLA answer; final doc
-  structure; extra skills; hooks.
-- Confirm D-010 Steam assumption.
-- Linux package format (AppImage vs. deb).
+- **Round 10, final:** final doc structure; extra skills; hooks; Linux package format
+  (AppImage vs. deb); confirm D-010 Steam assumption.
+- Company name, characters and host names: decided in the story workshop (M4).
 
 ## 6. Parking lot (ideas, not planned)
 
