@@ -35,6 +35,7 @@ Commands (defined in `package.json`):
 | `npm run e2e` | Build the app and run the end-to-end tests (Playwright drives Electron) |
 | `npm run package` | Build the installer for the current platform (Windows: NSIS installer, Linux: AppImage) into `apps/desktop/release` |
 | `npm run e2e:packaged` | Run the end-to-end tests against the app from the last `npm run package` |
+| `npm run check:docs-duty` | Check that your commits update `docs/STATUS.md` if they change code or content; CI runs it too |
 
 ## Workflow
 
@@ -46,7 +47,8 @@ and a pull request:
 2. Commit messages and pull request titles follow
    [Conventional Commits](https://www.conventionalcommits.org/) in English, e.g.
    `feat: add wc command`, `fix: ls -l column width`, `docs: update roadmap`.
-3. `npm run check` must pass; CI runs the same checks on Linux and Windows.
+3. `npm run check` must pass; CI runs it on Linux and the tests on Windows, including the
+   end-to-end tests and the installer build.
 4. Update the documentation in the same pull request: at least `docs/STATUS.md` when code or
    content changes (CI checks this), plus the other documents listed in `CLAUDE.md` under
    "Documentation duty" when affected.

@@ -1,0 +1,38 @@
+# Dependency updates (ADR 0016, ADR 0036): weekly, grouped, and only for versions that have been
+# public for a week, so that a compromised release is usually found before it reaches us. Every
+# update runs CI, including the license check.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      # Minor and patch updates of all packages in one pull request.
+      npm-minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Electron major upgrades are done deliberately, not by Dependabot (ADR 0016).
+      - dependency-name: electron
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      github-actions:
+        patterns: ["*"]

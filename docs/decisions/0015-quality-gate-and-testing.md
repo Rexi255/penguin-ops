@@ -1,7 +1,8 @@
 # 0015. Strict quality gate and test strategy
 
 - Status: Accepted; partly superseded by [0027](0027-work-directly-on-main.md) (the gate runs on
-  pushes to `main`, not on pull requests)
+  pushes to `main`, not on pull requests) and [0036](0036-continuous-integration.md) (the
+  Windows CI job also runs the end-to-end tests)
 - Date: 2026-11-16
 - Supersedes: –
 

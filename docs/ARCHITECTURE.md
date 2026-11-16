@@ -206,6 +206,12 @@ end-to-end tests in `apps/desktop/e2e/` (`*.spec.ts`).
   for each test (project `built`); no browser download is needed. `npm run e2e:packaged` runs
   the same tests against the unpacked app from the last `npm run package` (project
   `packaged`). Neither is part of `npm run check`.
+- CI (ADR 0036): `.github/workflows/ci.yml` runs on every push to `main` and every pull
+  request. The Linux job runs `npm run check`, the end-to-end tests (under `xvfb-run`), builds
+  the AppImage and tests the packaged app. The Windows job runs `npm test`, the end-to-end
+  tests, builds the installer and tests the packaged app. The documentation duty job runs
+  `npm run check:docs-duty` (`scripts/check-docs-duty.ts`, rule in `scripts/docs-duty/`).
+  Dependabot (`.github/dependabot.yml`) proposes grouped weekly updates.
 - Packaging (ADR 0034): `npm run package` builds the app and runs electron-builder for the
   current platform: NSIS installer wizard on Windows, AppImage on Linux, both in
   `apps/desktop/release/`. Nothing is published by a build.

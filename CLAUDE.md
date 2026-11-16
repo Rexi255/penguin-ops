@@ -140,6 +140,8 @@ Commands are defined only as npm scripts in `package.json`. Existing:
   on Windows, AppImage on Linux) into `apps/desktop/release`.
 - `npm run e2e:packaged`: run the end-to-end tests against the app from the last
   `npm run package`.
+- `npm run check:docs-duty`: check that the unpushed commits update `docs/STATUS.md` if they
+  change code or content (CI runs it for every push and pull request).
 
 Planned:
 

@@ -31,7 +31,7 @@ Rules: tick a box in the same commit that completes it. New ideas go to
       configuration with a first test against the window (ADR 0030).
 - [x] M0.8 Packaging: electron-builder with NSIS installer wizard (install folder, shortcuts,
       uninstaller) and AppImage; `npm run package`.
-- [ ] M0.9 CI on every push to `main` and on outside pull requests: Linux job (all checks),
+- [x] M0.9 CI on every push to `main` and on outside pull requests: Linux job (all checks),
       Windows job (unit and content tests, installer build), documentation duty check, pull
       request template for outside contributors, Dependabot configuration.
 - [ ] M0.10 Branch protection on `main` (owner, guided by Claude): block force pushes and

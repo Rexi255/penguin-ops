@@ -4,35 +4,33 @@ _Last updated: 2026-11-17_
 
 ## Recently completed
 
+- M0.9 CI with GitHub Actions on every push to `main` and every pull request: Linux job
+  (`npm run check`, end-to-end tests, AppImage, packaged app), Windows job (tests, end-to-end
+  tests, installer, packaged app), documentation duty check (`npm run check:docs-duty`),
+  Dependabot with grouped weekly updates, pull request template (ADR 0036).
 - M0.8 Packaging: `npm run package` builds an NSIS installer wizard (Windows) or an AppImage
-  (Linux) into `apps/desktop/release` with electron-builder; app id
-  `io.github.rexi255.penguin-ops`; `npm run e2e:packaged` runs the end-to-end tests against
-  the packaged app (ADR 0034). The owner tested install and uninstall on Windows.
-  `truncate-utf8-bytes` (WTFPL) approved as a development-only exception (ADR 0035).
-- M0.7 Electron window: electron-vite builds main, preload (CommonJS) and the React renderer
-  from `apps/ui`; placeholder screen with name and version; security baseline; typed preload
-  contract `DesktopApi`; Playwright end-to-end tests against Electron (ADR 0033).
+  (Linux) into `apps/desktop/release`; `npm run e2e:packaged` tests the packaged app; the owner
+  tested install and uninstall on Windows (ADR 0034). `truncate-utf8-bytes` (WTFPL) approved as
+  a development-only exception (ADR 0035).
+- M0.7 Electron window with placeholder screen, security baseline, typed preload contract and
+  Playwright end-to-end tests (ADR 0033).
 - M0.6 `npm run check` runs format check, type check, lint, tests with coverage and the
   license check in one command.
-- M0.5 License check: `npm run check:licenses` checks every package in `package-lock.json`
-  against `license-policy.json` (ADR 0032).
-- M0.4 Test setup: Vitest 5 with V8 coverage (engine threshold 90 %), first engine module;
-  lightningcss approved as a development-only exception (ADR 0030, ADR 0031).
+- M0.5 License check against `license-policy.json` from the lockfile (ADR 0032).
 
 ## In progress
 
-- ROADMAP M0.9: CI on every push to `main`.
+- Nothing.
 
 ## Next 3 steps
 
-1. ROADMAP M0.9: CI on every push to `main` (including `npm run e2e`, `npm run package` and
-   `npm run e2e:packaged`).
-2. ROADMAP M0.10: branch protection on `main` (owner, guided by Claude).
-3. ROADMAP M0.11: `/adr` skill.
+1. ROADMAP M0.10: branch protection on `main` (owner, guided by Claude).
+2. ROADMAP M0.11: `/adr` skill.
+3. ROADMAP M1.1: core types of the engine (world, host, file system node, user, group, session).
 
 ## Blockers and open questions
 
-- Linux was not verified locally (no WSL), including the AppImage; CI covers it from M0.9.
-  Electron on Linux CI may need extra setup for its sandbox and a virtual display.
+- Linux is verified only by CI (no WSL locally). The AppImage itself is built but not started
+  in CI (the tests start the unpacked app); a manual check on a Linux machine is still open.
 - Steam release is assumed to be "maybe later" (ADR 0002); confirm with the owner when it
   becomes relevant.
