@@ -1,0 +1,23 @@
+# Normalise line endings to LF for all text files (Windows and Linux).
+* text=auto eol=lf
+
+# Windows scripts need CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary files: never touch line endings, no text diffs.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.icns binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.ogg binary
+*.mp3 binary
+*.wav binary
+*.zip binary

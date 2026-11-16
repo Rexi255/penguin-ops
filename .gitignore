@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Build output (electron-builder writes installers to release/)
+dist/
+out/
+release/
+*.tsbuildinfo
+.vite/
+
+# Tests and reports
+coverage/
+playwright-report/
+test-results/
+blob-report/
+reports/
+.stryker-tmp/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment and secrets
+.env
+.env.*
+
+# Editors and operating systems
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Personal Claude Code files
+CLAUDE.local.md
+.claude/settings.local.json
