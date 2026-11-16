@@ -133,11 +133,12 @@ Commands are defined only as npm scripts in `package.json`. Existing:
 - `npm run format`: format all files with Prettier.
 - Single steps of `check`: `npm run format:check`, `npm run typecheck`, `npm run lint`,
   `npm test` (without coverage), `npm run test:coverage`, `npm run check:licenses`.
+- `npm run dev`: start the game in development mode with hot reload.
+- `npm run build`: build the app into `apps/desktop/out`.
+- `npm run e2e`: build the app and run the Playwright end-to-end tests against Electron.
 
 Planned:
 
-- `npm run dev`: start the game in development mode (M0.7).
-- `npm run e2e`: end-to-end and screenshot tests (M0.7).
 - `npm run package`: build the installer (M0.8).
 - `npm run test:mutation`: mutation tests of the engine (before releases).
 

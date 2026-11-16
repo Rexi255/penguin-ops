@@ -23,7 +23,7 @@ const BOUNDARIES = [
   { folder: "packages/content", allowed: [], typeOnly: ["engine"], node: false },
   { folder: "packages/gameplay", allowed: ["engine", "content"], typeOnly: [], node: false },
   { folder: "apps/ui", allowed: ["engine", "content", "gameplay"], typeOnly: [], node: false },
-  { folder: "apps/desktop", allowed: [], typeOnly: [], node: true },
+  { folder: "apps/desktop", allowed: [], typeOnly: ["ui"], node: true },
 ];
 
 /**

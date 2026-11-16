@@ -1,8 +1,10 @@
-// Electron main process: Node APIs allowed, no DOM. It uses only the build output of apps/ui,
-// never its source, so it has no project references (ADR 0006).
+// Solution file of the desktop workspace (ADR 0030, ADR 0033): the main process and preload
+// script, their unit tests, and the build and end-to-end tooling are separate projects.
 {
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "types": ["node"]
-  }
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.lib.json" },
+    { "path": "./tsconfig.test.json" },
+    { "path": "./tsconfig.tooling.json" }
+  ]
 }

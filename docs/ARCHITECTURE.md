@@ -1,8 +1,8 @@
 # Architecture
 
-> **Status: skeleton.** The workspaces exist with strict TypeScript configs (ROADMAP M0.2) but
-> contain no code yet. The sections below describe the target architecture decided in the
-> planning phase. Update this document whenever the real structure differs or grows.
+> **Status: skeleton.** The workspaces exist with strict TypeScript configs (ROADMAP M0.2);
+> the Electron app opens a placeholder window (M0.7), and the engine has its random generator.
+> Most sections below describe the target architecture decided in the planning phase. Update this document whenever the real structure differs or grows.
 > Reasons for each choice are in `docs/decisions/`.
 
 ## Overview
@@ -151,6 +151,12 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
 - Colour schemes, optional effects, bundled fonts, UI sounds via Web Audio.
 - All texts come from the catalogs; no hard-coded strings.
 
+Current state (ADR 0033): `index.html` (with the strict Content Security Policy) loads
+`src/main.tsx`, which asks the desktop API for the app info and renders the placeholder screen
+(`src/app.tsx`). `src/styles.css` holds the first design tokens. `src/desktop-api.ts` defines
+the preload contract (`DesktopApi`); `src/index.ts` exports only its types, for
+`apps/desktop`.
+
 ## Desktop (`apps/desktop`)
 
 - Electron main process: window and fullscreen, save slots and settings in the per-user data
@@ -160,18 +166,43 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   renderer, strict Content Security Policy, no remote content, no network requests.
 - Packaging with electron-builder: NSIS installer (Windows), AppImage (Linux).
 
+Current state (ADR 0033):
+
+```
+apps/desktop/
+  electron.vite.config.ts   builds main, preload and the renderer (root: apps/ui) into out/
+  playwright.config.ts      end-to-end tests against the built app
+  src/main/index.ts         app start, hardening of all web contents and the session, IPC handlers
+  src/main/window.ts        the main window
+  src/main/web-preferences.ts  secure web preferences of every window
+  src/main/security.ts      pure checks: allowed request URLs, trusted IPC senders
+  src/preload/index.ts      exposes DesktopApi as window.penguinOps (built as CommonJS)
+  src/shared/ipc-channels.ts  IPC channel names used by main and preload
+  e2e/                      Playwright tests (*.spec.ts)
+```
+
+- `apps/desktop` may import only types from `@penguin-ops/ui` (the preload contract); ESLint
+  enforces it.
+- Requests: only the app's files (or the development server during `npm run dev`) and
+  `data:`, `blob:`, `devtools:` URLs pass the `webRequest` filter; everything else is
+  cancelled. New windows, navigation, `<webview>` and permission requests are denied.
+- `apps/desktop` has three TypeScript projects (`tsconfig.lib.json`, `tsconfig.test.json`,
+  `tsconfig.tooling.json`); they skip checking third-party declaration files because Electron's
+  and electron-vite's declarations are not self-contained.
+
 ## Testing and CI
 
 Test layers, quality gate and CI jobs: ADR 0015. Tests live next to the code (`*.test.ts`);
-end-to-end tests in `apps/ui/e2e/`.
+end-to-end tests in `apps/desktop/e2e/` (`*.spec.ts`).
 
 - `npm run check` is the local quality gate: `format:check`, `typecheck`, `lint`,
   `test:coverage` and `check:licenses`, in this order; it stops at the first failing step.
 
 - Vitest (ADR 0030): one root `vitest.config.ts` with one project per workspace that has tests
-  (`engine`, `tooling` for `scripts/`). `npm test` runs them; `npm run test:coverage` also
-  enforces at least 90 % coverage for `packages/engine/src`.
-- Playwright is set up in ROADMAP M0.7 together with the first window.
+  (`engine`, `desktop`, `tooling` for `scripts/`). `npm test` runs them;
+  `npm run test:coverage` also enforces at least 90 % coverage for `packages/engine/src`.
+- Playwright (ADR 0033): `npm run e2e` builds the app and starts it through Electron for each
+  test; no browser download is needed. Not part of `npm run check`.
 
 ## Claude Code setup
 

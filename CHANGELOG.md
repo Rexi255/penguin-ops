@@ -6,4 +6,6 @@ project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-_No player-visible changes yet._
+### Added
+
+- The game opens a window with a placeholder screen that shows the name and version.

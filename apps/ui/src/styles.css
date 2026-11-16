@@ -1,0 +1,57 @@
+/* Design tokens (ADR 0020). Colour schemes will redefine these variables; components only use
+   the variables, never colours directly. */
+:root {
+  --color-background: #0d1117;
+  --color-text: #e6edf3;
+  --color-text-muted: #9198a1;
+  --color-accent: #7ee787;
+  --font-ui: system-ui, "Segoe UI", "Noto Sans", sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", Consolas, "DejaVu Sans Mono", monospace;
+  --space-2: 0.5rem;
+  --space-4: 1rem;
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-ui);
+}
+
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: 100%;
+  padding: var(--space-4);
+}
+
+.placeholder__title {
+  margin: 0;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 3rem;
+  font-weight: 700;
+}
+
+.placeholder__version {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+}

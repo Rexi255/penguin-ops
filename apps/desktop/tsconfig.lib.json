@@ -1,0 +1,14 @@
+// Electron main process and preload script: Node APIs allowed, no DOM. From apps/ui it only
+// imports the types of the preload contract (ADR 0033); the renderer is used as build output.
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    // Electron's type declarations need DOM types (for <webview> and video frames), which the
+    // main process must not have. Declaration files are therefore not checked; our own code
+    // still is (ADR 0033).
+    "skipLibCheck": true
+  },
+  "exclude": ["${configDir}/src/**/*.test.ts"],
+  "references": [{ "path": "../ui" }]
+}

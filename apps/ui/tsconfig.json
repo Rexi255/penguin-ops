@@ -3,10 +3,13 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["ES2024", "DOM", "DOM.Iterable"]
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    // Vite's client types: imports of CSS and other assets.
+    "types": ["vite/client"]
   },
   "references": [
-    { "path": "../../packages/engine" },
+    { "path": "../../packages/engine/tsconfig.lib.json" },
     { "path": "../../packages/content" },
     { "path": "../../packages/gameplay" }
   ]

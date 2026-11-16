@@ -1,11 +1,23 @@
 {
   "name": "@penguin-ops/desktop",
+  "productName": "PenguinOps",
   "version": "0.0.0",
   "private": true,
   "description": "Electron main process, preload API and packaging configuration.",
   "license": "MIT",
   "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
+  "main": "out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "e2e": "electron-vite build && playwright test"
+  },
+  "devDependencies": {
+    "@penguin-ops/ui": "0.0.0",
+    "@playwright/test": "^1.65.1",
+    "@vitejs/plugin-react": "^6.3.0",
+    "electron": "^45.3.3",
+    "electron-vite": "^6.0.0",
+    "vite": "^8.3.8"
   }
 }

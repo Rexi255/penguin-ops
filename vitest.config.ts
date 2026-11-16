@@ -14,6 +14,13 @@ export default defineConfig({
       },
       {
         test: {
+          name: "desktop",
+          include: ["apps/desktop/src/**/*.test.ts"],
+          environment: "node",
+        },
+      },
+      {
+        test: {
           name: "tooling",
           include: ["scripts/**/*.test.ts"],
           environment: "node",

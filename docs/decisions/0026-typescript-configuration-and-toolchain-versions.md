@@ -1,6 +1,7 @@
 # 0026. TypeScript configuration and toolchain versions
 
-- Status: Accepted
+- Status: Accepted; partly superseded by [0033](0033-electron-app-structure-and-preload-contract.md)
+  (`skipLibCheck` and the environment of `apps/desktop`)
 - Date: 2026-11-16
 - Supersedes: –
 

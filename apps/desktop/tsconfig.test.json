@@ -1,0 +1,13 @@
+// Unit tests of the main process (Vitest).
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "${configDir}/dist/test",
+    "tsBuildInfoFile": "${configDir}/dist/test/tsconfig.tsbuildinfo",
+    "types": ["node"],
+    // Same reason as in tsconfig.lib.json (ADR 0033).
+    "skipLibCheck": true
+  },
+  "include": ["${configDir}/src/**/*.test.ts"],
+  "references": [{ "path": "./tsconfig.lib.json" }]
+}

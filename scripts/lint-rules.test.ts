@@ -73,6 +73,8 @@ describe("package boundaries (ADR 0006)", () => {
     ["apps/ui", 'export * from "@penguin-ops/content";', "allowed"],
     ["apps/ui", 'export * from "@penguin-ops/gameplay";', "allowed"],
     ["apps/ui", 'export * from "@penguin-ops/desktop";', "forbidden"],
+    ["apps/desktop", 'import type { DesktopApi } from "@penguin-ops/ui";', "allowed"],
+    ["apps/desktop", 'import { DesktopApi } from "@penguin-ops/ui";', "forbidden"],
     ["apps/desktop", 'export * from "@penguin-ops/ui";', "forbidden"],
     ["apps/desktop", 'export * from "@penguin-ops/engine";', "forbidden"],
   ];

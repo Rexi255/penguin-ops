@@ -1,0 +1,21 @@
+// Build configuration and end-to-end tests of the desktop app. They run in Node.js (electron-vite
+// and Playwright load them), not in the app.
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "${configDir}",
+    "outDir": "${configDir}/dist/tooling",
+    "tsBuildInfoFile": "${configDir}/dist/tooling/tsconfig.tsbuildinfo",
+    // The end-to-end tests contain functions that run in the page, so they see the DOM.
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "types": ["node"],
+    // electron-vite's declarations import the optional peer dependency @swc/core, which is not
+    // installed. Declaration files are therefore not checked; our own code still is (ADR 0033).
+    "skipLibCheck": true
+  },
+  "include": [
+    "${configDir}/electron.vite.config.ts",
+    "${configDir}/playwright.config.ts",
+    "${configDir}/e2e"
+  ]
+}

@@ -31,8 +31,9 @@ ones marked "planned" do not exist yet):
 | `npm test` | Run all tests (Vitest), including the tests that prove the lint rules fire |
 | `npm run test:coverage` | Run all tests with coverage; fails below 90 % in the engine |
 | `npm run check:licenses` | Check the licenses of all npm dependencies against `license-policy.json` |
-| `npm run dev` | Start the game in development mode (planned) |
-| `npm run e2e` | End-to-end and screenshot tests (planned) |
+| `npm run dev` | Start the game in development mode with hot reload |
+| `npm run build` | Build the app into `apps/desktop/out` |
+| `npm run e2e` | Build the app and run the end-to-end tests (Playwright drives Electron) |
 | `npm run package` | Build the installer (planned) |
 
 ## Workflow

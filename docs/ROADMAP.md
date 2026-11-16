@@ -26,7 +26,7 @@ Rules: tick a box in the same commit that completes it. New ideas go to
       (SPDX expressions, dev/runtime scope), as an npm script.
 - [x] M0.6 `npm run check` (format, lint, types, tests, licenses); update the Commands section in
       `CLAUDE.md` and `CONTRIBUTING.md`.
-- [ ] M0.7 Electron window: electron-vite, React placeholder screen "PenguinOps", security
+- [x] M0.7 Electron window: electron-vite, React placeholder screen "PenguinOps", security
       baseline (ADR 0014), typed preload stub; `npm run dev` works on Windows; Playwright
       configuration with a first test against the window (ADR 0030).
 - [ ] M0.8 Packaging: electron-builder with NSIS installer wizard (install folder, shortcuts,
@@ -171,6 +171,10 @@ AppImage runs on Linux, and chapters 0–2 are playable in both languages.
 - Code signing via SignPath Foundation.
 - Key remapping.
 - `.deb` package.
+- ESLint rules for React hooks (`eslint-plugin-react-hooks`) once components use hooks
+  (ADR 0033).
+- Load the renderer through a custom `app://` protocol instead of `file://` (Electron security
+  checklist, ADR 0033).
 - Upgrade to TypeScript 7 once `typescript-eslint` supports it (ADR 0026).
 - Lint rules that enforce ADR 0008 in engine and gameplay: ban `Date.now()`, `new Date()`
   without arguments, `performance.now()` and `Math.random()`.

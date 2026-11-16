@@ -1,6 +1,7 @@
 # 0029. Formatting, linting and boundary enforcement
 
-- Status: Accepted
+- Status: Accepted; partly superseded by [0033](0033-electron-app-structure-and-preload-contract.md)
+  (`apps/desktop` may import types from `@penguin-ops/ui`)
 - Date: 2026-11-16
 - Supersedes: –
 
