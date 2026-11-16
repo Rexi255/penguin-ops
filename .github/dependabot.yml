@@ -22,6 +22,10 @@ updates:
       # Electron major upgrades are done deliberately, not by Dependabot (ADR 0016).
       - dependency-name: electron
         update-types: ["version-update:semver-major"]
+      # TypeScript 7 waits until typescript-eslint supports it (ADR 0026); the upgrade is done
+      # deliberately as well.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
