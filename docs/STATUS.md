@@ -8,7 +8,8 @@ _Last updated: 2026-11-17_
   from `apps/ui`; placeholder screen with name and version; security baseline with request
   filter, denied navigation, windows and permissions, strict CSP; typed preload contract
   `DesktopApi` in `apps/ui`; Playwright end-to-end tests against Electron (`npm run e2e`)
-  (ADR 0033). Fixed project references to the engine, which broke a clean `tsc --build`.
+  (ADR 0033); the owner confirmed `npm run dev` on Windows. Fixed project references to the
+  engine, which broke a clean `tsc --build`.
 - M0.6 `npm run check` runs format check, type check, lint, tests with coverage and the
   license check in one command; `CLAUDE.md` and `CONTRIBUTING.md` list the real commands.
 - M0.5 License check: `npm run check:licenses` checks every package in `package-lock.json`
@@ -35,7 +36,5 @@ _Last updated: 2026-11-17_
 
 - Linux was not verified locally (no WSL); CI covers it from M0.9. Electron on Linux CI may
   need extra setup for its sandbox and a virtual display.
-- `npm run dev` was verified on Windows through Claude's session; the owner has not opened the
-  window by hand yet.
 - Steam release is assumed to be "maybe later" (ADR 0002); confirm with the owner when it
   becomes relevant.
