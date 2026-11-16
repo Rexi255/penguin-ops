@@ -46,6 +46,7 @@ penguin-ops/
   .claude/       Claude Code skills, rules and hooks
   .github/       CI workflows, Dependabot, pull request template (from M0)
   scripts/       repository tooling in TypeScript, run directly by Node.js
+                 (license-check/: the dependency license checker)
   package.json         npm workspaces, root scripts, pinned Node.js version (engines)
   tsconfig.base.json   shared strict compiler options
   tsconfig.json        solution file: references all workspaces and the tooling for `tsc --build`
@@ -88,6 +89,17 @@ Details and reasons: ADR 0029.
   wrapped by hand.
 - ESLint (`npm run lint`) uses the strict type-checked rules of `typescript-eslint`, the
   exhaustive switch check, the package boundaries and the ban on focused or skipped tests.
+
+## License check
+
+Details and reasons: ADR 0005, ADR 0031, ADR 0032.
+
+- `npm run check:licenses` runs `scripts/check-licenses.ts`. It reads every third-party
+  package from `package-lock.json` (all platforms, so Windows and Linux give the same result),
+  parses its SPDX license expression and checks it against `license-policy.json`.
+- A package marked `dev` in the lockfile is in development scope; every other package is
+  shipped (runtime). Development exceptions such as `lightningcss-*` are accepted only in
+  development scope.
 
 ## Engine (`packages/engine`)
 

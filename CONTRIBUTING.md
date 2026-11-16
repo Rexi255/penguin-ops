@@ -29,6 +29,7 @@ ones marked "planned" do not exist yet):
 | `npm run lint` | Lint with ESLint, including the package boundary rules |
 | `npm test` | Run all tests (Vitest), including the tests that prove the lint rules fire |
 | `npm run test:coverage` | Run all tests with coverage; fails below 90 % in the engine |
+| `npm run check:licenses` | Check the licenses of all npm dependencies against `license-policy.json` |
 | `npm run dev` | Start the game in development mode (planned) |
 | `npm run check` | Format check, lint, type check, all tests, license check (planned) |
 | `npm run e2e` | End-to-end and screenshot tests (planned) |
