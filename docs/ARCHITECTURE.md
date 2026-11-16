@@ -45,9 +45,13 @@ penguin-ops/
   docs/          documentation (see CLAUDE.md, "Where to find what")
   .claude/       Claude Code skills, rules and hooks
   .github/       CI workflows, Dependabot, pull request template (from M0)
+  scripts/       repository tooling in TypeScript, run directly by Node.js
   package.json         npm workspaces, root scripts, pinned Node.js version (engines)
   tsconfig.base.json   shared strict compiler options
-  tsconfig.json        solution file: references all workspaces for `tsc --build`
+  tsconfig.json        solution file: references all workspaces and the tooling for `tsc --build`
+  tsconfig.tooling.json  TypeScript project for `eslint.config.js` and `scripts/`
+  eslint.config.js     lint rules, including the package boundaries
+  .prettierrc.json     formatting (Markdown is excluded, see .prettierignore)
 ```
 
 Allowed dependencies: `engine` ← `content` ← `gameplay` ← `ui` ← `desktop`. The engine
@@ -66,7 +70,19 @@ Details and reasons: ADR 0026.
   adds Node types. Using a wrong-environment API is a type error.
 - The dependency direction between workspaces is declared in each `package.json`
   (`dependencies`) and `tsconfig.json` (`references`), but TypeScript does not enforce it for
-  imports by package name. ESLint package boundary rules enforce it from ROADMAP M0.3 on.
+  imports by package name. ESLint enforces it (ADR 0029): `eslint.config.js` holds one table of
+  allowed imports per workspace and blocks every other `@penguin-ops/*` import, Node.js
+  built-ins outside `apps/desktop`, and dynamic `import()`. Relative imports into another
+  workspace already fail `tsc --build`. `npm run test:lint-rules` proves that these rules fire.
+
+## Formatting and linting
+
+Details and reasons: ADR 0029.
+
+- Prettier formats code, JSON and YAML (`npm run format`, `npm run format:check`); Markdown is
+  wrapped by hand.
+- ESLint (`npm run lint`) uses the strict type-checked rules of `typescript-eslint`, the
+  exhaustive switch check, the package boundaries and the ban on focused or skipped tests.
 
 ## Engine (`packages/engine`)
 

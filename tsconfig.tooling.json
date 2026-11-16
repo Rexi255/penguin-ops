@@ -1,0 +1,19 @@
+// Repository tooling that runs directly in Node.js: the ESLint configuration and the scripts in
+// scripts/. Node.js runs the TypeScript files without a build step (type stripping), so only
+// erasable TypeScript syntax is allowed and imports keep their .ts extension.
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "${configDir}",
+    "outDir": "${configDir}/dist/tooling",
+    "tsBuildInfoFile": "${configDir}/dist/tooling/tsconfig.tsbuildinfo",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "allowJs": true,
+    "checkJs": true,
+    "erasableSyntaxOnly": true,
+    "allowImportingTsExtensions": true,
+    "types": ["node"]
+  },
+  "include": ["${configDir}/eslint.config.js", "${configDir}/scripts"]
+}

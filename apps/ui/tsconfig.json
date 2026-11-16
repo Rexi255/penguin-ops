@@ -5,5 +5,9 @@
   "compilerOptions": {
     "lib": ["ES2024", "DOM", "DOM.Iterable"]
   },
-  "references": [{ "path": "../../packages/engine" }, { "path": "../../packages/content" }, { "path": "../../packages/gameplay" }]
+  "references": [
+    { "path": "../../packages/engine" },
+    { "path": "../../packages/content" },
+    { "path": "../../packages/gameplay" }
+  ]
 }

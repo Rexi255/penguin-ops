@@ -21,6 +21,14 @@
       "reason": "Accessibility test tool, used only in tests and never shipped."
     }
   ],
-  "askFirst": ["GPL-*", "AGPL-*", "LGPL-*", "MPL-*", "CC-BY-SA-*", "UNLICENSED", "SEE LICENSE IN *"],
+  "askFirst": [
+    "GPL-*",
+    "AGPL-*",
+    "LGPL-*",
+    "MPL-*",
+    "CC-BY-SA-*",
+    "UNLICENSED",
+    "SEE LICENSE IN *"
+  ],
   "forbidden": ["CC-BY-NC-*"]
 }

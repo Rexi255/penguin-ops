@@ -24,6 +24,10 @@ ones marked "planned" do not exist yet):
 |---|---|
 | `npm install` | Install dependencies |
 | `npm run typecheck` | Type-check all workspaces (`tsc --build`) |
+| `npm run format` | Format all files with Prettier |
+| `npm run format:check` | Check formatting without changing files |
+| `npm run lint` | Lint with ESLint, including the package boundary rules |
+| `npm run test:lint-rules` | Prove that the lint rules fire |
 | `npm run dev` | Start the game in development mode (planned) |
 | `npm run check` | Format check, lint, type check, all tests, license check (planned) |
 | `npm run e2e` | End-to-end and screenshot tests (planned) |

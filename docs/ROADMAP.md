@@ -16,7 +16,7 @@ Rules: tick a box in the same commit that completes it. New ideas go to
 - [x] M0.2 Monorepo skeleton: root `package.json` with npm workspaces; `packages/engine`,
       `packages/content`, `packages/gameplay`, `apps/ui`, `apps/desktop`; strict TypeScript
       configs (engine and gameplay without DOM and Node types); Node LTS pinned.
-- [ ] M0.3 Formatting and linting: Prettier; ESLint with strict type-checked rules,
+- [x] M0.3 Formatting and linting: Prettier; ESLint with strict type-checked rules,
       `switch-exhaustiveness-check`, package boundary rules (TypeScript alone does not enforce
       the dependency direction for package-name imports, ADR 0026), no focused or skipped
       tests.
@@ -171,6 +171,8 @@ AppImage runs on Linux, and chapters 0–2 are playable in both languages.
 - Key remapping.
 - `.deb` package.
 - Upgrade to TypeScript 7 once `typescript-eslint` supports it (ADR 0026).
+- Lint rules that enforce ADR 0008 in engine and gameplay: ban `Date.now()`, `new Date()`
+  without arguments, `performance.now()` and `Math.random()`.
 - `vim` side chapter; Rocky Linux side chapter ("the new customer runs Rocky Linux").
 - Later chapters: firewall (`ufw`/`nftables`), nginx, Docker basics, disks (`lsblk`, `mount`,
   `fstab`), `sed`/`awk`, `git`.
