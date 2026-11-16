@@ -165,6 +165,9 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
 Test layers, quality gate and CI jobs: ADR 0015. Tests live next to the code (`*.test.ts`);
 end-to-end tests in `apps/ui/e2e/`.
 
+- `npm run check` is the local quality gate: `format:check`, `typecheck`, `lint`,
+  `test:coverage` and `check:licenses`, in this order; it stops at the first failing step.
+
 - Vitest (ADR 0030): one root `vitest.config.ts` with one project per workspace that has tests
   (`engine`, `tooling` for `scripts/`). `npm test` runs them; `npm run test:coverage` also
   enforces at least 90 % coverage for `packages/engine/src`.

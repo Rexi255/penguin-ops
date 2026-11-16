@@ -17,12 +17,13 @@ refuses other versions), Git. Works on Windows and Linux. In VS Code, install th
 extensions when prompted (ESLint, Prettier, Playwright, YAML, EditorConfig; listed in
 `.vscode/extensions.json`).
 
-The code skeleton is being built in milestone M0. Commands (defined in `package.json`; the
+Commands (defined in `package.json`; the
 ones marked "planned" do not exist yet):
 
 | Command | Purpose |
 |---|---|
 | `npm install` | Install dependencies |
+| `npm run check` | Format check, type check, lint, tests with coverage and license check in one command; run it before every commit |
 | `npm run typecheck` | Type-check all workspaces (`tsc --build`) |
 | `npm run format` | Format all files with Prettier |
 | `npm run format:check` | Check formatting without changing files |
@@ -31,7 +32,6 @@ ones marked "planned" do not exist yet):
 | `npm run test:coverage` | Run all tests with coverage; fails below 90 % in the engine |
 | `npm run check:licenses` | Check the licenses of all npm dependencies against `license-policy.json` |
 | `npm run dev` | Start the game in development mode (planned) |
-| `npm run check` | Format check, lint, type check, all tests, license check (planned) |
 | `npm run e2e` | End-to-end and screenshot tests (planned) |
 | `npm run package` | Build the installer (planned) |
 

@@ -58,7 +58,7 @@ through questions and reviews and plays the game on Windows.
 A work package is done only when all of these are true:
 
 1. The code builds and runs on Windows and Linux.
-2. `npm run check` passes (from ROADMAP M0.6 on).
+2. `npm run check` passes.
 3. New or changed behaviour has tests, including error cases. Every level has reference
    solutions that are tested in every language.
 4. The documentation duty below is fulfilled in the same commit.
@@ -101,7 +101,7 @@ Reasons: [ADR 0027](docs/decisions/0027-work-directly-on-main.md).
   one or a few commits on `main`, pushed to `origin/main`.
 - Commit messages: Conventional Commits in English (`feat: …`, `fix: …`, `docs: …`, `test: …`,
   `refactor: …`, `chore: …`).
-- Run `npm run check` before every commit (from ROADMAP M0.6 on). Never commit a red state.
+- Run `npm run check` before every commit. Never commit a red state.
 - You may commit, push to `main` and fix CI failures without asking. A red CI run on `main` is
   fixed before any new work.
 - Ask the user before pushing a commit that changes `CLAUDE.md`, anything in `.claude/`,
@@ -128,18 +128,20 @@ Vitest, Testing Library, Playwright, axe-core, Stryker, ESLint, Prettier. Reason
 
 Commands are defined only as npm scripts in `package.json`. Existing:
 
-- `npm run typecheck`: type-check all workspaces (`tsc --build`).
+- `npm run check`: format check, type check, lint, all tests with coverage, license check. Run
+  it before every commit.
+- `npm run format`: format all files with Prettier.
+- Single steps of `check`: `npm run format:check`, `npm run typecheck`, `npm run lint`,
+  `npm test` (without coverage), `npm run test:coverage`, `npm run check:licenses`.
 
 Planned:
 
-- `npm run dev`: start the game in development mode.
-- `npm run check`: format check, lint, type check, all tests, license check. Run it before
-  every commit.
-- `npm run e2e`: end-to-end and screenshot tests.
-- `npm run package`: build the installer.
+- `npm run dev`: start the game in development mode (M0.7).
+- `npm run e2e`: end-to-end and screenshot tests (M0.7).
+- `npm run package`: build the installer (M0.8).
 - `npm run test:mutation`: mutation tests of the engine (before releases).
 
-Update this section in M0.6 when the scripts exist.
+Update this section whenever a script is added.
 
 ## Code conventions
 

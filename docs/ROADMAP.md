@@ -24,7 +24,7 @@ Rules: tick a box in the same commit that completes it. New ideas go to
       random generator); lint rule tests moved to Vitest (ADR 0030). Playwright moved to M0.7.
 - [x] M0.5 License check: a tool that enforces `license-policy.json` for all npm dependencies
       (SPDX expressions, dev/runtime scope), as an npm script.
-- [ ] M0.6 `npm run check` (format, lint, types, tests, licenses); update the Commands section in
+- [x] M0.6 `npm run check` (format, lint, types, tests, licenses); update the Commands section in
       `CLAUDE.md` and `CONTRIBUTING.md`.
 - [ ] M0.7 Electron window: electron-vite, React placeholder screen "PenguinOps", security
       baseline (ADR 0014), typed preload stub; `npm run dev` works on Windows; Playwright
