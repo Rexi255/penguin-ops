@@ -19,6 +19,18 @@
       "license": "MPL-2.0",
       "scope": "development",
       "reason": "Accessibility test tool, used only in tests and never shipped."
+    },
+    {
+      "package": "lightningcss",
+      "license": "MPL-2.0",
+      "scope": "development",
+      "reason": "Required CSS tool of Vite (build and tests), never shipped. ADR 0031."
+    },
+    {
+      "package": "lightningcss-*",
+      "license": "MPL-2.0",
+      "scope": "development",
+      "reason": "Platform binaries of lightningcss, never shipped. ADR 0031."
     }
   ],
   "askFirst": [

@@ -49,7 +49,8 @@ penguin-ops/
   package.json         npm workspaces, root scripts, pinned Node.js version (engines)
   tsconfig.base.json   shared strict compiler options
   tsconfig.json        solution file: references all workspaces and the tooling for `tsc --build`
-  tsconfig.tooling.json  TypeScript project for `eslint.config.js` and `scripts/`
+  tsconfig.tooling.json  TypeScript project for `eslint.config.js`, `vitest.config.ts` and `scripts/`
+  vitest.config.ts     test projects and coverage thresholds
   eslint.config.js     lint rules, including the package boundaries
   .prettierrc.json     formatting (Markdown is excluded, see .prettierignore)
 ```
@@ -73,7 +74,11 @@ Details and reasons: ADR 0026.
   imports by package name. ESLint enforces it (ADR 0029): `eslint.config.js` holds one table of
   allowed imports per workspace and blocks every other `@penguin-ops/*` import, Node.js
   built-ins outside `apps/desktop`, and dynamic `import()`. Relative imports into another
-  workspace already fail `tsc --build`. `npm run test:lint-rules` proves that these rules fire.
+  workspace already fail `tsc --build`. Tests in `scripts/lint-rules.test.ts` prove that these
+  rules fire.
+- A workspace with tests has a solution `tsconfig.json` with two projects:
+  `tsconfig.lib.json` (production code) and `tsconfig.test.json` (only `*.test.ts`, with Node
+  types because Vitest needs them). Production code keeps its environment (ADR 0030).
 
 ## Formatting and linting
 
@@ -101,7 +106,8 @@ Details and reasons: ADR 0029.
 - **Events:** the engine emits structured events (output, game notices with message keys,
   screen clear, full-screen program start and end). It never produces translatable text.
 - **Determinism** (ADR 0008): injected game clock and seeded random generator; deterministic
-  data generators.
+  data generators. The random generator exists (`src/random.ts`, Mulberry32, created from a
+  32-bit seed); the clock follows in ROADMAP M1.3.
 - **Completion and history:** APIs for tab completion and command history.
 
 ## Content (`packages/content` and `content/`)
@@ -146,6 +152,11 @@ Details and reasons: ADR 0029.
 
 Test layers, quality gate and CI jobs: ADR 0015. Tests live next to the code (`*.test.ts`);
 end-to-end tests in `apps/ui/e2e/`.
+
+- Vitest (ADR 0030): one root `vitest.config.ts` with one project per workspace that has tests
+  (`engine`, `tooling` for `scripts/`). `npm test` runs them; `npm run test:coverage` also
+  enforces at least 90 % coverage for `packages/engine/src`.
+- Playwright is set up in ROADMAP M0.7 together with the first window.
 
 ## Claude Code setup
 

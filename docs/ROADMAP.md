@@ -20,14 +20,15 @@ Rules: tick a box in the same commit that completes it. New ideas go to
       `switch-exhaustiveness-check`, package boundary rules (TypeScript alone does not enforce
       the dependency direction for package-name imports, ADR 0026), no focused or skipped
       tests.
-- [ ] M0.4 Test setup: Vitest with coverage (engine threshold 90 %) and a first test; Playwright
-      configuration.
+- [x] M0.4 Test setup: Vitest with coverage (engine threshold 90 %) and a first test (the seeded
+      random generator); lint rule tests moved to Vitest (ADR 0030). Playwright moved to M0.7.
 - [ ] M0.5 License check: a tool that enforces `license-policy.json` for all npm dependencies
       (SPDX expressions, dev/runtime scope), as an npm script.
 - [ ] M0.6 `npm run check` (format, lint, types, tests, licenses); update the Commands section in
       `CLAUDE.md` and `CONTRIBUTING.md`.
 - [ ] M0.7 Electron window: electron-vite, React placeholder screen "PenguinOps", security
-      baseline (ADR 0014), typed preload stub; `npm run dev` works on Windows.
+      baseline (ADR 0014), typed preload stub; `npm run dev` works on Windows; Playwright
+      configuration with a first test against the window (ADR 0030).
 - [ ] M0.8 Packaging: electron-builder with NSIS installer wizard (install folder, shortcuts,
       uninstaller) and AppImage; `npm run package`.
 - [ ] M0.9 CI on every push to `main` and on outside pull requests: Linux job (all checks),
@@ -47,8 +48,8 @@ placeholder window; CI builds the installer; `main` is protected.
       data model with one host (ADR 0009).
 - [ ] M1.2 Virtual file system: paths (absolute, relative, `~`, `.`, `..`), owner, group, mode,
       mtime, lookup errors (ENOENT, ENOTDIR, EACCES), permission checks.
-- [ ] M1.3 Determinism: injected game clock, seeded random generator, world builder from a spec
-      (ADR 0008).
+- [ ] M1.3 Determinism: injected game clock, world builder from a spec (ADR 0008). The seeded
+      random generator was added in M0.4.
 - [ ] M1.4 Lexer: words, single and double quotes, escapes, operators, variables, `~`.
 - [ ] M1.5 Parser: AST for simple commands, pipelines, lists (`;`, `&&`, `||`), redirections
       (`>`, `>>`, `2>`, `<`); bash-like syntax errors.

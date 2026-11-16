@@ -106,15 +106,6 @@ export default defineConfig(
           requireDefaultForNonUnion: true,
         },
       ],
-      // node:test returns promises from test() and describe() that the runner itself awaits.
-      "@typescript-eslint/no-floating-promises": [
-        "error",
-        {
-          allowForKnownSafeCalls: [
-            { from: "package", package: "node:test", name: ["describe", "test", "it", "suite"] },
-          ],
-        },
-      ],
     },
   },
 

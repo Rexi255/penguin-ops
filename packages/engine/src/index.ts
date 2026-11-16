@@ -1,2 +1,2 @@
-// Public API of the engine package. Exports are added from ROADMAP M1 on.
-export {};
+// Public API of the engine package.
+export { createRandom, type RandomGenerator } from "./random";

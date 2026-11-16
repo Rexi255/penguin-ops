@@ -2,10 +2,8 @@
 // package boundaries (ADR 0006), exhaustive switches, strict TypeScript rules and the ban on
 // focused or skipped tests (ADR 0015). Each case lints a small piece of code as if it were a
 // file in a given workspace; the file never exists on disk.
-import assert from "node:assert/strict";
-import { describe, test } from "node:test";
-
 import { ESLint } from "eslint";
+import { describe, expect, test } from "vitest";
 
 const PROBE_FILE = "src/lint-probe.ts";
 const WORKSPACES = [
@@ -35,7 +33,9 @@ const eslint = new ESLint({
 /** Lints `code` as a file in `workspace` and returns the ids of the rules that reported. */
 async function ruleIds(workspace: Workspace, code: string): Promise<string[]> {
   const [result] = await eslint.lintText(code, { filePath: `${workspace}/${PROBE_FILE}` });
-  assert.ok(result, "ESLint returned no result");
+  if (result === undefined) {
+    throw new Error("ESLint returned no result");
+  }
   return result.messages.map((message) => message.ruleId ?? `fatal: ${message.message}`);
 }
 
@@ -48,11 +48,10 @@ async function assertImport(
   expected: "allowed" | "forbidden",
 ): Promise<void> {
   const ids = await ruleIds(workspace, `${statement}\n`);
-  assert.equal(
+  expect(
     ids.includes(BOUNDARY_RULE),
-    expected === "forbidden",
     `${workspace}: "${statement}" should be ${expected}, reported: ${ids.join(", ") || "nothing"}`,
-  );
+  ).toBe(expected === "forbidden");
 }
 
 describe("package boundaries (ADR 0006)", () => {
@@ -105,7 +104,7 @@ describe("dynamic imports", () => {
         workspace,
         'export const lazy = (): Promise<unknown> => import("@penguin-ops/ui");\n',
       );
-      assert.ok(ids.includes("no-restricted-syntax"), ids.join(", "));
+      expect(ids).toContain("no-restricted-syntax");
     });
   }
 });
@@ -118,7 +117,7 @@ describe("exhaustive switch", () => {
       "packages/engine",
       `${prefix}  switch (kind) {\n    case "file":\n      return 1;\n  }\n  return 0;\n}\n`,
     );
-    assert.ok(ids.includes("@typescript-eslint/switch-exhaustiveness-check"), ids.join(", "));
+    expect(ids).toContain("@typescript-eslint/switch-exhaustiveness-check");
   });
 
   test("a default case does not hide a missing case", async () => {
@@ -126,7 +125,7 @@ describe("exhaustive switch", () => {
       "packages/engine",
       `${prefix}  switch (kind) {\n    case "file":\n      return 1;\n    default:\n      return 0;\n  }\n}\n`,
     );
-    assert.ok(ids.includes("@typescript-eslint/switch-exhaustiveness-check"), ids.join(", "));
+    expect(ids).toContain("@typescript-eslint/switch-exhaustiveness-check");
   });
 
   test("a complete switch without default passes", async () => {
@@ -134,14 +133,14 @@ describe("exhaustive switch", () => {
       "packages/engine",
       `${prefix}  switch (kind) {\n    case "file":\n      return 1;\n    case "directory":\n      return 2;\n  }\n}\n`,
     );
-    assert.deepEqual(ids, []);
+    expect(ids).toEqual([]);
   });
 });
 
 describe("strict TypeScript rules", () => {
   test("explicit any is an error", async () => {
     const ids = await ruleIds("packages/engine", "export const value: any = 1;\n");
-    assert.ok(ids.includes("@typescript-eslint/no-explicit-any"), ids.join(", "));
+    expect(ids).toContain("@typescript-eslint/no-explicit-any");
   });
 
   test("a non-null assertion is an error", async () => {
@@ -149,7 +148,7 @@ describe("strict TypeScript rules", () => {
       "packages/engine",
       "export function first(list: string[]): string {\n  return list[0]!;\n}\n",
     );
-    assert.ok(ids.includes("@typescript-eslint/no-non-null-assertion"), ids.join(", "));
+    expect(ids).toContain("@typescript-eslint/no-non-null-assertion");
   });
 
   test("@ts-ignore is an error", async () => {
@@ -157,7 +156,7 @@ describe("strict TypeScript rules", () => {
       "packages/engine",
       "// @ts-ignore\nexport const value: number = 1;\n",
     );
-    assert.ok(ids.includes("@typescript-eslint/ban-ts-comment"), ids.join(", "));
+    expect(ids).toContain("@typescript-eslint/ban-ts-comment");
   });
 });
 
@@ -173,7 +172,7 @@ describe("no focused or skipped tests (ADR 0015)", () => {
   for (const [statement, rule] of cases) {
     test(`${statement} is reported by ${rule}`, async () => {
       const ids = await ruleIds("packages/engine", `${statement}\n`);
-      assert.ok(ids.includes(rule), ids.join(", "));
+      expect(ids).toContain(rule);
     });
   }
 });

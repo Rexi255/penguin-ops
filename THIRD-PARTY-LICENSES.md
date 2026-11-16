@@ -13,7 +13,7 @@ licenses: [ADR 0005](docs/decisions/0005-mit-license-and-dependency-allowlist.md
 
 | Name | Type | Source | License | Used for | Notes |
 |---|---|---|---|---|---|
-| _none yet_ | | | | | |
+| Mulberry32 | Code (algorithm, adapted) | https://gist.github.com/tommyettinger/46a874533244883189143505d203312c | CC0-1.0 | Seeded random generator of the engine | `packages/engine/src/random.ts`; dedicated to the public domain by Tommy Ettinger |
 
 <!--
 Example row:

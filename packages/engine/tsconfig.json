@@ -1,4 +1,6 @@
-// Pure package: no DOM library, no Node types, no project-internal dependencies (ADR 0006).
+// Solution file of the engine workspace: the production code and its tests are separate
+// projects, so that only the tests see Node.js types (ADR 0030).
 {
-  "extends": "../../tsconfig.base.json"
+  "files": [],
+  "references": [{ "path": "./tsconfig.lib.json" }, { "path": "./tsconfig.test.json" }]
 }

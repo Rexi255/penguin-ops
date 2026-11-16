@@ -1,0 +1,5 @@
+// Pure package: no DOM library, no Node types, no project-internal dependencies (ADR 0006).
+{
+  "extends": "../../tsconfig.base.json",
+  "exclude": ["${configDir}/src/**/*.test.ts"]
+}

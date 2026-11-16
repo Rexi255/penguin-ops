@@ -1,6 +1,7 @@
 # 0005. MIT license and dependency allowlist
 
-- Status: Accepted
+- Status: Accepted; partly superseded by [0031](0031-lightningcss-license-exception.md) (lightningcss
+  added to the approved exceptions)
 - Date: 2026-11-16
 - Supersedes: –
 
