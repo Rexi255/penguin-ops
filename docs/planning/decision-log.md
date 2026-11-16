@@ -8,7 +8,7 @@
 > Status values: **Decided** (owner confirmed), **Decided by Claude** (owner delegated or did
 > not object), **Assumed** (needs confirmation), **Open** (not yet discussed).
 
-Last updated: 2026-11-16 (after planning round 4)
+Last updated: 2026-11-16 (after planning round 5)
 
 ---
 
@@ -378,6 +378,41 @@ auto-play the reference solution, live display of check rules (met/unmet), switc
 during a ticket. Must be disabled in release builds, guarded by a dedicated test. Also used by
 Claude for screenshot tests.
 
+### Round 5: Game design
+
+**D-030 Story and tone** (Decided)
+Realistic everyday IT work in a company, told with plenty of humour: real IT life is full of
+bizarre and wild situations, and the game should show that. On top runs a quiet overarching
+mystery (working idea: the previous admin left suddenly, his notes are scattered across the
+servers, and odd things happen in the logs). It resolves gradually across chapters, without
+time pressure, and motivates exactly the skills being taught (reading logs, `grep`, `ssh`,
+checking permissions). The owner contributes real-life anecdotes as story material.
+
+**D-031 Progression: chapters with an inbox** (Decided)
+Each chapter (e.g. a training week or month) offers several tickets that can be solved in any
+order. Every chapter ends with an **incident** ticket that combines what was learned (may be
+multi-step; no timer, no failure). Chapters also contain **review tickets** (older commands
+mixed in) and **optional side tickets** for deeper learning.
+
+**D-032 Game mode per save slot: Story or Sandbox** (Decided; meaning of "Sandbox" Open)
+When creating a save slot, the player chooses Story mode or Sandbox mode. What Sandbox
+contains (all tickets unlocked without story, a free playground world, or both) is decided in
+round 6.
+
+**D-033 Hints and rewards** (Decided)
+Hints are free and unlimited; every ticket always gives full XP (the prototype's "no hint"
+bonus is removed). Bonus XP comes from optional extra goals (e.g. "solve it with a pipe",
+"try an option from the explanation") and side tickets. Achievements reward exploration (e.g.
+"used 10 different commands", "found the hidden note"). Ranks stay (intern → ... → senior
+admin, translated); promotions are small story moments at the end of a chapter.
+
+**D-034 Player name becomes the Linux user** (Decided)
+On "New game" the player enters a name. It is shown on the save slot, and a Linux user name is
+derived from it (lowercase, umlauts transliterated, editable), e.g. `jan@<host>:~$`. Allowed:
+lowercase letters, digits and hyphen, starting with a letter, like real Linux accounts.
+Check rules must never depend on the user name; a test replays every reference solution with
+two different user names. Company and host names are decided together with the game name.
+
 ---
 
 ## 4. Verified facts from research (2026-11-16)
@@ -397,13 +432,10 @@ Claude for screenshot tests.
 
 ## 5. Open questions (later rounds)
 
-- **Round 5, game design:** story and tone; progression structure (chapters, unlocks, boss
-  tickets, mix/review tickets, side tickets); hints, XP, ranks and the conflict between a
-  "no hint" bonus and the relaxed design; achievements; player name and Linux user name
-  (replaces `azubi`); company name, host names.
 - **Round 6, curriculum:** commands and concepts per chapter, relevance for IT specialists in
   system integration (Fachinformatiker Systemintegration); in-game Linux distribution and
-  version (also the reference system for D-009).
+  version (also the reference system for D-009); meaning of Sandbox mode (D-032);
+  interactive editor (nano/vim) and full-screen programs (`less`, `man`, `top`).
 - **Round 7, design and UX:** layout (fake desktop with apps vs. fixed layout), colour scheme,
   fonts (licence), sounds and music (sources, licences), accessibility, key bindings, onboarding,
   language switcher, settings menu.
@@ -411,6 +443,7 @@ Claude for screenshot tests.
   visual regression, npm license checker tool, line endings, branching vs. cloud-session
   branches, commit message convention, branch protection, repo visibility (private until MVP?).
 - **Round 9, wrap-up:** MVP scope and milestones; name and branding (name conflict check);
+  company name and host names (D-034);
   copyright holder name in LICENSE; license allowlist contents; DCO/CLA answer; final doc
   structure; extra skills; hooks.
 - Confirm D-010 Steam assumption.
@@ -425,3 +458,4 @@ Claude for screenshot tests.
 - Community translations.
 - Auto-updater.
 - Code signing via SignPath Foundation.
+- Story material: real-life IT anecdotes from the owner (D-030).
