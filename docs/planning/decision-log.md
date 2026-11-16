@@ -8,7 +8,7 @@
 > Status values: **Decided** (owner confirmed), **Decided by Claude** (owner delegated or did
 > not object), **Assumed** (needs confirmation), **Open** (not yet discussed).
 
-Last updated: 2026-11-16 (after planning round 6)
+Last updated: 2026-11-16 (after planning round 7)
 
 ---
 
@@ -461,6 +461,66 @@ A simulated `nano` is taught in chapter 5. `vim` comes later as an optional, hum
 chapter. `nano`, `less`, `man` and `top` share one engine mechanism: a full-screen program that
 takes over the terminal.
 
+### Round 7: Design and UX
+
+**D-039 Screen layout: workplace layout** (Decided)
+Fixed areas with a desktop look: the terminal is always large and visible; a side panel with
+tabs (Tickets, Mail, Handbook; later e.g. a network map); a top bar with in-game day and
+progress (rank, XP); a footer with key hints. Full-screen programs (`nano`, `less`, `top`) take
+over the terminal area. Free-floating windows (fake desktop) were rejected: overlapping
+windows confuse beginners, window management is costly and error-prone, and fixed areas are
+reliable for screenshot tests.
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│ Week 1 · Monday           Intern [####------] 340 XP         │
+├──────────────────────────────────────────────────────────────┤
+│ Tickets│Mail│Handbook│ jan@itdesk:~$ cat tickets/handover.txt│
+│ ─────────────────────│ ...                                   │
+│ #1002 Printer floor 2│ jan@itdesk:~$ _                       │
+│ [Hint 1/3]           │                                       │
+├──────────────────────────────────────────────────────────────┤
+│ F1 Hint · F2 Handbook · Tab Complete · Esc Menu              │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**D-040 Visual style** (Decided)
+Modern dark base (like the prototype), plus selectable terminal colour schemes (e.g. default,
+retro CRT, Solarized, high contrast) and optional effects (glow, scanlines). Every scheme is
+covered by screenshot tests. Fonts: JetBrains Mono (terminal) and Inter (UI), bundled for
+offline use, both under SIL Open Font License 1.1 (to be added to the allowlist in the license
+round unless the owner objects).
+
+**D-041 Sound and music** (Decided)
+UI sounds (notification, success, subtle clicks) generated in code with the Web Audio API (no
+asset files, no license questions); part of the MVP. Calm background music (lo-fi or office
+ambient) in a later milestone, from CC0 or CC-BY 4.0 sources, with separate volume sliders and
+an in-game credits screen plus `THIRD-PARTY-LICENSES.md`. Claude cannot listen: Claude
+pre-filters license-safe candidates, the owner chooses the tracks.
+
+**D-042 Accessibility: basic level** (Decided)
+Full keyboard control, scalable font size, "reduce motion" (turns off animations and effects),
+high-contrast scheme, information never conveyed by colour alone, automated accessibility
+checks in tests (contrast, missing labels). Screen reader support is a later milestone, once
+the UI is stable.
+
+**D-043 UX details** (Decided by Claude, owner did not object)
+- Onboarding: chapter 0 is the tutorial; the trainer introduces the UI step by step; short
+  first-time tooltips; no separate tutorial screen.
+- Flow: start screen → choose save slot (3 slots, Story/Sandbox, name) → game. Esc opens the
+  pause menu (continue, settings, handbook, save and quit).
+- Window: fullscreen on first start; toggle with F11 or in settings.
+- Global settings: language, volume (master, music, effects), fullscreen, font size, colour
+  scheme, effects on/off, reduce motion.
+- Keys: the terminal behaves like bash (Tab, arrows, Ctrl+C, Ctrl+L, Ctrl+A/E, later Ctrl+R).
+  Game functions on F-keys and Esc (F1 hint, F2 handbook, ...), shown in the footer.
+  Key remapping is a later idea.
+- In-game handbook: every learned command with translated explanation, options table and
+  examples; searchable; grows as the player learns.
+- Language switch: on the start screen and in settings. Switching during a ticket restarts it
+  in the new language after a confirmation, so translated files stay consistent.
+- Notifications: new mails and tickets appear as small toasts and never interrupt typing.
+
 ---
 
 ## 4. Verified facts from research (2026-11-16)
@@ -475,14 +535,17 @@ takes over the terminal.
   Windows, hooks need Git Bash or PowerShell.
 - Electron bundles Chromium, which includes an ffmpeg library under LGPL as a separate DLL
   (to be verified in the license round; affects the allowlist).
+- GitHub: the repo `Rexi255/penguin-ops` is currently **private**. Protected branches and
+  rulesets are available for public repos on GitHub Free, but for private repos only with
+  GitHub Pro or higher. GitHub Actions on standard runners is free for public repos; private
+  repos draw from a limited included quota, and Windows minutes cost more than Linux minutes.
+- The initial commit's author email is the owner's private address (relevant before making
+  the repo public).
 
 ---
 
 ## 5. Open questions (later rounds)
 
-- **Round 7, design and UX:** layout (fake desktop with apps vs. fixed layout), colour scheme,
-  fonts (licence), sounds and music (sources, licences), accessibility, key bindings, onboarding,
-  language switcher, settings menu, in-game handbook.
 - **Round 8, quality and workflow:** test strategy details, CI jobs, lint and format config,
   visual regression, npm license checker tool, line endings, branching vs. cloud-session
   branches, commit message convention, branch protection, repo visibility (private until MVP?).
