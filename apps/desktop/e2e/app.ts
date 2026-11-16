@@ -1,4 +1,6 @@
-// Starts the built desktop app for a test and closes it afterwards.
+// Starts the desktop app for a test and closes it afterwards: either the built app (`out/`, run
+// by the development Electron) or the packaged app from `npm run package` (ADR 0034).
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 import {
@@ -8,15 +10,39 @@ import {
   type Page,
 } from "@playwright/test";
 
+import { LINUX_EXECUTABLE_NAME, OUTPUT_DIRECTORY } from "../electron-builder.config";
+
+export interface AppOptions {
+  /**
+   * `false`: the built app in `out/`, started with the Electron of the development dependencies.
+   * `true`: the unpacked app that `npm run package` writes next to the installer.
+   */
+  readonly packaged: boolean;
+}
+
 interface AppFixtures {
   readonly electronApp: ElectronApplication;
   readonly page: Page;
 }
 
+const appFolder = join(import.meta.dirname, "..");
+
+/** The executable inside the unpacked app that electron-builder writes to release/. */
+function packagedExecutable(): string {
+  const release = join(appFolder, OUTPUT_DIRECTORY);
+  if (process.platform === "win32") {
+    return join(release, "win-unpacked", "PenguinOps.exe");
+  }
+  if (process.platform === "linux") {
+    return join(release, "linux-unpacked", LINUX_EXECUTABLE_NAME);
+  }
+  throw new Error(`The packaged app is not built for ${process.platform} (ADR 0002).`);
+}
+
 // `page` replaces Playwright's browser page with the app window, so no browser is started.
-export const test = base.extend<AppFixtures>({
-  // eslint-disable-next-line no-empty-pattern -- Playwright reads a fixture's dependencies from this pattern, and this fixture has none.
-  electronApp: async ({}, use) => {
+export const test = base.extend<AppFixtures, AppOptions>({
+  packaged: [false, { option: true, scope: "worker" }],
+  electronApp: async ({ packaged }, use) => {
     // ELECTRON_RUN_AS_NODE (set for example by VS Code extension hosts) would start Electron as
     // plain Node.js without a window.
     const env = Object.fromEntries(
@@ -25,8 +51,17 @@ export const test = base.extend<AppFixtures>({
           entry[0] !== "ELECTRON_RUN_AS_NODE" && entry[1] !== undefined,
       ),
     );
-    // The app folder: Electron starts the "main" file of its package.json (the built main process).
-    const app = await electron.launch({ args: [join(import.meta.dirname, "..")], env });
+    let app: ElectronApplication;
+    if (packaged) {
+      const executablePath = packagedExecutable();
+      if (!existsSync(executablePath)) {
+        throw new Error(`${executablePath} does not exist. Run "npm run package" first.`);
+      }
+      app = await electron.launch({ executablePath, env });
+    } else {
+      // Electron starts the "main" file of the app folder's package.json (the built main process).
+      app = await electron.launch({ args: [appFolder], env });
+    }
     await use(app);
     await app.close();
   },

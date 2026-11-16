@@ -31,6 +31,12 @@
       "license": "MPL-2.0",
       "scope": "development",
       "reason": "Platform binaries of lightningcss, never shipped. ADR 0031."
+    },
+    {
+      "package": "truncate-utf8-bytes",
+      "license": "WTFPL",
+      "scope": "development",
+      "reason": "Indirect dependency of electron-builder (packaging only), never shipped. ADR 0035."
     }
   ],
   "askFirst": [

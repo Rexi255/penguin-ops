@@ -1,5 +1,5 @@
-// Build configuration and end-to-end tests of the desktop app. They run in Node.js (electron-vite
-// and Playwright load them), not in the app.
+// Build and packaging configuration and end-to-end tests of the desktop app. They run in Node.js
+// (electron-vite, electron-builder, Vitest and Playwright load them), not in the app.
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
@@ -16,6 +16,8 @@
   "include": [
     "${configDir}/electron.vite.config.ts",
     "${configDir}/playwright.config.ts",
+    "${configDir}/electron-builder.config.ts",
+    "${configDir}/electron-builder.config.test.ts",
     "${configDir}/e2e"
   ]
 }

@@ -16,6 +16,8 @@
     "dev": "npm run dev -w @penguin-ops/desktop",
     "build": "npm run build -w @penguin-ops/desktop",
     "e2e": "npm run e2e -w @penguin-ops/desktop",
+    "package": "npm run package -w @penguin-ops/desktop",
+    "e2e:packaged": "npm run e2e:packaged -w @penguin-ops/desktop",
     "typecheck": "tsc --build",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

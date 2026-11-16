@@ -15,7 +15,7 @@ export default defineConfig({
       {
         test: {
           name: "desktop",
-          include: ["apps/desktop/src/**/*.test.ts"],
+          include: ["apps/desktop/src/**/*.test.ts", "apps/desktop/*.test.ts"],
           environment: "node",
         },
       },

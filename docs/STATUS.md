@@ -4,37 +4,35 @@ _Last updated: 2026-11-17_
 
 ## Recently completed
 
+- M0.8 Packaging: `npm run package` builds an NSIS installer wizard (Windows) or an AppImage
+  (Linux) into `apps/desktop/release` with electron-builder; app id
+  `io.github.rexi255.penguin-ops`; `npm run e2e:packaged` runs the end-to-end tests against
+  the packaged app (ADR 0034). The owner tested install and uninstall on Windows.
+  `truncate-utf8-bytes` (WTFPL) approved as a development-only exception (ADR 0035).
 - M0.7 Electron window: electron-vite builds main, preload (CommonJS) and the React renderer
-  from `apps/ui`; placeholder screen with name and version; security baseline with request
-  filter, denied navigation, windows and permissions, strict CSP; typed preload contract
-  `DesktopApi` in `apps/ui`; Playwright end-to-end tests against Electron (`npm run e2e`)
-  (ADR 0033); the owner confirmed `npm run dev` on Windows. Fixed project references to the
-  engine, which broke a clean `tsc --build`.
+  from `apps/ui`; placeholder screen with name and version; security baseline; typed preload
+  contract `DesktopApi`; Playwright end-to-end tests against Electron (ADR 0033).
 - M0.6 `npm run check` runs format check, type check, lint, tests with coverage and the
-  license check in one command; `CLAUDE.md` and `CONTRIBUTING.md` list the real commands.
+  license check in one command.
 - M0.5 License check: `npm run check:licenses` checks every package in `package-lock.json`
-  (all platforms) against `license-policy.json`, with SPDX expressions and development-only
-  exceptions; own checker without dependencies (ADR 0032).
-- M0.4 Test setup: Vitest 5 with V8 coverage (engine threshold 90 %, proven to fail below it),
-  first engine module (seeded random generator, Mulberry32), lint rule tests moved to Vitest;
-  separate test tsconfig so only tests see Node types (ADR 0030). Playwright moved to M0.7.
-  lightningcss (MPL-2.0, required by Vite 8) approved as a development-only exception (ADR 0031).
-- M0.3 Formatting and linting: Prettier (Markdown excluded), ESLint 10 with strict type-checked
-  rules, exhaustive switches, package boundary rules and no focused or skipped tests (ADR 0029).
+  against `license-policy.json` (ADR 0032).
+- M0.4 Test setup: Vitest 5 with V8 coverage (engine threshold 90 %), first engine module;
+  lightningcss approved as a development-only exception (ADR 0030, ADR 0031).
 
 ## In progress
 
-- Nothing.
+- ROADMAP M0.9: CI on every push to `main`.
 
 ## Next 3 steps
 
-1. ROADMAP M0.8: packaging with electron-builder (NSIS installer, AppImage), `npm run package`.
-2. ROADMAP M0.9: CI on every push to `main` (including `npm run e2e`).
-3. ROADMAP M0.10: branch protection on `main` (owner, guided by Claude).
+1. ROADMAP M0.9: CI on every push to `main` (including `npm run e2e`, `npm run package` and
+   `npm run e2e:packaged`).
+2. ROADMAP M0.10: branch protection on `main` (owner, guided by Claude).
+3. ROADMAP M0.11: `/adr` skill.
 
 ## Blockers and open questions
 
-- Linux was not verified locally (no WSL); CI covers it from M0.9. Electron on Linux CI may
-  need extra setup for its sandbox and a virtual display.
+- Linux was not verified locally (no WSL), including the AppImage; CI covers it from M0.9.
+  Electron on Linux CI may need extra setup for its sandbox and a virtual display.
 - Steam release is assumed to be "maybe later" (ADR 0002); confirm with the owner when it
   becomes relevant.

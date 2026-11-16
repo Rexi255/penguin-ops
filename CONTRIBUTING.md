@@ -17,8 +17,7 @@ refuses other versions), Git. Works on Windows and Linux. In VS Code, install th
 extensions when prompted (ESLint, Prettier, Playwright, YAML, EditorConfig; listed in
 `.vscode/extensions.json`).
 
-Commands (defined in `package.json`; the
-ones marked "planned" do not exist yet):
+Commands (defined in `package.json`):
 
 | Command | Purpose |
 |---|---|
@@ -34,7 +33,8 @@ ones marked "planned" do not exist yet):
 | `npm run dev` | Start the game in development mode with hot reload |
 | `npm run build` | Build the app into `apps/desktop/out` |
 | `npm run e2e` | Build the app and run the end-to-end tests (Playwright drives Electron) |
-| `npm run package` | Build the installer (planned) |
+| `npm run package` | Build the installer for the current platform (Windows: NSIS installer, Linux: AppImage) into `apps/desktop/release` |
+| `npm run e2e:packaged` | Run the end-to-end tests against the app from the last `npm run package` |
 
 ## Workflow
 

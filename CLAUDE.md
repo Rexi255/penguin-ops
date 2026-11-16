@@ -136,10 +136,13 @@ Commands are defined only as npm scripts in `package.json`. Existing:
 - `npm run dev`: start the game in development mode with hot reload.
 - `npm run build`: build the app into `apps/desktop/out`.
 - `npm run e2e`: build the app and run the Playwright end-to-end tests against Electron.
+- `npm run package`: build the app and its installer for the current platform (NSIS installer
+  on Windows, AppImage on Linux) into `apps/desktop/release`.
+- `npm run e2e:packaged`: run the end-to-end tests against the app from the last
+  `npm run package`.
 
 Planned:
 
-- `npm run package`: build the installer (M0.8).
 - `npm run test:mutation`: mutation tests of the engine (before releases).
 
 Update this section whenever a script is added.

@@ -69,7 +69,7 @@ export default defineConfig(
   globalIgnores([
     "**/dist/",
     "**/out/",
-    "release/",
+    "**/release/",
     "coverage/",
     "playwright-report/",
     "test-results/",

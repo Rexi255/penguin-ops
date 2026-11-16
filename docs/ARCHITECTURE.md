@@ -171,7 +171,8 @@ Current state (ADR 0033):
 ```
 apps/desktop/
   electron.vite.config.ts   builds main, preload and the renderer (root: apps/ui) into out/
-  playwright.config.ts      end-to-end tests against the built app
+  electron-builder.config.ts  packages out/ into the installer or AppImage in release/ (ADR 0034)
+  playwright.config.ts      end-to-end tests against the built and the packaged app
   src/main/index.ts         app start, hardening of all web contents and the session, IPC handlers
   src/main/window.ts        the main window
   src/main/web-preferences.ts  secure web preferences of every window
@@ -201,8 +202,13 @@ end-to-end tests in `apps/desktop/e2e/` (`*.spec.ts`).
 - Vitest (ADR 0030): one root `vitest.config.ts` with one project per workspace that has tests
   (`engine`, `desktop`, `tooling` for `scripts/`). `npm test` runs them;
   `npm run test:coverage` also enforces at least 90 % coverage for `packages/engine/src`.
-- Playwright (ADR 0033): `npm run e2e` builds the app and starts it through Electron for each
-  test; no browser download is needed. Not part of `npm run check`.
+- Playwright (ADR 0033, ADR 0034): `npm run e2e` builds the app and starts it through Electron
+  for each test (project `built`); no browser download is needed. `npm run e2e:packaged` runs
+  the same tests against the unpacked app from the last `npm run package` (project
+  `packaged`). Neither is part of `npm run check`.
+- Packaging (ADR 0034): `npm run package` builds the app and runs electron-builder for the
+  current platform: NSIS installer wizard on Windows, AppImage on Linux, both in
+  `apps/desktop/release/`. Nothing is published by a build.
 
 ## Claude Code setup
 

@@ -29,7 +29,7 @@ Rules: tick a box in the same commit that completes it. New ideas go to
 - [x] M0.7 Electron window: electron-vite, React placeholder screen "PenguinOps", security
       baseline (ADR 0014), typed preload stub; `npm run dev` works on Windows; Playwright
       configuration with a first test against the window (ADR 0030).
-- [ ] M0.8 Packaging: electron-builder with NSIS installer wizard (install folder, shortcuts,
+- [x] M0.8 Packaging: electron-builder with NSIS installer wizard (install folder, shortcuts,
       uninstaller) and AppImage; `npm run package`.
 - [ ] M0.9 CI on every push to `main` and on outside pull requests: Linux job (all checks),
       Windows job (unit and content tests, installer build), documentation duty check, pull
@@ -175,6 +175,8 @@ AppImage runs on Linux, and chapters 0–2 are playable in both languages.
   (ADR 0033).
 - Load the renderer through a custom `app://` protocol instead of `file://` (Electron security
   checklist, ADR 0033).
+- Electron fuses for the packaged app, for example disabling `ELECTRON_RUN_AS_NODE` and Node.js
+  command line options (ADR 0034).
 - Upgrade to TypeScript 7 once `typescript-eslint` supports it (ADR 0026).
 - Lint rules that enforce ADR 0008 in engine and gameplay: ban `Date.now()`, `new Date()`
   without arguments, `performance.now()` and `Math.random()`.

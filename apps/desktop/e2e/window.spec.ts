@@ -8,6 +8,15 @@ test("opens the window with the placeholder screen", async ({ page }) => {
   await expect(page.getByTestId("app-version")).toHaveText(/^\d+\.\d+\.\d+$/);
 });
 
+test("runs as the packaged app exactly in the packaged project", async ({
+  electronApp,
+  packaged,
+}) => {
+  // The packaged app must not trust a development server URL and loads its files from app.asar.
+  const isPackaged = await electronApp.evaluate(({ app }) => app.isPackaged);
+  expect(isPackaged).toBe(packaged);
+});
+
 test("shows the version of the desktop package", async ({ electronApp, page }) => {
   const version = await electronApp.evaluate(({ app }) => app.getVersion());
   await expect(page.getByTestId("app-version")).toHaveText(version);

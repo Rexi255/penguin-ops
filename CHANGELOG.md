@@ -9,3 +9,5 @@ project uses [Semantic Versioning](https://semver.org/).
 ### Added
 
 - The game opens a window with a placeholder screen that shows the name and version.
+- Windows installer wizard (choice of folder, desktop and Start menu shortcuts, uninstaller
+  that keeps save games) and a Linux AppImage. No release has been published yet.
