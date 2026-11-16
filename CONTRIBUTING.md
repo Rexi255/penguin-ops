@@ -12,20 +12,22 @@ contribution is licensed under the same terms (GitHub Terms of Service, section 
 
 ## Setup
 
-Requirements: Node.js LTS (version pinned in the repository), Git. Works on Windows and Linux.
-In VS Code, install the recommended extensions when prompted (ESLint, Prettier, Playwright,
-YAML, EditorConfig; listed in `.vscode/extensions.json`).
+Requirements: Node.js 26 LTS (pinned in `.nvmrc` and in `engines` of `package.json`; `npm install`
+refuses other versions), Git. Works on Windows and Linux. In VS Code, install the recommended
+extensions when prompted (ESLint, Prettier, Playwright, YAML, EditorConfig; listed in
+`.vscode/extensions.json`).
 
-The code skeleton is created in milestone M0. Until then there is nothing to build. Planned
-commands (defined in `package.json`):
+The code skeleton is being built in milestone M0. Commands (defined in `package.json`; the
+ones marked "planned" do not exist yet):
 
 | Command | Purpose |
 |---|---|
 | `npm install` | Install dependencies |
-| `npm run dev` | Start the game in development mode |
-| `npm run check` | Format check, lint, type check, all tests, license check |
-| `npm run e2e` | End-to-end and screenshot tests |
-| `npm run package` | Build the installer |
+| `npm run typecheck` | Type-check all workspaces (`tsc --build`) |
+| `npm run dev` | Start the game in development mode (planned) |
+| `npm run check` | Format check, lint, type check, all tests, license check (planned) |
+| `npm run e2e` | End-to-end and screenshot tests (planned) |
+| `npm run package` | Build the installer (planned) |
 
 ## Workflow
 

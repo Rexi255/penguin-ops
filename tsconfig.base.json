@@ -1,0 +1,45 @@
+// Shared compiler options for every workspace. Each workspace sets "lib" and "types" itself,
+// so the pure packages never see DOM or Node APIs (ADR 0006).
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    // Language and modules: Vite bundles the code, tsc only type-checks.
+    "target": "ES2024",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "moduleDetection": "force",
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+
+    // Strictness.
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": false,
+
+    // Project references: each workspace is a composite project. Only declarations are
+    // emitted (to dist/), because Vite builds the JavaScript.
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": true,
+    "rootDir": "${configDir}/src",
+    "outDir": "${configDir}/dist",
+    "tsBuildInfoFile": "${configDir}/dist/tsconfig.tsbuildinfo",
+
+    // Pure by default: no DOM library and no global type packages (no Node types).
+    "lib": ["ES2024"],
+    "types": []
+  },
+  "include": ["${configDir}/src"]
+}

@@ -1,0 +1,8 @@
+// Electron main process: Node APIs allowed, no DOM. It uses only the build output of apps/ui,
+// never its source, so it has no project references (ADR 0006).
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"]
+  }
+}

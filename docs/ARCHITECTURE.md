@@ -1,7 +1,8 @@
 # Architecture
 
-> **Status: planned.** No code exists yet. This document describes the target architecture
-> decided in the planning phase. Update it whenever the real structure differs or grows.
+> **Status: skeleton.** The workspaces exist with strict TypeScript configs (ROADMAP M0.2) but
+> contain no code yet. The sections below describe the target architecture decided in the
+> planning phase. Update this document whenever the real structure differs or grows.
 > Reasons for each choice are in `docs/decisions/`.
 
 ## Overview
@@ -44,10 +45,28 @@ penguin-ops/
   docs/          documentation (see CLAUDE.md, "Where to find what")
   .claude/       Claude Code skills, rules and hooks
   .github/       CI workflows, Dependabot, pull request template (from M0)
+  package.json         npm workspaces, root scripts, pinned Node.js version (engines)
+  tsconfig.base.json   shared strict compiler options
+  tsconfig.json        solution file: references all workspaces for `tsc --build`
 ```
 
 Allowed dependencies: `engine` ← `content` ← `gameplay` ← `ui` ← `desktop`. The engine
-depends on nothing project-internal. Enforced by TypeScript configs and ESLint (ADR 0006).
+depends on nothing project-internal (ADR 0006).
+
+## TypeScript setup
+
+Details and reasons: ADR 0026.
+
+- Every workspace is named `@penguin-ops/<folder>`, exports its TypeScript source
+  (`src/index.ts`) and is a composite TypeScript project extending `tsconfig.base.json`.
+  `npm run typecheck` runs `tsc --build` over the root `tsconfig.json`; it emits only
+  declarations into the ignored `dist/` folders. Vite builds the JavaScript.
+- Each workspace declares its environment through `lib` and `types`: engine, content and
+  gameplay get plain `ES2024` without DOM or Node types; `apps/ui` adds the DOM; `apps/desktop`
+  adds Node types. Using a wrong-environment API is a type error.
+- The dependency direction between workspaces is declared in each `package.json`
+  (`dependencies`) and `tsconfig.json` (`references`), but TypeScript does not enforce it for
+  imports by package name. ESLint package boundary rules enforce it from ROADMAP M0.3 on.
 
 ## Engine (`packages/engine`)
 

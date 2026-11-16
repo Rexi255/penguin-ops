@@ -10,14 +10,16 @@ Rules: tick a box in the same pull request that completes it. New ideas go to
 
 ## M0 Foundation
 
-- [ ] M0.1 Repo settings (owner, guided by Claude): enable GitHub email privacy ("Keep my email
+- [x] M0.1 Repo settings (owner, guided by Claude): enable GitHub email privacy ("Keep my email
       addresses private", "Block command line pushes that expose my email"); make the
       repository public.
-- [ ] M0.2 Monorepo skeleton: root `package.json` with npm workspaces; `packages/engine`,
+- [x] M0.2 Monorepo skeleton: root `package.json` with npm workspaces; `packages/engine`,
       `packages/content`, `packages/gameplay`, `apps/ui`, `apps/desktop`; strict TypeScript
       configs (engine and gameplay without DOM and Node types); Node LTS pinned.
 - [ ] M0.3 Formatting and linting: Prettier; ESLint with strict type-checked rules,
-      `switch-exhaustiveness-check`, package boundary rules, no focused or skipped tests.
+      `switch-exhaustiveness-check`, package boundary rules (TypeScript alone does not enforce
+      the dependency direction for package-name imports, ADR 0026), no focused or skipped
+      tests.
 - [ ] M0.4 Test setup: Vitest with coverage (engine threshold 90 %) and a first test; Playwright
       configuration.
 - [ ] M0.5 License check: a tool that enforces `license-policy.json` for all npm dependencies
@@ -167,6 +169,7 @@ AppImage runs on Linux, and chapters 0–2 are playable in both languages.
 - Code signing via SignPath Foundation.
 - Key remapping.
 - `.deb` package.
+- Upgrade to TypeScript 7 once `typescript-eslint` supports it (ADR 0026).
 - `vim` side chapter; Rocky Linux side chapter ("the new customer runs Rocky Linux").
 - Later chapters: firewall (`ufw`/`nftables`), nginx, Docker basics, disks (`lsblk`, `mount`,
   `fstab`), `sed`/`awk`, `git`.

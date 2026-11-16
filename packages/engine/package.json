@@ -1,0 +1,11 @@
+{
+  "name": "@penguin-ops/engine",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Linux simulation: world, hosts, file system, shell, commands and rule evaluation. Pure TypeScript.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "@penguin-ops/ui",
+  "version": "0.0.0",
+  "private": true,
+  "description": "React user interface that runs in Electron's renderer process.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@penguin-ops/content": "0.0.0",
+    "@penguin-ops/engine": "0.0.0",
+    "@penguin-ops/gameplay": "0.0.0"
+  }
+}

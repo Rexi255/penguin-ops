@@ -1,0 +1,9 @@
+// Renderer code: DOM APIs allowed, Node APIs not (ADR 0006, ADR 0014).
+// May use engine, content and gameplay.
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2024", "DOM", "DOM.Iterable"]
+  },
+  "references": [{ "path": "../../packages/engine" }, { "path": "../../packages/content" }, { "path": "../../packages/gameplay" }]
+}
