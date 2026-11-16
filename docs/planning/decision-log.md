@@ -8,7 +8,7 @@
 > Status values: **Decided** (owner confirmed), **Decided by Claude** (owner delegated or did
 > not object), **Assumed** (needs confirmation), **Open** (not yet discussed).
 
-Last updated: 2026-11-16 (after planning round 7)
+Last updated: 2026-11-16 (after planning round 8)
 
 ---
 
@@ -521,6 +521,52 @@ the UI is stable.
   in the new language after a confirmation, so translated files stay consistent.
 - Notifications: new mails and tickets appear as small toasts and never interrupt typing.
 
+### Round 8: Quality and workflow
+
+**D-044 Quality tooling and CI** (Decided by Claude, owner did not object)
+- Test layers: unit tests (Vitest) for parser, every command, file system, every rule type;
+  content tests (schema, de/en completeness, reference solutions in every language and with
+  two user names, "not solved at start", no false tips); UI component tests (Testing Library);
+  end-to-end and screenshot comparison tests (Playwright); Electron smoke test (starts, saves,
+  loads); later the differential tests against Debian 13 (D-009).
+- Tools: TypeScript strict mode; ESLint with strict type-checked rules, exhaustiveness check
+  and enforced package boundaries; Prettier for formatting.
+- Commands live in exactly one place, as npm scripts that run on Windows and Linux:
+  `npm run dev`, `npm run check` (format, lint, types, tests, licenses), `npm run e2e`,
+  `npm run package` (names may be refined in M0).
+- Line endings fixed to LF via `.gitattributes`; Node version pinned; package manager npm.
+- Commit messages follow Conventional Commits (`feat:`, `fix:`, `docs:`, `test:`,
+  `refactor:`, `chore:`).
+- Versioning: SemVer, 0.x until the first finished version. A release is a git tag; CI then
+  builds the Windows installer and a Linux package and publishes a GitHub Release with notes
+  from `CHANGELOG.md`.
+- Dependabot proposes grouped dependency updates weekly; Electron major upgrades are done
+  deliberately by hand.
+- CI on every change: Linux runs all checks; Windows runs unit and content tests and builds
+  the installer once.
+
+**D-045 Repo visibility: public** (Decided)
+The repo becomes public at repo setup. Before switching: rewrite the initial commit so its
+author email is the owner's GitHub noreply address (the owner explicitly allowed this,
+including the one-time force push to `main` it requires), and the owner enables GitHub's email
+privacy settings ("Keep my email addresses private", "Block command line pushes that expose my
+email"). Then `main` gets branch protection: pull request required, required CI checks, no
+force pushes, squash merge only.
+
+**D-046 Workflow: one pull request per work package** (Decided)
+Every work package lands via its own pull request; CI must be green; merged as squash commit.
+The owner explicitly allowed Claude to do everything around it on its own, without asking:
+create branches, commit, push, open pull requests (English description, German summary in
+chat, before/after screenshots for visual changes), fix CI failures, update pull requests,
+prepare Dependabot updates. **Merging stays with the owner** (his review point).
+
+**D-047 Quality gate: strict** (Decided)
+Every pull request must pass: format, lint, types, unit tests, content tests, UI tests,
+end-to-end and screenshot tests, accessibility checks, license check, Windows build, and a
+minimum test coverage for the engine (target 90 %). Mutation testing of the engine (Stryker)
+is available as an npm script and runs before every release and on demand; no scheduled runs
+(owner considers weekly runs overkill).
+
 ---
 
 ## 4. Verified facts from research (2026-11-16)
@@ -533,8 +579,16 @@ the UI is stable.
   built-in `/next` or `/wrap-up`; hooks are configured in `.claude/settings.json`; SessionStart
   stdout is added to context; a Stop hook runs after every reply (with a loop guard); on
   Windows, hooks need Git Bash or PowerShell.
-- Electron bundles Chromium, which includes an ffmpeg library under LGPL as a separate DLL
-  (to be verified in the license round; affects the allowlist).
+- Electron bundles Chromium; its prebuilt ffmpeg library (separate DLL) is LGPL-2.1+ according
+  to the `LICENSES.chromium.html` shipped with Electron (electron/electron issue 48097).
+- GitHub Terms of Service, section D.6 "Contributions Under Repository License": content added
+  to a repository with a license notice is licensed under the same terms ("inbound=outbound").
+  A DCO or CLA is not needed for this project.
+- Name check "penguin-ops" (2026-11-16): no game or software product with this name found.
+  Same name used by a UK operations consultancy (penguinops.com), a Japanese company
+  (penguinops.xyz) and a YouTube gaming channel. GitHub: a few tiny repos (max. 1 star). npm:
+  name free. "Sudo Ergo Sum": only a T-shirt slogan; free on GitHub and npm. "Rootine": over
+  100 GitHub repos.
 - GitHub: the repo `Rexi255/penguin-ops` is currently **private**. Protected branches and
   rulesets are available for public repos on GitHub Free, but for private repos only with
   GitHub Pro or higher. GitHub Actions on standard runners is free for public repos; private
