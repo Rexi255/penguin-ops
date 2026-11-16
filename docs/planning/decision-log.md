@@ -8,7 +8,7 @@
 > Status values: **Decided** (owner confirmed), **Decided by Claude** (owner delegated or did
 > not object), **Assumed** (needs confirmation), **Open** (not yet discussed).
 
-Last updated: 2026-11-16 (after planning round 5)
+Last updated: 2026-11-16 (after planning round 6)
 
 ---
 
@@ -394,10 +394,9 @@ order. Every chapter ends with an **incident** ticket that combines what was lea
 multi-step; no timer, no failure). Chapters also contain **review tickets** (older commands
 mixed in) and **optional side tickets** for deeper learning.
 
-**D-032 Game mode per save slot: Story or Sandbox** (Decided; meaning of "Sandbox" Open)
-When creating a save slot, the player chooses Story mode or Sandbox mode. What Sandbox
-contains (all tickets unlocked without story, a free playground world, or both) is decided in
-round 6.
+**D-032 Game mode per save slot: Story or Sandbox** (Decided)
+When creating a save slot, the player chooses Story mode or Sandbox mode. The mode is fixed
+per slot. Contents of Sandbox mode: see D-035.
 
 **D-033 Hints and rewards** (Decided)
 Hints are free and unlimited; every ticket always gives full XP (the prototype's "no hint"
@@ -412,6 +411,55 @@ derived from it (lowercase, umlauts transliterated, editable), e.g. `jan@<host>:
 lowercase letters, digits and hyphen, starting with a letter, like real Linux accounts.
 Check rules must never depend on the user name; a test replays every reference solution with
 two different user names. Company and host names are decided together with the game name.
+
+### Round 6: Curriculum
+
+**D-035 Sandbox mode = free play + playground** (Decided)
+A Sandbox slot offers (1) **free play**: all chapters and tickets unlocked from the start,
+without story scenes (ticket texts stay; XP and achievements still count) and (2) the
+**playground**: no tickets, the whole company world with all servers and files to explore
+freely. In Story mode the playground is unlocked after chapter 0, so options from the
+explanations can be tried safely.
+
+**D-036 Curriculum** (Decided)
+Order principles: read before change, one host before many, every chapter builds on the
+previous one. Each chapter has about 5–8 main tickets, an incident at the end, review tickets
+and a few side tickets. Chapters 6–13 are the core for system integration work.
+
+| # | Chapter (story hook) | Commands and concepts | Example incident |
+|---|---|---|---|
+| 0 | First day (onboarding) | `pwd`, `ls`, `cd`; absolute/relative paths, `~ . ..`; tab completion, history, `help`, `hint` | Find the trainer's checklist |
+| 1 | What others left behind | `cat`, `less`, `head`, `tail`, `wc`; `ls -a/-l`, hidden files | Reconstruct the predecessor's handover |
+| 2 | Tidying up | `mkdir`, `touch`, `cp`, `mv`, `rm`, `rmdir`; globs `* ? [ ]` | "Disk full!" |
+| 3 | Search and find | `grep` (`-i -r -n -v -c`), `find`, `sort`, `uniq`, `cut` | Who "accidentally" moved the company presentation? |
+| 4 | Pipes and redirection | `\|`, `>`, `>>`, `2>`, `/dev/null`, `tee` | Log analysis after an outage: which IP hammers the server? |
+| 5 | Editing files | `nano`, `echo`; editing config files | A typo in a config takes down the intranet |
+| 6 | Users, groups, permissions | `id`, `groups`, `chmod` (rwx and octal), `chown`, `sudo`, `useradd`/`usermod`/`passwd`, `/etc/passwd` | The new colleague can suddenly read the salary list |
+| 7 | Processes and resources | `ps`, `top`, `kill`, `df`, `du`, `free`, `uptime`, `uname` | Something eats the CPU (the coffee machine?) |
+| 8 | Services and logs | `systemctl`, `journalctl`, `/var/log`, `cron`/`crontab` | The web server is dead after an update |
+| 9 | Network basics | `ip`, `ping`, `ss`, `/etc/hosts`, `dig`/`host`, `curl` | "The internet is broken" (it's DNS) |
+| 10 | Remote access (more servers join) | `ssh`, `scp`, `ssh-keygen`, `authorized_keys`, `~/.ssh/config`, `rsync` | A server nobody can log in to anymore |
+| 11 | Software and updates | `apt` (`update`, `upgrade`, `install`, `remove`, `search`), `dpkg -l` | An update that brings half the company to a halt |
+| 12 | Archives and backup | `tar`, `gzip`, `zip`, backups with `rsync`, restore | Data recovery after an `rm -rf` |
+| 13 | Bash scripts | shebang, variables, `$1`, `if`/`test`, `for`/`while`, exit codes, functions, automation with `cron` | The predecessor hid his work in scripts |
+| 14 | Finale | everything combined across several servers | The mystery about the predecessor is solved |
+
+Later ideas: firewall (`ufw`/`nftables`), web server configuration (nginx), Docker basics,
+disks (`lsblk`, `mount`, `fstab`), `sed`/`awk`, `git`, the small internet, a Rocky Linux side
+chapter ("the new customer runs Rocky Linux"). MVP chapters are decided in round 9.
+
+`man` pages stay English (part of the Linux world). German explanations of learned commands go
+into an in-game handbook (UX round).
+
+**D-037 In-game Linux: Debian 13** (Decided)
+The simulated system is Debian 13 (`apt`). The official Debian 13 container image is the
+reference system for the differential tests (D-009), so simulated error messages match one
+pinned version.
+
+**D-038 Editor and full-screen programs** (Decided)
+A simulated `nano` is taught in chapter 5. `vim` comes later as an optional, humorous side
+chapter. `nano`, `less`, `man` and `top` share one engine mechanism: a full-screen program that
+takes over the terminal.
 
 ---
 
@@ -432,13 +480,9 @@ two different user names. Company and host names are decided together with the g
 
 ## 5. Open questions (later rounds)
 
-- **Round 6, curriculum:** commands and concepts per chapter, relevance for IT specialists in
-  system integration (Fachinformatiker Systemintegration); in-game Linux distribution and
-  version (also the reference system for D-009); meaning of Sandbox mode (D-032);
-  interactive editor (nano/vim) and full-screen programs (`less`, `man`, `top`).
 - **Round 7, design and UX:** layout (fake desktop with apps vs. fixed layout), colour scheme,
   fonts (licence), sounds and music (sources, licences), accessibility, key bindings, onboarding,
-  language switcher, settings menu.
+  language switcher, settings menu, in-game handbook.
 - **Round 8, quality and workflow:** test strategy details, CI jobs, lint and format config,
   visual regression, npm license checker tool, line endings, branching vs. cloud-session
   branches, commit message convention, branch protection, repo visibility (private until MVP?).
