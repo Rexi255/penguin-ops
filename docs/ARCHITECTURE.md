@@ -119,7 +119,8 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     `replaceHostRoot` returns a world with a changed file system of one host.
     Hosts have no services, processes or network yet.
   - `src/credentials.ts`: `Credentials` (UID, primary GID, all GIDs), fixed at login.
-  - `src/session.ts`: `Session` with host name, credentials, working directory, shell
+  - `src/session.ts`: `Session` with host name, credentials, working directory (as bash names
+    it, ADR 0053), shell
     variables, the last exit status and the umask; `createSession` (starts in the home
     directory, or in `/` if the user cannot enter it, sets the login variables such as `HOME`
     and `PATH`, ADR 0046, and the umask of Debian 13's `pam_umask`, ADR 0048) and `userAtHost`
@@ -199,6 +200,17 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     gets only valid, simulated options and its operands. `createCommandLookup` turns the
     registered commands (also plain `ShellCommand`s such as `echo`) into the interpreter's
     `CommandLookup`.
+  - `src/builtins.ts` (ADR 0053): `defineBuiltin` builds a bash builtin; `parseBuiltinOptions`
+    reads options like bash's `internal_getopt`, invalid options give `bash: NAME: -x: invalid
+    option`, the usage line and exit status 2, and `--help` or unsimulated letters give the
+    notice `option-not-simulated`.
+  - `src/quote.ts`: `localeQuote` quotes operands in coreutils messages with `‘…’` like gnulib's
+    `quote` in an English UTF-8 locale. `src/utf8.ts` converts between text and UTF-8 bytes.
+  - `src/commands/` holds the commands, one module each, and `COMMANDS`, the list for
+    `createCommandLookup`. `cd`, `pwd` and `echo` are builtins, `whoami` uses `defineCommand`.
+    `directory-names.ts` works out working directory names like bash (by text, keeping a
+    leading `//`) and checks them like chdir(2) and getcwd(3); the session's `cwd` is the name
+    bash remembers, not a resolved path.
 - **Full-screen programs:** one mechanism for `less`, `man`, `top`, `nano` and later `vim`.
 - **Rule evaluation** (ADR 0011): rule types plus `all`, `any`, `not`, evaluated against world
   state and command output.

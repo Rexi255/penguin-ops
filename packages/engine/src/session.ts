@@ -22,7 +22,10 @@ export interface Session {
   /** The name of the host the session runs on. */
   readonly host: string;
   readonly credentials: Credentials;
-  /** The current working directory as an absolute path. */
+  /**
+   * The current working directory as an absolute path, as bash remembers it (ADR 0053): without
+   * `.` and `..`, but possibly with a leading `//`, and possibly removed since.
+   */
   readonly cwd: string;
   /**
    * The shell variables by name (ADR 0046). A variable that is missing is unset; a variable with

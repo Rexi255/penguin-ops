@@ -56,11 +56,28 @@ export interface OptionNotSimulated {
 }
 
 /**
+ * The command would act on a shell variable whose effect the game does not simulate yet, such
+ * as `CDPATH` for `cd`. `variable` is its name.
+ */
+export interface VariableNotSimulated {
+  readonly key: "variable-not-simulated";
+  readonly variable: string;
+}
+
+/**
+ * The command would write bytes that are not valid UTF-8 (for example `echo -e '\xff'`). The
+ * game's files and terminal hold text only (ADR 0053).
+ */
+export interface InvalidUtf8NotSimulated {
+  readonly key: "invalid-utf8-not-simulated";
+}
+
+/**
  * A game notice from a command, with a message key; the UI renders it in the player's language.
  * Each key is one message, and the other fields are the values the message shows. Later
  * commands add keys to this union (ADR 0052).
  */
-export type CommandNotice = OptionNotSimulated;
+export type CommandNotice = OptionNotSimulated | VariableNotSimulated | InvalidUtf8NotSimulated;
 
 /**
  * A command that ran: its exit status (a whole number from 0 to 255), and the changed world and

@@ -71,8 +71,10 @@ placeholder window; CI builds the installer.
 - [x] M1.7b Command framework, part 2: registry of commands with their option tables, reporting
       of unsimulated options and other game notices from commands as structured events
       (ADR 0007, ADR 0052).
-- [ ] M1.8 Commands batch 1: `pwd`, `cd`, `ls` (`-l`, `-a`, `-1`), `whoami`, `echo`, `clear`,
-      `history`.
+- [x] M1.8a Commands batch 1, part 1: `pwd`, `cd`, `whoami`, `echo`, with the usage error
+      format of bash builtins (ADR 0053).
+- [ ] M1.8b Commands batch 1, part 2: `ls` (`-l`, `-a`, `-1`).
+- [ ] M1.8c Commands batch 1, part 3: `clear`, `history` (session history, screen clear event).
 - [ ] M1.9 Commands batch 2: `cat` (`-n`), `head`, `tail`, `mkdir` (`-p`), `touch`.
 - [ ] M1.10 Commands batch 3: `cp` (`-r`), `mv`, `rm` (`-r`, `-f`), `grep` (`-i`, `-v`, `-n`,
       `-c`, `-r`, `-l`).
@@ -234,5 +236,8 @@ AppImage runs on Linux, and chapters 0–2 are playable in both languages.
   the special parameters `$$` and `$-`.
 - Command lookup through `PATH` and executable files (`./run.sh`, `/bin/ls`), so that
   `PATH= ls` fails like in bash (ADR 0047).
+- `CDPATH` for `cd`; until then a non-empty `CDPATH` stops `cd` with a game notice (ADR 0053).
+- A removed working directory (needs `rm`, M1.10): `cd ..` finds the parent through the kernel,
+  and bash forgets the directory's name after a failed `pwd -P` (ADR 0053).
 - Later chapters: firewall (`ufw`/`nftables`), nginx, Docker basics, disks (`lsblk`, `mount`,
   `fstab`), `sed`/`awk`, `git`.

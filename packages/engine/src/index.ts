@@ -8,7 +8,17 @@ export {
   isValidMode,
   MAX_MODE,
 } from "./fs-node";
+export {
+  BUILTIN_USAGE_STATUS,
+  type BuiltinDefinition,
+  builtinError,
+  type BuiltinInvocation,
+  type BuiltinOptionParse,
+  defineBuiltin,
+  parseBuiltinOptions,
+} from "./builtins";
 export { type Clock, createGameClock, type GameClock } from "./clock";
+export { cd, COMMANDS, echo, pwd, whoami } from "./commands";
 export {
   type CommandDefinition,
   type CommandInvocation,
@@ -42,6 +52,7 @@ export {
   type CommandNotice,
   type CommandResult,
   type CommandStop,
+  type InvalidUtf8NotSimulated,
   type OptionNotSimulated,
   type OutputStream,
   runScript,
@@ -52,6 +63,7 @@ export {
   type StandardInput,
   TIME_PER_INPUT,
   type UnsupportedExecution,
+  type VariableNotSimulated,
 } from "./interpreter";
 export {
   type ControlOperator,
@@ -104,8 +116,10 @@ export {
 } from "./parser";
 export { joinAbsolute, type PathParts, splitPath } from "./path";
 export { type Access, hasPermission } from "./permissions";
+export { localeQuote } from "./quote";
 export { createRandom, type RandomGenerator } from "./random";
 export { createSession, DEFAULT_IFS, type Session, userAtHost } from "./session";
+export { decodeUtf8, encodeCodePoint, encodeUtf8, isScalarValue } from "./utf8";
 export {
   createWorld,
   findGroup,

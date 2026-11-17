@@ -4,6 +4,11 @@ _Last updated: 2026-11-17_
 
 ## Recently completed
 
+- M1.8a First commands: `cd` (`-L`, `-P`, `-e`, `cd -`, names worked out by text like bash,
+  with its fallback to chdir), `pwd` (`-L`, `-P`), `echo` (`-n`, `-e`, `-E`) and `whoami`;
+  `defineBuiltin` gives bash builtins bash's option parsing and usage errors; new notices
+  `variable-not-simulated` (`CDPATH`) and `invalid-utf8-not-simulated` (`echo -e '\xff'`);
+  coreutils operands are quoted with `‘…’` (ADR 0053).
 - M1.7b Command registry: `defineCommand` builds a command from its real option table, its
   simulated option ids and its usage error status; an unsimulated option before the first
   error stops the input with the game notice `option-not-simulated`, parse errors give the
@@ -24,11 +29,6 @@ _Last updated: 2026-11-17_
   like `open(2)` for `>` and `>>`, with the kernel's error order (`ENOENT`, `ENOTDIR`,
   `EACCES`, `EISDIR`), setgid groups and mtimes from the game clock; sessions have a umask
   like Debian 13's `pam_umask` (002 with a private group, else 022) (ADR 0048).
-- M1.6b Execution: `runScript` runs and-or lists, pipelines (one command after the other,
-  session changes lost like in a subshell) and assignments, keeps `$?`, reports `command not
-  found` with 127 and stops the input with a game notice for unsupported features; commands
-  are `ShellCommand` functions with `stdout`/`stderr` writers; the game clock moves one second
-  per input (ADR 0047, partly supersedes ADR 0043).
 
 ## In progress
 
@@ -36,10 +36,10 @@ _Last updated: 2026-11-17_
 
 ## Next 3 steps
 
-1. ROADMAP M1.8: commands batch 1 (`pwd`, `cd`, `ls`, `whoami`, `echo`, `clear`, `history`),
-   with the usage error format of bash builtins; probably split into smaller packages.
-2. ROADMAP M1.9: commands batch 2 (`cat`, `head`, `tail`, `mkdir`, `touch`).
-3. ROADMAP M1.10: commands batch 3 (`cp`, `mv`, `rm`, `grep`).
+1. ROADMAP M1.8b: `ls` with `-l`, `-a` and `-1` (columns, long format, sorting with
+   `compareNames`).
+2. ROADMAP M1.8c: `clear` and `history` (session history, screen clear event).
+3. ROADMAP M1.9: commands batch 2 (`cat`, `head`, `tail`, `mkdir`, `touch`).
 
 ## Blockers and open questions
 
