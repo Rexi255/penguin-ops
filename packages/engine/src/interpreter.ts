@@ -3,7 +3,9 @@
 // previous pipeline, and the commands of a pipeline run one after the other with the output of
 // one as the input of the next. Assignments set shell variables or, before a command name, only
 // the variables that command sees. Redirections (ADR 0049) open their files from left to right
-// before the command runs; the output for a file is added to it after the command.
+// before the command runs; the output for a file is added to it after the command. A command
+// can stop the input with a game notice when the player uses something it does not simulate
+// (ADR 0052).
 
 import type { Clock, GameClock } from "./clock";
 import { expandAssignment, expandWords, type UnsupportedParameter } from "./expand";
@@ -45,17 +47,45 @@ export interface CommandContext {
 }
 
 /**
- * What a command returns: its exit status (a whole number from 0 to 255), and the changed world
- * and session if it changed them. A missing `world` or `session` means unchanged. The
- * interpreter sets the session's `exitStatus` itself.
+ * The player used an option of the real command that the game does not simulate yet. `option`
+ * is its full name with dashes, such as `-Z` or `--almost-all`, also when it was abbreviated.
  */
-export interface CommandResult {
+export interface OptionNotSimulated {
+  readonly key: "option-not-simulated";
+  readonly option: string;
+}
+
+/**
+ * A game notice from a command, with a message key; the UI renders it in the player's language.
+ * Each key is one message, and the other fields are the values the message shows. Later
+ * commands add keys to this union (ADR 0052).
+ */
+export type CommandNotice = OptionNotSimulated;
+
+/**
+ * A command that ran: its exit status (a whole number from 0 to 255), and the changed world and
+ * session if it changed them. A missing `world` or `session` means unchanged. The interpreter
+ * sets the session's `exitStatus` itself.
+ */
+export interface CommandExit {
   readonly exitStatus: number;
   readonly world?: World;
   readonly session?: Session;
 }
 
-/** A simulated command. The command framework (ROADMAP M1.7) builds commands on this. */
+/**
+ * A command that met something the game does not simulate. The interpreter reports `stop` as a
+ * notice and stops the rest of the input like after an unsupported shell feature. The command
+ * changes nothing; the output it wrote before stays.
+ */
+export interface CommandStop {
+  readonly stop: CommandNotice;
+}
+
+/** What a command returns. */
+export type CommandResult = CommandExit | CommandStop;
+
+/** A simulated command. `defineCommand` builds commands with an option table on this. */
 export type ShellCommand = (context: CommandContext) => CommandResult;
 
 /** Finds the command for a command name, or `undefined` if there is none. */
@@ -74,7 +104,7 @@ export type UnsupportedExecution =
 /**
  * What the shell shows while it runs an input, in order: output of commands to the terminal,
  * and game notices that the UI renders in the player's language. Consecutive output to the same
- * stream is merged into one event.
+ * stream is merged into one event. A game notice is always the last event: it stops the input.
  */
 export type ShellEvent =
   | { readonly kind: "output"; readonly stream: OutputStream; readonly text: string }
@@ -83,6 +113,12 @@ export type ShellEvent =
       readonly feature: UnsupportedExecution;
       /** The offset in the input where the unsupported feature starts. */
       readonly start: number;
+    }
+  | {
+      readonly kind: "notice";
+      /** The command name as the player wrote it (after expansion). */
+      readonly command: string;
+      readonly notice: CommandNotice;
     };
 
 /** What `runScript` needs. */
@@ -126,14 +162,19 @@ const ERROR_MESSAGES: Readonly<Record<WriteError, string>> = {
 /** The standard input of a command that reads from the terminal. */
 const TERMINAL: StandardInput = { kind: "terminal" };
 
-/** Stops the rest of an input after an unsupported feature, as bash does after expansion errors. */
+/**
+ * Stops the rest of an input after an unsupported feature, as bash does after expansion errors.
+ * `event` is the game notice that explains the stop.
+ */
 class Abort extends Error {
-  constructor(
-    readonly feature: UnsupportedExecution,
-    readonly start: number,
-  ) {
-    super(`unsupported: ${feature}`);
+  constructor(readonly event: ShellEvent) {
+    super(`stopped: ${event.kind}`);
   }
+}
+
+/** Stops the rest of an input after an unsupported shell feature at the offset `start`. */
+function unsupported(feature: UnsupportedExecution, start: number): Abort {
+  return new Abort({ kind: "unsupported", feature, start });
 }
 
 /** The world and the session between two commands. */
@@ -170,8 +211,10 @@ interface ShellState {
  *
  * Expansion errors, redirections of file descriptors other than 0, 1 and 2, reversed
  * redirections (`0>`, `1<`) and command names with a `/` stop the rest of the input with an
- * "unsupported" event and exit status 1. Throws an Error if a command returns an exit status
- * outside 0 to 255, or if the session's host is not part of the world.
+ * "unsupported" event and exit status 1. A command that returns a `CommandStop` stops it the
+ * same way with a "notice" event, after the files its redirections opened and the standard
+ * error it wrote. Throws an Error if a command returns an exit status outside 0 to 255, or if
+ * the session's host is not part of the world.
  */
 export function runScript(run: ScriptRun): ScriptResult {
   run.clock.advance(TIME_PER_INPUT);
@@ -185,7 +228,7 @@ export function runScript(run: ScriptRun): ScriptResult {
     if (!(failure instanceof Abort)) {
       throw failure;
     }
-    runner.events.push({ kind: "unsupported", feature: failure.feature, start: failure.start });
+    runner.events.push(failure.event);
     state = withExitStatus(runner.lastState ?? state, ABORT_STATUS);
   }
   return { world: state.world, session: state.session, events: runner.events };
@@ -393,14 +436,19 @@ class Runner {
       const buffer = new OutputBuffer();
       const output = isLast ? this.terminal() : buffer;
       // Each command of the pipeline runs in a subshell of the shell's session.
-      const result = this.runCommand({ world, session: state.session }, command, stdin, output);
-      world = result.world;
-      exitStatus = result.session.exitStatus;
-      for (const event of buffer.events) {
-        if (event.stream === "stderr") {
-          this.write("stderr", event.text);
+      let result: ShellState;
+      try {
+        result = this.runCommand({ world, session: state.session }, command, stdin, output);
+      } finally {
+        // Also when the input stops, the standard error written before goes to the terminal.
+        for (const event of buffer.events) {
+          if (event.stream === "stderr") {
+            this.write("stderr", event.text);
+          }
         }
       }
+      world = result.world;
+      exitStatus = result.session.exitStatus;
       stdin = { kind: "text", text: buffer.text("stdout") };
     });
     return { world, session: { ...state.session, exitStatus } };
@@ -436,11 +484,11 @@ class Runner {
     this.lastState = state;
     const expanded = expandWords(state.world, state.session, command.words);
     if (!expanded.ok) {
-      throw new Abort(expanded.error.feature, expanded.error.start);
+      throw unsupported(expanded.error.feature, expanded.error.start);
     }
     const [name, ...args] = expanded.fields;
     if (name?.includes("/") === true) {
-      throw new Abort("command-path", command.words[0]?.start ?? command.start);
+      throw unsupported("command-path", command.words[0]?.start ?? command.start);
     }
     const commandSession = this.assign(state.world, state.session, command.assignments);
     const streams = new CommandStreams(stdin, output);
@@ -451,7 +499,7 @@ class Runner {
       // command name that includes the assignments, which are made before the redirections.
       const session = name === undefined ? commandSession : state.session;
       this.lastState = { world: opened, session };
-      throw new Abort(redirected.feature, redirected.start);
+      throw unsupported(redirected.feature, redirected.start);
     }
     if (name === undefined) {
       // Without a command name the assignments stay, even after a failed redirection.
@@ -483,6 +531,11 @@ class Runner {
         streams.write("stderr", text);
       },
     });
+    if ("stop" in result) {
+      // Like after an unsupported redirection: the files opened before the stop stay.
+      this.lastState = { world: streams.flush(opened, this.clock), session: state.session };
+      throw new Abort({ kind: "notice", command: name, notice: result.stop });
+    }
     checkExitStatus(name, result.exitStatus);
     const session = restoreVariables(
       result.session ?? commandSession,
@@ -501,7 +554,7 @@ class Runner {
     for (const assignment of assignments) {
       const expanded = expandAssignment(world, current, assignment);
       if (!expanded.ok) {
-        throw new Abort(expanded.error.feature, expanded.error.start);
+        throw unsupported(expanded.error.feature, expanded.error.start);
       }
       const previous = assignment.append ? (current.variables.get(assignment.name) ?? "") : "";
       current = withVariable(current, assignment.name, previous + expanded.value);

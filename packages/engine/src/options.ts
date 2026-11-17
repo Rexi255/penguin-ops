@@ -62,22 +62,37 @@ export type OptionError =
   /** A long option without an argument that got one (`--all=yes`); `name` as in `ParsedOption`. */
   | { readonly kind: "unexpected-argument"; readonly name: string };
 
-/** The result of `parseOptions`: the options in the order written and the operands, or an error. */
+/**
+ * The result of `parseOptions`: the options in the order written and the operands, or the first
+ * error. A failure keeps the options before the error, because `getopt_long` returns them to the
+ * command before it reports the error, and some commands act on them at once (`--help`).
+ */
 export type OptionParseResult<Id extends string = string> =
   | {
       readonly ok: true;
       readonly options: readonly ParsedOption<Id>[];
       readonly operands: readonly string[];
     }
-  | { readonly ok: false; readonly error: OptionError };
+  | {
+      readonly ok: false;
+      readonly error: OptionError;
+      readonly options: readonly ParsedOption<Id>[];
+    };
 
 /** A spec with a long name, so lookups by long name need no checks. */
 type LongSpec<Id extends string> = OptionSpec<Id> & { readonly long: string };
 
-/** The options of one argument, and the index of the next argument to look at. */
+/**
+ * The options of one argument and the index of the next argument to look at, or an error and
+ * the options of the argument before it (`-ax` gives `-a`, then the error for `x`).
+ */
 type Step<Id extends string> =
   | { readonly ok: true; readonly options: readonly ParsedOption<Id>[]; readonly next: number }
-  | { readonly ok: false; readonly error: OptionError };
+  | {
+      readonly ok: false;
+      readonly error: OptionError;
+      readonly options: readonly ParsedOption<Id>[];
+    };
 
 /**
  * Splits the arguments of a command into options and operands like `getopt_long`:
@@ -95,16 +110,16 @@ type Step<Id extends string> =
  * - An optional argument must be attached (`-a5`, `--color=always`); the next argument is
  *   never taken.
  *
- * The first error ends the parsing, like in the coreutils, which exit on the first error.
- * Throws an Error if `specs` are invalid: an option with neither name, a short name that is not
- * one character or is `-`, a long name that is empty or contains `=`, or a name used twice.
+ * The first error ends the parsing, like in the coreutils, which exit on the first error; the
+ * options before it are part of the failure. Throws an Error if `specs` are invalid (see
+ * `validateOptionSpecs`).
  */
 export function parseOptions<Id extends string>(
   args: readonly string[],
   specs: readonly OptionSpec<Id>[],
   order: OptionOrder = "permute",
 ): OptionParseResult<Id> {
-  validateSpecs(specs);
+  validateOptionSpecs(specs);
   const options: ParsedOption<Id>[] = [];
   const operands: string[] = [];
   let index = 0;
@@ -127,7 +142,7 @@ export function parseOptions<Id extends string>(
       ? parseLongOption(arg, args, index + 1, specs)
       : parseShortCluster(arg, args, index + 1, specs);
     if (!step.ok) {
-      return step;
+      return { ok: false, error: step.error, options: [...options, ...step.options] };
     }
     options.push(...step.options);
     index = step.next;
@@ -182,20 +197,17 @@ function parseLongOption<Id extends string>(
 
   const match = findLongOption(name, specs);
   if (match.kind === "none") {
-    return { ok: false, error: { kind: "unrecognized-option", arg } };
+    return failed({ kind: "unrecognized-option", arg });
   }
   if (match.kind === "ambiguous") {
-    return {
-      ok: false,
-      error: { kind: "ambiguous-option", arg, possibilities: match.possibilities },
-    };
+    return failed({ kind: "ambiguous-option", arg, possibilities: match.possibilities });
   }
   const spec = match.spec;
   const fullName = `--${spec.long}`;
   switch (spec.argument) {
     case "none":
       if (attached !== undefined) {
-        return { ok: false, error: { kind: "unexpected-argument", name: fullName } };
+        return failed({ kind: "unexpected-argument", name: fullName });
       }
       return found(spec.id, fullName, undefined, next);
     case "optional":
@@ -206,7 +218,7 @@ function parseLongOption<Id extends string>(
       }
       const following = args[next];
       if (following === undefined) {
-        return { ok: false, error: { kind: "missing-argument", name: fullName } };
+        return failed({ kind: "missing-argument", name: fullName });
       }
       return found(spec.id, fullName, following, next + 1);
     }
@@ -259,7 +271,7 @@ function parseShortCluster<Id extends string>(
   for (const [position, character] of characters.entries()) {
     const spec = specs.find((candidate) => candidate.short === character);
     if (spec === undefined) {
-      return { ok: false, error: { kind: "invalid-option", option: character } };
+      return { ok: false, error: { kind: "invalid-option", option: character }, options };
     }
     const name = `-${character}`;
     const rest = characters.slice(position + 1).join("");
@@ -277,7 +289,7 @@ function parseShortCluster<Id extends string>(
         }
         const following = args[next];
         if (following === undefined) {
-          return { ok: false, error: { kind: "missing-argument", name } };
+          return { ok: false, error: { kind: "missing-argument", name }, options };
         }
         options.push({ id: spec.id, name, argument: following });
         return { ok: true, options, next: next + 1 };
@@ -285,6 +297,11 @@ function parseShortCluster<Id extends string>(
     }
   }
   return { ok: true, options, next };
+}
+
+/** A step that failed with `error` before it found an option. */
+function failed<Id extends string>(error: OptionError): Step<Id> {
+  return { ok: false, error, options: [] };
 }
 
 /** A step that found one option. */
@@ -301,8 +318,13 @@ function hasLongName<Id extends string>(spec: OptionSpec<Id>): spec is LongSpec<
   return spec.long !== undefined;
 }
 
-/** Throws an Error if the specs of a command are invalid (see `parseOptions`). */
-function validateSpecs(specs: readonly OptionSpec[]): void {
+/**
+ * Throws an Error if the option table of a command is invalid: an option with neither name, a
+ * short name that is not one character or is `-`, a long name that is empty or contains `=`, or
+ * a name used twice. `parseOptions` checks its specs with it; command definitions check theirs
+ * when they are created.
+ */
+export function validateOptionSpecs(specs: readonly OptionSpec[]): void {
   const shortNames = new Set<string>();
   const longNames = new Set<string>();
   for (const spec of specs) {

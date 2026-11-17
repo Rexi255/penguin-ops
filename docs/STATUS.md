@@ -4,6 +4,11 @@ _Last updated: 2026-11-17_
 
 ## Recently completed
 
+- M1.7b Command registry: `defineCommand` builds a command from its real option table, its
+  simulated option ids and its usage error status; an unsimulated option before the first
+  error stops the input with the game notice `option-not-simulated`, parse errors give the
+  coreutils' usage error, and `createCommandLookup` registers the commands. Commands return a
+  `CommandExit` or a `CommandStop` with a `CommandNotice` (ADR 0052).
 - M1.7a Option parser: `parseOptions` reads options like GNU `getopt_long` (clusters,
   `-n5`/`-n 5`, `--lines=5`/`--lines 5`, unambiguous abbreviations, `--`, operands between
   options or `require-order`) and returns errors as values; `optionErrorMessage` and
@@ -24,10 +29,6 @@ _Last updated: 2026-11-17_
   found` with 127 and stops the input with a game notice for unsupported features; commands
   are `ShellCommand` functions with `stdout`/`stderr` writers; the game clock moves one second
   per input (ADR 0047, partly supersedes ADR 0043).
-- M1.6a Word expansion: `expandWords` turns parsed words into arguments like bash (tilde,
-  variables and `$?`, field splitting with `IFS`, pathname expansion with permissions, quote
-  removal); sessions have shell variables and an exit status; `compareNames` sorts like the
-  en_US.UTF-8 locale (ADR 0046).
 
 ## In progress
 
@@ -35,10 +36,10 @@ _Last updated: 2026-11-17_
 
 ## Next 3 steps
 
-1. ROADMAP M1.7b: command registry with option tables, game notices for unsimulated options
-   and other game notices from commands, on top of `parseOptions` and `CommandLookup`.
-2. ROADMAP M1.8: commands batch 1 (`pwd`, `cd`, `ls`, `whoami`, `echo`, `clear`, `history`).
-3. ROADMAP M1.9: commands batch 2 (`cat`, `head`, `tail`, `mkdir`, `touch`).
+1. ROADMAP M1.8: commands batch 1 (`pwd`, `cd`, `ls`, `whoami`, `echo`, `clear`, `history`),
+   with the usage error format of bash builtins; probably split into smaller packages.
+2. ROADMAP M1.9: commands batch 2 (`cat`, `head`, `tail`, `mkdir`, `touch`).
+3. ROADMAP M1.10: commands batch 3 (`cp`, `mv`, `rm`, `grep`).
 
 ## Blockers and open questions
 

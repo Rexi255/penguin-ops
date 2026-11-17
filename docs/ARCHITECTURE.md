@@ -172,10 +172,11 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     input of the next (session changes inside a pipeline are lost like in a subshell), the exit
     status in `$?`, and assignments (shell variables, or only for one command before its name).
     Commands are `ShellCommand` functions found through a `CommandLookup`; they get a
-    `CommandContext` with `stdout` and `stderr` writers and return their exit status and a
-    changed world or session. The result has `ShellEvent`s: output and game notices for
-    unsupported features, which stop the rest of the input. Unknown commands give bash's
-    `command not found` and exit status 127.
+    `CommandContext` with `stdout` and `stderr` writers and return a `CommandExit` (exit status
+    and a changed world or session) or a `CommandStop` with a `CommandNotice` (ADR 0052). The
+    result has `ShellEvent`s: output, and game notices for unsupported features (`unsupported`)
+    and from commands (`notice`), which stop the rest of the input. Unknown commands give
+    bash's `command not found` and exit status 127.
   - Redirections (ADR 0049): after the assignments and before the command lookup, `<`, `>`,
     `>>`, `2>` and `2>>` open their targets from left to right (`openForReading`,
     `writeFile`). The command gets its `stdin` as a `StandardInput` (`terminal`, `text` or
@@ -189,8 +190,15 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     like glibc's `getopt_long` (ADR 0051): short option clusters, required and optional
     arguments, unambiguous abbreviations of long options, `--`, and operands between options
     (`permute`) or not (`require-order`). Commands declare their complete real option table as
-    `OptionSpec`s. Errors are values; `optionErrorMessage` and `tryHelpMessage` write glibc's
-    and the coreutils' messages.
+    `OptionSpec`s. Errors are values and keep the options read before them;
+    `optionErrorMessage` and `tryHelpMessage` write glibc's and the coreutils' messages.
+  - `src/command-registry.ts` (ADR 0052): `defineCommand` builds a command from its real option
+    table, the ids of its simulated options and its usage error status. It parses the arguments
+    before the command runs: an unsimulated option before the first error stops the input with
+    the notice `option-not-simulated`, a parse error writes the usage error, and the command
+    gets only valid, simulated options and its operands. `createCommandLookup` turns the
+    registered commands (also plain `ShellCommand`s such as `echo`) into the interpreter's
+    `CommandLookup`.
 - **Full-screen programs:** one mechanism for `less`, `man`, `top`, `nano` and later `vim`.
 - **Rule evaluation** (ADR 0011): rule types plus `all`, `any`, `not`, evaluated against world
   state and command output.

@@ -68,9 +68,9 @@ placeholder window; CI builds the installer.
 - [x] M1.7a Command framework, part 1: shared option parser like GNU `getopt_long` (clusters,
       option arguments, abbreviations, `--`, permutation) with glibc's and coreutils' error
       messages (ADR 0051).
-- [ ] M1.7b Command framework, part 2: registry of commands with their option tables, reporting
+- [x] M1.7b Command framework, part 2: registry of commands with their option tables, reporting
       of unsimulated options and other game notices from commands as structured events
-      (ADR 0007).
+      (ADR 0007, ADR 0052).
 - [ ] M1.8 Commands batch 1: `pwd`, `cd`, `ls` (`-l`, `-a`, `-1`), `whoami`, `echo`, `clear`,
       `history`.
 - [ ] M1.9 Commands batch 2: `cat` (`-n`), `head`, `tail`, `mkdir` (`-p`), `touch`.

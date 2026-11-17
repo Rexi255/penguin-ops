@@ -9,6 +9,13 @@ export {
   MAX_MODE,
 } from "./fs-node";
 export { type Clock, createGameClock, type GameClock } from "./clock";
+export {
+  type CommandDefinition,
+  type CommandInvocation,
+  createCommandLookup,
+  defineCommand,
+  type RegisteredCommand,
+} from "./command-registry";
 export { compareNames } from "./collation";
 export { type Credentials } from "./credentials";
 export {
@@ -30,8 +37,12 @@ export {
 export { type Gid, MAX_ID, toGid, toUid, type Uid } from "./ids";
 export {
   type CommandContext,
+  type CommandExit,
   type CommandLookup,
+  type CommandNotice,
   type CommandResult,
+  type CommandStop,
+  type OptionNotSimulated,
   type OutputStream,
   runScript,
   type ScriptResult,
@@ -71,6 +82,7 @@ export {
   type ParsedOption,
   parseOptions,
   tryHelpMessage,
+  validateOptionSpecs,
 } from "./options";
 export {
   type AndOrList,

@@ -104,6 +104,12 @@ const testCommands: Record<string, ShellCommand> = {
     stdout("moved\n");
     return { exitStatus: 0, session: { ...session, cwd: args[0] ?? "/" } };
   },
+  /** Writes to both streams, then stops with a notice. */
+  halt: ({ stdout: out, stderr: err }) => {
+    out("partial\n");
+    err("warning\n");
+    return { stop: { key: "option-not-simulated", option: "-Z" } };
+  },
   /** Writes its name and arguments, one per line, and sets exit status 0. */
   args: ({ name, args, stdout }) => {
     stdout([name, ...args].map((field) => `[${field}]\n`).join(""));
@@ -836,5 +842,51 @@ describe("runScript: unsupported redirections", () => {
   test("a stop loses assignments before a command name", () => {
     const result = runFiles("X=1 say hi 3> x.txt");
     expect(result.session.variables.has("X")).toBe(false);
+  });
+});
+
+describe("runScript: commands that stop", () => {
+  const notice: ShellEvent = {
+    kind: "notice",
+    command: "halt",
+    notice: { key: "option-not-simulated", option: "-Z" },
+  };
+
+  test("a stop keeps the output before it, ends with the notice and stops the input", () => {
+    const result = run("say a; halt; say b");
+    expect(result.events).toEqual([stdout("a\npartial\n"), stderr("warning\n"), notice]);
+    expect(result.session.exitStatus).toBe(1);
+  });
+
+  test("a stop ends and-or lists like an unsupported feature", () => {
+    expect(run("false || halt || say no").events.at(-1)).toEqual(notice);
+    expect(run("halt && say no").events).not.toContainEqual(stdout("no\n"));
+  });
+
+  test("a stop keeps the changes before it and loses assignments before the command name", () => {
+    const result = run("X=1; stamp; Y=2 halt");
+    expect(result.session.variables.get("X")).toBe("1");
+    expect(result.session.variables.has("Y")).toBe(false);
+    expect(rootMtime(result.world)).toBe(START + TIME_PER_INPUT);
+  });
+
+  test("a stop keeps the files its redirections opened, with the output written to them", () => {
+    const result = runFiles("halt > out.txt 2> err.txt; say no");
+    expect(contentOf(result.world, "/home/alice/out.txt")).toBe("partial\n");
+    expect(contentOf(result.world, "/home/alice/err.txt")).toBe("warning\n");
+    expect(result.events).toEqual([notice]);
+    expect(result.session.exitStatus).toBe(1);
+  });
+
+  test("a stop inside a pipeline shows its error output, then the notice", () => {
+    const result = run("stamp | halt | upper");
+    expect(result.events).toEqual([stderr("warning\n"), notice]);
+    expect(rootMtime(result.world)).toBe(START + TIME_PER_INPUT);
+    expect(result.session.exitStatus).toBe(1);
+  });
+
+  test("a stop at the end of a pipeline shows its output", () => {
+    const result = run("say a | halt");
+    expect(result.events).toEqual([stdout("partial\n"), stderr("warning\n"), notice]);
   });
 });

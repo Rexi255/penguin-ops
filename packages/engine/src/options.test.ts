@@ -6,6 +6,7 @@ import {
   type OptionSpec,
   parseOptions,
   tryHelpMessage,
+  validateOptionSpecs,
 } from "./options";
 
 /** A part of the option table of GNU `ls` and `head`, in the order of their `long_options`. */
@@ -200,6 +201,7 @@ describe("parseOptions", () => {
       expect(result).toEqual({
         ok: false,
         error: { kind: "ambiguous-option", arg: "--ver", possibilities: ["verbose", "verbosity"] },
+        options: [],
       });
     });
 
@@ -220,6 +222,7 @@ describe("parseOptions", () => {
           arg: "--co",
           possibilities: ["color", "context", "context-all"],
         },
+        options: [],
       });
     });
   });
@@ -270,6 +273,38 @@ describe("parseOptions", () => {
       expect(failure(["file", "-x"])).toEqual({ kind: "invalid-option", option: "x" });
     });
 
+    test("keep the options before the error, also from the same cluster", () => {
+      const result = parseOptions(["-l", "file", "--all", "-1ax"], specs);
+      expect(result).toEqual({
+        ok: false,
+        error: { kind: "invalid-option", option: "x" },
+        options: [
+          { id: "long", name: "-l", argument: undefined },
+          { id: "all", name: "--all", argument: undefined },
+          { id: "one-per-line", name: "-1", argument: undefined },
+          { id: "all", name: "-a", argument: undefined },
+        ],
+      });
+    });
+
+    test("keep the options before a missing argument at the end of a cluster", () => {
+      const result = parseOptions(["-an"], specs);
+      expect(result).toEqual({
+        ok: false,
+        error: { kind: "missing-argument", name: "-n" },
+        options: [{ id: "all", name: "-a", argument: undefined }],
+      });
+    });
+
+    test("keep no options when the first argument fails", () => {
+      const result = parseOptions(["--nope", "-a"], specs);
+      expect(result).toEqual({
+        ok: false,
+        error: { kind: "unrecognized-option", arg: "--nope" },
+        options: [],
+      });
+    });
+
     test("report nothing for options after -- or after an operand with require-order", () => {
       expect(parseOptions(["--", "-x"], specs).ok).toBe(true);
       expect(parseOptions(["file", "-x"], specs, "require-order").ok).toBe(true);
@@ -300,6 +335,15 @@ describe("parseOptions", () => {
       ],
     ])("throw for %s", (_, invalid) => {
       expect(() => parseOptions([], invalid)).toThrow(Error);
+      expect(() => {
+        validateOptionSpecs(invalid);
+      }).toThrow(Error);
+    });
+
+    test("accept a valid table", () => {
+      expect(() => {
+        validateOptionSpecs(specs);
+      }).not.toThrow();
     });
 
     test("accept a non-ASCII character as a short name", () => {
