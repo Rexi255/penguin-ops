@@ -1,8 +1,9 @@
 # Architecture
 
 > **Status: skeleton.** The workspaces exist with strict TypeScript configs (ROADMAP M0.2);
-> the Electron app opens a placeholder window (M0.7), and the engine has its random generator
-> and the core types of the world model (M1.1).
+> the Electron app opens a placeholder window (M0.7), and the engine has the core types of the
+> world model (M1.1), path lookup and permission checks (M1.2), and its random generator, game
+> clock and world builder (M1.3).
 > Most sections below describe the target architecture decided in the planning phase. Update this document whenever the real structure differs or grows.
 > Reasons for each choice are in `docs/decisions/`.
 
@@ -119,6 +120,10 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   - `src/session.ts`: `Session` with host name, credentials and working directory;
     `createSession` (starts in the home directory, or in `/` if the user cannot enter it) and
     `userAtHost` (the `\u@\h` part of the prompt).
+  - `src/world-builder.ts`: `buildWorld` creates a checked world from a short `WorldSpec`
+    (users and groups by name, files as a map from absolute paths to contents); it creates
+    missing parent directories and fills in defaults for owner, group, mode and mtime
+    (ADR 0043). Tests use it, and the content loader (M2.2) will map levels onto it.
 - **File system** (ADR 0042): tree of directories and files with owner, group, mode and mtime.
   - `src/path.ts`: `splitPath` and `joinAbsolute` for path strings; `expandTilde` for the
     shell's tilde expansion (`~`, `~/…`, `~name`). The file system itself treats `~` as a name.
@@ -137,9 +142,12 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   state and command output.
 - **Events:** the engine emits structured events (output, game notices with message keys,
   screen clear, full-screen program start and end). It never produces translatable text.
-- **Determinism** (ADR 0008): injected game clock and seeded random generator; deterministic
-  data generators. The random generator exists (`src/random.ts`, Mulberry32, created from a
-  32-bit seed); the clock follows in ROADMAP M1.3.
+- **Determinism** (ADR 0008, ADR 0043): injected game clock and seeded random generator;
+  deterministic data generators.
+  - `src/random.ts`: Mulberry32 generator created from a 32-bit seed.
+  - `src/clock.ts`: `createGameClock(start)` gives a `GameClock` that stands still until its
+    owner calls `advance`; engine functions take the read-only `Clock` view (`now()`).
+  - Data generators are added when a level needs them.
 - **Completion and history:** APIs for tab completion and command history.
 
 ## Content (`packages/content` and `content/`)

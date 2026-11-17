@@ -8,6 +8,7 @@ export {
   isValidMode,
   MAX_MODE,
 } from "./fs-node";
+export { type Clock, createGameClock, type GameClock } from "./clock";
 export { type Credentials } from "./credentials";
 export { type Gid, MAX_ID, toGid, toUid, type Uid } from "./ids";
 export { lookup, type LookupError, type LookupResult } from "./lookup";
@@ -29,3 +30,11 @@ export {
   type User,
   type World,
 } from "./world";
+export {
+  buildWorld,
+  type GroupSpec,
+  type HostSpec,
+  type NodeSpec,
+  type UserSpec,
+  type WorldSpec,
+} from "./world-builder";

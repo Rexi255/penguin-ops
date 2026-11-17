@@ -4,6 +4,10 @@ _Last updated: 2026-11-17_
 
 ## Recently completed
 
+- M1.3 Determinism: game clock that stands still until its owner advances it, with a
+  read-only `Clock` view for the engine; `buildWorld` creates a checked world from a short
+  spec (users and groups by name, files by path, missing parents and default owner, mode and
+  mtime filled in) (ADR 0043).
 - M1.2 Virtual file system, read side: path lookup component by component like the kernel
   (`.`, `..`, trailing slash, ENOENT/ENOTDIR/EACCES as values), permission checks with one
   class and root rules, tilde expansion for the shell, session start in `/` when the home
@@ -17,9 +21,6 @@ _Last updated: 2026-11-17_
 - Roadmap: the design language comes before the game frame screens as M3.0a–f (impeccable
   design skill, tokens, styleguide page, typography, icon style, logo); the owner drafts the
   logo in a separate chat; M5.1 keeps only the final app icon files (ADR 0039).
-- M0.11 `/adr` skill: `npm run adr:new` creates the next decision record from the template
-  and updates the status lines of completely or partly superseded records; tested with Vitest
-  against fixtures and the real records (ADR 0038). M0 is complete.
 
 ## In progress
 
@@ -27,9 +28,10 @@ _Last updated: 2026-11-17_
 
 ## Next 3 steps
 
-1. ROADMAP M1.3: determinism (injected game clock, world builder from a spec).
-2. ROADMAP M1.4: lexer (words, quotes, escapes, operators, variables, `~`).
-3. ROADMAP M1.5: parser (AST for simple commands, pipelines, lists, redirections).
+1. ROADMAP M1.4: lexer (words, quotes, escapes, operators, variables, `~`).
+2. ROADMAP M1.5: parser (AST for simple commands, pipelines, lists, redirections).
+3. ROADMAP M1.6: interpreter (expansion, pipelines, redirections, exit codes, `$?`); decide
+   there who advances the game clock and by how much (ADR 0043).
 
 ## Blockers and open questions
 
