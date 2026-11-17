@@ -1,23 +1,40 @@
 import { describe, expect, test } from "vitest";
 
-import type { DirectoryNode } from "./fs-node";
+import type { DirectoryNode, FileNode, FsNode } from "./fs-node";
 import { toGid, toUid } from "./ids";
 import { createSession, type Session, userAtHost } from "./session";
-import { createWorld, type Host, type World } from "./world";
+import { createWorld, type Host, type User, type World } from "./world";
 
-const emptyRoot: DirectoryNode = {
-  kind: "directory",
-  owner: toUid(0),
-  group: toGid(0),
-  mode: 0o755,
+function dir(entries: Record<string, FsNode>, mode = 0o755, owner = 0, group = 0): DirectoryNode {
+  return {
+    kind: "directory",
+    owner: toUid(owner),
+    group: toGid(group),
+    mode,
+    mtime: 0,
+    entries: new Map(Object.entries(entries)),
+  };
+}
+
+const profile: FileNode = {
+  kind: "file",
+  owner: toUid(1000),
+  group: toGid(1000),
+  mode: 0o644,
   mtime: 0,
-  entries: new Map(),
+  content: "",
 };
 
-function host(name: string): Host {
+/** `/root` (700 root) and `/home/alice` (750 alice:alice) exist. */
+const standardRoot = dir({
+  root: dir({}, 0o700),
+  home: dir({ alice: dir({}, 0o750, 1000, 1000) }),
+});
+
+function host(name: string, root: DirectoryNode = standardRoot): Host {
   return {
     name,
-    root: emptyRoot,
+    root,
     users: [
       { name: "root", uid: toUid(0), gid: toGid(0), home: "/root", shell: "/bin/bash" },
       {
@@ -51,6 +68,50 @@ describe("createSession", () => {
     const session = createSession(world, "srv01", "root");
     expect(session.host).toBe("srv01");
     expect(session.cwd).toBe("/root");
+  });
+
+  test("starts in / when the home directory does not exist", () => {
+    const withoutHomes = createWorld({ hosts: [host("ws01", dir({}))] });
+    expect(createSession(withoutHomes, "ws01", "alice").cwd).toBe("/");
+    expect(createSession(withoutHomes, "ws01", "root").cwd).toBe("/");
+  });
+
+  test("starts in / when the home directory is a file", () => {
+    const homeIsFile = createWorld({
+      hosts: [host("ws01", dir({ home: dir({ alice: profile }) }))],
+    });
+    expect(createSession(homeIsFile, "ws01", "alice").cwd).toBe("/");
+  });
+
+  test("starts in / when the user may not search the way to the home directory", () => {
+    const lockedHome = createWorld({
+      hosts: [host("ws01", dir({ home: dir({ alice: dir({}, 0o755, 1000, 1000) }, 0o700) }))],
+    });
+    expect(createSession(lockedHome, "ws01", "alice").cwd).toBe("/");
+  });
+
+  test("starts in / when the user may not search the home directory itself", () => {
+    const foreignHome = createWorld({
+      hosts: [host("ws01", dir({ home: dir({ alice: dir({}, 0o700) }) }))],
+    });
+    expect(createSession(foreignHome, "ws01", "alice").cwd).toBe("/");
+  });
+
+  test("starts in the canonical path of the home directory", () => {
+    const original = host("ws01");
+    const oddHome: User = {
+      name: "alice",
+      uid: toUid(1000),
+      gid: toGid(1000),
+      home: "/home//alice/",
+      shell: "/bin/bash",
+    };
+    const world = createWorld({
+      hosts: [
+        { ...original, users: original.users.map((u) => (u.name === "alice" ? oddHome : u)) },
+      ],
+    });
+    expect(createSession(world, "ws01", "alice").cwd).toBe("/home/alice");
   });
 
   test("throws for an unknown host", () => {

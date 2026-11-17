@@ -115,11 +115,19 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   - `src/world.ts`: `World`, `Host`, `User`, `Group`; `createWorld` checks the structural rules
     and throws an `InvalidWorldError`; lookups by name and ID; `groupIdsOf` (like `id -G`).
     Hosts have no services, processes or network yet.
-  - `src/session.ts`: `Session` with host name, credentials fixed at login and working
-    directory; `createSession` and `userAtHost` (the `\u@\h` part of the prompt).
-- **File system:** tree of directories and files with owner, group, mode and mtime; path
-  resolution (`~`, `.`, `..`), permission checks and errors like Linux (ENOENT, ENOTDIR,
-  EACCES).
+  - `src/credentials.ts`: `Credentials` (UID, primary GID, all GIDs), fixed at login.
+  - `src/session.ts`: `Session` with host name, credentials and working directory;
+    `createSession` (starts in the home directory, or in `/` if the user cannot enter it) and
+    `userAtHost` (the `\u@\h` part of the prompt).
+- **File system** (ADR 0042): tree of directories and files with owner, group, mode and mtime.
+  - `src/path.ts`: `splitPath` and `joinAbsolute` for path strings; `expandTilde` for the
+    shell's tilde expansion (`~`, `~/…`, `~name`). The file system itself treats `~` as a name.
+  - `src/permissions.ts`: `hasPermission` with exactly one class (owner, group, other) like the
+    kernel; root may read, write and search everything and execute files with any x bit.
+  - `src/lookup.ts`: `lookup` walks a path component by component from the root or the working
+    directory, needs search permission on every directory on the way and returns the node with
+    its canonical path, or `ENOENT`, `ENOTDIR` or `EACCES` as a value.
+  - Writing to the tree follows with the first commands that change files (ROADMAP M1.9).
 - **Shell** (ADR 0007): lexer → parser → AST → interpreter. Expansion of variables, `~` and
   globs; pipelines; lists with `;`, `&&`, `||`; redirections; exit codes.
 - **Commands:** registry of command implementations with declared options, a shared option

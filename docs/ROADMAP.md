@@ -46,9 +46,9 @@ placeholder window; CI builds the installer.
 
 - [x] M1.1 Core types: world, host, file system node, user, group, session; multi-host-ready
       data model with one host (ADR 0009, ADR 0041).
-- [ ] M1.2 Virtual file system: paths (absolute, relative, `~`, `.`, `..`), owner, group, mode,
+- [x] M1.2 Virtual file system: paths (absolute, relative, `~`, `.`, `..`), owner, group, mode,
       mtime, lookup errors (ENOENT, ENOTDIR, EACCES), permission checks; a session starts in
-      `/` when the user's home directory does not exist (ADR 0041).
+      `/` when the user's home directory does not exist (ADR 0041, ADR 0042).
 - [ ] M1.3 Determinism: injected game clock, world builder from a spec (ADR 0008). The seeded
       random generator was added in M0.4.
 - [ ] M1.4 Lexer: words, single and double quotes, escapes, operators, variables, `~`.

@@ -4,6 +4,10 @@ _Last updated: 2026-11-17_
 
 ## Recently completed
 
+- M1.2 Virtual file system, read side: path lookup component by component like the kernel
+  (`.`, `..`, trailing slash, ENOENT/ENOTDIR/EACCES as values), permission checks with one
+  class and root rules, tilde expansion for the shell, session start in `/` when the home
+  cannot be entered (ADR 0042).
 - M1.1 Core types of the engine: immutable world with hosts, users, groups and a file system
   tree of `file` and `directory` nodes; branded `Uid`/`Gid`; `createWorld` checks the
   structural rules; sessions keep the groups of their login like Linux (ADR 0041).
@@ -16,8 +20,6 @@ _Last updated: 2026-11-17_
 - M0.11 `/adr` skill: `npm run adr:new` creates the next decision record from the template
   and updates the status lines of completely or partly superseded records; tested with Vitest
   against fixtures and the real records (ADR 0038). M0 is complete.
-- M0.10 dropped: `main` stays without branch protection, so nothing in the repository
-  settings gets in the way of direct pushes; the process guardrails stay (ADR 0037).
 
 ## In progress
 
@@ -25,10 +27,9 @@ _Last updated: 2026-11-17_
 
 ## Next 3 steps
 
-1. ROADMAP M1.2: virtual file system (paths, owner, group, mode, lookup errors, permission
-   checks; session start in `/` without a home directory).
-2. ROADMAP M1.3: determinism (injected game clock, world builder from a spec).
-3. ROADMAP M1.4: lexer (words, quotes, escapes, operators, variables, `~`).
+1. ROADMAP M1.3: determinism (injected game clock, world builder from a spec).
+2. ROADMAP M1.4: lexer (words, quotes, escapes, operators, variables, `~`).
+3. ROADMAP M1.5: parser (AST for simple commands, pipelines, lists, redirections).
 
 ## Blockers and open questions
 
