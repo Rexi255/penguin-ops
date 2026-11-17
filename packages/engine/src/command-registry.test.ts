@@ -117,6 +117,7 @@ function run(input: string, lookup: CommandLookup = commands): ScriptResult {
     script: parsed.script,
     commands: lookup,
     clock: createGameClock(START),
+    terminal: { columns: 80 },
   });
 }
 

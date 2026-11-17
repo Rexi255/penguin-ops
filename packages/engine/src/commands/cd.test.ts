@@ -59,6 +59,7 @@ function run(input: string, session: Session = alice): ScriptResult {
     script: parsed.script,
     commands,
     clock: createGameClock(START),
+    terminal: { columns: 80 },
   });
 }
 

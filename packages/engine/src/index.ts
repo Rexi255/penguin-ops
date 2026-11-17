@@ -18,7 +18,7 @@ export {
   parseBuiltinOptions,
 } from "./builtins";
 export { type Clock, createGameClock, type GameClock } from "./clock";
-export { cd, COMMANDS, echo, pwd, whoami } from "./commands";
+export { cd, COMMANDS, echo, ls, pwd, whoami } from "./commands";
 export {
   type CommandDefinition,
   type CommandInvocation,
@@ -27,6 +27,7 @@ export {
   type RegisteredCommand,
 } from "./command-registry";
 export { compareNames } from "./collation";
+export { displayWidth } from "./display-width";
 export { type Credentials } from "./credentials";
 export {
   type AssignmentExpansion,
@@ -36,7 +37,13 @@ export {
   type UnsupportedParameter,
   type WordsExpansion,
 } from "./expand";
-export { type OpenedForReading, openForReading, type ReadOpenResult } from "./fs-read";
+export {
+  type DirectoryOpenResult,
+  openDirectory,
+  type OpenedForReading,
+  openForReading,
+  type ReadOpenResult,
+} from "./fs-read";
 export {
   type FileWrite,
   writeFile,
@@ -61,6 +68,7 @@ export {
   type ShellCommand,
   type ShellEvent,
   type StandardInput,
+  type Terminal,
   TIME_PER_INPUT,
   type UnsupportedExecution,
   type VariableNotSimulated,
@@ -116,7 +124,7 @@ export {
 } from "./parser";
 export { joinAbsolute, type PathParts, splitPath } from "./path";
 export { type Access, hasPermission } from "./permissions";
-export { localeQuote } from "./quote";
+export { localeQuote, shellQuote, shellQuoteAlways } from "./quote";
 export { createRandom, type RandomGenerator } from "./random";
 export { createSession, DEFAULT_IFS, type Session, userAtHost } from "./session";
 export { decodeUtf8, encodeCodePoint, encodeUtf8, isScalarValue } from "./utf8";

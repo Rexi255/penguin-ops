@@ -8,6 +8,7 @@ import {
   type ShellCommand,
   type ShellEvent,
   runScript,
+  type Terminal,
   TIME_PER_INPUT,
 } from "./interpreter";
 import { lookup as lookupPath } from "./lookup";
@@ -99,6 +100,11 @@ const testCommands: Record<string, ShellCommand> = {
     stdout("b\n");
     return { exitStatus: 0 };
   },
+  /** Writes the terminal's width to standard error, or `<no terminal>` if stdout goes elsewhere. */
+  tty: ({ terminal, stderr }) => {
+    stderr(terminal === undefined ? "<no terminal>\n" : `${String(terminal.columns)}\n`);
+    return { exitStatus: 0 };
+  },
   /** Changes the working directory to its argument without any checks, and says so. */
   go: ({ args, session, stdout }) => {
     stdout("moved\n");
@@ -124,6 +130,7 @@ interface RunOptions {
   readonly world?: World;
   readonly clock?: GameClock;
   readonly commands?: CommandLookup;
+  readonly terminal?: Terminal;
 }
 
 function run(input: string, options: RunOptions = {}): ScriptResult {
@@ -137,6 +144,7 @@ function run(input: string, options: RunOptions = {}): ScriptResult {
     script: parsed.script,
     commands: options.commands ?? lookup,
     clock: options.clock ?? createGameClock(START),
+    terminal: options.terminal ?? { columns: 80 },
   });
 }
 
@@ -180,6 +188,39 @@ describe("runScript: the game clock", () => {
     const clock = createGameClock(START);
     run("", { clock });
     expect(clock.now()).toBe(START + TIME_PER_INPUT);
+  });
+});
+
+describe("runScript: the terminal", () => {
+  test("a command whose output goes to the terminal learns its width", () => {
+    expect(run("tty").events).toEqual([stderr("80\n")]);
+    expect(run("tty", { terminal: { columns: 132 } }).events).toEqual([stderr("132\n")]);
+  });
+
+  test("only the last command of a pipeline writes to the terminal", () => {
+    expect(run("tty | upper").events).toEqual([stderr("<no terminal>\n")]);
+    expect(run("say | tty").events).toEqual([stderr("80\n")]);
+  });
+
+  test("redirecting standard output to a file takes the terminal away", () => {
+    expect(run("tty > /home/alice/out.txt").events).toEqual([stderr("<no terminal>\n")]);
+    expect(run("tty 1>> /home/alice/out.txt").events).toEqual([stderr("<no terminal>\n")]);
+  });
+
+  test("redirecting standard input or standard error keeps the terminal", () => {
+    expect(run("tty < /home/alice/notes.txt").events).toEqual([stderr("80\n")]);
+    const result = run("tty 2> /home/alice/err.txt");
+    expect(result.events).toEqual([]);
+    const host = findHost(result.world, "ws01");
+    const written = host && lookupPath(host.root, alice.credentials, "/", "/home/alice/err.txt");
+    expect(written).toMatchObject({ ok: true, node: { content: "80\n" } });
+  });
+
+  test("a terminal narrower than one column or of a fractional width is an error", () => {
+    expect(() => run("true", { terminal: { columns: 0 } })).toThrow(RangeError);
+    expect(() => run("true", { terminal: { columns: 1.5 } })).toThrow(RangeError);
+    expect(() => run("true", { terminal: { columns: Number.NaN } })).toThrow(RangeError);
+    expect(run("tty", { terminal: { columns: 1 } }).events).toEqual([stderr("1\n")]);
   });
 });
 

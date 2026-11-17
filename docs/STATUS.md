@@ -4,6 +4,12 @@ _Last updated: 2026-11-17_
 
 ## Recently completed
 
+- M1.8b-1 `ls` without the long format: `-a`, `-1`, several operands (files first, then
+  directories with `NAME:`), columns for the terminal's width with tabs like GNU `ls`, shell
+  quoting of names on a terminal (`'my file'`, `"it's"`), one name per line into pipes and
+  files, `cannot access`/`cannot open directory` with exit status 2. Commands learn whether
+  their output goes to the terminal and its width (`ScriptRun.terminal`); new
+  `openDirectory`, `shellQuote`, `shellQuoteAlways`, `displayWidth` (ADR 0054).
 - M1.8a First commands: `cd` (`-L`, `-P`, `-e`, `cd -`, names worked out by text like bash,
   with its fallback to chdir), `pwd` (`-L`, `-P`), `echo` (`-n`, `-e`, `-E`) and `whoami`;
   `defineBuiltin` gives bash builtins bash's option parsing and usage errors; new notices
@@ -20,15 +26,8 @@ _Last updated: 2026-11-17_
   `tryHelpMessage` write glibc's and the coreutils' messages; commands declare their complete
   real option table (ADR 0051).
 - M1.6c-2 Redirections: `<`, `>`, `>>`, `2>` and `2>>` open their files from left to right
-  before the command (also for unknown commands), output is added after the command, failures
-  give bash's message and exit status 1, redirections win over pipes; `stdin` is now a
-  `StandardInput` union with `directory` for `< dir`; fds from 3 on and `0>`/`1<` are game
-  notices (ADR 0049). After a code review, `<` reads its file when the command starts, so
-  `cmd < f > f` empties `f` like bash (ADR 0050).
-- M1.6c-1 Write side of the file system: `writeFile` creates, truncates or appends to a file
-  like `open(2)` for `>` and `>>`, with the kernel's error order (`ENOENT`, `ENOTDIR`,
-  `EACCES`, `EISDIR`), setgid groups and mtimes from the game clock; sessions have a umask
-  like Debian 13's `pam_umask` (002 with a private group, else 022) (ADR 0048).
+  before the command, output is added after the command, failures give bash's message and exit
+  status 1; `<` reads its file when the command starts (ADR 0049, ADR 0050).
 
 ## In progress
 
@@ -36,8 +35,8 @@ _Last updated: 2026-11-17_
 
 ## Next 3 steps
 
-1. ROADMAP M1.8b: `ls` with `-l`, `-a` and `-1` (columns, long format, sorting with
-   `compareNames`).
+1. ROADMAP M1.8b-2: `ls -l` (long format, `total`, owner and group names, dates with the
+   six-month rule).
 2. ROADMAP M1.8c: `clear` and `history` (session history, screen clear event).
 3. ROADMAP M1.9: commands batch 2 (`cat`, `head`, `tail`, `mkdir`, `touch`).
 
@@ -50,3 +49,5 @@ _Last updated: 2026-11-17_
 - The logo colours are provisional until M3.0f-2 aligns them with the design tokens.
 - Steam release is assumed to be "maybe later" (ADR 0002); confirm with the owner when it
   becomes relevant.
+- Some `ls` details could not be checked against a real Debian 13 (tests marked
+  `@differential`, ADR 0054); M6 verifies them.

@@ -52,6 +52,38 @@ export function openForReading(world: World, session: Session, path: string): Re
   }
 }
 
+/** The result of `openDirectory`: the names of the directory's entries, or an error code. */
+export type DirectoryOpenResult =
+  | { readonly ok: true; readonly names: readonly string[] }
+  | { readonly ok: false; readonly error: LookupError };
+
+/**
+ * Opens the directory at `path` on the session's host and reads all its entries, like
+ * opendir(3) and readdir(3) as the session's user with its working directory: the path resolves
+ * like `lookup` (ENOENT, ENOTDIR, EACCES), the node must be a directory (else ENOTDIR) and needs
+ * read permission (else EACCES). The names start with `.` and `..`, as readdir(3) returns them
+ * too; the order of the others is unspecified, as on Linux.
+ *
+ * Throws an Error if the session's host is not part of `world`.
+ */
+export function openDirectory(world: World, session: Session, path: string): DirectoryOpenResult {
+  const host = findHost(world, session.host);
+  if (host === undefined) {
+    throw new Error(`the session's host "${session.host}" is not part of the world`);
+  }
+  const found = lookup(host.root, session.credentials, session.cwd, path);
+  if (!found.ok) {
+    return found;
+  }
+  if (found.node.kind !== "directory") {
+    return { ok: false, error: "ENOTDIR" };
+  }
+  if (!hasPermission(found.node, session.credentials, "read")) {
+    return { ok: false, error: "EACCES" };
+  }
+  return { ok: true, names: [".", "..", ...found.node.entries.keys()] };
+}
+
 /**
  * Returns the current content of the file at the canonical absolute `path` on the host
  * `hostName`, like a read(2) from a file that `openForReading` opened before: there are no

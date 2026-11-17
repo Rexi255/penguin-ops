@@ -58,6 +58,7 @@ function run(input: string): ScriptResult {
     script: parsed.script,
     commands: createCommandLookup([go]),
     clock: createGameClock(START),
+    terminal: { columns: 80 },
   });
 }
 

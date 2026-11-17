@@ -139,7 +139,7 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     its canonical path, or `ENOENT`, `ENOTDIR` or `EACCES` as a value. `nodeAtCanonicalPath`
     walks a canonical path without checks, for files a redirection already opened (ADR 0050).
   - `src/collation.ts`: `compareNames` sorts names like Debian's en_US.UTF-8 locale (an
-    approximation of glibc's collation, ADR 0046); glob results use it, `ls` will too.
+    approximation of glibc's collation, ADR 0046); glob results and `ls` use it.
   - `src/fs-write.ts`: `writeFile` creates, truncates or appends to a file like `open(2)` for
     `>` and `>>` (ADR 0048): kernel error order (`ENOENT`, `ENOTDIR`, `EACCES`, `EISDIR`), new
     files with the session's user, its primary group (or the group of a setgid directory) and
@@ -150,7 +150,10 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   - `src/fs-read.ts`: `openForReading` opens a file or directory like `open(2)` with
     `O_RDONLY` (lookup errors, read permission); a file gives its canonical path and content, a
     directory only errors on reading (ADR 0049). `readOpenFile` reads an opened file again
-    without permission checks (ADR 0050).
+    without permission checks (ADR 0050). `openDirectory` reads a directory's entry names like
+    opendir(3) and readdir(3), `.` and `..` included (ADR 0054).
+  - `src/display-width.ts`: `displayWidth` counts terminal cells like glibc's `wcwidth`, for
+    `ls` in columns (ADR 0054).
 - **Shell** (ADR 0007): lexer → parser → AST → interpreter. Expansion of variables, `~` and
   globs; pipelines; lists with `;`, `&&`, `||`; redirections; exit codes.
   - `src/lexer.ts`: `lex` splits an input text into word, control operator, redirection and
@@ -177,7 +180,9 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     and a changed world or session) or a `CommandStop` with a `CommandNotice` (ADR 0052). The
     result has `ShellEvent`s: output, and game notices for unsupported features (`unsupported`)
     and from commands (`notice`), which stop the rest of the input. Unknown commands give
-    bash's `command not found` and exit status 127.
+    bash's `command not found` and exit status 127. `ScriptRun.terminal` carries the
+    terminal's width from the UI; a command gets it as `CommandContext.terminal` only if its
+    standard output is neither piped nor redirected to a file, like `isatty(1)` (ADR 0054).
   - Redirections (ADR 0049): after the assignments and before the command lookup, `<`, `>`,
     `>>`, `2>` and `2>>` open their targets from left to right (`openForReading`,
     `writeFile`). The command gets its `stdin` as a `StandardInput` (`terminal`, `text` or
@@ -205,9 +210,14 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     option`, the usage line and exit status 2, and `--help` or unsimulated letters give the
     notice `option-not-simulated`.
   - `src/quote.ts`: `localeQuote` quotes operands in coreutils messages with `‘…’` like gnulib's
-    `quote` in an English UTF-8 locale. `src/utf8.ts` converts between text and UTF-8 bytes.
+    `quote` in an English UTF-8 locale. `shellQuoteAlways` quotes file names in messages of
+    `ls` and other file commands like `quoteaf` (`'x'`, `"it's"`, `$'\n'`), and `shellQuote`
+    quotes only names that need it, as `ls` does on a terminal (ADR 0054). `src/utf8.ts`
+    converts between text and UTF-8 bytes.
   - `src/commands/` holds the commands, one module each, and `COMMANDS`, the list for
-    `createCommandLookup`. `cd`, `pwd` and `echo` are builtins, `whoami` uses `defineCommand`.
+    `createCommandLookup`. `cd`, `pwd` and `echo` are builtins, `whoami` and `ls` use
+    `defineCommand`. `ls` follows coreutils' `ls.c`: columns on a terminal, one name per line
+    otherwise (ADR 0054).
     `directory-names.ts` works out working directory names like bash (by text, keeping a
     leading `//`) and checks them like chdir(2) and getcwd(3); the session's `cwd` is the name
     bash remembers, not a resolved path.

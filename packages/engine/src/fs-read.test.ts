@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import { createGameClock } from "./clock";
-import { openForReading, readOpenFile } from "./fs-read";
+import { openDirectory, openForReading, readOpenFile } from "./fs-read";
 import { createSession, type Session } from "./session";
 import { buildWorld } from "./world-builder";
 
@@ -116,6 +116,53 @@ describe("readOpenFile", () => {
   test("by throwing when the host is not part of the world", () => {
     expect(() => readOpenFile(world, "gone", "/etc/hostname")).toThrow(
       `the host "gone" is not part of the world`,
+    );
+  });
+});
+
+describe("openDirectory", () => {
+  test("returns the names of the entries after . and ..", () => {
+    const opened = openDirectory(world, session("alice"), "/home/alice");
+    expect(opened.ok).toBe(true);
+    const names = opened.ok ? opened.names : [];
+    expect(names.slice(0, 2)).toEqual([".", ".."]);
+    expect([...names.slice(2)].sort()).toEqual(["docs", "drop.txt", "hidden", "notes.txt"]);
+  });
+
+  test("returns only . and .. for an empty directory, also from a relative path", () => {
+    const alice = session("alice");
+    expect(openDirectory(world, alice, "docs")).toEqual({ ok: true, names: [".", ".."] });
+    expect(openDirectory(world, alice, "docs/")).toEqual({ ok: true, names: [".", ".."] });
+  });
+
+  test("fails like the path lookup for paths that do not lead to a node", () => {
+    const alice = session("alice");
+    expect(openDirectory(world, alice, "missing")).toEqual({ ok: false, error: "ENOENT" });
+    expect(openDirectory(world, alice, "notes.txt/x")).toEqual({ ok: false, error: "ENOTDIR" });
+    expect(openDirectory(world, alice, "/srv/closed/x")).toEqual({ ok: false, error: "EACCES" });
+  });
+
+  test("fails with ENOTDIR for a file", () => {
+    expect(openDirectory(world, session("alice"), "notes.txt")).toEqual({
+      ok: false,
+      error: "ENOTDIR",
+    });
+  });
+
+  test("needs read permission on the directory, except for root", () => {
+    const alice = session("alice");
+    expect(openDirectory(world, alice, "hidden")).toEqual({ ok: false, error: "EACCES" });
+    expect(openDirectory(world, alice, "/srv/closed")).toEqual({ ok: false, error: "EACCES" });
+    expect(openDirectory(world, session("root"), "/srv/closed")).toEqual({
+      ok: true,
+      names: [".", "..", "inside.txt"],
+    });
+  });
+
+  test("by throwing when the session's host is not part of the world", () => {
+    const lost: Session = { ...session("alice"), host: "gone" };
+    expect(() => openDirectory(world, lost, "/")).toThrow(
+      `the session's host "gone" is not part of the world`,
     );
   });
 });

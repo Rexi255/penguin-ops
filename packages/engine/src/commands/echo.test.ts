@@ -39,6 +39,7 @@ function run(input: string): ScriptResult {
     script: parsed.script,
     commands,
     clock: createGameClock(START),
+    terminal: { columns: 80 },
   });
 }
 

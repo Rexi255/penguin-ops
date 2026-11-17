@@ -27,6 +27,15 @@ export type StandardInput =
   /** A directory (`< /tmp`): bash opens it, but every read fails with "Is a directory". */
   | { readonly kind: "directory" };
 
+/**
+ * The terminal the player types into. Commands that lay out their output for the screen (`ls`
+ * in columns) need its width, which Linux programs get with the `TIOCGWINSZ` ioctl.
+ */
+export interface Terminal {
+  /** The width of the terminal in character cells, a whole number from 1 on. */
+  readonly columns: number;
+}
+
 /** What a command gets when it runs. */
 export interface CommandContext {
   readonly world: World;
@@ -38,6 +47,11 @@ export interface CommandContext {
   readonly args: readonly string[];
   /** Where the command reads its input from. */
   readonly stdin: StandardInput;
+  /**
+   * The terminal if the command's standard output goes to it, like `isatty(1)`; `undefined` if
+   * it goes to a pipe or a file. Some commands write differently then (`ls` in one column).
+   */
+  readonly terminal: Terminal | undefined;
   /** The game time; commands may read it (for example for mtimes), but never advance it. */
   readonly clock: Clock;
   /** Writes `text` to the command's standard output. */
@@ -146,6 +160,8 @@ export interface ScriptRun {
   readonly commands: CommandLookup;
   /** The game clock, which `runScript` advances by `TIME_PER_INPUT` before it runs the input. */
   readonly clock: GameClock;
+  /** The terminal that shows the output. */
+  readonly terminal: Terminal;
 }
 
 /** The state after an input: the changed world and session, and what the terminal shows. */
@@ -230,12 +246,20 @@ interface ShellState {
  * redirections (`0>`, `1<`) and command names with a `/` stop the rest of the input with an
  * "unsupported" event and exit status 1. A command that returns a `CommandStop` stops it the
  * same way with a "notice" event, after the files its redirections opened and the standard
- * error it wrote. Throws an Error if a command returns an exit status outside 0 to 255, or if
- * the session's host is not part of the world.
+ * error it wrote. A command learns whether its standard output goes to the terminal (neither
+ * piped nor redirected to a file) and how wide the terminal is.
+ *
+ * Throws a RangeError if the terminal's width is not a whole number from 1 on or if a command
+ * returns an exit status outside 0 to 255, and an Error if the session's host is not part of
+ * the world.
  */
 export function runScript(run: ScriptRun): ScriptResult {
+  const columns = run.terminal.columns;
+  if (!Number.isSafeInteger(columns) || columns < 1) {
+    throw new RangeError(`the terminal must be at least 1 column wide, got ${String(columns)}`);
+  }
   run.clock.advance(TIME_PER_INPUT);
-  const runner = new Runner(run.commands, run.clock);
+  const runner = new Runner(run.commands, run.clock, run.terminal);
   let state: ShellState = { world: run.world, session: run.session };
   try {
     for (const list of run.script.lists) {
@@ -267,11 +291,14 @@ function withVariable(session: Session, name: string, value: string | undefined)
 
 /** Where a command writes its output. */
 interface Output {
+  /** Whether the output goes to the terminal; else it goes to the next command of a pipeline. */
+  readonly terminal: boolean;
   write(stream: OutputStream, text: string): void;
 }
 
 /** The output of a command inside a pipeline, merged into chunks of consecutive output. */
 class OutputBuffer implements Output {
+  readonly terminal = false;
   readonly events: { stream: OutputStream; text: string }[] = [];
 
   write(stream: OutputStream, text: string): void {
@@ -373,6 +400,11 @@ class CommandStreams {
     this.files.set(stream, file);
   }
 
+  /** Whether standard output goes to the terminal: not redirected to a file and not piped. */
+  stdoutIsTerminal(): boolean {
+    return this.output.terminal && !this.files.has("stdout");
+  }
+
   /** The standard input for the command; a file opened with `<` is read from `world` now. */
   stdin(world: World): StandardInput {
     const input = this.input;
@@ -427,6 +459,7 @@ class Runner {
   constructor(
     private readonly commands: CommandLookup,
     private readonly clock: Clock,
+    private readonly terminal: Terminal,
   ) {}
 
   runAndOrList(state: ShellState, list: AndOrList): ShellState {
@@ -443,7 +476,7 @@ class Runner {
   private runPipeline(state: ShellState, pipeline: Pipeline): ShellState {
     const [only, ...more] = pipeline.commands;
     if (only !== undefined && more.length === 0) {
-      return this.runCommand(state, only, TERMINAL, this.terminal());
+      return this.runCommand(state, only, TERMINAL, this.terminalOutput());
     }
     let world = state.world;
     let stdin: StandardInput = TERMINAL;
@@ -451,7 +484,7 @@ class Runner {
     pipeline.commands.forEach((command, index) => {
       const isLast = index === pipeline.commands.length - 1;
       const buffer = new OutputBuffer();
-      const output = isLast ? this.terminal() : buffer;
+      const output = isLast ? this.terminalOutput() : buffer;
       // Each command of the pipeline runs in a subshell of the shell's session.
       let result: ShellState;
       try {
@@ -472,8 +505,9 @@ class Runner {
   }
 
   /** An output that writes straight to the terminal events. */
-  private terminal(): Output {
+  private terminalOutput(): Output {
     return {
+      terminal: true,
       write: (stream, text) => {
         this.write(stream, text);
       },
@@ -540,6 +574,7 @@ class Runner {
       name,
       args,
       stdin: streams.stdin(opened),
+      terminal: streams.stdoutIsTerminal() ? this.terminal : undefined,
       clock: this.clock,
       stdout: (text) => {
         streams.write("stdout", text);

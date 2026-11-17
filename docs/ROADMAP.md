@@ -73,7 +73,10 @@ placeholder window; CI builds the installer.
       (ADR 0007, ADR 0052).
 - [x] M1.8a Commands batch 1, part 1: `pwd`, `cd`, `whoami`, `echo`, with the usage error
       format of bash builtins (ADR 0053).
-- [ ] M1.8b Commands batch 1, part 2: `ls` (`-l`, `-a`, `-1`).
+- [x] M1.8b-1 Commands batch 1, part 2a: `ls` with `-a` and `-1`: several operands, columns for
+      the terminal's width, shell quoting of names, errors (ADR 0054).
+- [ ] M1.8b-2 Commands batch 1, part 2b: `ls -l` (long format, `total`, owner and group names,
+      dates).
 - [ ] M1.8c Commands batch 1, part 3: `clear`, `history` (session history, screen clear event).
 - [ ] M1.9 Commands batch 2: `cat` (`-n`), `head`, `tail`, `mkdir` (`-p`), `touch`.
 - [ ] M1.10 Commands batch 3: `cp` (`-r`), `mv`, `rm` (`-r`, `-f`), `grep` (`-i`, `-v`, `-n`,
@@ -238,6 +241,13 @@ AppImage runs on Linux, and chapters 0–2 are playable in both languages.
   `PATH= ls` fails like in bash (ADR 0047).
 - `CDPATH` for `cd`; until then a non-empty `CDPATH` stops `cd` with a game notice (ADR 0053).
 - A removed working directory (needs `rm`, M1.10): `cd ..` finds the parent through the kernel,
-  and bash forgets the directory's name after a failed `pwd -P` (ADR 0053).
+  and bash forgets the directory's name after a failed `pwd -P` (ADR 0053); `ls .` and `ls ..`
+  still work there (ADR 0054).
+- Aliases and Debian's `alias ls='ls --color=auto'` from `/etc/skel/.bashrc`, with colour
+  output in the terminal (ADR 0054).
+- Exported variables (`export`, `env`), so that commands see only the environment and not every
+  shell variable (`TABSIZE`, `QUOTING_STYLE` for `ls`, ADR 0054).
+- Locale variables (`LANG`, `LC_ALL`, `LC_COLLATE`, `LANGUAGE`): all commands ignore them; a
+  game notice when they change sorting, quoting or message language.
 - Later chapters: firewall (`ufw`/`nftables`), nginx, Docker basics, disks (`lsblk`, `mount`,
   `fstab`), `sed`/`awk`, `git`.
