@@ -1,6 +1,7 @@
 # 0027. Work directly on main
 
-- Status: Accepted
+- Status: Accepted; partly superseded by [0037](0037-no-branch-protection-on-main.md) (no
+  branch protection on `main`)
 - Date: 2026-11-16
 - Supersedes: [0016](0016-git-workflow-and-claude-autonomy.md)
 

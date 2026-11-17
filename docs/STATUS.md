@@ -4,6 +4,8 @@ _Last updated: 2026-11-17_
 
 ## Recently completed
 
+- M0.10 dropped: `main` stays without branch protection, so nothing in the repository
+  settings gets in the way of direct pushes; the process guardrails stay (ADR 0037).
 - M0.9 CI with GitHub Actions on every push to `main` and every pull request: Linux job
   (`npm run check`, end-to-end tests, AppImage, packaged app), Windows job (tests, end-to-end
   tests, installer, packaged app), documentation duty check (`npm run check:docs-duty`),
@@ -16,7 +18,6 @@ _Last updated: 2026-11-17_
   Playwright end-to-end tests (ADR 0033).
 - M0.6 `npm run check` runs format check, type check, lint, tests with coverage and the
   license check in one command.
-- M0.5 License check against `license-policy.json` from the lockfile (ADR 0032).
 
 ## In progress
 
@@ -24,9 +25,10 @@ _Last updated: 2026-11-17_
 
 ## Next 3 steps
 
-1. ROADMAP M0.10: branch protection on `main` (owner, guided by Claude).
-2. ROADMAP M0.11: `/adr` skill.
-3. ROADMAP M1.1: core types of the engine (world, host, file system node, user, group, session).
+1. ROADMAP M0.11: `/adr` skill.
+2. ROADMAP M1.1: core types of the engine (world, host, file system node, user, group, session).
+3. ROADMAP M1.2: virtual file system (paths, owner, group, mode, lookup errors, permission
+   checks).
 
 ## Blockers and open questions
 
