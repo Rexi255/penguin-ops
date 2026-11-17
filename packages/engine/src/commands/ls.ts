@@ -1,22 +1,31 @@
-// The coreutils command `ls` 9.7 (ADR 0054), following `src/ls.c` without the long format
-// (ROADMAP M1.8b-2). `ls` looks up every operand first and reports those it cannot access, then
-// lists the other files and then the contents of the directories, each sorted by name. On a
-// terminal it writes the names in columns as wide as the terminal, quoted where a shell would
-// need quotes; into a pipe or a file it writes one name per line, as they are. The game runs
-// `ls` without Debian's `alias ls='ls --color=auto'`, so there are no colours.
+// The coreutils command `ls` 9.7 (ADR 0054, ADR 0055), following `src/ls.c`. `ls` looks up every
+// operand first and reports those it cannot access, then lists the other files and then the
+// contents of the directories, each sorted by name. On a terminal it writes the names in
+// columns as wide as the terminal, quoted where a shell would need quotes; into a pipe or a
+// file it writes one name per line, as they are. `-l` writes one line per file in the long
+// format instead (see `long-listing.ts`). The game runs `ls` without Debian's
+// `alias ls='ls --color=auto'`, so there are no colours.
 
 import { compareNames } from "../collation";
 import { type CommandInvocation, defineCommand } from "../command-registry";
 import { displayWidth } from "../display-width";
-import { openDirectory } from "../fs-read";
+import { type FileStatus, fileStatus } from "../file-status";
+import type { FsNode } from "../fs-node";
+import { type DirectoryEntry, openDirectory } from "../fs-read";
 import type { CommandResult } from "../interpreter";
 import { lookup } from "../lookup";
+import type { ParsedOption } from "../options";
 import { shellQuote, shellQuoteAlways } from "../quote";
 import type { Session } from "../session";
-import { directoryView, LOOKUP_ERROR_MESSAGES } from "./directory-names";
+import { findHost, type Host } from "../world";
+import { type DirectoryView, directoryView, LOOKUP_ERROR_MESSAGES } from "./directory-names";
+import { formatLongListing, type LongEntry, type LongStyle, totalLine } from "./long-listing";
 
 /** The exit status of `ls` after a serious problem, such as an operand it cannot access. */
 const FAILURE = 2;
+
+/** The exit status of `ls` after a minor problem, such as a listed file it cannot stat(2). */
+const MINOR_PROBLEM = 1;
 
 /** The narrowest column `ls` lays out, separator included. */
 const MIN_COLUMN_WIDTH = 3;
@@ -103,29 +112,78 @@ export const ls = defineCommand({
     { id: "sort-by-extension", short: "X", argument: "none" },
     { id: "one-per-line", short: "1", argument: "none" },
   ],
-  simulated: ["all", "one-per-line"],
+  simulated: [
+    "all",
+    "one-per-line",
+    "long",
+    "long-without-owner",
+    "long-without-group",
+    "no-group",
+    "numeric-uid-gid",
+  ],
   usageErrorStatus: FAILURE,
   run: (invocation) => {
-    const oneColumn = invocation.options.some((option) => option.id === "one-per-line");
+    const long = longStyle(invocation.options);
+    const oneColumn =
+      long !== undefined || invocation.options.some((option) => option.id === "one-per-line");
     const columns = oneColumn ? undefined : invocation.terminal?.columns;
-    const variable = variableNotSimulated(invocation.session, columns !== undefined);
+    const variable = variableNotSimulated(
+      invocation.session,
+      columns !== undefined,
+      long !== undefined,
+    );
     if (variable !== undefined) {
       return { stop: { key: "variable-not-simulated", variable } };
     }
-    return new Listing(invocation, columns).run();
+    return new Listing(invocation, columns, long).run();
   },
 });
 
 /**
+ * The style of the long format, or `undefined` if `ls` does not write it. `-l`, `-g`, `-o` and
+ * `-n` each select the long format, which `-1` cannot undo; `-g` drops the owner, `-o` and `-G`
+ * drop the group, `-n` shows IDs instead of names.
+ */
+function longStyle(options: readonly ParsedOption[]): LongStyle | undefined {
+  const given = new Set(options.map((option) => option.id));
+  const long =
+    given.has("long") ||
+    given.has("long-without-owner") ||
+    given.has("long-without-group") ||
+    given.has("numeric-uid-gid");
+  if (!long) {
+    return undefined;
+  }
+  return {
+    owner: !given.has("long-without-owner"),
+    group: !given.has("long-without-group") && !given.has("no-group"),
+    numericIds: given.has("numeric-uid-gid"),
+  };
+}
+
+/**
+ * Variables that change the long format and that the game does not simulate: `TIME_STYLE` and
+ * `TZ` change the times, `LS_BLOCK_SIZE`, `BLOCK_SIZE` and `BLOCKSIZE` the units of the sizes.
+ */
+const LONG_FORMAT_VARIABLES = ["TIME_STYLE", "TZ", "LS_BLOCK_SIZE", "BLOCK_SIZE", "BLOCKSIZE"];
+
+/**
  * The first environment variable that would change what `ls` writes and that the game does not
  * simulate: `TABSIZE` changes the tab stops between columns, `QUOTING_STYLE` the quoting of
- * names. The game has no exported variables yet, so a shell variable counts too.
+ * names, and in the long format also `LONG_FORMAT_VARIABLES`. The game has no exported
+ * variables yet, so a shell variable counts too.
  */
-function variableNotSimulated(session: Session, inColumns: boolean): string | undefined {
-  if (inColumns && session.variables.has("TABSIZE")) {
-    return "TABSIZE";
-  }
-  return session.variables.has("QUOTING_STYLE") ? "QUOTING_STYLE" : undefined;
+function variableNotSimulated(
+  session: Session,
+  inColumns: boolean,
+  long: boolean,
+): string | undefined {
+  const variables = [
+    ...(inColumns ? ["TABSIZE"] : []),
+    "QUOTING_STYLE",
+    ...(long ? LONG_FORMAT_VARIABLES : []),
+  ];
+  return variables.find((variable) => session.variables.has(variable));
 }
 
 /** A name as `ls` writes it, and how many cells it takes on the terminal. */
@@ -137,7 +195,14 @@ interface ShownName {
 /** An operand that `ls` could access. */
 interface Operand {
   readonly name: string;
-  readonly isDirectory: boolean;
+  readonly node: FsNode;
+}
+
+/** A file of a listing: its name, its kind, and its status if `ls` needs and could get it. */
+interface ListedFile {
+  readonly name: string;
+  readonly kind: FsNode["kind"];
+  readonly status: FileStatus | undefined;
 }
 
 /** One run of `ls`, with the state that `ls.c` keeps in global variables. */
@@ -148,17 +213,21 @@ class Listing {
   private readonly all: boolean;
   /** Whether names go to a terminal, where `ls` quotes them like a shell needs them. */
   private readonly quoted: boolean;
+  private readonly view: DirectoryView;
 
   /**
    * @param columns The width of the terminal if `ls` writes in columns; `undefined` if it
-   *   writes one name per line (`-1`, or not on a terminal).
+   *   writes one name per line (`-1`, `-l`, or not on a terminal).
+   * @param long The style of the long format, or `undefined` without `-l`.
    */
   constructor(
     private readonly invocation: CommandInvocation,
     private readonly columns: number | undefined,
+    private readonly long: LongStyle | undefined,
   ) {
     this.all = invocation.options.some((option) => option.id === "all");
     this.quoted = invocation.terminal !== undefined;
+    this.view = directoryView(invocation.world, invocation.session);
   }
 
   run(): CommandResult {
@@ -167,27 +236,34 @@ class Listing {
       this.listDirectory(".", false);
       return { exitStatus: this.exitStatus };
     }
-    const view = directoryView(this.invocation.world, this.invocation.session);
+    const { root, credentials, cwd } = this.view;
     const found: Operand[] = [];
     // `ls` checks whether a name needs quotes before it looks the name up, so operands it
     // cannot access still move the others aside.
     let someQuoted = false;
     for (const operand of operands) {
       someQuoted ||= this.quoteName(operand) !== operand;
-      const result = lookup(view.root, view.credentials, view.cwd, operand);
+      const result = lookup(root, credentials, cwd, operand);
       if (result.ok) {
-        found.push({ name: operand, isDirectory: result.node.kind === "directory" });
+        found.push({ name: operand, node: result.node });
       } else {
         const reason = LOOKUP_ERROR_MESSAGES[result.error];
         this.fail(`cannot access ${shellQuoteAlways(operand)}: ${reason}`);
       }
     }
     found.sort((a, b) => compareNames(a.name, b.name));
-    const files = found.filter((operand) => !operand.isDirectory).map((operand) => operand.name);
-    const directories = found.filter((operand) => operand.isDirectory);
+    const gathered = found.map((operand): ListedFile => ({
+      name: operand.name,
+      kind: operand.node.kind,
+      status: fileStatus(operand.node),
+    }));
+    const files = gathered.filter((file) => file.kind !== "directory");
+    const directories = found.filter((operand) => operand.node.kind === "directory");
     let withHeader = true;
     if (files.length > 0) {
-      this.writeNames(files, someQuoted);
+      // The columns of the long format are measured over all operands, also the directories:
+      // `ls.c` measures every file it gathers before it takes the directories out.
+      this.writeFiles(files, gathered, someQuoted);
       if (directories.length > 0) {
         this.invocation.stdout("\n");
       }
@@ -204,47 +280,107 @@ class Listing {
   private listDirectory(name: string, withHeader: boolean): void {
     const { world, session, stdout } = this.invocation;
     const opened = openDirectory(world, session, name);
-    if (!opened.ok) {
-      // Only `.` in a working directory that was removed is not found: Linux still opens the
-      // directory, and it has no entries any more.
-      if (opened.error !== "ENOENT") {
-        const reason = LOOKUP_ERROR_MESSAGES[opened.error];
-        this.fail(`cannot open directory ${shellQuoteAlways(name)}: ${reason}`);
-      }
+    let entries: readonly DirectoryEntry[] = [];
+    if (opened.ok) {
+      entries = opened.entries;
+    } else if (opened.error !== "ENOENT") {
+      const reason = LOOKUP_ERROR_MESSAGES[opened.error];
+      this.fail(`cannot open directory ${shellQuoteAlways(name)}: ${reason}`);
       return;
     }
+    // Else it is `.` in a working directory that was removed: Linux still opens the directory,
+    // and it has no entries any more.
     if (withHeader) {
       stdout(`${this.firstHeader ? "" : "\n"}${this.quoteDirectoryName(name)}:\n`);
       this.firstHeader = false;
     }
-    const names = opened.names.filter((entry) => this.all || !entry.startsWith("."));
-    if (names.length === 0) {
-      return;
+    // In the long format, `ls` stats each entry while it reads the directory, so its messages
+    // come in the order of readdir(3), before the sorted listing.
+    const files = entries
+      .filter((entry) => this.all || !entry.name.startsWith("."))
+      .map((entry) => this.gatherEntry(name, entry));
+    files.sort((a, b) => compareNames(a.name, b.name));
+    if (this.long !== undefined) {
+      stdout(totalLine(files.map((file) => file.status)));
     }
-    names.sort(compareNames);
-    this.writeNames(
-      names,
-      names.some((entry) => this.quoteName(entry) !== entry),
-    );
+    if (files.length > 0) {
+      this.writeFiles(
+        files,
+        files,
+        files.some((file) => this.quoteName(file.name) !== file.name),
+      );
+    }
   }
 
   /**
-   * Writes `names` in columns or one per line. In columns, if any of `names` (or of the other
-   * operands) is quoted, the others get a space in front, so that the names line up inside the
-   * quotes (`align_variable_outer_quotes`).
+   * The entry `entry` of the directory `directory`. In the long format, `ls` stats it through
+   * the path of the directory; if that fails, it reports the file, sets the exit status to 1
+   * and still lists the file, with `?` for what it does not know.
    */
-  private writeNames(names: readonly string[], someQuoted: boolean): void {
-    const columns = this.columns;
-    if (columns === undefined) {
-      this.invocation.stdout(names.map((name) => `${this.quoteName(name)}\n`).join(""));
+  private gatherEntry(directory: string, entry: DirectoryEntry): ListedFile {
+    const unknown: ListedFile = { name: entry.name, kind: entry.kind, status: undefined };
+    if (this.long === undefined) {
+      return unknown;
+    }
+    const path = attach(directory, entry.name);
+    const { root, credentials, cwd } = this.view;
+    const found = lookup(root, credentials, cwd, path);
+    if (!found.ok) {
+      const reason = LOOKUP_ERROR_MESSAGES[found.error];
+      this.minorProblem(`cannot access ${shellQuoteAlways(path)}: ${reason}`);
+      return unknown;
+    }
+    return { ...unknown, status: fileStatus(found.node) };
+  }
+
+  /**
+   * Writes `files` in the long format, in columns or one per line. In the long format and in
+   * columns, if any of `files` (or of the other operands) is quoted, the others get a space in
+   * front, so that the names line up inside the quotes (`align_variable_outer_quotes`).
+   * `measured` are the files whose statuses set the widths of the columns of the long format.
+   */
+  private writeFiles(
+    files: readonly ListedFile[],
+    measured: readonly ListedFile[],
+    someQuoted: boolean,
+  ): void {
+    const { long, columns, invocation } = this;
+    if (long !== undefined) {
+      const entries = files.map((file): LongEntry => ({
+        text: this.alignedName(file.name, someQuoted),
+        kind: file.kind,
+        status: file.status,
+      }));
+      const statuses = measured.map((file) => file.status);
+      const context = { host: this.host(), style: long, now: invocation.clock.now() };
+      invocation.stdout(formatLongListing(entries, statuses, context));
       return;
     }
-    const shown = names.map((name): ShownName => {
-      const quoted = this.quoteName(name);
-      const text = someQuoted && quoted === name ? ` ${quoted}` : quoted;
+    if (columns === undefined) {
+      invocation.stdout(files.map((file) => `${this.quoteName(file.name)}\n`).join(""));
+      return;
+    }
+    const shown = files.map((file): ShownName => {
+      const text = this.alignedName(file.name, someQuoted);
       return { text, width: displayWidth(text) };
     });
-    this.invocation.stdout(layOutInColumns(shown, columns));
+    invocation.stdout(layOutInColumns(shown, columns));
+  }
+
+  /** The quoted name, with a space in front if it needs no quotes but `someQuoted` others do. */
+  private alignedName(name: string, someQuoted: boolean): string {
+    const quoted = this.quoteName(name);
+    return someQuoted && quoted === name ? ` ${quoted}` : quoted;
+  }
+
+  /** The host of the session, whose users and groups name the owners of files. */
+  private host(): Host {
+    const { world, session } = this.invocation;
+    const host = findHost(world, session.host);
+    if (host === undefined) {
+      throw new Error(`the session's host "${session.host}" is not part of the world`);
+    }
+    return host;
   }
 
   /** A file name as `ls` writes it: shell-quoted on a terminal, else as it is. */
@@ -262,6 +398,23 @@ class Listing {
     this.invocation.stderr(`${this.invocation.name}: ${message}\n`);
     this.exitStatus = FAILURE;
   }
+
+  /** Writes `ls: MESSAGE` to standard error; the exit status becomes 1 unless it is already 2. */
+  private minorProblem(message: string): void {
+    this.invocation.stderr(`${this.invocation.name}: ${message}\n`);
+    this.exitStatus = Math.max(this.exitStatus, MINOR_PROBLEM);
+  }
+}
+
+/**
+ * The path of the entry `name` of the directory `directory`, like `attach` in `ls.c`: the name
+ * alone in `.`, else the directory, a slash unless it ends with one, and the name.
+ */
+function attach(directory: string, name: string): string {
+  if (directory === ".") {
+    return name;
+  }
+  return directory.endsWith("/") ? directory + name : `${directory}/${name}`;
 }
 
 /**

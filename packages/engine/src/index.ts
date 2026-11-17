@@ -26,8 +26,17 @@ export {
   defineCommand,
   type RegisteredCommand,
 } from "./command-registry";
+export { type CalendarTime, utcCalendarTime } from "./calendar";
 export { compareNames } from "./collation";
 export { displayWidth } from "./display-width";
+export {
+  FILE_SYSTEM_BLOCK_SIZE,
+  type FileStatus,
+  fileStatus,
+  fileTypeLetter,
+  modeString,
+  STAT_BLOCK_SIZE,
+} from "./file-status";
 export { type Credentials } from "./credentials";
 export {
   type AssignmentExpansion,
@@ -38,6 +47,7 @@ export {
   type WordsExpansion,
 } from "./expand";
 export {
+  type DirectoryEntry,
   type DirectoryOpenResult,
   openDirectory,
   type OpenedForReading,

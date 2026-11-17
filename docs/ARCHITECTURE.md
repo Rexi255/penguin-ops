@@ -150,8 +150,14 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   - `src/fs-read.ts`: `openForReading` opens a file or directory like `open(2)` with
     `O_RDONLY` (lookup errors, read permission); a file gives its canonical path and content, a
     directory only errors on reading (ADR 0049). `readOpenFile` reads an opened file again
-    without permission checks (ADR 0050). `openDirectory` reads a directory's entry names like
-    opendir(3) and readdir(3), `.` and `..` included (ADR 0054).
+    without permission checks (ADR 0050). `openDirectory` reads a directory's entries (name and
+    kind, like `d_name` and `d_type`) like opendir(3) and readdir(3), `.` and `..` included
+    (ADR 0054, ADR 0055).
+  - `src/file-status.ts`: `fileStatus` gives a node's stat(2) fields like ext4 with 4 KiB
+    blocks: links, size in UTF-8 bytes (4096 for a directory), blocks of 512 bytes;
+    `modeString` writes the mode string of `ls -l` (ADR 0055).
+  - `src/calendar.ts`: `utcCalendarTime` turns a game time into a UTC date and time of day;
+    the simulated hosts run on UTC (ADR 0055).
   - `src/display-width.ts`: `displayWidth` counts terminal cells like glibc's `wcwidth`, for
     `ls` in columns (ADR 0054).
 - **Shell** (ADR 0007): lexer → parser → AST → interpreter. Expansion of variables, `~` and
@@ -217,7 +223,8 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   - `src/commands/` holds the commands, one module each, and `COMMANDS`, the list for
     `createCommandLookup`. `cd`, `pwd` and `echo` are builtins, `whoami` and `ls` use
     `defineCommand`. `ls` follows coreutils' `ls.c`: columns on a terminal, one name per line
-    otherwise (ADR 0054).
+    otherwise (ADR 0054); `long-listing.ts` writes its long format with `-l`, `-g`, `-o`, `-G`
+    and `-n` (ADR 0055).
     `directory-names.ts` works out working directory names like bash (by text, keeping a
     leading `//`) and checks them like chdir(2) and getcwd(3); the session's `cwd` is the name
     bash remembers, not a resolved path.

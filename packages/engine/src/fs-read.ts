@@ -2,6 +2,7 @@
 // O_RDONLY, which bash calls for `<`: the path is looked up like `lookup`, and the node needs
 // read permission. A directory opens too; only reading from it fails later with EISDIR.
 
+import type { FsNode } from "./fs-node";
 import { lookup, type LookupError, nodeAtCanonicalPath } from "./lookup";
 import { splitPath } from "./path";
 import { hasPermission } from "./permissions";
@@ -52,17 +53,26 @@ export function openForReading(world: World, session: Session, path: string): Re
   }
 }
 
-/** The result of `openDirectory`: the names of the directory's entries, or an error code. */
+/**
+ * An entry of a directory as readdir(3) returns it: its name (`d_name`) and the kind of node it
+ * points to (`d_type`, which ext4 fills in), known without searching the directory.
+ */
+export interface DirectoryEntry {
+  readonly name: string;
+  readonly kind: FsNode["kind"];
+}
+
+/** The result of `openDirectory`: the entries of the directory, or an error code. */
 export type DirectoryOpenResult =
-  | { readonly ok: true; readonly names: readonly string[] }
+  | { readonly ok: true; readonly entries: readonly DirectoryEntry[] }
   | { readonly ok: false; readonly error: LookupError };
 
 /**
  * Opens the directory at `path` on the session's host and reads all its entries, like
  * opendir(3) and readdir(3) as the session's user with its working directory: the path resolves
  * like `lookup` (ENOENT, ENOTDIR, EACCES), the node must be a directory (else ENOTDIR) and needs
- * read permission (else EACCES). The names start with `.` and `..`, as readdir(3) returns them
- * too; the order of the others is unspecified, as on Linux.
+ * read permission (else EACCES). The entries start with the directories `.` and `..`, as
+ * readdir(3) returns them too; the order of the others is unspecified, as on Linux.
  *
  * Throws an Error if the session's host is not part of `world`.
  */
@@ -81,7 +91,14 @@ export function openDirectory(world: World, session: Session, path: string): Dir
   if (!hasPermission(found.node, session.credentials, "read")) {
     return { ok: false, error: "EACCES" };
   }
-  return { ok: true, names: [".", "..", ...found.node.entries.keys()] };
+  const entries = [...found.node.entries].map(([name, node]): DirectoryEntry => ({
+    name,
+    kind: node.kind,
+  }));
+  return {
+    ok: true,
+    entries: [{ name: ".", kind: "directory" }, { name: "..", kind: "directory" }, ...entries],
+  };
 }
 
 /**

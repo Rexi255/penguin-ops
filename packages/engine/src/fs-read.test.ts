@@ -121,18 +121,26 @@ describe("readOpenFile", () => {
 });
 
 describe("openDirectory", () => {
-  test("returns the names of the entries after . and ..", () => {
+  const dot = { name: ".", kind: "directory" };
+  const dotDot = { name: "..", kind: "directory" };
+
+  test("returns the entries with their kinds after . and ..", () => {
     const opened = openDirectory(world, session("alice"), "/home/alice");
     expect(opened.ok).toBe(true);
-    const names = opened.ok ? opened.names : [];
-    expect(names.slice(0, 2)).toEqual([".", ".."]);
-    expect([...names.slice(2)].sort()).toEqual(["docs", "drop.txt", "hidden", "notes.txt"]);
+    const entries = opened.ok ? opened.entries : [];
+    expect(entries.slice(0, 2)).toEqual([dot, dotDot]);
+    expect([...entries.slice(2)].sort((a, b) => a.name.localeCompare(b.name))).toEqual([
+      { name: "docs", kind: "directory" },
+      { name: "drop.txt", kind: "file" },
+      { name: "hidden", kind: "directory" },
+      { name: "notes.txt", kind: "file" },
+    ]);
   });
 
   test("returns only . and .. for an empty directory, also from a relative path", () => {
     const alice = session("alice");
-    expect(openDirectory(world, alice, "docs")).toEqual({ ok: true, names: [".", ".."] });
-    expect(openDirectory(world, alice, "docs/")).toEqual({ ok: true, names: [".", ".."] });
+    expect(openDirectory(world, alice, "docs")).toEqual({ ok: true, entries: [dot, dotDot] });
+    expect(openDirectory(world, alice, "docs/")).toEqual({ ok: true, entries: [dot, dotDot] });
   });
 
   test("fails like the path lookup for paths that do not lead to a node", () => {
@@ -155,7 +163,7 @@ describe("openDirectory", () => {
     expect(openDirectory(world, alice, "/srv/closed")).toEqual({ ok: false, error: "EACCES" });
     expect(openDirectory(world, session("root"), "/srv/closed")).toEqual({
       ok: true,
-      names: [".", "..", "inside.txt"],
+      entries: [dot, dotDot, { name: "inside.txt", kind: "file" }],
     });
   });
 

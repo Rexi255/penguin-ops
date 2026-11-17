@@ -384,8 +384,7 @@ describe("ls errors", () => {
 describe("ls options", () => {
   test("stops with a notice for an option it does not simulate yet", () => {
     for (const [input, option] of [
-      ["ls -l", "-l"],
-      ["ls -la", "-l"],
+      ["ls -lh", "-h"],
       ["ls -aR docs", "-R"],
       ["ls --color=auto", "--color"],
       ["ls --help", "--help"],

@@ -1,9 +1,14 @@
 # Status
 
-_Last updated: 2026-11-17_
+_Last updated: 2026-11-18_
 
 ## Recently completed
 
+- M1.8b-2 `ls -l` and `-g`, `-o`, `-G`, `-n`: mode string with `s`/`t`, links, owner and
+  group names (IDs without a name), sizes, `total` in KiB of 4 KiB blocks, dates in UTC with
+  the six-month rule, `?` lines and exit status 1 for entries that cannot be stat'ed. New
+  `fileStatus`, `modeString`, `utcCalendarTime`; `openDirectory` returns the kind of each
+  entry; the simulated hosts run on UTC (ADR 0055).
 - M1.8b-1 `ls` without the long format: `-a`, `-1`, several operands (files first, then
   directories with `NAME:`), columns for the terminal's width with tabs like GNU `ls`, shell
   quoting of names on a terminal (`'my file'`, `"it's"`), one name per line into pipes and
@@ -25,9 +30,6 @@ _Last updated: 2026-11-17_
   options or `require-order`) and returns errors as values; `optionErrorMessage` and
   `tryHelpMessage` write glibc's and the coreutils' messages; commands declare their complete
   real option table (ADR 0051).
-- M1.6c-2 Redirections: `<`, `>`, `>>`, `2>` and `2>>` open their files from left to right
-  before the command, output is added after the command, failures give bash's message and exit
-  status 1; `<` reads its file when the command starts (ADR 0049, ADR 0050).
 
 ## In progress
 
@@ -35,10 +37,9 @@ _Last updated: 2026-11-17_
 
 ## Next 3 steps
 
-1. ROADMAP M1.8b-2: `ls -l` (long format, `total`, owner and group names, dates with the
-   six-month rule).
-2. ROADMAP M1.8c: `clear` and `history` (session history, screen clear event).
-3. ROADMAP M1.9: commands batch 2 (`cat`, `head`, `tail`, `mkdir`, `touch`).
+1. ROADMAP M1.8c: `clear` and `history` (session history, screen clear event).
+2. ROADMAP M1.9: commands batch 2 (`cat`, `head`, `tail`, `mkdir`, `touch`).
+3. ROADMAP M1.10: commands batch 3 (`cp`, `mv`, `rm`, `grep`).
 
 ## Blockers and open questions
 
@@ -50,4 +51,4 @@ _Last updated: 2026-11-17_
 - Steam release is assumed to be "maybe later" (ADR 0002); confirm with the owner when it
   becomes relevant.
 - Some `ls` details could not be checked against a real Debian 13 (tests marked
-  `@differential`, ADR 0054); M6 verifies them.
+  `@differential`, ADR 0054, ADR 0055); M6 verifies them.

@@ -75,8 +75,8 @@ placeholder window; CI builds the installer.
       format of bash builtins (ADR 0053).
 - [x] M1.8b-1 Commands batch 1, part 2a: `ls` with `-a` and `-1`: several operands, columns for
       the terminal's width, shell quoting of names, errors (ADR 0054).
-- [ ] M1.8b-2 Commands batch 1, part 2b: `ls -l` (long format, `total`, owner and group names,
-      dates).
+- [x] M1.8b-2 Commands batch 1, part 2b: `ls -l` (long format, `total`, owner and group names,
+      dates), with `-g`, `-o`, `-G`, `-n` (ADR 0055).
 - [ ] M1.8c Commands batch 1, part 3: `clear`, `history` (session history, screen clear event).
 - [ ] M1.9 Commands batch 2: `cat` (`-n`), `head`, `tail`, `mkdir` (`-p`), `touch`.
 - [ ] M1.10 Commands batch 3: `cp` (`-r`), `mv`, `rm` (`-r`, `-f`), `grep` (`-i`, `-v`, `-n`,
@@ -249,5 +249,9 @@ AppImage runs on Linux, and chapters 0–2 are playable in both languages.
   shell variable (`TABSIZE`, `QUOTING_STYLE` for `ls`, ADR 0054).
 - Locale variables (`LANG`, `LC_ALL`, `LC_COLLATE`, `LANGUAGE`): all commands ignore them; a
   game notice when they change sorting, quoting or message language.
+- `POSIXLY_CORRECT`: options stop at the first operand for all commands, and `ls -l` counts
+  `total` in 512-byte blocks; the game ignores it so far (ADR 0055).
+- Hard links (`ln`) and symbolic links (`ln -s`), with their link counts and `->` targets in
+  `ls -l` (ADR 0055).
 - Later chapters: firewall (`ufw`/`nftables`), nginx, Docker basics, disks (`lsblk`, `mount`,
   `fstab`), `sed`/`awk`, `git`.
