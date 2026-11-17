@@ -212,6 +212,8 @@ AppImage runs on Linux, and chapters 0–2 are playable in both languages.
 - Upgrade to TypeScript 7 once `typescript-eslint` supports it (ADR 0026).
 - Lint rules that enforce ADR 0008 in engine and gameplay: ban `Date.now()`, `new Date()`
   without arguments, `performance.now()` and `Math.random()`.
+- CI starts the packaged AppImage itself (not only the unpacked app), so that the M5 criterion
+  "the AppImage runs on Linux" is verified without a Linux machine of the owner.
 - `vim` side chapter; Rocky Linux side chapter ("the new customer runs Rocky Linux").
 - Later chapters: firewall (`ufw`/`nftables`), nginx, Docker basics, disks (`lsblk`, `mount`,
   `fstab`), `sed`/`awk`, `git`.

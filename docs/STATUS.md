@@ -35,10 +35,10 @@ _Last updated: 2026-11-17_
 
 ## Blockers and open questions
 
-- Linux is verified only by CI (no WSL locally). The AppImage itself is built but not started
-  in CI (the tests start the unpacked app); a manual check on a Linux machine is still open.
-- Owner task: upload `assets/brand/web/social-preview.png` in GitHub → Settings → General →
-  Social preview.
+- Linux is verified only by CI; the owner plays on Windows and has no Linux machine, so no
+  manual Linux check is planned. CI builds the AppImage but starts the unpacked app, so the
+  M5 criterion "the AppImage runs on Linux" needs CI to start the AppImage itself (ROADMAP
+  ideas) before v0.1.
 - The logo colours are provisional until M3.0f-2 aligns them with the design tokens.
 - Steam release is assumed to be "maybe later" (ADR 0002); confirm with the owner when it
   becomes relevant.
