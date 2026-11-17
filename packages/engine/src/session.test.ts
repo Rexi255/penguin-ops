@@ -85,6 +85,24 @@ describe("createSession", () => {
     );
   });
 
+  test("@differential gives a user with a private group the umask 002 and root 022", () => {
+    expect(createSession(world, "ws01", "alice").umask).toBe(0o002);
+    expect(createSession(world, "ws01", "root").umask).toBe(0o022);
+  });
+
+  test("@differential gives a user whose primary group has another name the umask 022", () => {
+    const original = host("ws01");
+    const shared = createWorld({
+      hosts: [
+        {
+          ...original,
+          groups: original.groups.map((g) => (g.name === "alice" ? { ...g, name: "staff" } : g)),
+        },
+      ],
+    });
+    expect(createSession(shared, "ws01", "alice").umask).toBe(0o022);
+  });
+
   test("keeps HOME as written in the user list when the session starts in /", () => {
     const withoutHomes = createWorld({ hosts: [host("ws01", dir({}))] });
     const session = createSession(withoutHomes, "ws01", "alice");

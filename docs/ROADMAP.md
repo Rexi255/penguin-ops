@@ -61,8 +61,9 @@ placeholder window; CI builds the installer.
 - [x] M1.6b Interpreter, part 2, execution: lists (`;`, `&&`, `||`), pipelines, exit codes and
       `$?` through a minimal command interface; assignments; decide who advances the game clock
       (ADR 0047).
-- [ ] M1.6c Interpreter, part 3: redirections (`<`, `>`, `>>`, `2>`) with the write side of the
-      file system.
+- [x] M1.6c-1 Interpreter, part 3a: write side of the file system (`writeFile` like `open(2)`
+      for `>` and `>>`, session umask of Debian 13) (ADR 0048).
+- [ ] M1.6c-2 Interpreter, part 3b: redirections (`<`, `>`, `>>`, `2>`) on top of `writeFile`.
 - [ ] M1.7 Command framework: registry, shared option parser (including `--`), coreutils-style
       error formats, game notices as structured events (ADR 0007).
 - [ ] M1.8 Commands batch 1: `pwd`, `cd`, `ls` (`-l`, `-a`, `-1`), `whoami`, `echo`, `clear`,

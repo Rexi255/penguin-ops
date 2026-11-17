@@ -176,6 +176,20 @@ export function findHost(world: World, name: string): Host | undefined {
   return world.hosts.find((host) => host.name === name);
 }
 
+/**
+ * Returns a new world in which the host called `hostName` has the root directory `root`; all
+ * other hosts and the host's users and groups stay the same objects. Throws an Error if the world
+ * has no such host.
+ */
+export function replaceHostRoot(world: World, hostName: string, root: DirectoryNode): World {
+  if (findHost(world, hostName) === undefined) {
+    throw new Error(`no host "${hostName}" in the world`);
+  }
+  return {
+    hosts: world.hosts.map((host) => (host.name === hostName ? { ...host, root } : host)),
+  };
+}
+
 /** Returns the user called `name`, or undefined. */
 export function findUser(host: Host, name: string): User | undefined {
   return host.users.find((user) => user.name === name);

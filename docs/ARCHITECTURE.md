@@ -2,8 +2,9 @@
 
 > **Status: skeleton.** The workspaces exist with strict TypeScript configs (ROADMAP M0.2);
 > the Electron app opens a placeholder window (M0.7), and the engine has the core types of the
-> world model (M1.1), path lookup and permission checks (M1.2), and its random generator, game
-> clock and world builder (M1.3).
+> world model (M1.1), path lookup and permission checks (M1.2), its random generator, game
+> clock and world builder (M1.3), the shell lexer, parser, word expansion and execution
+> (M1.4–M1.6b) and the write side of the file system (M1.6c-1).
 > Most sections below describe the target architecture decided in the planning phase. Update this document whenever the real structure differs or grows.
 > Reasons for each choice are in `docs/decisions/`.
 
@@ -114,13 +115,15 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   - `src/fs-node.ts`: `FsNode`, a discriminated union of `file` and `directory`. A directory
     maps entry names to nodes; every node has owner, group, mode and mtime.
   - `src/world.ts`: `World`, `Host`, `User`, `Group`; `createWorld` checks the structural rules
-    and throws an `InvalidWorldError`; lookups by name and ID; `groupIdsOf` (like `id -G`).
+    and throws an `InvalidWorldError`; lookups by name and ID; `groupIdsOf` (like `id -G`);
+    `replaceHostRoot` returns a world with a changed file system of one host.
     Hosts have no services, processes or network yet.
   - `src/credentials.ts`: `Credentials` (UID, primary GID, all GIDs), fixed at login.
   - `src/session.ts`: `Session` with host name, credentials, working directory, shell
-    variables and the last exit status; `createSession` (starts in the home directory, or in
-    `/` if the user cannot enter it, and sets the login variables such as `HOME` and `PATH`,
-    ADR 0046) and `userAtHost` (the `\u@\h` part of the prompt).
+    variables, the last exit status and the umask; `createSession` (starts in the home
+    directory, or in `/` if the user cannot enter it, sets the login variables such as `HOME`
+    and `PATH`, ADR 0046, and the umask of Debian 13's `pam_umask`, ADR 0048) and `userAtHost`
+    (the `\u@\h` part of the prompt).
   - `src/world-builder.ts`: `buildWorld` creates a checked world from a short `WorldSpec`
     (users and groups by name, files as a map from absolute paths to contents); it creates
     missing parent directories and fills in defaults for owner, group, mode and mtime
@@ -135,7 +138,11 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     its canonical path, or `ENOENT`, `ENOTDIR` or `EACCES` as a value.
   - `src/collation.ts`: `compareNames` sorts names like Debian's en_US.UTF-8 locale (an
     approximation of glibc's collation, ADR 0046); glob results use it, `ls` will too.
-  - Writing to the tree follows with the redirections (ROADMAP M1.6c).
+  - `src/fs-write.ts`: `writeFile` creates, truncates or appends to a file like `open(2)` for
+    `>` and `>>` (ADR 0048): kernel error order (`ENOENT`, `ENOTDIR`, `EACCES`, `EISDIR`), new
+    files with the session's user, its primary group (or the group of a setgid directory) and
+    the mode `0o666 & ~umask`, mtimes from the game clock. It copies only the directories on
+    the changed path and puts the new root into a new world with `replaceHostRoot`.
 - **Shell** (ADR 0007): lexer → parser → AST → interpreter. Expansion of variables, `~` and
   globs; pipelines; lists with `;`, `&&`, `||`; redirections; exit codes.
   - `src/lexer.ts`: `lex` splits an input text into word, control operator, redirection and

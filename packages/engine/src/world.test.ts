@@ -13,6 +13,7 @@ import {
   groupIdsOf,
   type Host,
   InvalidWorldError,
+  replaceHostRoot,
   type User,
 } from "./world";
 
@@ -290,6 +291,34 @@ describe("lookups", () => {
 
   test("user names are case-sensitive", () => {
     expect(findUser(host, "Alice")).toBeUndefined();
+  });
+});
+
+describe("replaceHostRoot", () => {
+  const world = createWorld({ hosts: [workstation(), workstation({ name: "ws02" })] });
+  const emptyRoot = dir();
+
+  test("gives the named host the new root and keeps everything else", () => {
+    const changed = replaceHostRoot(world, "ws02", emptyRoot);
+    const before = findHost(world, "ws02");
+    const after = findHost(changed, "ws02");
+    expect(after?.root).toBe(emptyRoot);
+    expect(after?.users).toBe(before?.users);
+    expect(after?.groups).toBe(before?.groups);
+    expect(findHost(changed, "ws01")).toBe(findHost(world, "ws01"));
+    expect(changed.hosts.map((host) => host.name)).toEqual(["ws01", "ws02"]);
+  });
+
+  test("leaves the old world unchanged", () => {
+    const before = findHost(world, "ws01")?.root;
+    replaceHostRoot(world, "ws01", emptyRoot);
+    expect(findHost(world, "ws01")?.root).toBe(before);
+  });
+
+  test("throws for an unknown host", () => {
+    expect(() => replaceHostRoot(world, "nas01", emptyRoot)).toThrow(
+      'no host "nas01" in the world',
+    );
   });
 });
 

@@ -19,6 +19,13 @@ export {
   type UnsupportedParameter,
   type WordsExpansion,
 } from "./expand";
+export {
+  type FileWrite,
+  writeFile,
+  type WriteError,
+  type WriteMode,
+  type WriteResult,
+} from "./fs-write";
 export { type Gid, MAX_ID, toGid, toUid, type Uid } from "./ids";
 export {
   type CommandContext,
@@ -85,6 +92,7 @@ export {
   groupIdsOf,
   type Host,
   InvalidWorldError,
+  replaceHostRoot,
   type User,
   type World,
 } from "./world";

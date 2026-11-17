@@ -1,4 +1,4 @@
-// A login session (ADR 0009, ADR 0041, ADR 0042): the shell of one user on one host. Like a
+// A login session (ADR 0009, ADR 0041, ADR 0042, ADR 0048): the shell of one user on one host. Like a
 // Linux process, a session keeps the user and group IDs it got at login. A group change made
 // later (for example with `usermod -aG`) reaches only sessions started after it, as in real
 // Linux.
@@ -6,7 +6,16 @@
 import type { Credentials } from "./credentials";
 import { lookup } from "./lookup";
 import { hasPermission } from "./permissions";
-import { type World, findHost, findUser, findUserByUid, groupIdsOf } from "./world";
+import {
+  findGroupByGid,
+  findHost,
+  findUser,
+  findUserByUid,
+  groupIdsOf,
+  type Host,
+  type User,
+  type World,
+} from "./world";
 
 /** The state of one shell. The history follows with ROADMAP M1.11. */
 export interface Session {
@@ -22,6 +31,11 @@ export interface Session {
   readonly variables: ReadonlyMap<string, string>;
   /** The exit status of the last command, which `$?` expands to. A new shell starts with 0. */
   readonly exitStatus: number;
+  /**
+   * The file mode creation mask (ADR 0048): permission bits from 0 to 0o777 that new files and
+   * directories do not get. A new file gets the mode `0o666 & ~umask`.
+   */
+  readonly umask: number;
 }
 
 /** Debian 13's `PATH` from `/etc/profile` for root and for all other users. */
@@ -31,6 +45,23 @@ const USER_PATH = "/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games";
 /** Bash's default `IFS`: space, tab and line break. */
 export const DEFAULT_IFS = " \t\n";
 
+/** The `UMASK` of Debian 13's `/etc/login.defs`. */
+const LOGIN_UMASK = 0o022;
+
+/** The umask of a user with a private group: the group bits copied from the owner bits. */
+const PRIVATE_GROUP_UMASK = 0o002;
+
+/**
+ * Returns the umask a login gives `user`, like Debian 13's `pam_umask` with the `usergroups`
+ * option: a user other than root whose primary group has the user's name gets 0o002, so the
+ * members of a shared group can write the files; everybody else gets 0o022.
+ */
+function loginUmask(host: Host, user: User): number {
+  const primaryGroup = findGroupByGid(host, user.gid);
+  const hasPrivateGroup = user.uid !== 0 && primaryGroup?.name === user.name;
+  return hasPrivateGroup ? PRIVATE_GROUP_UMASK : LOGIN_UMASK;
+}
+
 /**
  * Starts a session for the user `userName` on the host `hostName`. Like `login`, it starts in
  * the user's home directory if the user can change into it, and in `/` otherwise (the home is
@@ -39,7 +70,8 @@ export const DEFAULT_IFS = " \t\n";
  *
  * The shell variables are those that `login`, `/etc/profile` and bash set on Debian 13: `HOME`
  * (the home from the user list, as written there), `USER`, `LOGNAME`, `SHELL`, `PATH`, `PWD`,
- * `HOSTNAME` and `IFS`. `OLDPWD` is unset until the first `cd`.
+ * `HOSTNAME` and `IFS`. `OLDPWD` is unset until the first `cd`. The umask comes from
+ * `loginUmask`.
  */
 export function createSession(world: World, hostName: string, userName: string): Session {
   const host = findHost(world, hostName);
@@ -69,7 +101,14 @@ export function createSession(world: World, hostName: string, userName: string):
     ["SHELL", user.shell],
     ["USER", user.name],
   ]);
-  return { host: host.name, credentials, cwd, variables, exitStatus: 0 };
+  return {
+    host: host.name,
+    credentials,
+    cwd,
+    variables,
+    exitStatus: 0,
+    umask: loginUmask(host, user),
+  };
 }
 
 /** What bash shows for `\u` when the session's user ID has no user, for example after `userdel`. */
