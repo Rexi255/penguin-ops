@@ -21,6 +21,19 @@ export {
 } from "./expand";
 export { type Gid, MAX_ID, toGid, toUid, type Uid } from "./ids";
 export {
+  type CommandContext,
+  type CommandLookup,
+  type CommandResult,
+  type OutputStream,
+  runScript,
+  type ScriptResult,
+  type ScriptRun,
+  type ShellCommand,
+  type ShellEvent,
+  TIME_PER_INPUT,
+  type UnsupportedExecution,
+} from "./interpreter";
+export {
   type ControlOperator,
   type ControlToken,
   lex,

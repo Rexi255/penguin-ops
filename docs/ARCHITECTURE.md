@@ -153,7 +153,16 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   - `src/glob.ts`: `expandPathname` matches `*`, `?` and bracket expressions against the
     directories of the session's host, with bash 5.2's default options and the read and
     search permissions of the session.
-  - Execution of lists and pipelines (M1.6b) and redirections (M1.6c) follow.
+  - `src/interpreter.ts`: `runScript` runs a parsed input (ADR 0047): and-or lists with `&&`
+    and `||`, pipelines whose commands run one after the other with the output of one as the
+    input of the next (session changes inside a pipeline are lost like in a subshell), the exit
+    status in `$?`, and assignments (shell variables, or only for one command before its name).
+    Commands are `ShellCommand` functions found through a `CommandLookup`; they get a
+    `CommandContext` with `stdout` and `stderr` writers and return their exit status and a
+    changed world or session. The result has `ShellEvent`s: output and game notices for
+    unsupported features, which stop the rest of the input. Unknown commands give bash's
+    `command not found` and exit status 127.
+  - Redirections follow with M1.6c.
 - **Commands:** registry of command implementations with declared options, a shared option
   parser and coreutils-style errors, matching Debian 13 (ADR 0004).
 - **Full-screen programs:** one mechanism for `less`, `man`, `top`, `nano` and later `vim`.
@@ -165,7 +174,8 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   deterministic data generators.
   - `src/random.ts`: Mulberry32 generator created from a 32-bit seed.
   - `src/clock.ts`: `createGameClock(start)` gives a `GameClock` that stands still until its
-    owner calls `advance`; engine functions take the read-only `Clock` view (`now()`).
+    owner calls `advance`. `runScript` advances it by one second per input (ADR 0047); all
+    other engine functions and the commands take the read-only `Clock` view (`now()`).
   - Data generators are added when a level needs them.
 - **Completion and history:** APIs for tab completion and command history.
 

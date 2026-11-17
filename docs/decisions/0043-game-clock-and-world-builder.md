@@ -1,6 +1,7 @@
 # 0043. Game clock and world builder
 
-- Status: Accepted
+- Status: Accepted; partly superseded by
+  [0047](0047-shell-execution-of-lists-pipelines-and-assignments.md) (who advances the game clock)
 - Date: 2026-11-17
 - Supersedes: –
 

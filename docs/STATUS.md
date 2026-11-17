@@ -4,11 +4,15 @@ _Last updated: 2026-11-17_
 
 ## Recently completed
 
+- M1.6b Execution: `runScript` runs and-or lists, pipelines (one command after the other,
+  session changes lost like in a subshell) and assignments, keeps `$?`, reports `command not
+  found` with 127 and stops the input with a game notice for unsupported features; commands
+  are `ShellCommand` functions with `stdout`/`stderr` writers; the game clock moves one second
+  per input (ADR 0047, partly supersedes ADR 0043).
 - M1.6a Word expansion: `expandWords` turns parsed words into arguments like bash (tilde,
   variables and `$?`, field splitting with `IFS`, pathname expansion with permissions, quote
   removal); sessions have shell variables and an exit status; `compareNames` sorts like the
-  en_US.UTF-8 locale; brace expansion stays literal, `$$` and `$-` are unsupported (ADR 0046).
-  Also repaired `docs/ROADMAP.md`, which the parser commit had duplicated.
+  en_US.UTF-8 locale (ADR 0046).
 - M1.5 Parser: `parse` builds a tree of lists, `&&`/`||` chains, pipelines and simple
   commands with assignments, words and `<`/`>`/`>>` redirections; bash syntax errors and
   unsupported syntax come back as values (ADR 0045).
@@ -16,8 +20,6 @@ _Last updated: 2026-11-17_
   bash; words keep their quoted and unquoted parts (ADR 0044).
 - M1.3 Determinism: game clock that stands still until its owner advances it; `buildWorld`
   creates a checked world from a short spec (ADR 0043).
-- M1.2 Virtual file system, read side: path lookup like the kernel, permission checks, session
-  start in `/` when the home cannot be entered (ADR 0042).
 
 ## In progress
 
@@ -25,11 +27,11 @@ _Last updated: 2026-11-17_
 
 ## Next 3 steps
 
-1. ROADMAP M1.6b: execution of lists, pipelines, exit codes and `$?` through a minimal command
-   interface, and assignments; decide there who advances the game clock and by how much
-   (ADR 0043).
-2. ROADMAP M1.6c: redirections with the write side of the file system.
-3. ROADMAP M1.7: command framework (registry, option parser, error formats, game notices).
+1. ROADMAP M1.6c: redirections with the write side of the file system; replaces the
+   `redirection` stop of ADR 0047.
+2. ROADMAP M1.7: command framework (registry, option parser, error formats, game notices) on
+   top of `ShellCommand` and `CommandLookup`.
+3. ROADMAP M1.8: commands batch 1 (`pwd`, `cd`, `ls`, `whoami`, `echo`, `clear`, `history`).
 
 ## Blockers and open questions
 

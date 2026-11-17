@@ -58,8 +58,9 @@ placeholder window; CI builds the installer.
 - [x] M1.6a Interpreter, part 1, word expansion: shell variables in the session, tilde,
       parameters (`$?`), field splitting, pathname expansion, quote removal; sort order of the
       default English locale (ADR 0046).
-- [ ] M1.6b Interpreter, part 2, execution: lists (`;`, `&&`, `||`), pipelines, exit codes and
-      `$?` through a minimal command interface; assignments; decide who advances the game clock.
+- [x] M1.6b Interpreter, part 2, execution: lists (`;`, `&&`, `||`), pipelines, exit codes and
+      `$?` through a minimal command interface; assignments; decide who advances the game clock
+      (ADR 0047).
 - [ ] M1.6c Interpreter, part 3: redirections (`<`, `>`, `>>`, `2>`) with the write side of the
       file system.
 - [ ] M1.7 Command framework: registry, shared option parser (including `--`), coreutils-style
@@ -225,5 +226,7 @@ AppImage runs on Linux, and chapters 0–2 are playable in both languages.
   (`!!`, `!$`), command substitution, brace expansion, here-documents, file descriptor
   duplication (`2>&1`, common in tutorials), `&>`, pipeline negation (`!`), the `time` keyword,
   the special parameters `$$` and `$-`.
+- Command lookup through `PATH` and executable files (`./run.sh`, `/bin/ls`), so that
+  `PATH= ls` fails like in bash (ADR 0047).
 - Later chapters: firewall (`ufw`/`nftables`), nginx, Docker basics, disks (`lsblk`, `mount`,
   `fstab`), `sed`/`awk`, `git`.
