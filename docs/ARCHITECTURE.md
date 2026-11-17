@@ -1,7 +1,8 @@
 # Architecture
 
 > **Status: skeleton.** The workspaces exist with strict TypeScript configs (ROADMAP M0.2);
-> the Electron app opens a placeholder window (M0.7), and the engine has its random generator.
+> the Electron app opens a placeholder window (M0.7), and the engine has its random generator
+> and the core types of the world model (M1.1).
 > Most sections below describe the target architecture decided in the planning phase. Update this document whenever the real structure differs or grows.
 > Reasons for each choice are in `docs/decisions/`.
 
@@ -105,8 +106,17 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
 
 ## Engine (`packages/engine`)
 
-- **World model** (ADR 0009): a world has hosts and a network. Each host has a file system,
-  users, groups, services and processes. A session belongs to one host and user.
+- **World model** (ADR 0009, ADR 0041): a world has hosts and a network. Each host has a file
+  system, users, groups, services and processes. A session belongs to one host and user.
+  Current state: all world data is immutable; a change returns a new world.
+  - `src/ids.ts`: branded `Uid` and `Gid` number types, created with `toUid` and `toGid`.
+  - `src/fs-node.ts`: `FsNode`, a discriminated union of `file` and `directory`. A directory
+    maps entry names to nodes; every node has owner, group, mode and mtime.
+  - `src/world.ts`: `World`, `Host`, `User`, `Group`; `createWorld` checks the structural rules
+    and throws an `InvalidWorldError`; lookups by name and ID; `groupIdsOf` (like `id -G`).
+    Hosts have no services, processes or network yet.
+  - `src/session.ts`: `Session` with host name, credentials fixed at login and working
+    directory; `createSession` and `userAtHost` (the `\u@\h` part of the prompt).
 - **File system:** tree of directories and files with owner, group, mode and mtime; path
   resolution (`~`, `.`, `..`), permission checks and errors like Linux (ENOENT, ENOTDIR,
   EACCES).

@@ -4,6 +4,9 @@ _Last updated: 2026-11-17_
 
 ## Recently completed
 
+- M1.1 Core types of the engine: immutable world with hosts, users, groups and a file system
+  tree of `file` and `directory` nodes; branded `Uid`/`Gid`; `createWorld` checks the
+  structural rules; sessions keep the groups of their login like Linux (ADR 0041).
 - M3.0f-1 and M5.1-1, done early: the owner's logo is in `assets/brand/` (SVG variants for dark
   and light backgrounds, web icons, usage rules) and in the README; the installer, the app and
   the AppImage use the PenguinOps app icon; a test guards the brand files (ADR 0040).
@@ -15,10 +18,6 @@ _Last updated: 2026-11-17_
   against fixtures and the real records (ADR 0038). M0 is complete.
 - M0.10 dropped: `main` stays without branch protection, so nothing in the repository
   settings gets in the way of direct pushes; the process guardrails stay (ADR 0037).
-- M0.9 CI with GitHub Actions on every push to `main` and every pull request: Linux job
-  (`npm run check`, end-to-end tests, AppImage, packaged app), Windows job (tests, end-to-end
-  tests, installer, packaged app), documentation duty check (`npm run check:docs-duty`),
-  Dependabot with grouped weekly updates, pull request template (ADR 0036).
 
 ## In progress
 
@@ -26,10 +25,10 @@ _Last updated: 2026-11-17_
 
 ## Next 3 steps
 
-1. ROADMAP M1.1: core types of the engine (world, host, file system node, user, group, session).
-2. ROADMAP M1.2: virtual file system (paths, owner, group, mode, lookup errors, permission
-   checks).
-3. ROADMAP M1.3: determinism (injected game clock, world builder from a spec).
+1. ROADMAP M1.2: virtual file system (paths, owner, group, mode, lookup errors, permission
+   checks; session start in `/` without a home directory).
+2. ROADMAP M1.3: determinism (injected game clock, world builder from a spec).
+3. ROADMAP M1.4: lexer (words, quotes, escapes, operators, variables, `~`).
 
 ## Blockers and open questions
 
