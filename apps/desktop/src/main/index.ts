@@ -11,7 +11,7 @@ import { createMainWindow } from "./window";
 
 /** The development server URL is only trusted in a development build, never when installed. */
 function resolveAppLocation(): AppLocation {
-  const devServerUrl = process.env["ELECTRON_RENDERER_URL"];
+  const devServerUrl = process.env.ELECTRON_RENDERER_URL;
   if (!app.isPackaged && devServerUrl !== undefined) {
     return { kind: "dev-server", origin: new URL(devServerUrl).origin };
   }

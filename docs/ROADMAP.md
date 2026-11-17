@@ -109,9 +109,11 @@ inventing it along the way.
 - [ ] M3.0e Icon style: rules (grid, stroke, corners), choice between an icon set with an
       allowed license and own SVG icons, first icons for the side panel tabs; shown in the
       styleguide.
-- [ ] M3.0f Logo: take over the logo that the owner chose from drafts made in a separate chat
-      (own penguin, not Tux, ADR 0021); clean up the SVG, align its colours with the tokens,
-      variants for dark and light backgrounds; shown in the styleguide.
+- [x] M3.0f-1 Logo take-over (done early, ADR 0040): the owner's brand package in
+      `assets/brand/` (own penguin, not Tux, ADR 0021), clean SVGs with variants for dark and
+      light backgrounds, logo in the README, test of the brand files.
+- [ ] M3.0f-2 Logo and tokens: align the logo colours with the tokens of M3.0b (regenerate all
+      brand files if a colour changes); show the logo in the styleguide.
 - [ ] M3.1 App screens: start screen with the logo, save slot screen, game screen, pause menu.
 - [ ] M3.2 New game flow: name, derived Linux user name (validation, editing), Story or Sandbox
       mode (ADR 0017, ADR 0019).
@@ -161,8 +163,9 @@ Sandbox mode, and the owner has played them once.
 
 ## M5 Release v0.1
 
-- [ ] M5.1 App icon and logo polish: final app icon from the chosen logo (M3.0f) as ico, icns
-      and png in all sizes for the installer, AppImage and window; final polish of the logo.
+- [x] M5.1-1 App icon (done early, ADR 0040): ico and png in all sizes for the installer, the
+      app, the AppImage and the Linux window; no icns (macOS is not supported, ADR 0002).
+- [ ] M5.1-2 Logo polish: final polish of the logo and, if it changes, of the app icons.
 - [ ] M5.2 Player README: install, start, SmartScreen note, screenshots.
 - [ ] M5.3 Release pipeline: git tag → CI builds NSIS installer and AppImage → GitHub Release
       with notes from `CHANGELOG.md`; generated dependency license texts included.
@@ -196,6 +199,9 @@ AppImage runs on Linux, and chapters 0–2 are playable in both languages.
 - Code signing via SignPath Foundation.
 - Key remapping.
 - `.deb` package.
+- Set `desktopName` and `linux.syncDesktopName` for electron-builder, so that Linux desktops
+  link the running window to the AppImage's desktop entry (electron-builder warns about it,
+  ADR 0040).
 - ESLint rules for React hooks (`eslint-plugin-react-hooks`) once components use hooks
   (ADR 0033).
 - Load the renderer through a custom `app://` protocol instead of `file://` (Electron security

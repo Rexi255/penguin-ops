@@ -4,6 +4,9 @@ _Last updated: 2026-11-17_
 
 ## Recently completed
 
+- M3.0f-1 and M5.1-1, done early: the owner's logo is in `assets/brand/` (SVG variants for dark
+  and light backgrounds, web icons, usage rules) and in the README; the installer, the app and
+  the AppImage use the PenguinOps app icon; a test guards the brand files (ADR 0040).
 - Roadmap: the design language comes before the game frame screens as M3.0a–f (impeccable
   design skill, tokens, styleguide page, typography, icon style, logo); the owner drafts the
   logo in a separate chat; M5.1 keeps only the final app icon files (ADR 0039).
@@ -16,10 +19,6 @@ _Last updated: 2026-11-17_
   (`npm run check`, end-to-end tests, AppImage, packaged app), Windows job (tests, end-to-end
   tests, installer, packaged app), documentation duty check (`npm run check:docs-duty`),
   Dependabot with grouped weekly updates, pull request template (ADR 0036).
-- M0.8 Packaging: `npm run package` builds an NSIS installer wizard (Windows) or an AppImage
-  (Linux) into `apps/desktop/release`; `npm run e2e:packaged` tests the packaged app; the owner
-  tested install and uninstall on Windows (ADR 0034). `truncate-utf8-bytes` (WTFPL) approved as
-  a development-only exception (ADR 0035).
 
 ## In progress
 
@@ -36,7 +35,8 @@ _Last updated: 2026-11-17_
 
 - Linux is verified only by CI (no WSL locally). The AppImage itself is built but not started
   in CI (the tests start the unpacked app); a manual check on a Linux machine is still open.
-- Logo: the owner drafts it in a separate chat from the briefing of this session; M3.0f takes
-  over the chosen SVG files.
+- Owner task: upload `assets/brand/web/social-preview.png` in GitHub → Settings → General →
+  Social preview.
+- The logo colours are provisional until M3.0f-2 aligns them with the design tokens.
 - Steam release is assumed to be "maybe later" (ADR 0002); confirm with the owner when it
   becomes relevant.

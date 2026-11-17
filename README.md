@@ -1,4 +1,9 @@
-# PenguinOps
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/svg/logo-horizontal-dark.svg">
+    <img src="assets/brand/svg/logo-horizontal-light.svg" alt="PenguinOps" width="420">
+  </picture>
+</h1>
 
 A relaxed learning game for Linux commands. You start as an intern in a company's IT
 department and solve support tickets in a simulated terminal: find a lost file, clean up a full

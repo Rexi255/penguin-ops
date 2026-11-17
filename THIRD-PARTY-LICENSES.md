@@ -13,6 +13,7 @@ licenses: [ADR 0005](docs/decisions/0005-mit-license-and-dependency-allowlist.md
 
 | Name | Type | Source | License | Used for | Notes |
 |---|---|---|---|---|---|
+| Geist Mono Bold | Font (glyph outlines) | https://github.com/vercel/geist-font | OFL-1.1 | Wordmark of the logo | Converted to paths in `assets/brand/svg/logo-wordmark-*.svg` and `logo-horizontal-*.svg` and in the raster images made from them; the font file is not shipped. © The Geist Project Authors |
 | Mulberry32 | Code (algorithm, adapted) | https://gist.github.com/tommyettinger/46a874533244883189143505d203312c | CC0-1.0 | Seeded random generator of the engine | `packages/engine/src/random.ts`; dedicated to the public domain by Tommy Ettinger |
 
 <!--

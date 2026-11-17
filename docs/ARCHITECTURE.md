@@ -42,6 +42,7 @@ penguin-ops/
     levels/<level-id>/level.yaml, de.yaml, en.yaml
     ui/de.yaml, ui/en.yaml
     worlds/      shared base worlds (e.g. the company network, the playground)
+  assets/brand/  logo SVGs and web icons, with usage rules (ADR 0040)
   docs/          documentation (see CLAUDE.md, "Where to find what")
   .claude/       Claude Code skills, rules and hooks
   .github/       CI workflows, Dependabot, pull request template (from M0)
@@ -175,6 +176,7 @@ Current state (ADR 0033):
 apps/desktop/
   electron.vite.config.ts   builds main, preload and the renderer (root: apps/ui) into out/
   electron-builder.config.ts  packages out/ into the installer or AppImage in release/ (ADR 0034)
+  build/                    app icons that electron-builder reads while packaging (ADR 0040)
   playwright.config.ts      end-to-end tests against the built and the packaged app
   src/main/index.ts         app start, hardening of all web contents and the session, IPC handlers
   src/main/window.ts        the main window
@@ -218,6 +220,11 @@ end-to-end tests in `apps/desktop/e2e/` (`*.spec.ts`).
 - Packaging (ADR 0034): `npm run package` builds the app and runs electron-builder for the
   current platform: NSIS installer wizard on Windows, AppImage on Linux, both in
   `apps/desktop/release/`. Nothing is published by a build.
+- App icon (ADR 0040): `apps/desktop/build/icon.ico` for Windows (executable, shortcuts,
+  installer), `apps/desktop/build/icons/NxN.png` for the AppImage. On Linux the main window
+  also sets the 256 px PNG as its icon; electron-vite copies it into `out/` through an
+  `?asset` import. The source files and usage rules are in `assets/brand/README.md`;
+  `scripts/brand-assets.test.ts` guards them.
 
 ## Claude Code setup
 

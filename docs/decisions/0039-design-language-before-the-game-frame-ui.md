@@ -1,6 +1,8 @@
 # 0039. Design language before the game frame UI
 
-- Status: Accepted
+- Status: Accepted; partly superseded by
+  [0040](0040-logo-and-app-icon-taken-over-before-the-design-tokens.md) (the order of the logo
+  package)
 - Date: 2026-11-17
 - Supersedes: –
 

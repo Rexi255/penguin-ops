@@ -3,6 +3,9 @@ import { join } from "node:path";
 
 import { BrowserWindow } from "electron";
 
+// electron-vite copies the file into the build output and returns its path at run time.
+import windowIcon from "../../build/icons/256x256.png?asset";
+
 import type { AppLocation } from "./security";
 import { secureWebPreferences } from "./web-preferences";
 
@@ -18,6 +21,10 @@ export async function createMainWindow(location: AppLocation): Promise<BrowserWi
     show: false,
     backgroundColor: BACKGROUND_COLOR,
     autoHideMenuBar: true,
+    // Windows takes the window icon from PenguinOps.exe, which electron-builder gives the app
+    // icon. Linux needs it here, for development runs and for desktops that read the icon from
+    // the window instead of from the .desktop file.
+    ...(process.platform === "linux" ? { icon: windowIcon } : {}),
     webPreferences: secureWebPreferences(join(import.meta.dirname, "../preload/index.cjs")),
   });
   window.once("ready-to-show", () => {

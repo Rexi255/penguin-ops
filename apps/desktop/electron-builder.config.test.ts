@@ -1,6 +1,8 @@
 // Guards the packaging decisions of ADR 0002 and ADR 0034. That the installer and the AppImage
 // really build and start is shown by `npm run package` and `npm run e2e:packaged` (CI, M0.9).
+import { existsSync } from "node:fs";
 import { createRequire } from "node:module";
+import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
@@ -44,6 +46,18 @@ describe("electron-builder configuration", () => {
   it("builds an AppImage for Linux", () => {
     expect(config.linux?.target).toEqual([{ target: "AppImage", arch: ["x64"] }]);
     expect(config.linux?.executableName).toBe("penguin-ops");
+  });
+
+  it("gives the installer, the app and the AppImage the PenguinOps icon", () => {
+    expect(config.directories?.buildResources).toBe("build");
+    expect(config.win?.icon).toBe("build/icon.ico");
+    expect(config.linux?.icon).toBe("build/icons");
+    // The wizards fall back to the app icon only when no installer icon is set.
+    expect(config.nsis?.installerIcon).toBeUndefined();
+    expect(config.nsis?.uninstallerIcon).toBeUndefined();
+    for (const path of [config.win?.icon, config.linux?.icon]) {
+      expect(existsSync(join(import.meta.dirname, path ?? "missing"))).toBe(true);
+    }
   });
 
   it("names the files as the README tells players to download them", () => {

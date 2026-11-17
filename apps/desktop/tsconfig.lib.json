@@ -3,7 +3,8 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["node"],
+    // electron-vite/node declares asset imports such as `icon.png?asset`.
+    "types": ["node", "electron-vite/node"],
     // Electron's type declarations need DOM types (for <webview> and video frames), which the
     // main process must not have. Declaration files are therefore not checked; our own code
     // still is (ADR 0033).

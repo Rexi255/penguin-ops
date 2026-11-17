@@ -28,6 +28,8 @@ export const LINUX_EXECUTABLE_NAME = "penguin-ops";
 
 export const OUTPUT_DIRECTORY = "release";
 
+export const BUILD_RESOURCES_DIRECTORY = "build";
+
 const config: Configuration = {
   // Identifies the installation on Windows (uninstall entry, upgrades). Never change it after a
   // release, or a new version installs next to the old one instead of updating it (ADR 0021).
@@ -35,7 +37,9 @@ const config: Configuration = {
   productName: "PenguinOps",
   copyright: "Copyright © 2026 Rexi255",
   electronVersion: installedElectronVersion(),
-  directories: { output: OUTPUT_DIRECTORY },
+  // build/ holds the app icon (assets/brand/README.md): icon.ico for Windows, icons/NxN.png for
+  // Linux. It is only read while packaging and not copied into the app.
+  directories: { output: OUTPUT_DIRECTORY, buildResources: BUILD_RESOURCES_DIRECTORY },
   // Only the build output is shipped: no sources, tests or source maps. The app has no runtime
   // dependencies, because electron-vite bundles everything into out/.
   files: ["out/**/*", "!**/*.map"],
@@ -45,6 +49,9 @@ const config: Configuration = {
 
   win: {
     target: [{ target: "nsis", arch: ["x64"] }],
+    // Used for PenguinOps.exe, the shortcuts and the uninstall entry; the installer and
+    // uninstaller wizards use it too.
+    icon: "build/icon.ico",
   },
   nsis: {
     // An installer wizard instead of a one-click installer: the player chooses the folder.
@@ -68,6 +75,8 @@ const config: Configuration = {
   linux: {
     target: [{ target: "AppImage", arch: ["x64"] }],
     executableName: LINUX_EXECUTABLE_NAME,
+    // One PNG per size, named NxN.png, for the AppImage's desktop entry and icon theme.
+    icon: "build/icons",
     category: "Game",
     // Shown by application menus; the description in package.json is meant for developers.
     synopsis: "A relaxed learning game for Linux commands.",
