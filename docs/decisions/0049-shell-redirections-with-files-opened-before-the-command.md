@@ -1,6 +1,8 @@
 # 0049. Shell redirections with files opened before the command
 
-- Status: Accepted
+- Status: Accepted; partly superseded by
+  [0050](0050-input-redirections-read-the-file-when-the-command-starts.md) (when the input
+  redirection reads its file)
 - Date: 2026-11-17
 - Supersedes: –
 

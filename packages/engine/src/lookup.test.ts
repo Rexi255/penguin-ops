@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 import type { Credentials } from "./credentials";
 import type { DirectoryNode, FileNode, FsNode } from "./fs-node";
 import { toGid, toUid } from "./ids";
-import { lookup } from "./lookup";
+import { lookup, nodeAtCanonicalPath } from "./lookup";
 
 function file(content: string, mode = 0o644, owner = 0, group = 0): FileNode {
   return { kind: "file", owner: toUid(owner), group: toGid(group), mode, mtime: 0, content };
@@ -242,5 +242,20 @@ describe("lookup errors", () => {
       error: "ENOTDIR",
     });
     expect(lookup(root, bob, "/", "/missing/hostname/")).toEqual({ ok: false, error: "ENOENT" });
+  });
+});
+
+describe("nodeAtCanonicalPath", () => {
+  test("returns the node without checking permissions", () => {
+    expect(nodeAtCanonicalPath(root, [])).toBe(root);
+    expect(nodeAtCanonicalPath(root, ["home", "bob", "secret.txt"])).toMatchObject({
+      content: "pin 1234\n",
+    });
+    expect(nodeAtCanonicalPath(root, ["locked", "inside"])).toMatchObject({ content: "x\n" });
+  });
+
+  test("returns undefined for a missing name or a path through a file", () => {
+    expect(nodeAtCanonicalPath(root, ["home", "carol"])).toBeUndefined();
+    expect(nodeAtCanonicalPath(root, ["etc", "hostname", "x"])).toBeUndefined();
   });
 });

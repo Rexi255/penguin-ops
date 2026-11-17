@@ -83,6 +83,29 @@ export function lookup(
 }
 
 /**
+ * Returns the node at the canonical `components` below `root` (no `.`, `..` or empty names), or
+ * `undefined` if there is none. Nothing is checked: this is for files that a redirection opened
+ * before and that the kernel would reach through the open file instead of the path (ADR 0049).
+ */
+export function nodeAtCanonicalPath(
+  root: DirectoryNode,
+  components: readonly string[],
+): FsNode | undefined {
+  let current: FsNode = root;
+  for (const component of components) {
+    if (current.kind !== "directory") {
+      return undefined;
+    }
+    const child = current.entries.get(component);
+    if (child === undefined) {
+      return undefined;
+    }
+    current = child;
+  }
+  return current;
+}
+
+/**
  * Walks `components` from `from`. With `credentials`, every directory must allow searching;
  * without them (for the walk to the working directory) nothing is checked.
  */

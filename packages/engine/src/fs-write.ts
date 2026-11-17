@@ -6,7 +6,7 @@
 import type { Clock } from "./clock";
 import type { Credentials } from "./credentials";
 import type { DirectoryNode, FileNode, FsNode } from "./fs-node";
-import { lookup, type LookupError } from "./lookup";
+import { lookup, type LookupError, nodeAtCanonicalPath } from "./lookup";
 import { joinAbsolute, splitPath } from "./path";
 import { hasPermission } from "./permissions";
 import type { Session } from "./session";
@@ -134,9 +134,12 @@ export function writeToOpenFile(
   const components = splitPath(path).components;
   const name = components.at(-1);
   const directoryComponents = components.slice(0, -1);
-  const directory = nodeAtComponents(host.root, directoryComponents);
-  const file = name === undefined ? undefined : directory?.entries.get(name);
-  if (name === undefined || directory === undefined || file?.kind !== "file") {
+  const directory = nodeAtCanonicalPath(host.root, directoryComponents);
+  if (name === undefined || directory?.kind !== "directory") {
+    return world;
+  }
+  const file = directory.entries.get(name);
+  if (file?.kind !== "file") {
     return world;
   }
   const written = writeToFile(file, { path, text, mode: "append" }, clock.now());
@@ -146,22 +149,6 @@ export function writeToOpenFile(
   const changed = withEntry(directory, name, written, directory.mtime);
   const root = replaceDirectory(host.root, directoryComponents, changed);
   return replaceHostRoot(world, host.name, root);
-}
-
-/** The directory at the canonical `components` below `root`, or `undefined` if there is none. */
-function nodeAtComponents(
-  root: DirectoryNode,
-  components: readonly string[],
-): DirectoryNode | undefined {
-  let current: DirectoryNode = root;
-  for (const component of components) {
-    const child = current.entries.get(component);
-    if (child?.kind !== "directory") {
-      return undefined;
-    }
-    current = child;
-  }
-  return current;
 }
 
 /** Where a write goes: the directory that holds the file, its canonical path, the file's name. */

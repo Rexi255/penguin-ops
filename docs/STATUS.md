@@ -8,7 +8,8 @@ _Last updated: 2026-11-17_
   before the command (also for unknown commands), output is added after the command, failures
   give bash's message and exit status 1, redirections win over pipes; `stdin` is now a
   `StandardInput` union with `directory` for `< dir`; fds from 3 on and `0>`/`1<` are game
-  notices (ADR 0049).
+  notices (ADR 0049). After a code review, `<` reads its file when the command starts, so
+  `cmd < f > f` empties `f` like bash (ADR 0050).
 - M1.6c-1 Write side of the file system: `writeFile` creates, truncates or appends to a file
   like `open(2)` for `>` and `>>`, with the kernel's error order (`ENOENT`, `ENOTDIR`,
   `EACCES`, `EISDIR`), setgid groups and mtimes from the game clock; sessions have a umask

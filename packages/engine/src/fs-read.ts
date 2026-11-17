@@ -1,18 +1,21 @@
-// Opening files for reading (ADR 0049), modelled on the Linux kernel's open(2) with O_RDONLY,
-// which bash calls for `<`: the path is looked up like `lookup`, and the node needs read
-// permission. A directory opens too; only reading from it fails later with EISDIR.
+// Opening files for reading (ADR 0049, ADR 0050), modelled on the Linux kernel's open(2) with
+// O_RDONLY, which bash calls for `<`: the path is looked up like `lookup`, and the node needs
+// read permission. A directory opens too; only reading from it fails later with EISDIR.
 
-import { lookup, type LookupError } from "./lookup";
+import { lookup, type LookupError, nodeAtCanonicalPath } from "./lookup";
+import { splitPath } from "./path";
 import { hasPermission } from "./permissions";
 import type { Session } from "./session";
 import { findHost, type World } from "./world";
 
 /**
- * What an opened node gives a reader: the content of a file at the time it was opened, or a
- * directory, whose every read fails with EISDIR ("Is a directory").
+ * What was opened: a file with its canonical absolute path and its content at the time it was
+ * opened, or a directory, whose every read fails with EISDIR ("Is a directory"). Whoever reads
+ * the file later must read it again with `readOpenFile`, because it may have changed since.
  */
 export type OpenedForReading =
-  { readonly kind: "file"; readonly content: string } | { readonly kind: "directory" };
+  | { readonly kind: "file"; readonly path: string; readonly content: string }
+  | { readonly kind: "directory" };
 
 /** The result of `openForReading`: what was opened, or an error code of the lookup. */
 export type ReadOpenResult =
@@ -40,8 +43,28 @@ export function openForReading(world: World, session: Session, path: string): Re
   }
   switch (found.node.kind) {
     case "file":
-      return { ok: true, opened: { kind: "file", content: found.node.content } };
+      return {
+        ok: true,
+        opened: { kind: "file", path: found.path, content: found.node.content },
+      };
     case "directory":
       return { ok: true, opened: { kind: "directory" } };
   }
+}
+
+/**
+ * Returns the current content of the file at the canonical absolute `path` on the host
+ * `hostName`, like a read(2) from a file that `openForReading` opened before: there are no
+ * permission checks, and a `>` that emptied the file since is seen. Returns the empty text if
+ * no file is at `path` any more (the game has no inodes to keep a removed file readable).
+ *
+ * Throws an Error if `hostName` is not part of `world`.
+ */
+export function readOpenFile(world: World, hostName: string, path: string): string {
+  const host = findHost(world, hostName);
+  if (host === undefined) {
+    throw new Error(`the host "${hostName}" is not part of the world`);
+  }
+  const node = nodeAtCanonicalPath(host.root, splitPath(path).components);
+  return node?.kind === "file" ? node.content : "";
 }

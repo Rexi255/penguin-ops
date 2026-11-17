@@ -582,6 +582,12 @@ describe("runScript: output redirections", () => {
     expect(contentOf(result.world, "/home/alice/notes.txt")).toBe("hello\ne1\ne2\n");
   });
 
+  test("two redirections to the same file get the output in write order", () => {
+    const result = runFiles("mixed > out.txt 2>> out.txt; pieces >> out.txt");
+    expect(result.events).toEqual([]);
+    expect(contentOf(result.world, "/home/alice/out.txt")).toBe("e1\no1\ne2\nab\n");
+  });
+
   test("1> and 1>> are the same as > and >>", () => {
     const result = runFiles("say a 1> one.txt; say b 1>> one.txt");
     expect(contentOf(result.world, "/home/alice/one.txt")).toBe("a\nb\n");
@@ -676,11 +682,20 @@ describe("runScript: input redirections", () => {
     expect(runFiles("< missing.txt").session.exitStatus).toBe(1);
   });
 
-  test("redirections run from left to right, so < reads before > empties the file", () => {
-    const readFirst = runFiles("upper < notes.txt > notes.txt");
-    expect(contentOf(readFirst.world, "/home/alice/notes.txt")).toBe("HELLO\n");
-    const emptyFirst = runFiles("upper > notes.txt < notes.txt");
-    expect(contentOf(emptyFirst.world, "/home/alice/notes.txt")).toBe("");
+  test("> empties the file before the command reads it, in either order (< f > f)", () => {
+    for (const input of ["upper < notes.txt > notes.txt", "upper > notes.txt < notes.txt"]) {
+      const result = runFiles(input);
+      expect(contentOf(result.world, "/home/alice/notes.txt")).toBe("");
+    }
+  });
+
+  test(">> keeps the content that < reads from the same file", () => {
+    const result = runFiles("upper < notes.txt >> notes.txt");
+    expect(contentOf(result.world, "/home/alice/notes.txt")).toBe("hello\nHELLO\n");
+  });
+
+  test("a later < wins over an earlier one", () => {
+    expect(runFiles("upper < docs < notes.txt").events).toEqual([stdout("HELLO\n")]);
   });
 });
 
@@ -809,5 +824,17 @@ describe("runScript: unsupported redirections", () => {
     const result = runFiles("say hi > first.txt 3> x.txt");
     expect(contentOf(result.world, "/home/alice/first.txt")).toBe("");
     expect(result.session.exitStatus).toBe(1);
+  });
+
+  test("a stop keeps assignments without a command name, which come before it", () => {
+    const result = runFiles("X=1 > first.txt 3> x.txt");
+    expect(result.session.variables.get("X")).toBe("1");
+    expect(contentOf(result.world, "/home/alice/first.txt")).toBe("");
+    expect(result.session.exitStatus).toBe(1);
+  });
+
+  test("a stop loses assignments before a command name", () => {
+    const result = runFiles("X=1 say hi 3> x.txt");
+    expect(result.session.variables.has("X")).toBe(false);
   });
 });

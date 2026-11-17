@@ -7,7 +7,7 @@
 
 import type { Clock, GameClock } from "./clock";
 import { expandAssignment, expandWords, type UnsupportedParameter } from "./expand";
-import { openForReading } from "./fs-read";
+import { openForReading, readOpenFile } from "./fs-read";
 import { writeFile, type WriteError, writeToOpenFile } from "./fs-write";
 import type { AndOrList, Assignment, Pipeline, Redirection, Script, SimpleCommand } from "./parser";
 import type { Session } from "./session";
@@ -284,23 +284,46 @@ function redirectedStream(
   }
 }
 
+/** Standard input as the redirections leave it: given, or a file that `<` opened. */
+type RedirectedInput = StandardInput | ({ readonly kind: "file" } & OpenFile);
+
 /**
- * The standard streams of one command after its redirections. Output to the terminal or the pipe
- * goes on at once; output to a file is kept in order and added to the files by `flush`, because
- * the command works on its own copy of the world while it runs.
+ * The standard streams of one command after its redirections. A file opened with `<` is read
+ * only when the command starts, so it sees what later redirections did to it (`< f > f` reads
+ * the emptied file). Output to the terminal or the pipe goes on at once; output to a file is
+ * kept in order and added to the files by `flush`, because the command works on its own copy of
+ * the world while it runs.
  */
 class CommandStreams {
   private readonly files = new Map<OutputStream, OpenFile>();
   private readonly pending: { file: OpenFile; text: string }[] = [];
 
   constructor(
-    public stdin: StandardInput,
+    private input: RedirectedInput,
     private readonly output: Output,
   ) {}
+
+  /** Reads standard input from `input` from now on. */
+  readFrom(input: RedirectedInput): void {
+    this.input = input;
+  }
 
   /** Sends the output of `stream` to `file` from now on. */
   redirect(stream: OutputStream, file: OpenFile): void {
     this.files.set(stream, file);
+  }
+
+  /** The standard input for the command; a file opened with `<` is read from `world` now. */
+  stdin(world: World): StandardInput {
+    const input = this.input;
+    switch (input.kind) {
+      case "terminal":
+      case "text":
+      case "directory":
+        return input;
+      case "file":
+        return { kind: "text", text: readOpenFile(world, input.host, input.path) };
+    }
   }
 
   write(stream: OutputStream, text: string): void {
@@ -309,8 +332,12 @@ class CommandStreams {
       this.output.write(stream, text);
       return;
     }
+    if (text === "") {
+      return;
+    }
     const last = this.pending.at(-1);
-    if (last?.file === file) {
+    // Two redirections to the same file (`> f 2>> f`) share one chunk while they take turns.
+    if (last?.file.host === file.host && last.file.path === file.path) {
       last.text += text;
     } else {
       this.pending.push({ file, text });
@@ -420,8 +447,10 @@ class Runner {
     const redirected = this.redirect(state.world, commandSession, command.redirections, streams);
     const opened = redirected.world;
     if (redirected.kind === "unsupported") {
-      // The files opened before the stop stay, like every other change before a stop.
-      this.lastState = { world: opened, session: state.session };
+      // The files opened before the stop stay, like every other change before a stop. Without a
+      // command name that includes the assignments, which are made before the redirections.
+      const session = name === undefined ? commandSession : state.session;
+      this.lastState = { world: opened, session };
       throw new Abort(redirected.feature, redirected.start);
     }
     if (name === undefined) {
@@ -445,7 +474,7 @@ class Runner {
       session: commandSession,
       name,
       args,
-      stdin: streams.stdin,
+      stdin: streams.stdin(opened),
       clock: this.clock,
       stdout: (text) => {
         streams.write("stdout", text);
@@ -531,8 +560,10 @@ class Runner {
       if (!read.ok) {
         return { kind: "failed", error: read.error };
       }
-      streams.stdin =
-        read.opened.kind === "file" ? { kind: "text", text: read.opened.content } : read.opened;
+      const opened = read.opened;
+      streams.readFrom(
+        opened.kind === "file" ? { kind: "file", host: session.host, path: opened.path } : opened,
+      );
       return { kind: "opened", world };
     }
     const mode = redirection.operator === ">>" ? "append" : "truncate";

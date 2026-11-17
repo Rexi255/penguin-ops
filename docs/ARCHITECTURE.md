@@ -135,7 +135,8 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     kernel; root may read, write and search everything and execute files with any x bit.
   - `src/lookup.ts`: `lookup` walks a path component by component from the root or the working
     directory, needs search permission on every directory on the way and returns the node with
-    its canonical path, or `ENOENT`, `ENOTDIR` or `EACCES` as a value.
+    its canonical path, or `ENOENT`, `ENOTDIR` or `EACCES` as a value. `nodeAtCanonicalPath`
+    walks a canonical path without checks, for files a redirection already opened (ADR 0050).
   - `src/collation.ts`: `compareNames` sorts names like Debian's en_US.UTF-8 locale (an
     approximation of glibc's collation, ADR 0046); glob results use it, `ls` will too.
   - `src/fs-write.ts`: `writeFile` creates, truncates or appends to a file like `open(2)` for
@@ -146,8 +147,9 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     file's canonical path. `writeToOpenFile` adds text to a file that a redirection opened
     before, without permission checks, and drops it if the file is gone (ADR 0049).
   - `src/fs-read.ts`: `openForReading` opens a file or directory like `open(2)` with
-    `O_RDONLY` (lookup errors, read permission); a file gives its content, a directory only
-    errors on reading (ADR 0049).
+    `O_RDONLY` (lookup errors, read permission); a file gives its canonical path and content, a
+    directory only errors on reading (ADR 0049). `readOpenFile` reads an opened file again
+    without permission checks (ADR 0050).
 - **Shell** (ADR 0007): lexer → parser → AST → interpreter. Expansion of variables, `~` and
   globs; pipelines; lists with `;`, `&&`, `||`; redirections; exit codes.
   - `src/lexer.ts`: `lex` splits an input text into word, control operator, redirection and
@@ -177,8 +179,9 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   - Redirections (ADR 0049): after the assignments and before the command lookup, `<`, `>`,
     `>>`, `2>` and `2>>` open their targets from left to right (`openForReading`,
     `writeFile`). The command gets its `stdin` as a `StandardInput` (`terminal`, `text` or
-    `directory`); output for a file is collected and added with `writeToOpenFile` after the
-    command. A failed redirection writes bash's message and gives exit status 1 without running
+    `directory`); a file from `<` is read with `readOpenFile` when the command starts, so
+    `< f > f` sees the emptied file (ADR 0050). Output for a file is collected and added with
+    `writeToOpenFile` after the command. A failed redirection writes bash's message and gives exit status 1 without running
     the command; file descriptors from 3 on and reversed forms (`0>`, `1<`) are game notices.
 - **Commands:** registry of command implementations with declared options, a shared option
   parser and coreutils-style errors, matching Debian 13 (ADR 0004).

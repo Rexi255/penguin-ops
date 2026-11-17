@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import { createGameClock } from "./clock";
-import { openForReading } from "./fs-read";
+import { openForReading, readOpenFile } from "./fs-read";
 import { createSession, type Session } from "./session";
 import { buildWorld } from "./world-builder";
 
@@ -38,17 +38,17 @@ function session(user: string): Session {
 }
 
 describe("openForReading", () => {
-  test("opens a file with its content", () => {
+  test("opens a file with its canonical path and content", () => {
     expect(openForReading(world, session("alice"), "/home/alice/notes.txt")).toEqual({
       ok: true,
-      opened: { kind: "file", content: "hello\n" },
+      opened: { kind: "file", path: "/home/alice/notes.txt", content: "hello\n" },
     });
   });
 
   test("resolves relative paths from the working directory", () => {
     expect(openForReading(world, session("alice"), "docs/../notes.txt")).toEqual({
       ok: true,
-      opened: { kind: "file", content: "hello\n" },
+      opened: { kind: "file", path: "/home/alice/notes.txt", content: "hello\n" },
     });
   });
 
@@ -85,7 +85,7 @@ describe("openForReading", () => {
   test("lets root read everything", () => {
     expect(openForReading(world, session("root"), "/srv/closed/inside.txt")).toEqual({
       ok: true,
-      opened: { kind: "file", content: "inside\n" },
+      opened: { kind: "file", path: "/srv/closed/inside.txt", content: "inside\n" },
     });
     expect(openForReading(world, session("root"), "/home/alice/drop.txt")).toMatchObject({
       ok: true,
@@ -96,6 +96,26 @@ describe("openForReading", () => {
     const lost: Session = { ...session("alice"), host: "gone" };
     expect(() => openForReading(world, lost, "/etc/hostname")).toThrow(
       `the session's host "gone" is not part of the world`,
+    );
+  });
+});
+
+describe("readOpenFile", () => {
+  test("returns the current content without permission checks", () => {
+    expect(readOpenFile(world, "ws01", "/home/alice/notes.txt")).toBe("hello\n");
+    expect(readOpenFile(world, "ws01", "/home/alice/drop.txt")).toBe("secret\n");
+    expect(readOpenFile(world, "ws01", "/srv/closed/inside.txt")).toBe("inside\n");
+  });
+
+  test("returns the empty text if no file is at the path any more", () => {
+    expect(readOpenFile(world, "ws01", "/home/alice/gone.txt")).toBe("");
+    expect(readOpenFile(world, "ws01", "/home/alice/docs")).toBe("");
+    expect(readOpenFile(world, "ws01", "/etc/hostname/x")).toBe("");
+  });
+
+  test("by throwing when the host is not part of the world", () => {
+    expect(() => readOpenFile(world, "gone", "/etc/hostname")).toThrow(
+      `the host "gone" is not part of the world`,
     );
   });
 });
