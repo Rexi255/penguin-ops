@@ -105,6 +105,20 @@ const testCommands: Record<string, ShellCommand> = {
     stderr(terminal === undefined ? "<no terminal>\n" : `${String(terminal.columns)}\n`);
     return { exitStatus: 0 };
   },
+  /**
+   * Writes `before`, clears the screen (with the scrollback unless its argument is `keep`) and
+   * writes `after`; without a terminal it writes `<no terminal>` instead of clearing.
+   */
+  wipe: ({ args, terminal, stdout }) => {
+    stdout("before\n");
+    if (terminal === undefined) {
+      stdout("<no terminal>\n");
+    } else {
+      terminal.clearScreen(args[0] !== "keep");
+    }
+    stdout("after\n");
+    return { exitStatus: 0 };
+  },
   /** Changes the working directory to its argument without any checks, and says so. */
   go: ({ args, session, stdout }) => {
     stdout("moved\n");
@@ -221,6 +235,40 @@ describe("runScript: the terminal", () => {
     expect(() => run("true", { terminal: { columns: 1.5 } })).toThrow(RangeError);
     expect(() => run("true", { terminal: { columns: Number.NaN } })).toThrow(RangeError);
     expect(run("tty", { terminal: { columns: 1 } }).events).toEqual([stderr("1\n")]);
+  });
+
+  test("a command on the terminal clears the screen at its place in the output", () => {
+    expect(run("say hi; wipe; say ho").events).toEqual([
+      stdout("hi\nbefore\n"),
+      { kind: "clear-screen", clearsScrollback: true },
+      stdout("after\nho\n"),
+    ]);
+    expect(run("wipe keep").events).toEqual([
+      stdout("before\n"),
+      { kind: "clear-screen", clearsScrollback: false },
+      stdout("after\n"),
+    ]);
+  });
+
+  test("a command clears the screen as the last command of a pipeline only", () => {
+    expect(run("mixed | wipe").events).toEqual([
+      stderr("e1\ne2\n"),
+      stdout("before\n"),
+      { kind: "clear-screen", clearsScrollback: true },
+      stdout("after\n"),
+    ]);
+    expect(run("wipe | upper").events).toEqual([stdout("BEFORE\n<NO TERMINAL>\nAFTER\n")]);
+  });
+
+  test("a command whose output goes to a file cannot clear the screen", () => {
+    const result = run("wipe > /home/alice/out.txt");
+    expect(result.events).toEqual([]);
+    const host = findHost(result.world, "ws01");
+    const written = host && lookupPath(host.root, alice.credentials, "/", "/home/alice/out.txt");
+    expect(written).toMatchObject({
+      ok: true,
+      node: { content: "before\n<no terminal>\nafter\n" },
+    });
   });
 });
 

@@ -77,7 +77,9 @@ placeholder window; CI builds the installer.
       the terminal's width, shell quoting of names, errors (ADR 0054).
 - [x] M1.8b-2 Commands batch 1, part 2b: `ls -l` (long format, `total`, owner and group names,
       dates), with `-g`, `-o`, `-G`, `-n` (ADR 0055).
-- [ ] M1.8c Commands batch 1, part 3: `clear`, `history` (session history, screen clear event).
+- [x] M1.8c-1 Commands batch 1, part 3a: `clear` with the screen clear event, escape sequences
+      into pipes and files, `TERM` in the session (ADR 0056).
+- [ ] M1.8c-2 Commands batch 1, part 3b: `history` (session history).
 - [ ] M1.9 Commands batch 2: `cat` (`-n`), `head`, `tail`, `mkdir` (`-p`), `touch`.
 - [ ] M1.10 Commands batch 3: `cp` (`-r`), `mv`, `rm` (`-r`, `-f`), `grep` (`-i`, `-v`, `-n`,
       `-c`, `-r`, `-l`).

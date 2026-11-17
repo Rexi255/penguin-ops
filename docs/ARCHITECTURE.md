@@ -123,7 +123,7 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     it, ADR 0053), shell
     variables, the last exit status and the umask; `createSession` (starts in the home
     directory, or in `/` if the user cannot enter it, sets the login variables such as `HOME`
-    and `PATH`, ADR 0046, and the umask of Debian 13's `pam_umask`, ADR 0048) and `userAtHost`
+    and `PATH`, ADR 0046, `TERM=xterm-256color`, ADR 0056, and the umask of Debian 13's `pam_umask`, ADR 0048) and `userAtHost`
     (the `\u@\h` part of the prompt).
   - `src/world-builder.ts`: `buildWorld` creates a checked world from a short `WorldSpec`
     (users and groups by name, files as a map from absolute paths to contents); it creates
@@ -189,6 +189,8 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     bash's `command not found` and exit status 127. `ScriptRun.terminal` carries the
     terminal's width from the UI; a command gets it as `CommandContext.terminal` only if its
     standard output is neither piped nor redirected to a file, like `isatty(1)` (ADR 0054).
+    That `CommandTerminal` can also clear the screen, which gives a `clear-screen` event at
+    its place in the output (ADR 0056).
   - Redirections (ADR 0049): after the assignments and before the command lookup, `<`, `>`,
     `>>`, `2>` and `2>>` open their targets from left to right (`openForReading`,
     `writeFile`). The command gets its `stdin` as a `StandardInput` (`terminal`, `text` or
@@ -201,7 +203,8 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   - `src/options.ts`: `parseOptions` splits a command's arguments into options and operands
     like glibc's `getopt_long` (ADR 0051): short option clusters, required and optional
     arguments, unambiguous abbreviations of long options, `--`, and operands between options
-    (`permute`) or not (`require-order`). Commands declare their complete real option table as
+    (`permute`) or not (`require-order`). The `getopt` syntax reads like plain `getopt`,
+    without long options (ADR 0056). Commands declare their complete real option table as
     `OptionSpec`s. Errors are values and keep the options read before them;
     `optionErrorMessage` and `tryHelpMessage` write glibc's and the coreutils' messages.
   - `src/command-registry.ts` (ADR 0052): `defineCommand` builds a command from its real option
@@ -222,9 +225,11 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     converts between text and UTF-8 bytes.
   - `src/commands/` holds the commands, one module each, and `COMMANDS`, the list for
     `createCommandLookup`. `cd`, `pwd` and `echo` are builtins, `whoami` and `ls` use
-    `defineCommand`. `ls` follows coreutils' `ls.c`: columns on a terminal, one name per line
-    otherwise (ADR 0054); `long-listing.ts` writes its long format with `-l`, `-g`, `-o`, `-G`
-    and `-n` (ADR 0055).
+    `defineCommand`. `clear` is ncurses' program with plain `getopt`: on the terminal it clears
+    the screen, into a pipe or a file it writes the escape sequences of `xterm-256color`, the
+    `TERM` that `createSession` sets (ADR 0056). `ls` follows coreutils' `ls.c`: columns on a
+    terminal, one name per line otherwise (ADR 0054); `long-listing.ts` writes its long format
+    with `-l`, `-g`, `-o`, `-G` and `-n` (ADR 0055).
     `directory-names.ts` works out working directory names like bash (by text, keeping a
     leading `//`) and checks them like chdir(2) and getcwd(3); the session's `cwd` is the name
     bash remembers, not a resolved path.

@@ -18,7 +18,7 @@ export {
   parseBuiltinOptions,
 } from "./builtins";
 export { type Clock, createGameClock, type GameClock } from "./clock";
-export { cd, COMMANDS, echo, ls, pwd, whoami } from "./commands";
+export { cd, clear, COMMANDS, echo, ls, pwd, whoami } from "./commands";
 export {
   type CommandDefinition,
   type CommandInvocation,
@@ -69,6 +69,7 @@ export {
   type CommandNotice,
   type CommandResult,
   type CommandStop,
+  type CommandTerminal,
   type InvalidUtf8NotSimulated,
   type OptionNotSimulated,
   type OutputStream,
@@ -109,6 +110,7 @@ export {
   type OptionOrder,
   type OptionParseResult,
   type OptionSpec,
+  type OptionSyntax,
   type ParsedOption,
   parseOptions,
   tryHelpMessage,
@@ -136,7 +138,7 @@ export { joinAbsolute, type PathParts, splitPath } from "./path";
 export { type Access, hasPermission } from "./permissions";
 export { localeQuote, shellQuote, shellQuoteAlways } from "./quote";
 export { createRandom, type RandomGenerator } from "./random";
-export { createSession, DEFAULT_IFS, type Session, userAtHost } from "./session";
+export { createSession, DEFAULT_IFS, type Session, TERMINAL_TYPE, userAtHost } from "./session";
 export { decodeUtf8, encodeCodePoint, encodeUtf8, isScalarValue } from "./utf8";
 export {
   createWorld,

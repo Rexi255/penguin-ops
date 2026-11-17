@@ -3,6 +3,8 @@
 // attached or in the next argument (`-n5`, `-n 5`, `--lines=5`, `--lines 5`), unambiguous
 // abbreviations of long options (`--al` for `--all`), `--` as the end of the options, and
 // operands between options. The messages are glibc's; the "Try ... --help" line is coreutils'.
+// Programs that call plain `getopt` without long options, such as ncurses' `clear`, read
+// `--help` as short options (ADR 0056).
 
 /** Whether an option takes an argument, like `no_argument`, `required_argument` and `optional_argument`. */
 export type OptionArgument = "none" | "required" | "optional";
@@ -29,6 +31,17 @@ export interface OptionSpec<Id extends string = string> {
  *   that run another command (`env`, `nice`, `timeout`).
  */
 export type OptionOrder = "permute" | "require-order";
+
+/**
+ * Which glibc function the command calls:
+ *
+ * - `getopt-long`: `getopt_long`, as the coreutils do; an argument starting with `--` is a long
+ *   option.
+ * - `getopt`: plain `getopt`, which has no long options (ADR 0056). An argument starting with
+ *   `--` (other than `--` alone) is a cluster of short options, so `--help` is the invalid option
+ *   `-`. The option table must not have long names.
+ */
+export type OptionSyntax = "getopt-long" | "getopt";
 
 /** An option found in the arguments. */
 export interface ParsedOption<Id extends string = string> {
@@ -101,10 +114,12 @@ type Step<Id extends string> =
  * - `-` alone and every argument that does not start with `-` is an operand. With `permute`
  *   the options after it are still parsed; with `require-order` it and everything after it are
  *   operands.
- * - An argument starting with `--` is a long option. Its name may be abbreviated as long as
- *   the abbreviation is unambiguous; an exact name always wins. Several matches are not
- *   ambiguous if they all have the same `id` and argument kind as the first one.
- * - Any other argument starting with `-` is a cluster of short options (`-la` is `-l -a`).
+ * - With the `getopt-long` syntax, an argument starting with `--` is a long option. Its name may
+ *   be abbreviated as long as the abbreviation is unambiguous; an exact name always wins.
+ *   Several matches are not ambiguous if they all have the same `id` and argument kind as the
+ *   first one.
+ * - Any other argument starting with `-` is a cluster of short options (`-la` is `-l -a`); with
+ *   the `getopt` syntax also one starting with `--`.
  * - A required argument is the rest of the cluster (`-n5`) or the text after `=` (`--lines=5`),
  *   else the next argument, even if that starts with `-` (`-n -5`, `--lines --`).
  * - An optional argument must be attached (`-a5`, `--color=always`); the next argument is
@@ -112,14 +127,20 @@ type Step<Id extends string> =
  *
  * The first error ends the parsing, like in the coreutils, which exit on the first error; the
  * options before it are part of the failure. Throws an Error if `specs` are invalid (see
- * `validateOptionSpecs`).
+ * `validateOptionSpecs`) or if they have long names with the `getopt` syntax.
  */
 export function parseOptions<Id extends string>(
   args: readonly string[],
   specs: readonly OptionSpec<Id>[],
   order: OptionOrder = "permute",
+  syntax: OptionSyntax = "getopt-long",
 ): OptionParseResult<Id> {
   validateOptionSpecs(specs);
+  const longOptions = syntax === "getopt-long";
+  const withLongName = specs.find(hasLongName);
+  if (!longOptions && withLongName !== undefined) {
+    throw new Error(`option "${withLongName.id}" has a long name, which plain getopt cannot read`);
+  }
   const options: ParsedOption<Id>[] = [];
   const operands: string[] = [];
   let index = 0;
@@ -138,9 +159,10 @@ export function parseOptions<Id extends string>(
       index += 1;
       continue;
     }
-    const step = arg.startsWith("--")
-      ? parseLongOption(arg, args, index + 1, specs)
-      : parseShortCluster(arg, args, index + 1, specs);
+    const step =
+      longOptions && arg.startsWith("--")
+        ? parseLongOption(arg, args, index + 1, specs)
+        : parseShortCluster(arg, args, index + 1, specs);
     if (!step.ok) {
       return { ok: false, error: step.error, options: [...options, ...step.options] };
     }

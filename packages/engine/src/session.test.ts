@@ -73,6 +73,7 @@ describe("createSession", () => {
       PATH: "/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games",
       PWD: "/home/alice",
       SHELL: "/bin/bash",
+      TERM: "xterm-256color",
       USER: "alice",
     });
     expect(session.variables.has("OLDPWD")).toBe(false);

@@ -45,6 +45,12 @@ export interface Session {
 const ROOT_PATH = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
 const USER_PATH = "/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games";
 
+/**
+ * The terminal type of the game's terminal (ADR 0056): an xterm-compatible terminal emulator,
+ * as most of them (and SSH clients) report it on Debian 13.
+ */
+export const TERMINAL_TYPE = "xterm-256color";
+
 /** Bash's default `IFS`: space, tab and line break. */
 export const DEFAULT_IFS = " \t\n";
 
@@ -73,8 +79,8 @@ function loginUmask(host: Host, user: User): number {
  *
  * The shell variables are those that `login`, `/etc/profile` and bash set on Debian 13: `HOME`
  * (the home from the user list, as written there), `USER`, `LOGNAME`, `SHELL`, `PATH`, `PWD`,
- * `HOSTNAME` and `IFS`. `OLDPWD` is unset until the first `cd`. The umask comes from
- * `loginUmask`.
+ * `HOSTNAME` and `IFS`, and `TERM` from the terminal (`TERMINAL_TYPE`). `OLDPWD` is unset until
+ * the first `cd`. The umask comes from `loginUmask`.
  */
 export function createSession(world: World, hostName: string, userName: string): Session {
   const host = findHost(world, hostName);
@@ -102,6 +108,7 @@ export function createSession(world: World, hostName: string, userName: string):
     ["PATH", user.uid === 0 ? ROOT_PATH : USER_PATH],
     ["PWD", cwd],
     ["SHELL", user.shell],
+    ["TERM", TERMINAL_TYPE],
     ["USER", user.name],
   ]);
   return {

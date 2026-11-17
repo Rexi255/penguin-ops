@@ -36,6 +36,19 @@ export interface Terminal {
   readonly columns: number;
 }
 
+/**
+ * The terminal as a command whose standard output goes to it sees it: its width, and the
+ * control functions that real programs reach with escape sequences (ADR 0056).
+ */
+export interface CommandTerminal extends Terminal {
+  /**
+   * Clears the screen like the terminfo capability `clear` of `xterm-256color`, and the
+   * scrollback too if `clearsScrollback` is true (the capability `E3`). The shell reports it as
+   * a `clear-screen` event at this point of the output.
+   */
+  readonly clearScreen: (clearsScrollback: boolean) => void;
+}
+
 /** What a command gets when it runs. */
 export interface CommandContext {
   readonly world: World;
@@ -49,9 +62,10 @@ export interface CommandContext {
   readonly stdin: StandardInput;
   /**
    * The terminal if the command's standard output goes to it, like `isatty(1)`; `undefined` if
-   * it goes to a pipe or a file. Some commands write differently then (`ls` in one column).
+   * it goes to a pipe or a file. Some commands write differently then (`ls` in one column,
+   * `clear` its escape sequences).
    */
-  readonly terminal: Terminal | undefined;
+  readonly terminal: CommandTerminal | undefined;
   /** The game time; commands may read it (for example for mtimes), but never advance it. */
   readonly clock: Clock;
   /** Writes `text` to the command's standard output. */
@@ -134,11 +148,21 @@ export type UnsupportedExecution =
 
 /**
  * What the shell shows while it runs an input, in order: output of commands to the terminal,
- * and game notices that the UI renders in the player's language. Consecutive output to the same
- * stream is merged into one event. A game notice is always the last event: it stops the input.
+ * screen clears, and game notices that the UI renders in the player's language. Consecutive
+ * output to the same stream is merged into one event. A game notice is always the last event:
+ * it stops the input.
  */
 export type ShellEvent =
   | { readonly kind: "output"; readonly stream: OutputStream; readonly text: string }
+  | {
+      /**
+       * A command cleared the terminal (`clear`): the UI empties the screen and moves the
+       * cursor to the top left; the output after this event starts there (ADR 0056).
+       */
+      readonly kind: "clear-screen";
+      /** Whether the scrollback is cleared too (`clear` without `-x`). */
+      readonly clearsScrollback: boolean;
+    }
   | {
       readonly kind: "unsupported";
       readonly feature: UnsupportedExecution;
@@ -247,7 +271,8 @@ interface ShellState {
  * "unsupported" event and exit status 1. A command that returns a `CommandStop` stops it the
  * same way with a "notice" event, after the files its redirections opened and the standard
  * error it wrote. A command learns whether its standard output goes to the terminal (neither
- * piped nor redirected to a file) and how wide the terminal is.
+ * piped nor redirected to a file) and how wide the terminal is; only then can it clear the
+ * screen, which gives a "clear-screen" event.
  *
  * Throws a RangeError if the terminal's width is not a whole number from 1 on or if a command
  * returns an exit status outside 0 to 255, and an Error if the session's host is not part of
@@ -514,6 +539,16 @@ class Runner {
     };
   }
 
+  /** The terminal for a command whose standard output goes to it. */
+  private commandTerminal(): CommandTerminal {
+    return {
+      columns: this.terminal.columns,
+      clearScreen: (clearsScrollback) => {
+        this.events.push({ kind: "clear-screen", clearsScrollback });
+      },
+    };
+  }
+
   private write(stream: OutputStream, text: string): void {
     if (text === "") {
       return;
@@ -574,7 +609,7 @@ class Runner {
       name,
       args,
       stdin: streams.stdin(opened),
-      terminal: streams.stdoutIsTerminal() ? this.terminal : undefined,
+      terminal: streams.stdoutIsTerminal() ? this.commandTerminal() : undefined,
       clock: this.clock,
       stdout: (text) => {
         streams.write("stdout", text);

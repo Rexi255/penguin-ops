@@ -4,6 +4,11 @@ _Last updated: 2026-11-18_
 
 ## Recently completed
 
+- M1.8c-1 `clear` (ncurses 6.5): on the terminal a new `clear-screen` event (with or
+  without the scrollback, `-x`), into pipes and files the escape sequences of
+  `xterm-256color`; `-V`, ncurses' usage text, `TERM` errors and notices. Sessions set
+  `TERM=xterm-256color`; commands on the terminal get a `CommandTerminal`; `parseOptions`
+  has a `getopt` syntax without long options (ADR 0056).
 - M1.8b-2 `ls -l` and `-g`, `-o`, `-G`, `-n`: mode string with `s`/`t`, links, owner and
   group names (IDs without a name), sizes, `total` in KiB of 4 KiB blocks, dates in UTC with
   the six-month rule, `?` lines and exit status 1 for entries that cannot be stat'ed. New
@@ -25,11 +30,6 @@ _Last updated: 2026-11-18_
   error stops the input with the game notice `option-not-simulated`, parse errors give the
   coreutils' usage error, and `createCommandLookup` registers the commands. Commands return a
   `CommandExit` or a `CommandStop` with a `CommandNotice` (ADR 0052).
-- M1.7a Option parser: `parseOptions` reads options like GNU `getopt_long` (clusters,
-  `-n5`/`-n 5`, `--lines=5`/`--lines 5`, unambiguous abbreviations, `--`, operands between
-  options or `require-order`) and returns errors as values; `optionErrorMessage` and
-  `tryHelpMessage` write glibc's and the coreutils' messages; commands declare their complete
-  real option table (ADR 0051).
 
 ## In progress
 
@@ -37,7 +37,7 @@ _Last updated: 2026-11-18_
 
 ## Next 3 steps
 
-1. ROADMAP M1.8c: `clear` and `history` (session history, screen clear event).
+1. ROADMAP M1.8c-2: `history` (session history, `HISTCONTROL=ignoreboth`).
 2. ROADMAP M1.9: commands batch 2 (`cat`, `head`, `tail`, `mkdir`, `touch`).
 3. ROADMAP M1.10: commands batch 3 (`cp`, `mv`, `rm`, `grep`).
 
@@ -50,5 +50,5 @@ _Last updated: 2026-11-18_
 - The logo colours are provisional until M3.0f-2 aligns them with the design tokens.
 - Steam release is assumed to be "maybe later" (ADR 0002); confirm with the owner when it
   becomes relevant.
-- Some `ls` details could not be checked against a real Debian 13 (tests marked
-  `@differential`, ADR 0054, ADR 0055); M6 verifies them.
+- Some `ls` and `clear` details could not be checked against a real Debian 13 (tests marked
+  `@differential`, ADR 0054, ADR 0055, ADR 0056); M6 verifies them.

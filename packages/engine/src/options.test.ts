@@ -350,6 +350,73 @@ describe("parseOptions", () => {
       expect(parseOptions(["-ä"], [{ id: "a", short: "ä", argument: "none" }]).ok).toBe(true);
     });
   });
+
+  describe("plain getopt", () => {
+    /** The option string `T:Vx` of ncurses' `clear`. */
+    const shortOnly: readonly OptionSpec[] = [
+      { id: "term", short: "T", argument: "required" },
+      { id: "version", short: "V", argument: "none" },
+      { id: "no-scrollback", short: "x", argument: "none" },
+    ];
+
+    function getopt(args: readonly string[], order: "permute" | "require-order" = "permute") {
+      return parseOptions(args, shortOnly, order, "getopt");
+    }
+
+    test("reads short options, clusters and arguments like getopt_long", () => {
+      expect(getopt(["-xT", "xterm", "file", "-V"])).toEqual({
+        ok: true,
+        options: [
+          { id: "no-scrollback", name: "-x", argument: undefined },
+          { id: "term", name: "-T", argument: "xterm" },
+          { id: "version", name: "-V", argument: undefined },
+        ],
+        operands: ["file"],
+      });
+    });
+
+    test("reads an argument starting with -- as short options: --help is the option -", () => {
+      expect(getopt(["-x", "--help"])).toEqual({
+        ok: false,
+        error: { kind: "invalid-option", option: "-" },
+        options: [{ id: "no-scrollback", name: "-x", argument: undefined }],
+      });
+    });
+
+    test("ends the options at -- alone and keeps - as an operand", () => {
+      expect(getopt(["--", "-x"])).toEqual({ ok: true, options: [], operands: ["-x"] });
+      expect(getopt(["-", "-x"])).toEqual({
+        ok: true,
+        options: [{ id: "no-scrollback", name: "-x", argument: undefined }],
+        operands: ["-"],
+      });
+    });
+
+    test("takes the next argument for a required argument, also --", () => {
+      expect(getopt(["-T", "--"])).toEqual({
+        ok: true,
+        options: [{ id: "term", name: "-T", argument: "--" }],
+        operands: [],
+      });
+      expect(getopt(["-T"])).toEqual({
+        ok: false,
+        error: { kind: "missing-argument", name: "-T" },
+        options: [],
+      });
+    });
+
+    test("stops at the first operand with require-order", () => {
+      expect(getopt(["file", "-x"], "require-order")).toEqual({
+        ok: true,
+        options: [],
+        operands: ["file", "-x"],
+      });
+    });
+
+    test("throws for an option table with long names", () => {
+      expect(() => parseOptions([], specs, "permute", "getopt")).toThrow(Error);
+    });
+  });
 });
 
 describe("optionErrorMessage", () => {
