@@ -57,11 +57,39 @@ const world = createWorld({ hosts: [host("ws01"), host("srv01")] });
 
 describe("createSession", () => {
   test("starts in the user's home with the user's IDs and groups", () => {
-    expect(createSession(world, "ws01", "alice")).toEqual({
-      host: "ws01",
-      credentials: { uid: 1000, gid: 1000, groups: [1000, 27] },
-      cwd: "/home/alice",
+    const session = createSession(world, "ws01", "alice");
+    expect(session.host).toBe("ws01");
+    expect(session.credentials).toEqual({ uid: 1000, gid: 1000, groups: [1000, 27] });
+    expect(session.cwd).toBe("/home/alice");
+  });
+
+  test("@differential sets the shell variables of a Debian login", () => {
+    const session = createSession(world, "ws01", "alice");
+    expect(Object.fromEntries(session.variables)).toEqual({
+      HOME: "/home/alice",
+      HOSTNAME: "ws01",
+      IFS: " \t\n",
+      LOGNAME: "alice",
+      PATH: "/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games",
+      PWD: "/home/alice",
+      SHELL: "/bin/bash",
+      USER: "alice",
     });
+    expect(session.variables.has("OLDPWD")).toBe(false);
+    expect(session.exitStatus).toBe(0);
+  });
+
+  test("@differential gives root the PATH with the sbin directories", () => {
+    expect(createSession(world, "ws01", "root").variables.get("PATH")).toBe(
+      "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    );
+  });
+
+  test("keeps HOME as written in the user list when the session starts in /", () => {
+    const withoutHomes = createWorld({ hosts: [host("ws01", dir({}))] });
+    const session = createSession(withoutHomes, "ws01", "alice");
+    expect(session.variables.get("HOME")).toBe("/home/alice");
+    expect(session.variables.get("PWD")).toBe("/");
   });
 
   test("works on every host of the world", () => {

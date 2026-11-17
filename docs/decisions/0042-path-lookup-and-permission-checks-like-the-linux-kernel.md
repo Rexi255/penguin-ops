@@ -1,6 +1,7 @@
 # 0042. Path lookup and permission checks like the Linux kernel
 
-- Status: Accepted
+- Status: Accepted; partly superseded by [0046](0046-shell-word-expansion.md) (the tilde expansion
+  function)
 - Date: 2026-11-17
 - Supersedes: –
 

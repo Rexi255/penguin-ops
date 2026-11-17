@@ -45,7 +45,7 @@ interface Walk {
  * directory when a parent directory loses its execute permission later. A `cwd` that no longer
  * leads to a directory gives ENOENT for every relative path.
  *
- * `~` is an ordinary name here; the shell expands it before (see `expandTilde`). Throws an Error
+ * `~` is an ordinary name here; the shell expands it before (see `expandWords`). Throws an Error
  * if `cwd` is not an absolute path.
  */
 export function lookup(

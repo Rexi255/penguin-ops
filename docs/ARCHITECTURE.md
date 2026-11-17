@@ -117,22 +117,25 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     and throws an `InvalidWorldError`; lookups by name and ID; `groupIdsOf` (like `id -G`).
     Hosts have no services, processes or network yet.
   - `src/credentials.ts`: `Credentials` (UID, primary GID, all GIDs), fixed at login.
-  - `src/session.ts`: `Session` with host name, credentials and working directory;
-    `createSession` (starts in the home directory, or in `/` if the user cannot enter it) and
-    `userAtHost` (the `\u@\h` part of the prompt).
+  - `src/session.ts`: `Session` with host name, credentials, working directory, shell
+    variables and the last exit status; `createSession` (starts in the home directory, or in
+    `/` if the user cannot enter it, and sets the login variables such as `HOME` and `PATH`,
+    ADR 0046) and `userAtHost` (the `\u@\h` part of the prompt).
   - `src/world-builder.ts`: `buildWorld` creates a checked world from a short `WorldSpec`
     (users and groups by name, files as a map from absolute paths to contents); it creates
     missing parent directories and fills in defaults for owner, group, mode and mtime
     (ADR 0043). Tests use it, and the content loader (M2.2) will map levels onto it.
 - **File system** (ADR 0042): tree of directories and files with owner, group, mode and mtime.
-  - `src/path.ts`: `splitPath` and `joinAbsolute` for path strings; `expandTilde` for the
-    shell's tilde expansion (`~`, `~/…`, `~name`). The file system itself treats `~` as a name.
+  - `src/path.ts`: `splitPath` and `joinAbsolute` for path strings. The file system treats `~`
+    as a name; the shell expands it (`src/expand.ts`).
   - `src/permissions.ts`: `hasPermission` with exactly one class (owner, group, other) like the
     kernel; root may read, write and search everything and execute files with any x bit.
   - `src/lookup.ts`: `lookup` walks a path component by component from the root or the working
     directory, needs search permission on every directory on the way and returns the node with
     its canonical path, or `ENOENT`, `ENOTDIR` or `EACCES` as a value.
-  - Writing to the tree follows with the first commands that change files (ROADMAP M1.9).
+  - `src/collation.ts`: `compareNames` sorts names like Debian's en_US.UTF-8 locale (an
+    approximation of glibc's collation, ADR 0046); glob results use it, `ls` will too.
+  - Writing to the tree follows with the redirections (ROADMAP M1.6c).
 - **Shell** (ADR 0007): lexer → parser → AST → interpreter. Expansion of variables, `~` and
   globs; pipelines; lists with `;`, `&&`, `||`; redirections; exit codes.
   - `src/lexer.ts`: `lex` splits an input text into word, control operator, redirection and
@@ -143,6 +146,14 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     and-or lists, each a chain of pipelines with `&&`/`||`, each a list of simple commands with
     assignments, words and `<`/`>`/`>>` redirections. It finds tildes in assignments and
     returns bash's syntax errors, incomplete input and unsupported bash syntax as values.
+  - `src/expand.ts`: `expandWords` turns the words of a command into fields in bash's order
+    (ADR 0046): tilde and parameter expansion, field splitting with `IFS`, pathname expansion,
+    quote removal. `expandAssignment` expands assignment values without splitting and
+    globbing. Brace expansion is not simulated; `$$` and `$-` are returned as unsupported.
+  - `src/glob.ts`: `expandPathname` matches `*`, `?` and bracket expressions against the
+    directories of the session's host, with bash 5.2's default options and the read and
+    search permissions of the session.
+  - Execution of lists and pipelines (M1.6b) and redirections (M1.6c) follow.
 - **Commands:** registry of command implementations with declared options, a shared option
   parser and coreutils-style errors, matching Debian 13 (ADR 0004).
 - **Full-screen programs:** one mechanism for `less`, `man`, `top`, `nano` and later `vim`.
