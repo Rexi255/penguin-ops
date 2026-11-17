@@ -28,9 +28,13 @@ export interface FileWrite {
   readonly mode: WriteMode;
 }
 
-/** The result of `writeFile`: the changed world, or an error code. */
+/**
+ * The result of `writeFile`: the changed world and the canonical absolute path of the file, or an
+ * error code.
+ */
 export type WriteResult =
-  { readonly ok: true; readonly world: World } | { readonly ok: false; readonly error: WriteError };
+  | { readonly ok: true; readonly world: World; readonly path: string }
+  | { readonly ok: false; readonly error: WriteError };
 
 /** The mode that `open(2)` asks for when bash creates a file; the umask removes bits from it. */
 const NEW_FILE_MODE = 0o666;
@@ -71,6 +75,8 @@ export function writeFile(
     return target;
   }
   const { directory, name } = target;
+  const directoryComponents = splitPath(target.directoryPath).components;
+  const path = joinAbsolute([...directoryComponents, name]);
   const existing = directory.entries.get(name);
   const now = clock.now();
   let changed: DirectoryNode;
@@ -83,7 +89,7 @@ export function writeFile(
       }
       const file = writeToFile(existing, write, now);
       if (file === existing) {
-        return { ok: true, world };
+        return { ok: true, world, path };
       }
       changed = withEntry(directory, name, file, directory.mtime);
       break;
@@ -97,8 +103,65 @@ export function writeFile(
       break;
     }
   }
-  const root = replaceDirectory(host.root, splitPath(target.directoryPath).components, changed);
-  return { ok: true, world: replaceHostRoot(world, host.name, root) };
+  const root = replaceDirectory(host.root, directoryComponents, changed);
+  return { ok: true, world: replaceHostRoot(world, host.name, root), path };
+}
+
+/**
+ * Adds `text` to the end of the file at the canonical absolute `path` on the host `hostName`,
+ * like a write(2) to a file that `writeFile` opened before (a redirection of bash):
+ *
+ * - There are no permission checks; open(2) checked them, and an open file stays writable when
+ *   its mode changes later.
+ * - If `path` no longer leads to a file (a command removed it or replaced it with a directory),
+ *   the text is lost like a write to a deleted file, and `world` is returned unchanged.
+ * - The mtime becomes the clock's time, except for the empty text, which changes nothing.
+ *
+ * The game has no inodes, so a file that a command renamed is not followed; a new file at `path`
+ * gets the text instead. Throws an Error if `hostName` is not part of `world`.
+ */
+export function writeToOpenFile(
+  world: World,
+  hostName: string,
+  path: string,
+  text: string,
+  clock: Clock,
+): World {
+  const host = findHost(world, hostName);
+  if (host === undefined) {
+    throw new Error(`the host "${hostName}" is not part of the world`);
+  }
+  const components = splitPath(path).components;
+  const name = components.at(-1);
+  const directoryComponents = components.slice(0, -1);
+  const directory = nodeAtComponents(host.root, directoryComponents);
+  const file = name === undefined ? undefined : directory?.entries.get(name);
+  if (name === undefined || directory === undefined || file?.kind !== "file") {
+    return world;
+  }
+  const written = writeToFile(file, { path, text, mode: "append" }, clock.now());
+  if (written === file) {
+    return world;
+  }
+  const changed = withEntry(directory, name, written, directory.mtime);
+  const root = replaceDirectory(host.root, directoryComponents, changed);
+  return replaceHostRoot(world, host.name, root);
+}
+
+/** The directory at the canonical `components` below `root`, or `undefined` if there is none. */
+function nodeAtComponents(
+  root: DirectoryNode,
+  components: readonly string[],
+): DirectoryNode | undefined {
+  let current: DirectoryNode = root;
+  for (const component of components) {
+    const child = current.entries.get(component);
+    if (child?.kind !== "directory") {
+      return undefined;
+    }
+    current = child;
+  }
+  return current;
 }
 
 /** Where a write goes: the directory that holds the file, its canonical path, the file's name. */

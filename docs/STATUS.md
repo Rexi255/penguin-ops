@@ -4,6 +4,11 @@ _Last updated: 2026-11-17_
 
 ## Recently completed
 
+- M1.6c-2 Redirections: `<`, `>`, `>>`, `2>` and `2>>` open their files from left to right
+  before the command (also for unknown commands), output is added after the command, failures
+  give bash's message and exit status 1, redirections win over pipes; `stdin` is now a
+  `StandardInput` union with `directory` for `< dir`; fds from 3 on and `0>`/`1<` are game
+  notices (ADR 0049).
 - M1.6c-1 Write side of the file system: `writeFile` creates, truncates or appends to a file
   like `open(2)` for `>` and `>>`, with the kernel's error order (`ENOENT`, `ENOTDIR`,
   `EACCES`, `EISDIR`), setgid groups and mtimes from the game clock; sessions have a umask
@@ -20,8 +25,6 @@ _Last updated: 2026-11-17_
 - M1.5 Parser: `parse` builds a tree of lists, `&&`/`||` chains, pipelines and simple
   commands with assignments, words and `<`/`>`/`>>` redirections; bash syntax errors and
   unsupported syntax come back as values (ADR 0045).
-- M1.4 Lexer: `lex` splits input into words, operators, redirections and line breaks like
-  bash; words keep their quoted and unquoted parts (ADR 0044).
 
 ## In progress
 
@@ -29,11 +32,10 @@ _Last updated: 2026-11-17_
 
 ## Next 3 steps
 
-1. ROADMAP M1.6c-2: redirections (`<`, `>`, `>>`, `2>`) in `runScript` on top of `writeFile`;
-   replaces the `redirection` stop of ADR 0047.
-2. ROADMAP M1.7: command framework (registry, option parser, error formats, game notices) on
+1. ROADMAP M1.7: command framework (registry, option parser, error formats, game notices) on
    top of `ShellCommand` and `CommandLookup`.
-3. ROADMAP M1.8: commands batch 1 (`pwd`, `cd`, `ls`, `whoami`, `echo`, `clear`, `history`).
+2. ROADMAP M1.8: commands batch 1 (`pwd`, `cd`, `ls`, `whoami`, `echo`, `clear`, `history`).
+3. ROADMAP M1.9: commands batch 2 (`cat`, `head`, `tail`, `mkdir`, `touch`).
 
 ## Blockers and open questions
 

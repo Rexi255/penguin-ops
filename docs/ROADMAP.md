@@ -63,7 +63,8 @@ placeholder window; CI builds the installer.
       (ADR 0047).
 - [x] M1.6c-1 Interpreter, part 3a: write side of the file system (`writeFile` like `open(2)`
       for `>` and `>>`, session umask of Debian 13) (ADR 0048).
-- [ ] M1.6c-2 Interpreter, part 3b: redirections (`<`, `>`, `>>`, `2>`) on top of `writeFile`.
+- [x] M1.6c-2 Interpreter, part 3b: redirections (`<`, `>`, `>>`, `2>`) on top of `writeFile`
+      (ADR 0049).
 - [ ] M1.7 Command framework: registry, shared option parser (including `--`), coreutils-style
       error formats, game notices as structured events (ADR 0007).
 - [ ] M1.8 Commands batch 1: `pwd`, `cd`, `ls` (`-l`, `-a`, `-1`), `whoami`, `echo`, `clear`,

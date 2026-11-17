@@ -2,16 +2,28 @@
 // parser like bash. And-or lists run in order, `&&` and `||` look at the exit status of the
 // previous pipeline, and the commands of a pipeline run one after the other with the output of
 // one as the input of the next. Assignments set shell variables or, before a command name, only
-// the variables that command sees. Redirections follow with ROADMAP M1.6c.
+// the variables that command sees. Redirections (ADR 0049) open their files from left to right
+// before the command runs; the output for a file is added to it after the command.
 
 import type { Clock, GameClock } from "./clock";
 import { expandAssignment, expandWords, type UnsupportedParameter } from "./expand";
-import type { AndOrList, Assignment, Pipeline, Script, SimpleCommand } from "./parser";
+import { openForReading } from "./fs-read";
+import { writeFile, type WriteError, writeToOpenFile } from "./fs-write";
+import type { AndOrList, Assignment, Pipeline, Redirection, Script, SimpleCommand } from "./parser";
 import type { Session } from "./session";
 import type { World } from "./world";
 
 /** The output streams of a command. */
 export type OutputStream = "stdout" | "stderr";
+
+/** The standard input of a command. */
+export type StandardInput =
+  /** The terminal. The game does not simulate typing into a running command. */
+  | { readonly kind: "terminal" }
+  /** Text from the previous command of a pipeline, or the content of a file (`< file`). */
+  | { readonly kind: "text"; readonly text: string }
+  /** A directory (`< /tmp`): bash opens it, but every read fails with "Is a directory". */
+  | { readonly kind: "directory" };
 
 /** What a command gets when it runs. */
 export interface CommandContext {
@@ -22,11 +34,8 @@ export interface CommandContext {
   readonly name: string;
   /** The arguments after the command name (after expansion). */
   readonly args: readonly string[];
-  /**
-   * The text from the previous command of a pipeline, or `undefined` if standard input is the
-   * terminal. The game does not simulate typing into a running command.
-   */
-  readonly stdin: string | undefined;
+  /** Where the command reads its input from. */
+  readonly stdin: StandardInput;
   /** The game time; commands may read it (for example for mtimes), but never advance it. */
   readonly clock: Clock;
   /** Writes `text` to the command's standard output. */
@@ -55,8 +64,10 @@ export type CommandLookup = (name: string) => ShellCommand | undefined;
 /** Shell features the interpreter does not simulate yet. */
 export type UnsupportedExecution =
   | UnsupportedParameter
-  /** `<`, `>` and `>>`: follow with ROADMAP M1.6c. */
-  | "redirection"
+  /** A redirection of a file descriptor other than 0, 1 and 2, such as `3> file`. */
+  | "file-descriptor"
+  /** Output redirection of standard input (`0> file`), or input redirection of `1<` or `2<`. */
+  | "reversed-redirection"
   /** A command name with a `/`, such as `./run.sh` or `/bin/ls`: needs executable files. */
   | "command-path";
 
@@ -101,6 +112,20 @@ const COMMAND_NOT_FOUND = 127;
 /** The exit status bash returns when an expansion error stops an input. */
 const ABORT_STATUS = 1;
 
+/** The exit status of a command whose redirection failed; the command does not run. */
+const REDIRECTION_FAILED = 1;
+
+/** The messages of the Linux error codes, as bash prints them after a failed redirection. */
+const ERROR_MESSAGES: Readonly<Record<WriteError, string>> = {
+  ENOENT: "No such file or directory",
+  ENOTDIR: "Not a directory",
+  EACCES: "Permission denied",
+  EISDIR: "Is a directory",
+};
+
+/** The standard input of a command that reads from the terminal. */
+const TERMINAL: StandardInput = { kind: "terminal" };
+
 /** Stops the rest of an input after an unsupported feature, as bash does after expansion errors. */
 class Abort extends Error {
   constructor(
@@ -132,11 +157,21 @@ interface ShellState {
  * - A simple command expands its words first, then its assignments from left to right. Without a
  *   command name the assignments set shell variables (exit status 0). Before a command name
  *   they set the variables only for that command and are restored afterwards.
- * - An unknown command writes `bash: NAME: command not found` and has exit status 127.
+ * - Redirections come next, from left to right, with the variables of the assignments: `<` opens
+ *   a file or directory for reading, `>` creates or empties a file, `>>` creates a file or keeps
+ *   its content; `2>` and `2>>` redirect standard error. Each target must expand to exactly one
+ *   field (else `bash: WORD: ambiguous redirect`). The first redirection that fails writes
+ *   `bash: PATH: MESSAGE` to the standard error as redirected so far and gives exit status 1;
+ *   the command does not run, but the files opened before stay. A later redirection of the same
+ *   stream wins, and a redirection of standard input or output wins over the pipe.
+ * - The output to a file is added to it after the command, in the order the command wrote it.
+ * - An unknown command writes `bash: NAME: command not found` (after its redirections) and has
+ *   exit status 127.
  *
- * Expansion errors, redirections (ROADMAP M1.6c) and command names with a `/` stop the rest of
- * the input with an "unsupported" event and exit status 1. Throws an Error if a command returns
- * an exit status outside 0 to 255, or if the session's host is not part of the world.
+ * Expansion errors, redirections of file descriptors other than 0, 1 and 2, reversed
+ * redirections (`0>`, `1<`) and command names with a `/` stop the rest of the input with an
+ * "unsupported" event and exit status 1. Throws an Error if a command returns an exit status
+ * outside 0 to 255, or if the session's host is not part of the world.
  */
 export function runScript(run: ScriptRun): ScriptResult {
   run.clock.advance(TIME_PER_INPUT);
@@ -200,6 +235,99 @@ class OutputBuffer implements Output {
   }
 }
 
+/** The streams a redirection can connect to a file. */
+type RedirectedStream = "stdin" | OutputStream;
+
+/** A file that a redirection opened for output: its host and canonical absolute path. */
+interface OpenFile {
+  readonly host: string;
+  readonly path: string;
+}
+
+/**
+ * The result of the redirections of one command: all opened, one failed (bash's message is
+ * written), or one the game does not simulate. `world` holds the files opened until then.
+ */
+type RedirectionResult =
+  | { readonly kind: "opened" | "failed"; readonly world: World }
+  | {
+      readonly kind: "unsupported";
+      readonly world: World;
+      readonly feature: UnsupportedExecution;
+      readonly start: number;
+    };
+
+/** The result of opening the target of one redirection. */
+type OpenResult =
+  | { readonly kind: "opened"; readonly world: World }
+  | { readonly kind: "failed"; readonly error: WriteError };
+
+/**
+ * The stream that `redirection` connects: file descriptor 0 for `<`, 1 for `>` and `>>`, or the
+ * one written before the operator. Other descriptors and reversed directions are unsupported.
+ */
+function redirectedStream(
+  redirection: Redirection,
+): RedirectedStream | { readonly feature: UnsupportedExecution; readonly start: number } {
+  const input = redirection.operator === "<";
+  const fd = redirection.fd === undefined ? (input ? 0 : 1) : Number(redirection.fd);
+  const start = redirection.start;
+  switch (fd) {
+    case 0:
+      return input ? "stdin" : { feature: "reversed-redirection", start };
+    case 1:
+      return input ? { feature: "reversed-redirection", start } : "stdout";
+    case 2:
+      return input ? { feature: "reversed-redirection", start } : "stderr";
+    default:
+      return { feature: "file-descriptor", start };
+  }
+}
+
+/**
+ * The standard streams of one command after its redirections. Output to the terminal or the pipe
+ * goes on at once; output to a file is kept in order and added to the files by `flush`, because
+ * the command works on its own copy of the world while it runs.
+ */
+class CommandStreams {
+  private readonly files = new Map<OutputStream, OpenFile>();
+  private readonly pending: { file: OpenFile; text: string }[] = [];
+
+  constructor(
+    public stdin: StandardInput,
+    private readonly output: Output,
+  ) {}
+
+  /** Sends the output of `stream` to `file` from now on. */
+  redirect(stream: OutputStream, file: OpenFile): void {
+    this.files.set(stream, file);
+  }
+
+  write(stream: OutputStream, text: string): void {
+    const file = this.files.get(stream);
+    if (file === undefined) {
+      this.output.write(stream, text);
+      return;
+    }
+    const last = this.pending.at(-1);
+    if (last?.file === file) {
+      last.text += text;
+    } else {
+      this.pending.push({ file, text });
+    }
+  }
+
+  /** Adds the output kept for files to them in `world`, in the order it was written. */
+  flush(world: World, clock: Clock): World {
+    let current = world;
+    for (const { file, text } of this.pending) {
+      current = writeToOpenFile(current, file.host, file.path, text, clock);
+    }
+    this.pending.length = 0;
+    return current;
+  }
+}
+
 class Runner {
   readonly events: ShellEvent[] = [];
 
@@ -228,10 +356,10 @@ class Runner {
   private runPipeline(state: ShellState, pipeline: Pipeline): ShellState {
     const [only, ...more] = pipeline.commands;
     if (only !== undefined && more.length === 0) {
-      return this.runCommand(state, only, undefined, this.terminal());
+      return this.runCommand(state, only, TERMINAL, this.terminal());
     }
     let world = state.world;
-    let stdin: string | undefined;
+    let stdin: StandardInput = TERMINAL;
     let exitStatus = 0;
     pipeline.commands.forEach((command, index) => {
       const isLast = index === pipeline.commands.length - 1;
@@ -246,7 +374,7 @@ class Runner {
           this.write("stderr", event.text);
         }
       }
-      stdin = buffer.text("stdout");
+      stdin = { kind: "text", text: buffer.text("stdout") };
     });
     return { world, session: { ...state.session, exitStatus } };
   }
@@ -275,44 +403,55 @@ class Runner {
   private runCommand(
     state: ShellState,
     command: SimpleCommand,
-    stdin: string | undefined,
+    stdin: StandardInput,
     output: Output,
   ): ShellState {
     this.lastState = state;
-    const [redirection] = command.redirections;
-    if (redirection !== undefined) {
-      throw new Abort("redirection", redirection.start);
-    }
     const expanded = expandWords(state.world, state.session, command.words);
     if (!expanded.ok) {
       throw new Abort(expanded.error.feature, expanded.error.start);
     }
     const [name, ...args] = expanded.fields;
-    if (name === undefined) {
-      const session = this.assign(state.world, state.session, command.assignments);
-      return { world: state.world, session: { ...session, exitStatus: 0 } };
-    }
-    if (name.includes("/")) {
+    if (name?.includes("/") === true) {
       throw new Abort("command-path", command.words[0]?.start ?? command.start);
     }
     const commandSession = this.assign(state.world, state.session, command.assignments);
+    const streams = new CommandStreams(stdin, output);
+    const redirected = this.redirect(state.world, commandSession, command.redirections, streams);
+    const opened = redirected.world;
+    if (redirected.kind === "unsupported") {
+      // The files opened before the stop stay, like every other change before a stop.
+      this.lastState = { world: opened, session: state.session };
+      throw new Abort(redirected.feature, redirected.start);
+    }
+    if (name === undefined) {
+      // Without a command name the assignments stay, even after a failed redirection.
+      const exitStatus = redirected.kind === "opened" ? 0 : REDIRECTION_FAILED;
+      const world = streams.flush(opened, this.clock);
+      return { world, session: { ...commandSession, exitStatus } };
+    }
+    if (redirected.kind === "failed") {
+      const world = streams.flush(opened, this.clock);
+      return withExitStatus({ world, session: state.session }, REDIRECTION_FAILED);
+    }
     const implementation = this.commands(name);
     if (implementation === undefined) {
-      output.write("stderr", `bash: ${name}: command not found\n`);
-      return withExitStatus(state, COMMAND_NOT_FOUND);
+      streams.write("stderr", `bash: ${name}: command not found\n`);
+      const world = streams.flush(opened, this.clock);
+      return withExitStatus({ world, session: state.session }, COMMAND_NOT_FOUND);
     }
     const result = implementation({
-      world: state.world,
+      world: opened,
       session: commandSession,
       name,
       args,
-      stdin,
+      stdin: streams.stdin,
       clock: this.clock,
       stdout: (text) => {
-        output.write("stdout", text);
+        streams.write("stdout", text);
       },
       stderr: (text) => {
-        output.write("stderr", text);
+        streams.write("stderr", text);
       },
     });
     checkExitStatus(name, result.exitStatus);
@@ -322,7 +461,7 @@ class Runner {
       command.assignments,
     );
     return {
-      world: result.world ?? state.world,
+      world: streams.flush(result.world ?? opened, this.clock),
       session: { ...session, exitStatus: result.exitStatus },
     };
   }
@@ -339,6 +478,70 @@ class Runner {
       current = withVariable(current, assignment.name, previous + expanded.value);
     }
     return current;
+  }
+
+  /**
+   * Performs `redirections` from left to right for a command with `session`. Stops at the first
+   * redirection that fails, after writing bash's message to the standard error as redirected so
+   * far, or at the first one the game does not simulate.
+   */
+  private redirect(
+    world: World,
+    session: Session,
+    redirections: readonly Redirection[],
+    streams: CommandStreams,
+  ): RedirectionResult {
+    let current = world;
+    for (const redirection of redirections) {
+      const stream = redirectedStream(redirection);
+      if (typeof stream !== "string") {
+        return { kind: "unsupported", world: current, ...stream };
+      }
+      const target = expandWords(current, session, [redirection.target]);
+      if (!target.ok) {
+        const { feature, start } = target.error;
+        return { kind: "unsupported", world: current, feature, start };
+      }
+      const [path, ...more] = target.fields;
+      if (path === undefined || more.length > 0) {
+        streams.write("stderr", `bash: ${redirection.target.raw}: ambiguous redirect\n`);
+        return { kind: "failed", world: current };
+      }
+      const opened = this.open(current, session, path, stream, redirection, streams);
+      if (opened.kind === "failed") {
+        streams.write("stderr", `bash: ${path}: ${ERROR_MESSAGES[opened.error]}\n`);
+        return { kind: "failed", world: current };
+      }
+      current = opened.world;
+    }
+    return { kind: "opened", world: current };
+  }
+
+  /** Opens `path` for one redirection and connects it to `stream`. */
+  private open(
+    world: World,
+    session: Session,
+    path: string,
+    stream: RedirectedStream,
+    redirection: Redirection,
+    streams: CommandStreams,
+  ): OpenResult {
+    if (stream === "stdin") {
+      const read = openForReading(world, session, path);
+      if (!read.ok) {
+        return { kind: "failed", error: read.error };
+      }
+      streams.stdin =
+        read.opened.kind === "file" ? { kind: "text", text: read.opened.content } : read.opened;
+      return { kind: "opened", world };
+    }
+    const mode = redirection.operator === ">>" ? "append" : "truncate";
+    const written = writeFile(world, session, { path, text: "", mode }, this.clock);
+    if (!written.ok) {
+      return { kind: "failed", error: written.error };
+    }
+    streams.redirect(stream, { host: session.host, path: written.path });
+    return { kind: "opened", world: written.world };
   }
 }
 

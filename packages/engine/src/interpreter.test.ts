@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import { createGameClock, type GameClock } from "./clock";
+import type { FsNode } from "./fs-node";
 import {
   type CommandLookup,
   type ScriptResult,
@@ -9,9 +10,10 @@ import {
   runScript,
   TIME_PER_INPUT,
 } from "./interpreter";
+import { lookup as lookupPath } from "./lookup";
 import { parse } from "./parser";
 import { createSession, type Session } from "./session";
-import type { World } from "./world";
+import { findHost, type World } from "./world";
 import { buildWorld } from "./world-builder";
 
 const START = 1_700_000_000_000;
@@ -52,9 +54,19 @@ const testCommands: Record<string, ShellCommand> = {
   },
   /** Returns the exit status given as its argument. */
   exit: ({ args }) => ({ exitStatus: Number(args[0]) }),
-  /** Writes its standard input in upper case, or `<terminal>` if it has none. */
+  /** Writes its standard input in upper case, or `<terminal>` or `<directory>` if it has none. */
   upper: ({ stdin, stdout }) => {
-    stdout(stdin === undefined ? "<terminal>\n" : stdin.toUpperCase());
+    switch (stdin.kind) {
+      case "terminal":
+        stdout("<terminal>\n");
+        break;
+      case "directory":
+        stdout("<directory>\n");
+        break;
+      case "text":
+        stdout(stdin.text.toUpperCase());
+        break;
+    }
     return { exitStatus: 0 };
   },
   /** Writes the value of the variable named by its argument, or `<unset>`. */
@@ -86,6 +98,11 @@ const testCommands: Record<string, ShellCommand> = {
     stdout("");
     stdout("b\n");
     return { exitStatus: 0 };
+  },
+  /** Changes the working directory to its argument without any checks, and says so. */
+  go: ({ args, session, stdout }) => {
+    stdout("moved\n");
+    return { exitStatus: 0, session: { ...session, cwd: args[0] ?? "/" } };
   },
   /** Writes its name and arguments, one per line, and sets exit status 0. */
   args: ({ name, args, stdout }) => {
@@ -429,15 +446,6 @@ describe("runScript: unsupported features", () => {
     expect(result.events).toEqual([{ kind: "unsupported", feature: "process-id", start: 0 }]);
   });
 
-  test("redirections are not simulated yet", () => {
-    const result = run("say a; say b > out.txt; say c");
-    expect(result.events).toEqual([
-      stdout("a\n"),
-      { kind: "unsupported", feature: "redirection", start: 13 },
-    ]);
-    expect(result.session.exitStatus).toBe(1);
-  });
-
   test("command names with a slash are not simulated yet", () => {
     const result = run("X=1 ./run.sh; say no");
     expect(result.events).toEqual([{ kind: "unsupported", feature: "command-path", start: 4 }]);
@@ -460,6 +468,346 @@ describe("runScript: unsupported features", () => {
       { kind: "unsupported", feature: "process-id", start: 20 },
     ]);
     expect(rootMtime(result.world)).toBe(START + TIME_PER_INPUT);
+    expect(result.session.exitStatus).toBe(1);
+  });
+});
+
+/** A world with files for the redirection tests; alice's working directory is her home. */
+const filesWorld = buildWorld(
+  {
+    hosts: [
+      {
+        name: "ws01",
+        groups: [
+          { name: "root", gid: 0 },
+          { name: "alice", gid: 1000 },
+        ],
+        users: [
+          { name: "root", uid: 0 },
+          { name: "alice", uid: 1000 },
+        ],
+        files: {
+          "/home/alice/notes.txt": "hello\n",
+          "/home/alice/locked.txt": { content: "locked\n", mode: 0o444 },
+          "/home/alice/drop.txt": { content: "secret\n", mode: 0o200 },
+          "/home/alice/docs/a.txt": "a\n",
+          "/home/alice/docs/b.txt": "b\n",
+          "/tmp/": { mode: 0o1777 },
+        },
+      },
+    ],
+  },
+  createGameClock(START),
+);
+
+const filesAlice = createSession(filesWorld, "ws01", "alice");
+
+/** The game time of the first input. */
+const NOW = START + TIME_PER_INPUT;
+
+/** Runs `input` as alice in `filesWorld`, or in `current`. */
+function runFiles(input: string, current: World = filesWorld): ScriptResult {
+  return run(input, { world: current, session: filesAlice });
+}
+
+/** Returns the node at the absolute `path` of ws01, looked up as root. */
+function nodeAt(current: World, path: string): FsNode | undefined {
+  const root = findHost(current, "ws01")?.root;
+  if (root === undefined) {
+    throw new Error("no host ws01");
+  }
+  const result = lookupPath(root, createSession(filesWorld, "ws01", "root").credentials, "/", path);
+  return result.ok ? result.node : undefined;
+}
+
+/** Returns the content of the file at the absolute `path`, or `undefined` if there is none. */
+function contentOf(current: World, path: string): string | undefined {
+  const node = nodeAt(current, path);
+  return node?.kind === "file" ? node.content : undefined;
+}
+
+describe("runScript: output redirections", () => {
+  test("> creates a file with the output, like bash with the umask", () => {
+    const result = runFiles("say hi > out.txt");
+    expect(result.events).toEqual([]);
+    expect(result.session.exitStatus).toBe(0);
+    expect(nodeAt(result.world, "/home/alice/out.txt")).toEqual({
+      kind: "file",
+      owner: 1000,
+      group: 1000,
+      mode: 0o664,
+      mtime: NOW,
+      content: "hi\n",
+    });
+  });
+
+  test("> replaces the content of an existing file", () => {
+    const result = runFiles("say new > notes.txt");
+    expect(contentOf(result.world, "/home/alice/notes.txt")).toBe("new\n");
+  });
+
+  test(">> adds the output to the end of an existing file and creates a missing one", () => {
+    const result = runFiles("say more >> notes.txt; say first >> new.txt");
+    expect(contentOf(result.world, "/home/alice/notes.txt")).toBe("hello\nmore\n");
+    expect(contentOf(result.world, "/home/alice/new.txt")).toBe("first\n");
+  });
+
+  test("> without a command name creates an empty file or empties one", () => {
+    const result = runFiles("> empty.txt; > notes.txt; >> docs/a.txt");
+    expect(result.events).toEqual([]);
+    expect(result.session.exitStatus).toBe(0);
+    expect(contentOf(result.world, "/home/alice/empty.txt")).toBe("");
+    expect(contentOf(result.world, "/home/alice/notes.txt")).toBe("");
+    expect(contentOf(result.world, "/home/alice/docs/a.txt")).toBe("a\n");
+  });
+
+  test("the redirection may stand before, between or after the words", () => {
+    const result = runFiles("> a.txt say x; say > b.txt y; say z > c.txt");
+    expect(contentOf(result.world, "/home/alice/a.txt")).toBe("x\n");
+    expect(contentOf(result.world, "/home/alice/b.txt")).toBe("y\n");
+    expect(contentOf(result.world, "/home/alice/c.txt")).toBe("z\n");
+  });
+
+  test("2> sends standard error to a file and keeps standard output on the terminal", () => {
+    const result = runFiles("mixed 2> err.txt");
+    expect(result.events).toEqual([stdout("o1\n")]);
+    expect(result.session.exitStatus).toBe(2);
+    expect(contentOf(result.world, "/home/alice/err.txt")).toBe("e1\ne2\n");
+  });
+
+  test("> and 2>> send both streams to their own files", () => {
+    const result = runFiles("mixed > out.txt 2>> notes.txt");
+    expect(result.events).toEqual([]);
+    expect(contentOf(result.world, "/home/alice/out.txt")).toBe("o1\n");
+    expect(contentOf(result.world, "/home/alice/notes.txt")).toBe("hello\ne1\ne2\n");
+  });
+
+  test("1> and 1>> are the same as > and >>", () => {
+    const result = runFiles("say a 1> one.txt; say b 1>> one.txt");
+    expect(contentOf(result.world, "/home/alice/one.txt")).toBe("a\nb\n");
+  });
+
+  test("@differential leading zeros in the file descriptor are ignored", () => {
+    const result = runFiles("say a 01> one.txt; mixed 002> two.txt");
+    expect(contentOf(result.world, "/home/alice/one.txt")).toBe("a\n");
+    expect(contentOf(result.world, "/home/alice/two.txt")).toBe("e1\ne2\n");
+  });
+
+  test("the last redirection of a stream wins, but every target is opened", () => {
+    const result = runFiles("say hi > first.txt > second.txt");
+    expect(contentOf(result.world, "/home/alice/first.txt")).toBe("");
+    expect(contentOf(result.world, "/home/alice/second.txt")).toBe("hi\n");
+  });
+
+  test("the target is expanded: tilde, variables and a pattern with one match", () => {
+    const result = runFiles('NAME=log.txt; say a > ~/$NAME; say b >> "$HOME/$NAME"; say c > d*/a*');
+    expect(contentOf(result.world, "/home/alice/log.txt")).toBe("a\nb\n");
+    expect(contentOf(result.world, "/home/alice/docs/a.txt")).toBe("c\n");
+  });
+
+  test("a quoted target with spaces is one file name", () => {
+    const result = runFiles('X="my notes.txt"; say hi > "$X"');
+    expect(contentOf(result.world, "/home/alice/my notes.txt")).toBe("hi\n");
+  });
+
+  test("the file is opened in the working directory before the command runs", () => {
+    const result = runFiles("go /tmp > moved.txt");
+    expect(result.session.cwd).toBe("/tmp");
+    expect(contentOf(result.world, "/home/alice/moved.txt")).toBe("moved\n");
+    expect(nodeAt(result.world, "/tmp/moved.txt")).toBeUndefined();
+  });
+
+  test("the command sees the opened file and its world changes stay", () => {
+    const result = runFiles("stamp > out.txt");
+    expect(rootMtime(result.world)).toBe(NOW);
+    expect(contentOf(result.world, "/home/alice/out.txt")).toBe("");
+  });
+
+  test("a later input appends with its own time", () => {
+    const first = runFiles("say a > log.txt");
+    const clock = createGameClock(NOW);
+    const second = run("say b >> log.txt", { world: first.world, session: filesAlice, clock });
+    expect(nodeAt(second.world, "/home/alice/log.txt")).toMatchObject({
+      content: "a\nb\n",
+      mtime: NOW + TIME_PER_INPUT,
+    });
+  });
+
+  test("the output of a command that is not found goes to the redirected standard error", () => {
+    const result = runFiles("nosuch > out.txt 2> err.txt");
+    expect(result.events).toEqual([]);
+    expect(result.session.exitStatus).toBe(127);
+    expect(contentOf(result.world, "/home/alice/out.txt")).toBe("");
+    expect(contentOf(result.world, "/home/alice/err.txt")).toBe(
+      "bash: nosuch: command not found\n",
+    );
+  });
+
+  test("@differential prefix assignments are seen by the target and then restored", () => {
+    const result = runFiles("F=b.txt say hi > $F; show F");
+    expect(contentOf(result.world, "/home/alice/b.txt")).toBe("hi\n");
+    expect(result.events).toEqual([stdout("<unset>\n")]);
+  });
+
+  test("@differential assignments without a command name are made before the redirection", () => {
+    const result = runFiles("F=c.txt > $F; show F");
+    expect(nodeAt(result.world, "/home/alice/c.txt")).toBeDefined();
+    expect(result.events).toEqual([stdout("c.txt\n")]);
+  });
+});
+
+describe("runScript: input redirections", () => {
+  test("< gives the content of a file as standard input", () => {
+    const result = runFiles("upper < notes.txt; < docs/a.txt upper");
+    expect(result.events).toEqual([stdout("HELLO\nA\n")]);
+    expect(result.session.exitStatus).toBe(0);
+  });
+
+  test("0< is the same as <", () => {
+    expect(runFiles("upper 0< notes.txt").events).toEqual([stdout("HELLO\n")]);
+  });
+
+  test("< opens a directory, which the command cannot read", () => {
+    expect(runFiles("upper < docs").events).toEqual([stdout("<directory>\n")]);
+  });
+
+  test("< without a command name only checks that the file can be opened", () => {
+    expect(runFiles("< notes.txt").session.exitStatus).toBe(0);
+    expect(runFiles("< missing.txt").session.exitStatus).toBe(1);
+  });
+
+  test("redirections run from left to right, so < reads before > empties the file", () => {
+    const readFirst = runFiles("upper < notes.txt > notes.txt");
+    expect(contentOf(readFirst.world, "/home/alice/notes.txt")).toBe("HELLO\n");
+    const emptyFirst = runFiles("upper > notes.txt < notes.txt");
+    expect(contentOf(emptyFirst.world, "/home/alice/notes.txt")).toBe("");
+  });
+});
+
+describe("runScript: redirections in pipelines", () => {
+  test("> wins over the pipe: the next command reads nothing", () => {
+    const result = runFiles("say hi > out.txt | upper");
+    expect(result.events).toEqual([]);
+    expect(contentOf(result.world, "/home/alice/out.txt")).toBe("hi\n");
+  });
+
+  test("< wins over the pipe", () => {
+    expect(runFiles("say hi | upper < notes.txt").events).toEqual([stdout("HELLO\n")]);
+  });
+
+  test("2> in the middle of a pipeline keeps standard error off the terminal", () => {
+    const result = runFiles("mixed 2> err.txt | upper");
+    expect(result.events).toEqual([stdout("O1\n")]);
+    expect(contentOf(result.world, "/home/alice/err.txt")).toBe("e1\ne2\n");
+  });
+
+  test("the last command of a pipeline can write to a file", () => {
+    const result = runFiles("say hi | upper > out.txt");
+    expect(result.events).toEqual([]);
+    expect(contentOf(result.world, "/home/alice/out.txt")).toBe("HI\n");
+  });
+});
+
+describe("runScript: failed redirections", () => {
+  test.each([
+    ["say hi > missing/out.txt", "bash: missing/out.txt: No such file or directory\n"],
+    ["say hi > notes.txt/out.txt", "bash: notes.txt/out.txt: Not a directory\n"],
+    ["say hi > locked.txt", "bash: locked.txt: Permission denied\n"],
+    ["say hi >> locked.txt", "bash: locked.txt: Permission denied\n"],
+    ["say hi > docs", "bash: docs: Is a directory\n"],
+    ["say hi 2> docs", "bash: docs: Is a directory\n"],
+    ["upper < missing.txt", "bash: missing.txt: No such file or directory\n"],
+    ["upper < notes.txt/x", "bash: notes.txt/x: Not a directory\n"],
+    ["upper < drop.txt", "bash: drop.txt: Permission denied\n"],
+    ['say hi > ""', "bash: : No such file or directory\n"],
+  ])("%s writes bash's message, exit status 1, and the command does not run", (input, error) => {
+    const result = runFiles(input);
+    expect(result.events).toEqual([stderr(error)]);
+    expect(result.session.exitStatus).toBe(1);
+    expect(contentOf(result.world, "/home/alice/locked.txt")).toBe("locked\n");
+  });
+
+  test("the message shows the expanded path", () => {
+    expect(runFiles("say hi > ~/missing/x").events).toEqual([
+      stderr("bash: /home/alice/missing/x: No such file or directory\n"),
+    ]);
+  });
+
+  test("the files opened before the failed redirection stay", () => {
+    const result = runFiles("say hi > first.txt > missing/x");
+    expect(contentOf(result.world, "/home/alice/first.txt")).toBe("");
+  });
+
+  test("@differential the message goes to standard error as redirected before it", () => {
+    const result = runFiles("say hi 2> err.txt > missing/x");
+    expect(result.events).toEqual([]);
+    expect(contentOf(result.world, "/home/alice/err.txt")).toBe(
+      "bash: missing/x: No such file or directory\n",
+    );
+  });
+
+  test("the exit status 1 works with || and &&", () => {
+    expect(runFiles("say a > missing/x || say failed; say b > missing/x && say no").events).toEqual(
+      [
+        stderr("bash: missing/x: No such file or directory\n"),
+        stdout("failed\n"),
+        stderr("bash: missing/x: No such file or directory\n"),
+      ],
+    );
+  });
+
+  test("a command that is not found is not looked up after a failed redirection", () => {
+    const result = runFiles("nosuch > missing/x");
+    expect(result.events).toEqual([stderr("bash: missing/x: No such file or directory\n")]);
+    expect(result.session.exitStatus).toBe(1);
+  });
+
+  test("assignments before a command name are lost", () => {
+    const result = runFiles("X=1 say hi > missing/x; show X");
+    expect(result.events.at(-1)).toEqual(stdout("<unset>\n"));
+  });
+
+  test("@differential assignments without a command name stay", () => {
+    const result = runFiles("X=1 > missing/x");
+    expect(result.session.variables.get("X")).toBe("1");
+    expect(result.session.exitStatus).toBe(1);
+  });
+
+  test.each([
+    ["say hi > $EMPTY", "bash: $EMPTY: ambiguous redirect\n"],
+    ['X="a b"; say hi > $X', "bash: $X: ambiguous redirect\n"],
+    ["say hi > docs/*.txt", "bash: docs/*.txt: ambiguous redirect\n"],
+    ["upper < docs/*", "bash: docs/*: ambiguous redirect\n"],
+  ])("%s is an ambiguous redirect with exit status 1", (input, error) => {
+    const result = runFiles(input);
+    expect(result.events).toEqual([stderr(error)]);
+    expect(result.session.exitStatus).toBe(1);
+    expect(contentOf(result.world, "/home/alice/docs/a.txt")).toBe("a\n");
+  });
+});
+
+describe("runScript: unsupported redirections", () => {
+  test.each([
+    ["say a; say b 3> x.txt; say c", "file-descriptor", 13],
+    ["say b 9< notes.txt", "file-descriptor", 6],
+    ["say b 007> x.txt", "file-descriptor", 6],
+    ["say b 0> x.txt", "reversed-redirection", 6],
+    ["upper 1< notes.txt", "reversed-redirection", 6],
+    ["upper 2< notes.txt", "reversed-redirection", 6],
+    ["say b > $$", "process-id", 8],
+  ] as const)("%s stops the input with the notice %s", (input, feature, start) => {
+    const result = runFiles(input);
+    expect(result.events.at(-1)).toEqual({ kind: "unsupported", feature, start });
+    expect(result.events.filter((event) => event.kind === "output")).toEqual(
+      input.startsWith("say a") ? [stdout("a\n")] : [],
+    );
+    expect(result.session.exitStatus).toBe(1);
+    expect(nodeAt(result.world, "/home/alice/x.txt")).toBeUndefined();
+  });
+
+  test("a stop keeps the files opened before it", () => {
+    const result = runFiles("say hi > first.txt 3> x.txt");
+    expect(contentOf(result.world, "/home/alice/first.txt")).toBe("");
     expect(result.session.exitStatus).toBe(1);
   });
 });

@@ -19,6 +19,7 @@ export {
   type UnsupportedParameter,
   type WordsExpansion,
 } from "./expand";
+export { type OpenedForReading, openForReading, type ReadOpenResult } from "./fs-read";
 export {
   type FileWrite,
   writeFile,
@@ -37,6 +38,7 @@ export {
   type ScriptRun,
   type ShellCommand,
   type ShellEvent,
+  type StandardInput,
   TIME_PER_INPUT,
   type UnsupportedExecution,
 } from "./interpreter";

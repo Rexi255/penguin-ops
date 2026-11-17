@@ -2,7 +2,13 @@ import { describe, expect, test } from "vitest";
 
 import { createGameClock } from "./clock";
 import type { FsNode } from "./fs-node";
-import { type FileWrite, writeFile, type WriteMode, type WriteResult } from "./fs-write";
+import {
+  type FileWrite,
+  writeFile,
+  type WriteMode,
+  type WriteResult,
+  writeToOpenFile,
+} from "./fs-write";
 import { lookup } from "./lookup";
 import { createSession, type Session } from "./session";
 import { findHost, type World } from "./world";
@@ -180,7 +186,7 @@ describe("writeFile writes to an existing file", () => {
 
   test("@differential changes nothing when it appends the empty text", () => {
     const result = write("alice", "/home/alice/notes.txt", "", "append");
-    expect(result).toEqual({ ok: true, world });
+    expect(result).toEqual({ ok: true, world, path: "/home/alice/notes.txt" });
     expect(changed(result)).toBe(world);
   });
 
@@ -222,6 +228,13 @@ describe("writeFile resolves paths", () => {
       write("alice", "./docs/..//docs/./a.txt", "a\n", "truncate", "/home/alice"),
     );
     expect(nodeAt(after, "/home/alice/docs/a.txt")).toMatchObject({ content: "a\n" });
+  });
+
+  test("and returns the canonical absolute path of the file", () => {
+    const relative = write("alice", "./docs/..//docs/./a.txt", "a\n", "truncate", "/home/alice");
+    expect(relative).toMatchObject({ ok: true, path: "/home/alice/docs/a.txt" });
+    const existing = write("alice", "../alice/notes.txt", "", "append", "/home/alice");
+    expect(existing).toMatchObject({ ok: true, path: "/home/alice/notes.txt" });
   });
 });
 
@@ -334,5 +347,46 @@ describe("writeFile fails", () => {
     expect(() =>
       writeFile(world, lost, { path: "/tmp/a", text: "", mode: "truncate" }, clock),
     ).toThrow(`the session's host "gone" is not part of the world`);
+  });
+});
+
+describe("writeToOpenFile", () => {
+  test("adds the text to the end of the file and sets the mtime", () => {
+    const after = writeToOpenFile(world, "ws01", "/home/alice/notes.txt", "more\n", clock);
+    expect(nodeAt(after, "/home/alice/notes.txt")).toMatchObject({
+      content: "hello\nmore\n",
+      mtime: NOW,
+    });
+    expect(nodeAt(after, "/home/alice")?.mtime).toBe(BUILT);
+  });
+
+  test("does not check permissions, because the file is already open", () => {
+    const after = writeToOpenFile(world, "ws01", "/home/alice/locked.txt", "more\n", clock);
+    expect(nodeAt(after, "/home/alice/locked.txt")).toMatchObject({
+      content: "secret\nmore\n",
+      mode: 0o444,
+    });
+  });
+
+  test("changes nothing for the empty text", () => {
+    expect(writeToOpenFile(world, "ws01", "/home/alice/notes.txt", "", clock)).toBe(world);
+  });
+
+  test("loses the text if no file is at the path any more", () => {
+    for (const path of [
+      "/home/alice/gone.txt",
+      "/home/alice/missing/a.txt",
+      "/etc/hostname/a.txt",
+      "/home/alice/docs",
+      "/",
+    ]) {
+      expect(writeToOpenFile(world, "ws01", path, "x", clock)).toBe(world);
+    }
+  });
+
+  test("by throwing when the host is not part of the world", () => {
+    expect(() => writeToOpenFile(world, "gone", "/tmp/a", "x", clock)).toThrow(
+      `the host "gone" is not part of the world`,
+    );
   });
 });
