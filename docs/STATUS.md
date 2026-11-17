@@ -4,6 +4,10 @@ _Last updated: 2026-11-17_
 
 ## Recently completed
 
+- M1.4 Lexer: `lex` splits input into words, operators, redirections and line breaks like
+  bash; words keep their quoted and unquoted parts, parameters and tilde prefixes; incomplete
+  input and features the game does not simulate yet (`$(…)`, `!!`, `${x:-y}`, …) come back as
+  errors (ADR 0044).
 - M1.3 Determinism: game clock that stands still until its owner advances it, with a
   read-only `Clock` view for the engine; `buildWorld` creates a checked world from a short
   spec (users and groups by name, files by path, missing parents and default owner, mode and
@@ -18,9 +22,6 @@ _Last updated: 2026-11-17_
 - M3.0f-1 and M5.1-1, done early: the owner's logo is in `assets/brand/` (SVG variants for dark
   and light backgrounds, web icons, usage rules) and in the README; the installer, the app and
   the AppImage use the PenguinOps app icon; a test guards the brand files (ADR 0040).
-- Roadmap: the design language comes before the game frame screens as M3.0a–f (impeccable
-  design skill, tokens, styleguide page, typography, icon style, logo); the owner drafts the
-  logo in a separate chat; M5.1 keeps only the final app icon files (ADR 0039).
 
 ## In progress
 
@@ -28,10 +29,12 @@ _Last updated: 2026-11-17_
 
 ## Next 3 steps
 
-1. ROADMAP M1.4: lexer (words, quotes, escapes, operators, variables, `~`).
-2. ROADMAP M1.5: parser (AST for simple commands, pipelines, lists, redirections).
-3. ROADMAP M1.6: interpreter (expansion, pipelines, redirections, exit codes, `$?`); decide
-   there who advances the game clock and by how much (ADR 0043).
+1. ROADMAP M1.5: parser (AST for simple commands, pipelines, lists, redirections; assignments
+   and their tildes; bash's syntax errors; unsupported operators reported).
+2. ROADMAP M1.6: interpreter (expansion, pipelines, redirections, exit codes, `$?`); decide
+   there who advances the game clock and by how much (ADR 0043), and how brace expansion
+   (`{a,b}`) is handled.
+3. ROADMAP M1.7: command framework (registry, option parser, error formats, game notices).
 
 ## Blockers and open questions
 

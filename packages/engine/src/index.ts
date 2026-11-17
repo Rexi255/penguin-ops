@@ -11,6 +11,24 @@ export {
 export { type Clock, createGameClock, type GameClock } from "./clock";
 export { type Credentials } from "./credentials";
 export { type Gid, MAX_ID, toGid, toUid, type Uid } from "./ids";
+export {
+  type ControlOperator,
+  type ControlToken,
+  lex,
+  type LexError,
+  type LexResult,
+  type MissingInput,
+  type NewlineToken,
+  type ParameterPart,
+  type RedirectionOperator,
+  type RedirectionToken,
+  type TextPart,
+  type TildePart,
+  type Token,
+  type UnsupportedFeature,
+  type WordPart,
+  type WordToken,
+} from "./lexer";
 export { lookup, type LookupError, type LookupResult } from "./lookup";
 export { expandTilde, joinAbsolute, type PathParts, splitPath } from "./path";
 export { type Access, hasPermission } from "./permissions";

@@ -51,7 +51,8 @@ placeholder window; CI builds the installer.
       `/` when the user's home directory does not exist (ADR 0041, ADR 0042).
 - [x] M1.3 Determinism: injected game clock, world builder from a spec (ADR 0008, ADR 0043).
       The seeded random generator was added in M0.4.
-- [ ] M1.4 Lexer: words, single and double quotes, escapes, operators, variables, `~`.
+- [x] M1.4 Lexer: words, single and double quotes, escapes, operators, variables, `~`
+      (ADR 0044).
 - [ ] M1.5 Parser: AST for simple commands, pipelines, lists (`;`, `&&`, `||`), redirections
       (`>`, `>>`, `2>`, `<`); bash-like syntax errors.
 - [ ] M1.6 Interpreter: expansion (variables, tilde, globs), pipelines, redirections, exit codes,
@@ -215,5 +216,7 @@ AppImage runs on Linux, and chapters 0–2 are playable in both languages.
 - CI starts the packaged AppImage itself (not only the unpacked app), so that the M5 criterion
   "the AppImage runs on Linux" is verified without a Linux machine of the owner.
 - `vim` side chapter; Rocky Linux side chapter ("the new customer runs Rocky Linux").
+- Shell features that are not simulated yet (ADR 0044): history expansion (`!!`, `!$`),
+  command substitution, brace expansion, here-documents.
 - Later chapters: firewall (`ufw`/`nftables`), nginx, Docker basics, disks (`lsblk`, `mount`,
   `fstab`), `sed`/`awk`, `git`.

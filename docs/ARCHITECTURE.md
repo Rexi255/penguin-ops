@@ -135,6 +135,10 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   - Writing to the tree follows with the first commands that change files (ROADMAP M1.9).
 - **Shell** (ADR 0007): lexer → parser → AST → interpreter. Expansion of variables, `~` and
   globs; pipelines; lists with `;`, `&&`, `||`; redirections; exit codes.
+  - `src/lexer.ts`: `lex` splits an input text into word, control operator, redirection and
+    newline tokens with offsets (ADR 0044). Words keep their parts (text, parameter, tilde)
+    with a `quoted` flag, so the interpreter expands and globs only unquoted parts. Incomplete
+    input and features the game does not simulate yet are returned as errors.
 - **Commands:** registry of command implementations with declared options, a shared option
   parser and coreutils-style errors, matching Debian 13 (ADR 0004).
 - **Full-screen programs:** one mechanism for `less`, `man`, `top`, `nano` and later `vim`.
