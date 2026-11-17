@@ -46,7 +46,8 @@ penguin-ops/
   .claude/       Claude Code skills, rules and hooks
   .github/       CI workflows, Dependabot, pull request template (from M0)
   scripts/       repository tooling in TypeScript, run directly by Node.js
-                 (license-check/: the dependency license checker)
+                 (license-check/: the dependency license checker; docs-duty/: the
+                 documentation duty check; adr/: new decision records)
   package.json         npm workspaces, root scripts, pinned Node.js version (engines)
   tsconfig.base.json   shared strict compiler options
   tsconfig.json        solution file: references all workspaces and the tooling for `tsc --build`
@@ -221,7 +222,9 @@ end-to-end tests in `apps/desktop/e2e/` (`*.spec.ts`).
 - `CLAUDE.md`: rules for every session; imports `docs/STATUS.md`.
 - `.claude/rules/`: path-scoped rules (`engine.md`, `content.md`, `ui.md`) that load only when
   matching files are read.
-- `.claude/skills/`: `/next`, `/wrap-up`; more are planned in the roadmap.
+- `.claude/skills/`: `/next`, `/wrap-up`, `/adr`; more are planned in the roadmap. `/adr` runs
+  `npm run adr:new` (`scripts/new-adr.ts`, logic in `scripts/adr/`), which creates the next
+  record from the template and updates the status lines of superseded records (ADR 0038).
 - `.claude/settings.json` and `.claude/hooks/session-start.mjs`: a SessionStart hook that adds
   the git state to the context. It runs `node` in exec form, so it works on Windows and Linux.
 - Details and reasons: ADR 0025.

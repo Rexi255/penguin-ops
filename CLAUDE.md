@@ -47,8 +47,7 @@ through questions and reviews and plays the game on Windows.
 - When something is unclear, ask in German instead of guessing.
 - Explain new concepts (TypeScript, React, Electron, testing, architecture) in 1–3 German
   sentences when they first come up.
-- Record every important decision as a new file in `docs/decisions/` (copy `template.md`; use
-  `/adr` once it exists).
+- Record every important decision as a new file in `docs/decisions/` with the `/adr` skill.
 - Quality over speed: no shortcuts, no TODO hacks, no placeholder implementations that pretend
   to work.
 - In cloud sessions the user cannot run the app. Verify UI work with Playwright screenshots.
@@ -142,6 +141,8 @@ Commands are defined only as npm scripts in `package.json`. Existing:
   `npm run package`.
 - `npm run check:docs-duty`: check that the unpushed commits update `docs/STATUS.md` if they
   change code or content (CI runs it for every push and pull request).
+- `npm run adr:new -- "Title"`: create the next decision record from the template; options
+  `--supersedes <number>` and `--partly "<number>:<scope>"` (used by `/adr`).
 
 Planned:
 
@@ -181,4 +182,5 @@ Update this section whenever a script is added.
 
 - `/next`: propose the next small work package and wait for the user's OK.
 - `/wrap-up`: end-of-session check (only the user starts it).
-- Planned: `/adr` (M0.11), `/new-level` (M2.8), `/playtest` (M3.17), `/release` (M5.5).
+- `/adr`: create a decision record with the next number and handle superseded records.
+- Planned: `/new-level` (M2.8), `/playtest` (M3.17), `/release` (M5.5).

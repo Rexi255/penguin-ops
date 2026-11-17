@@ -4,6 +4,9 @@ _Last updated: 2026-11-17_
 
 ## Recently completed
 
+- M0.11 `/adr` skill: `npm run adr:new` creates the next decision record from the template
+  and updates the status lines of completely or partly superseded records; tested with Vitest
+  against fixtures and the real records (ADR 0038). M0 is complete.
 - M0.10 dropped: `main` stays without branch protection, so nothing in the repository
   settings gets in the way of direct pushes; the process guardrails stay (ADR 0037).
 - M0.9 CI with GitHub Actions on every push to `main` and every pull request: Linux job
@@ -16,8 +19,6 @@ _Last updated: 2026-11-17_
   a development-only exception (ADR 0035).
 - M0.7 Electron window with placeholder screen, security baseline, typed preload contract and
   Playwright end-to-end tests (ADR 0033).
-- M0.6 `npm run check` runs format check, type check, lint, tests with coverage and the
-  license check in one command.
 
 ## In progress
 
@@ -25,10 +26,10 @@ _Last updated: 2026-11-17_
 
 ## Next 3 steps
 
-1. ROADMAP M0.11: `/adr` skill.
-2. ROADMAP M1.1: core types of the engine (world, host, file system node, user, group, session).
-3. ROADMAP M1.2: virtual file system (paths, owner, group, mode, lookup errors, permission
+1. ROADMAP M1.1: core types of the engine (world, host, file system node, user, group, session).
+2. ROADMAP M1.2: virtual file system (paths, owner, group, mode, lookup errors, permission
    checks).
+3. ROADMAP M1.3: determinism (injected game clock, world builder from a spec).
 
 ## Blockers and open questions
 

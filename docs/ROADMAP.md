@@ -36,7 +36,7 @@ Rules: tick a box in the same commit that completes it. New ideas go to
       request template for outside contributors, Dependabot configuration.
 - [x] ~~M0.10 Branch protection on `main` (owner, guided by Claude): block force pushes and
       deletion (ADR 0027).~~ Dropped: `main` stays unprotected (ADR 0037).
-- [ ] M0.11 `/adr` skill: new decision record from `docs/decisions/template.md` with the next
+- [x] M0.11 `/adr` skill: new decision record from `docs/decisions/template.md` with the next
       number and supersede handling.
 
 **Done when:** `npm run check` is green locally on Windows and in CI; `npm run dev` opens the

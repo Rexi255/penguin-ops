@@ -36,6 +36,7 @@ Commands (defined in `package.json`):
 | `npm run package` | Build the installer for the current platform (Windows: NSIS installer, Linux: AppImage) into `apps/desktop/release` |
 | `npm run e2e:packaged` | Run the end-to-end tests against the app from the last `npm run package` |
 | `npm run check:docs-duty` | Check that your commits update `docs/STATUS.md` if they change code or content; CI runs it too |
+| `npm run adr:new -- "Title"` | Create the next decision record in `docs/decisions/` from the template; `--supersedes <number>` and `--partly "<number>:<scope>"` mark replaced records |
 
 ## Workflow
 
