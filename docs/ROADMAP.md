@@ -91,12 +91,34 @@ complete and solvable in both languages.
 
 ## M3 Game frame
 
-- [ ] M3.1 App screens: start screen, save slot screen, game screen, pause menu.
+The design language comes first (M3.0a–f), so that the screens are built on it instead of
+inventing it along the way.
+
+- [ ] M3.0a Set up the impeccable design skill: project install of the skill only, pinned
+      version, no design hook, telemetry off, live mode not used, `.gitignore` entries; check
+      that it works in cloud sessions and on Windows.
+- [ ] M3.0b Visual tone and design tokens: `PRODUCT.md` and `DESIGN.md` with `/impeccable init`
+      and `document`; semantic tokens for colours (default dark scheme, designed so that the
+      colour schemes of M3.9 only swap values), spacing, radii, shadows and motion in
+      `apps/ui`; a test that text and background token pairs meet WCAG AA contrast.
+- [ ] M3.0c Styleguide page: a page outside the packaged app that renders all tokens with the
+      real styles, opened by an npm script; Playwright test with axe check.
+- [ ] M3.0d Typography: check JetBrains Mono and Inter (ADR 0020) against alternatives and
+      their licenses, bundle the chosen fonts for offline use, type scale tokens; shown in the
+      styleguide.
+- [ ] M3.0e Icon style: rules (grid, stroke, corners), choice between an icon set with an
+      allowed license and own SVG icons, first icons for the side panel tabs; shown in the
+      styleguide.
+- [ ] M3.0f Logo: take over the logo that the owner chose from drafts made in a separate chat
+      (own penguin, not Tux, ADR 0021); clean up the SVG, align its colours with the tokens,
+      variants for dark and light backgrounds; shown in the styleguide.
+- [ ] M3.1 App screens: start screen with the logo, save slot screen, game screen, pause menu.
 - [ ] M3.2 New game flow: name, derived Linux user name (validation, editing), Story or Sandbox
       mode (ADR 0017, ADR 0019).
 - [ ] M3.3 Terminal component: input, coloured output, history, tab completion, Ctrl+C/L/A/E,
       scrollback.
-- [ ] M3.4 Workplace layout: top bar, side panel tabs, footer key hints (ADR 0020).
+- [ ] M3.4 Workplace layout: top bar, side panel tabs, footer key hints (ADR 0020), built
+      only from the design tokens and icons of M3.0b–e.
 - [ ] M3.5 Ticket panel: chapter inbox, ticket text, hints (F1), explanation after solving,
       extra goals.
 - [ ] M3.6 Game commands `help` and `hint`; engine notices rendered in the player's language.
@@ -104,14 +126,16 @@ complete and solvable in both languages.
       format with migration test, export and import (ADR 0013).
 - [ ] M3.8 Settings: language (OS default), volumes, fullscreen (F11), font size, colour
       scheme, effects, reduce motion; language switch restarts the ticket.
-- [ ] M3.9 Colour schemes and effects: default dark, retro CRT, Solarized, high contrast;
-      optional glow and scanlines; bundled fonts.
+- [ ] M3.9 Colour schemes and effects: retro CRT, Solarized and high contrast as value sets
+      for the semantic colour tokens of M3.0b (contrast test for every scheme); optional glow
+      and scanlines.
 - [ ] M3.10 UI sounds via Web Audio with volume control.
 - [ ] M3.11 Mail panel with toasts; handbook panel (searchable, grows with learned commands).
 - [ ] M3.12 Ranks, XP and achievements framework; promotions as story moments.
 - [ ] M3.13 Sandbox free play unlock rules.
 - [ ] M3.14 Accessibility basics and automated axe checks; keyboard-only play test.
-- [ ] M3.15 Screenshot tests of all main screens in both languages and all colour schemes.
+- [ ] M3.15 Screenshot tests of all main screens and the styleguide page in both languages and
+      all colour schemes.
 - [ ] M3.16 Developer mode UI (hidden) and a test that release builds disable it.
 - [ ] M3.17 `/playtest` skill.
 
@@ -137,7 +161,8 @@ Sandbox mode, and the owner has played them once.
 
 ## M5 Release v0.1
 
-- [ ] M5.1 Logo and app icon: own penguin, SVG draft by Claude, owner decides.
+- [ ] M5.1 App icon and logo polish: final app icon from the chosen logo (M3.0f) as ico, icns
+      and png in all sizes for the installer, AppImage and window; final polish of the logo.
 - [ ] M5.2 Player README: install, start, SmartScreen note, screenshots.
 - [ ] M5.3 Release pipeline: git tag → CI builds NSIS installer and AppImage → GitHub Release
       with notes from `CHANGELOG.md`; generated dependency license texts included.

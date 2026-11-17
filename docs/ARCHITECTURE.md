@@ -149,6 +149,8 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   (ADR 0020).
 - Terminal component: input line, coloured output, history, completion, key handling like
   bash; full-screen programs take over the area.
+- Design tokens (colours, spacing, radii, shadows, motion, type scale) defined before the
+  screens; colour schemes swap token values (ADR 0039).
 - Colour schemes, optional effects, bundled fonts, UI sounds via Web Audio.
 - All texts come from the catalogs; no hard-coded strings.
 

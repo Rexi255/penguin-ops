@@ -4,6 +4,9 @@ _Last updated: 2026-11-17_
 
 ## Recently completed
 
+- Roadmap: the design language comes before the game frame screens as M3.0a–f (impeccable
+  design skill, tokens, styleguide page, typography, icon style, logo); the owner drafts the
+  logo in a separate chat; M5.1 keeps only the final app icon files (ADR 0039).
 - M0.11 `/adr` skill: `npm run adr:new` creates the next decision record from the template
   and updates the status lines of completely or partly superseded records; tested with Vitest
   against fixtures and the real records (ADR 0038). M0 is complete.
@@ -17,8 +20,6 @@ _Last updated: 2026-11-17_
   (Linux) into `apps/desktop/release`; `npm run e2e:packaged` tests the packaged app; the owner
   tested install and uninstall on Windows (ADR 0034). `truncate-utf8-bytes` (WTFPL) approved as
   a development-only exception (ADR 0035).
-- M0.7 Electron window with placeholder screen, security baseline, typed preload contract and
-  Playwright end-to-end tests (ADR 0033).
 
 ## In progress
 
@@ -35,5 +36,7 @@ _Last updated: 2026-11-17_
 
 - Linux is verified only by CI (no WSL locally). The AppImage itself is built but not started
   in CI (the tests start the unpacked app); a manual check on a Linux machine is still open.
+- Logo: the owner drafts it in a separate chat from the briefing of this session; M3.0f takes
+  over the chosen SVG files.
 - Steam release is assumed to be "maybe later" (ADR 0002); confirm with the owner when it
   becomes relevant.
