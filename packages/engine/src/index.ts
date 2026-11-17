@@ -30,6 +30,24 @@ export {
   type WordToken,
 } from "./lexer";
 export { lookup, type LookupError, type LookupResult } from "./lookup";
+export {
+  type AndOrList,
+  type AndOrOperator,
+  type AndOrPart,
+  type Assignment,
+  type Command,
+  parse,
+  type ParseError,
+  type ParseMissingInput,
+  type ParseResult,
+  type Pipeline,
+  type Redirection,
+  type Script,
+  type SimpleCommand,
+  type SupportedRedirectionOperator,
+  type UnsupportedSyntax,
+  type Word,
+} from "./parser";
 export { expandTilde, joinAbsolute, type PathParts, splitPath } from "./path";
 export { type Access, hasPermission } from "./permissions";
 export { createRandom, type RandomGenerator } from "./random";

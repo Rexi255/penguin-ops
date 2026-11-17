@@ -4,6 +4,10 @@ _Last updated: 2026-11-17_
 
 ## Recently completed
 
+- M1.5 Parser: `parse` builds a tree of lists, `&&`/`||` chains, pipelines and simple
+  commands with assignments, words and `<`/`>`/`>>` redirections; finds tildes in assignments;
+  reports bash's "syntax error near unexpected token", incomplete input after `|`, `&&`, `||`,
+  and bash syntax the game does not simulate yet (`&`, `2>&1`, `if`, …) as values (ADR 0045).
 - M1.4 Lexer: `lex` splits input into words, operators, redirections and line breaks like
   bash; words keep their quoted and unquoted parts, parameters and tilde prefixes; incomplete
   input and features the game does not simulate yet (`$(…)`, `!!`, `${x:-y}`, …) come back as
@@ -19,9 +23,6 @@ _Last updated: 2026-11-17_
 - M1.1 Core types of the engine: immutable world with hosts, users, groups and a file system
   tree of `file` and `directory` nodes; branded `Uid`/`Gid`; `createWorld` checks the
   structural rules; sessions keep the groups of their login like Linux (ADR 0041).
-- M3.0f-1 and M5.1-1, done early: the owner's logo is in `assets/brand/` (SVG variants for dark
-  and light backgrounds, web icons, usage rules) and in the README; the installer, the app and
-  the AppImage use the PenguinOps app icon; a test guards the brand files (ADR 0040).
 
 ## In progress
 
@@ -29,12 +30,11 @@ _Last updated: 2026-11-17_
 
 ## Next 3 steps
 
-1. ROADMAP M1.5: parser (AST for simple commands, pipelines, lists, redirections; assignments
-   and their tildes; bash's syntax errors; unsupported operators reported).
-2. ROADMAP M1.6: interpreter (expansion, pipelines, redirections, exit codes, `$?`); decide
+1. ROADMAP M1.6: interpreter (expansion, pipelines, redirections, exit codes, `$?`); decide
    there who advances the game clock and by how much (ADR 0043), and how brace expansion
-   (`{a,b}`) is handled.
-3. ROADMAP M1.7: command framework (registry, option parser, error formats, game notices).
+   (`{a,b}`) is handled. Slice it if it is too big for one session.
+2. ROADMAP M1.7: command framework (registry, option parser, error formats, game notices).
+3. ROADMAP M1.8: commands batch 1 (`pwd`, `cd`, `ls`, `whoami`, `echo`, `clear`, …).
 
 ## Blockers and open questions
 

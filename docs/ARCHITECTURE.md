@@ -139,6 +139,10 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     newline tokens with offsets (ADR 0044). Words keep their parts (text, parameter, tilde)
     with a `quoted` flag, so the interpreter expands and globs only unquoted parts. Incomplete
     input and features the game does not simulate yet are returned as errors.
+  - `src/parser.ts`: `parse` lexes an input text and builds the tree (ADR 0045): a `Script` of
+    and-or lists, each a chain of pipelines with `&&`/`||`, each a list of simple commands with
+    assignments, words and `<`/`>`/`>>` redirections. It finds tildes in assignments and
+    returns bash's syntax errors, incomplete input and unsupported bash syntax as values.
 - **Commands:** registry of command implementations with declared options, a shared option
   parser and coreutils-style errors, matching Debian 13 (ADR 0004).
 - **Full-screen programs:** one mechanism for `less`, `man`, `top`, `nano` and later `vim`.
