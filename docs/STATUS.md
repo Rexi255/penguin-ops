@@ -4,6 +4,11 @@ _Last updated: 2026-11-17_
 
 ## Recently completed
 
+- M1.7a Option parser: `parseOptions` reads options like GNU `getopt_long` (clusters,
+  `-n5`/`-n 5`, `--lines=5`/`--lines 5`, unambiguous abbreviations, `--`, operands between
+  options or `require-order`) and returns errors as values; `optionErrorMessage` and
+  `tryHelpMessage` write glibc's and the coreutils' messages; commands declare their complete
+  real option table (ADR 0051).
 - M1.6c-2 Redirections: `<`, `>`, `>>`, `2>` and `2>>` open their files from left to right
   before the command (also for unknown commands), output is added after the command, failures
   give bash's message and exit status 1, redirections win over pipes; `stdin` is now a
@@ -23,9 +28,6 @@ _Last updated: 2026-11-17_
   variables and `$?`, field splitting with `IFS`, pathname expansion with permissions, quote
   removal); sessions have shell variables and an exit status; `compareNames` sorts like the
   en_US.UTF-8 locale (ADR 0046).
-- M1.5 Parser: `parse` builds a tree of lists, `&&`/`||` chains, pipelines and simple
-  commands with assignments, words and `<`/`>`/`>>` redirections; bash syntax errors and
-  unsupported syntax come back as values (ADR 0045).
 
 ## In progress
 
@@ -33,8 +35,8 @@ _Last updated: 2026-11-17_
 
 ## Next 3 steps
 
-1. ROADMAP M1.7: command framework (registry, option parser, error formats, game notices) on
-   top of `ShellCommand` and `CommandLookup`.
+1. ROADMAP M1.7b: command registry with option tables, game notices for unsimulated options
+   and other game notices from commands, on top of `parseOptions` and `CommandLookup`.
 2. ROADMAP M1.8: commands batch 1 (`pwd`, `cd`, `ls`, `whoami`, `echo`, `clear`, `history`).
 3. ROADMAP M1.9: commands batch 2 (`cat`, `head`, `tail`, `mkdir`, `touch`).
 

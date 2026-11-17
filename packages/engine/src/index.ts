@@ -62,6 +62,17 @@ export {
 } from "./lexer";
 export { lookup, type LookupError, type LookupResult } from "./lookup";
 export {
+  type OptionArgument,
+  type OptionError,
+  optionErrorMessage,
+  type OptionOrder,
+  type OptionParseResult,
+  type OptionSpec,
+  type ParsedOption,
+  parseOptions,
+  tryHelpMessage,
+} from "./options";
+export {
   type AndOrList,
   type AndOrOperator,
   type AndOrPart,

@@ -185,6 +185,12 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     the command; file descriptors from 3 on and reversed forms (`0>`, `1<`) are game notices.
 - **Commands:** registry of command implementations with declared options, a shared option
   parser and coreutils-style errors, matching Debian 13 (ADR 0004).
+  - `src/options.ts`: `parseOptions` splits a command's arguments into options and operands
+    like glibc's `getopt_long` (ADR 0051): short option clusters, required and optional
+    arguments, unambiguous abbreviations of long options, `--`, and operands between options
+    (`permute`) or not (`require-order`). Commands declare their complete real option table as
+    `OptionSpec`s. Errors are values; `optionErrorMessage` and `tryHelpMessage` write glibc's
+    and the coreutils' messages.
 - **Full-screen programs:** one mechanism for `less`, `man`, `top`, `nano` and later `vim`.
 - **Rule evaluation** (ADR 0011): rule types plus `all`, `any`, `not`, evaluated against world
   state and command output.
