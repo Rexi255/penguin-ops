@@ -11,7 +11,7 @@
 
 import { z } from "zod";
 
-import { accountNameSchema, type FileEntry, fileEntriesSchema } from "./file-entries-schema";
+import { accountNameSchema, type FileEntry, literalFileEntriesSchema } from "./file-entries-schema";
 import { idSchema, reportDuplicates } from "./level-schema";
 
 /** The world format version that this schema reads. */
@@ -127,7 +127,7 @@ const hostObjectSchema = z.strictObject({
     .meta({ description: "Host name." }),
   groups: z.array(groupSchema).meta({ description: "Groups in /etc/group order." }),
   users: z.array(userSchema).meta({ description: "Users in /etc/passwd order." }),
-  files: fileEntriesSchema({ what: "file" })
+  files: literalFileEntriesSchema("file")
     .prefault({})
     .meta({ description: "Files and directories, by path; ~/ is the player's home." }),
 });

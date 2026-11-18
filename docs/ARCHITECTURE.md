@@ -306,8 +306,8 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   history navigation (`src/history-navigation.ts`, ADR 0066). The history list itself is part
   of the session (`src/history.ts`, ADR 0057). The UI owns the keys: it calls `complete` on Tab
   and lists the matches on a second Tab that follows a Tab without a change; it keeps a
-  `HistoryNavigation` between Up and Down, and calls `acceptHistoryLine` and `recordHistory`
-  on Enter.
+  `HistoryNavigation` between Up and Down, and calls `acceptHistoryLine` on Enter; the level
+  session then records the input with `recordHistory` (ADR 0077).
 
 ## Content (`packages/content` and `content/`)
 
@@ -381,8 +381,19 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
 
 ## Gameplay (`packages/gameplay`)
 
-- Level session: builds the world from the level, passes commands to the engine, evaluates
-  goals, steps, tips and extra goals.
+- Level world (`src/level-world.ts`, ADR 0076): `levelWorldSpec` turns a base world and a level
+  into the engine's `WorldSpec` for one player: the player's account (UID and GID 1000, home
+  `/home/<name>` with mode 0700) on every host, the start files after the world's files on the
+  start host, `~/` as the home and prose files from the catalogs. `isValidPlayerName` holds the
+  user name rules of ADR 0019.
+- Level session (`src/level-session.ts`, ADR 0077): `startLevel` builds the world, logs the
+  player in on the start host in `start.cwd` and can resume at a checkpoint by replaying the
+  first reference solution. `runInput` returns `incomplete` for an input that needs another
+  line, else records it in the history, runs it (or reports bash's syntax error or unsupported
+  syntax) and `evaluate`s the rules: the goal or the next steps in order, extra goals, then
+  tips while unsolved. It returns the new immutable `LevelSession`, the `TerminalEvent`s and
+  the `GameEvent`s (`step-completed`, `solved`, `extra-goal`, `tip`).
+  `lastCompletedStep` is the checkpoint that save games keep.
 - Campaign: chapters, inbox, unlocking, Story and Sandbox modes, playground (ADR 0017).
 - Progress: XP, ranks, achievements (ADR 0018).
 - Save data model with format version and migrations; settings model (ADR 0013).

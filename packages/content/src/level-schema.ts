@@ -13,7 +13,7 @@
 import type { Rule } from "@penguin-ops/engine";
 import { z } from "zod";
 
-import { type FileAttributes, type FileEntry, fileEntriesSchema } from "./file-entries-schema";
+import { type FileAttributes, type FileEntry, proseFileEntriesSchema } from "./file-entries-schema";
 import { rulePathSchema, ruleSchema } from "./rule-schema";
 
 export { type FileSource, parseMode } from "./file-entries-schema";
@@ -123,7 +123,7 @@ const textKeySchema = z
   })
   .meta({ description: "A key of the level's text catalogs (de.yaml, en.yaml)." });
 
-const startFilesSchema = fileEntriesSchema({ what: "start file", textKey: textKeySchema });
+const startFilesSchema = proseFileEntriesSchema("start file", textKeySchema);
 
 const startSchema = z
   .strictObject({

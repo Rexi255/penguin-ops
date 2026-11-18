@@ -2,9 +2,9 @@
 
 > **Status: in progress.** The schemas of `level.yaml` (format 1), `content/chapters.yaml`,
 > the base worlds and the text catalogs, the loader and the checks of ICU, markup and
-> completeness are implemented (ADR 0068 to ADR 0076); the tests of the reference solutions
-> follow in milestone M2. Update this guide whenever the format changes. Reasons: ADR 0010,
-> 0011, 0012, 0067 to 0076.
+> completeness and the level session are implemented (ADR 0068 to ADR 0077); the tests of the
+> reference solutions follow in milestone M2. Update this guide whenever the format changes. Reasons: ADR 0010,
+> 0011, 0012, 0067 to 0077.
 
 ## Principles
 
@@ -161,8 +161,8 @@ world, and that the owners and groups of its start files are users and groups of
 | `start.files` | no | Files and folders to create (see below). |
 | `goal` | yes* | Rule that marks the ticket as solved. |
 | `steps` | yes* | Alternative to `goal` for multi-step tickets (see below). |
-| `tips` | no | List of `{ when: <rule>, say: <text key> }`; each tip is shown once. |
-| `extra_goals` | no | List of `{ id, when: <rule>, xp }`; optional bonus goals with unique IDs. |
+| `tips` | no | List of `{ when: <rule>, say: <text key> }`; each tip is shown once, before solving. |
+| `extra_goals` | no | List of `{ id, when: <rule>, xp }`; bonus goals with unique IDs, each reached once. |
 | `solutions` | yes | One or more reference solutions, each a list of command lines. |
 
 \* Exactly one of `goal` and `steps`.
@@ -187,8 +187,15 @@ steps:
     goal: { output_contains: "disk full" }
 ```
 
-A multi-step ticket has at least two steps, each with a unique `id` and a `goal`. Save games
-remember the last completed step (checkpoint). Use `goal` for a single-step ticket.
+A multi-step ticket has at least two steps, each with a unique `id` and a `goal`. Use `goal`
+for a single-step ticket.
+
+- Steps are completed **in order**: after every input the next step is checked; when it holds,
+  the step after it is checked against the same state. One input can complete several steps,
+  but a later step that holds early waits until the steps before it are completed.
+- Save games remember the last completed step (checkpoint). Resuming there plays the **first
+  reference solution** until that step is completed (ADR 0077), so the first reference solution
+  must pass through every step in order.
 
 ### Files in `start.files`
 
@@ -252,6 +259,23 @@ How rules see the world (ADR 0067):
 
 New rule types (e.g. `mode_is`, `owner_is`, `service_running`, `script_works`) are added to this
 table when the engine gains them.
+
+## How the game plays a level
+
+The level session (ADR 0077) starts the level and evaluates its rules after every input:
+
+- **Start:** the base world with the player's account and the start files, built at the game
+  clock's time; the player is logged in on the start host in `start.cwd`. Nothing is
+  evaluated at the start, and the content tests require the goal to be false there.
+- **Inputs:** an input that bash would continue on the next line (open quote, trailing `|`)
+  waits for the next line. A syntax error prints bash's message
+  (``bash: syntax error near unexpected token `;;'``) and counts as output. Syntax the game
+  does not simulate yet shows a game notice and runs nothing.
+- **Order after an input:** first the goal or the next steps, then the extra goals, then the
+  tips. A solved ticket stays solved.
+- **Extra goals** are reached once each, also after the ticket is solved.
+- **Tips** are shown once each, in the order of `tips`, only while the ticket is not solved;
+  the input that solves the ticket shows none.
 
 ## Texts: `de.yaml` and `en.yaml`
 

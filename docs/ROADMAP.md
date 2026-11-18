@@ -133,14 +133,15 @@ coverage ≥ 90 %; the engine cannot import DOM or Node APIs (enforced).
   - [ ] M2.4b Content test of `content/`: load it, report missing texts of further languages,
         play every reference solution per language and with two user names (needs the level
         session of M2.5).
-- [ ] M2.5 Gameplay core: level session (start, run command, evaluate goal, tips), steps and
+- [x] M2.5 Gameplay core: level session (start, run command, evaluate goal, tips), steps and
       checkpoints, extra goals.
   - [x] M2.5a Base worlds: format of `content/worlds/<world-id>.yaml`, loading with the content,
         checks of a level's world, start host and start file owners (ADR 0076).
-  - [ ] M2.5b Level session core: build the level's world with the player's account, run an
+  - [x] M2.5b Level session core: build the level's world with the player's account, run an
         input (syntax errors, incomplete input, unsupported syntax), evaluate the goal.
-  - [ ] M2.5c Steps and checkpoints: steps in order, step messages, resuming at a checkpoint.
-  - [ ] M2.5d Tips and extra goals: each tip once while the ticket is open, extra goals once.
+  - [x] M2.5c Steps and checkpoints: steps in order, step messages, resuming at a checkpoint.
+  - [x] M2.5d Tips and extra goals: each tip once while the ticket is open, extra goals once
+        (ADR 0077 for M2.5b to M2.5d).
 - [ ] M2.6 Port the five prototype levels with English names and the prose/technical split as
       test content.
 - [ ] M2.7 Developer mode API: load any level or step, auto-play a reference solution, inspect

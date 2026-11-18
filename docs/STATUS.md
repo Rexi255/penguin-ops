@@ -4,6 +4,12 @@ _Last updated: 2026-11-18_
 
 ## Recently completed
 
+- M2.5b–d Level session (`level-world.ts`, `level-session.ts`): `startLevel` builds the
+  level's world with the player's account and starts in `start.cwd`; `runInput` handles
+  incomplete input, bash syntax errors (exit status 2) and unsupported syntax, records the
+  history and evaluates the goal or the steps in order, extra goals once, tips once while
+  unsolved; checkpoints resume by replaying the first reference solution (ADR 0077). M2.5 is
+  complete.
 - M2.5a Base worlds (`world-schema.ts`, `file-entries-schema.ts`): `content/worlds/<id>.yaml`
   with hosts, groups, users and literal files (first host is the default host, standard world
   `office`); the game adds the player's account (UID/GID 1000) to every host; `loadContent`
@@ -19,17 +25,6 @@ _Last updated: 2026-11-18_
   a language as `{ language, source }`; further languages fall back to English text by text
   (hints and option table as a whole), each text formatted in its own language;
   `missingTexts(content)` lists what falls back, not as errors (ADR 0074). M2.3 is complete.
-- M2.3c Text markup (`markup.ts`): `formatText` and `parseMarkup` turn a formatted message into
-  `RichText` (paragraphs with kept line breaks, `- ` lists, bold on one line, code); values are
-  never markup and nothing is HTML. `checkText` adds markup checks to the ICU checks of
-  `loadContent`: unclosed or empty bold, bold around an option with a line break, empty list
-  items (ADR 0073).
-- M2.3b ICU MessageFormat (`message.ts`, `catalog-texts.ts`): `intl-messageformat` 12.1.4 and its
-  parser; code spans are never ICU and apostrophes are always literal; placeholders are camelCase
-  (`number`, `plural`, `selectordinal`, `select`, no dates), plural options must exist in the
-  language; level texts have no placeholders yet. `loadContent` checks every formatted catalog
-  text and reports problems at the spot inside the text; `formatMessage` returns catalog text,
-  values (never markup) and code as separate parts (ADR 0072).
 
 ## In progress
 
@@ -37,9 +32,9 @@ _Last updated: 2026-11-18_
 
 ## Next 3 steps
 
-1. ROADMAP M2.5b: level session core.
-2. ROADMAP M2.5c and M2.5d: steps and checkpoints, tips and extra goals.
-3. ROADMAP M2.4b: content test of `content/` with the reference solutions.
+1. ROADMAP M2.4b: content test of `content/` with the reference solutions.
+2. ROADMAP M2.6: port the five prototype levels.
+3. ROADMAP M2.7: developer mode API.
 
 The owner confirmed the order M2.5, M2.4b, M2.6.
 

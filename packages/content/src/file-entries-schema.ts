@@ -55,45 +55,64 @@ export const accountNameSchema = z.string().regex(ACCOUNT_NAME_PATTERN, {
   error: "a user or group name must not be empty or contain spaces, colons or slashes",
 });
 
-/** How a map of files is written in one kind of content file. */
-export interface FileEntriesOptions {
-  /** What the files are called in messages, for example "start file". */
-  readonly what: string;
-  /**
-   * The schema of `{ text: <key> }`, a key of the text catalogs, if the files may take prose;
-   * unset if all files are literal.
-   */
-  readonly textKey?: z.ZodType<string, string>;
+const contentSchema = z
+  .string()
+  .meta({ description: "Literal content: technical, always English." })
+  .optional();
+
+const attributeSchemas = {
+  owner: accountNameSchema.meta({ description: "Name of the owning user." }).optional(),
+  group: accountNameSchema.meta({ description: "Name of the owning group." }).optional(),
+  mode: modeSchema.optional(),
+};
+
+/**
+ * The schema of a map of files that may take prose from the catalogs (`start.files` of a
+ * level): a file is its literal content, `{ text: <key> }` or an object with `content` or
+ * `text` and attributes. `what` names the files in messages, for example "start file".
+ */
+export function proseFileEntriesSchema(what: string, textKey: z.ZodType<string, string>) {
+  const fileObjectSchema = z
+    .strictObject({
+      content: contentSchema,
+      text: textKey
+        .meta({ description: "Prose content: a key of the level's text catalogs." })
+        .optional(),
+      ...attributeSchemas,
+    })
+    .meta({ not: { required: ["content", "text"] } });
+  return fileEntriesSchema(
+    what,
+    "content or text",
+    'A file (literal content, { text: key } or { content, owner, group, mode }) or, for a path that ends with "/", a directory ({} or { owner, group, mode }).',
+    fileObjectSchema,
+  );
+}
+
+/**
+ * The schema of a map of literal files (the files of a base world's host): a file is its
+ * content or an object with `content` and attributes.
+ */
+export function literalFileEntriesSchema(what: string) {
+  return fileEntriesSchema(
+    what,
+    "content",
+    'A file (literal content or { content, owner, group, mode }) or, for a path that ends with "/", a directory ({} or { owner, group, mode }).',
+    z.strictObject({ content: contentSchema, ...attributeSchemas }),
+  );
 }
 
 /**
  * The schema of a map from paths to files and directories, turned into a list of entries in the
  * order of the map. Checks the paths and the entries together (see `checkFileEntries`).
+ * `contentKinds` names what a file needs in messages.
  */
-export function fileEntriesSchema({ what, textKey }: FileEntriesOptions) {
-  const content = z
-    .string()
-    .meta({ description: "Literal content: technical, always English." })
-    .optional();
-  const attributes = {
-    owner: accountNameSchema.meta({ description: "Name of the owning user." }).optional(),
-    group: accountNameSchema.meta({ description: "Name of the owning group." }).optional(),
-    mode: modeSchema.optional(),
-  };
-  const fileObjectSchema =
-    textKey === undefined
-      ? z.strictObject({ content, ...attributes })
-      : z
-          .strictObject({
-            content,
-            text: textKey
-              .meta({ description: "Prose content: a key of the level's text catalogs." })
-              .optional(),
-            ...attributes,
-          })
-          .meta({ not: { required: ["content", "text"] } });
-
-  const contentKinds = textKey === undefined ? "content" : "content or text";
+function fileEntriesSchema<Input>(
+  what: string,
+  contentKinds: string,
+  description: string,
+  fileObjectSchema: z.ZodType<FileObject, Input>,
+) {
   const valueSchema = z
     .union(
       [
@@ -104,12 +123,7 @@ export function fileEntriesSchema({ what, textKey }: FileEntriesOptions) {
         error: `a ${what} is its content (a string) or an object with ${contentKinds}; a directory is {} or an object with owner, group and mode`,
       },
     )
-    .meta({
-      description:
-        textKey === undefined
-          ? 'A file (literal content or { content, owner, group, mode }) or, for a path that ends with "/", a directory ({} or { owner, group, mode }).'
-          : 'A file (literal content, { text: key } or { content, owner, group, mode }) or, for a path that ends with "/", a directory ({} or { owner, group, mode }).',
-    });
+    .meta({ description });
 
   // The paths are checked together with the values: zod would replace the message of a key
   // check with a general "Invalid key in record".
@@ -130,16 +144,17 @@ export function fileEntriesSchema({ what, textKey }: FileEntriesOptions) {
     .transform((files) => Object.entries(files).map(([path, value]) => toFileEntry(path, value)));
 }
 
+/** A file object after parsing: the mode is a number. */
+export interface FileObject {
+  readonly content?: string | undefined;
+  readonly text?: string | undefined;
+  readonly owner?: string | undefined;
+  readonly group?: string | undefined;
+  readonly mode?: number | undefined;
+}
+
 /** A file value after parsing: its content, or an object with the mode as a number. */
-type FileValue =
-  | string
-  | {
-      readonly content?: string | undefined;
-      readonly text?: string | undefined;
-      readonly owner?: string | undefined;
-      readonly group?: string | undefined;
-      readonly mode?: number | undefined;
-    };
+type FileValue = string | FileObject;
 
 /** Why a key of a file map is not a valid path, or `undefined` if it is. */
 function filePathProblem(path: string, what: string): string | undefined {
