@@ -174,6 +174,14 @@ export { type Access, hasPermission } from "./permissions";
 export { localeQuote, shellQuote, shellQuoteAlways } from "./quote";
 export { createRandom, type RandomGenerator } from "./random";
 export {
+  checkRule,
+  evaluateRule,
+  InvalidRuleError,
+  type Rule,
+  type RuleContext,
+  terminalOutput,
+} from "./rules";
+export {
   createSession,
   DEFAULT_IFS,
   type Session,

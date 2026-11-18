@@ -85,6 +85,18 @@ Planned later: `{ generate: <generator>, seed: <n>, ... }` for deterministic gen
 | `any: [<rule>, ...]` | At least one rule is true. |
 | `not: <rule>` | The rule is false. |
 
+How rules see the world (ADR 0067):
+
+- Paths are absolute or start with `~/` (or are `~`); `~` is the player's home directory,
+  whatever the player is called. Relative paths and `~name` are invalid.
+- Permissions do not count: a rule sees every file, also one the player cannot read.
+- `file_contains` and `same_content` need regular files; a directory never matches.
+- "Output" is everything the last input wrote to the terminal, standard output and standard
+  error together. Output redirected into a file does not count.
+- `output_matches` takes a JavaScript regular expression; it is found anywhere in the output,
+  and `^` and `$` also match at line breaks (flags `m` and `u`).
+- `all` and `any` need at least one rule.
+
 New rule types (e.g. `mode_is`, `owner_is`, `service_running`, `script_works`) are added to this
 table when the engine gains them.
 

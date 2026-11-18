@@ -100,8 +100,9 @@ placeholder window; CI builds the installer.
       bash, with readline's list for the second Tab (ADR 0065).
 - [x] M1.11b History navigation API: Up and Down like readline, with the kept edits of history
       entries that `history` marks with `*` (ADR 0066).
-- [ ] M1.12 Rule engine: `cwd_is`, `exists`, `file_exists`, `dir_exists`, `file_contains`,
-      `same_content`, `output_contains`, `output_matches`; `all`, `any`, `not` (ADR 0011).
+- [x] M1.12 Rule engine: `cwd_is`, `exists`, `file_exists`, `dir_exists`, `file_contains`,
+      `same_content`, `output_contains`, `output_matches`; `all`, `any`, `not` (ADR 0011,
+      ADR 0067).
 
 **Done when:** all commands of the prototype work with English names and messages; engine
 coverage ≥ 90 %; the engine cannot import DOM or Node APIs (enforced).

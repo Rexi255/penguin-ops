@@ -4,6 +4,12 @@ _Last updated: 2026-11-18_
 
 ## Recently completed
 
+- M1.12 Rule engine (`rules.ts`): `Rule` union with the eight rule types and `all`/`any`/`not`,
+  `evaluateRule` (paths absolute or from the player's home, no permission checks, output of
+  the last input from `terminalOutput`, `output_matches` as JavaScript regex with `m`/`u`),
+  `checkRule` for validation (ADR 0067). M1 is complete: all Linux commands of the prototype exist
+  (the game commands `help` and `hint` follow in M3.6), engine coverage is 97.6 % (threshold
+  90 %), and lint rules and the engine's TypeScript libraries keep DOM and Node APIs out.
 - M1.11b History navigation (`history-navigation.ts`): `previousHistory`/`nextHistory` like
   readline's Up and Down (saved new line, bell at the oldest entry, cursor at the end), edits
   of history entries kept until the line is run (`HistoryEntry.original`, `*` in `history`),
@@ -17,11 +23,6 @@ _Last updated: 2026-11-18_
   patterns into JavaScript with regcomp's errors and dfa's warnings), `-e`, `-i`, `-v`, `-w`,
   `-x`, `-n`, `-c`, `-l`, `-L`, `-q`, `-s`, `-H`, `-h`, `-r`/`-R`, binary files, "input file is
   also the output", exit statuses 0/1/2 (ADR 0064). M1.10 is complete.
-- M1.10c `mv` (coreutils 9.7): rename first without replacing, then the target directory;
-  move-mode checks of `copy_internal` (same file, directory over file, just-created
-  destinations, repeated directories), the errors "subdirectory of itself", "cannot overwrite"
-  and "cannot move", `-f`, `-v`, `-t`, `-T`, `--strip-trailing-slashes`; the question before a
-  write-protected destination stops with a notice. New `fs-rename.ts` (ADR 0063).
 
 ## In progress
 
@@ -29,9 +30,10 @@ _Last updated: 2026-11-18_
 
 ## Next 3 steps
 
-1. ROADMAP M1.12: rule engine.
-2. Check the M1 "Done when" criteria (engine coverage, no DOM or Node APIs in the engine).
-3. ROADMAP M2.1: the first work package of the level system.
+1. ROADMAP M2.1: level schema v1 (zod) with the YAML form of the rules, and the generated JSON
+   Schema.
+2. ROADMAP M2.2: level loader with validation errors that name file and line.
+3. ROADMAP M2.3: translation catalogs and ICU formatting.
 
 ## Blockers and open questions
 

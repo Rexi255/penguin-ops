@@ -286,8 +286,11 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     `//`) and checks them like chdir(2) and getcwd(3); the session's `cwd` is the name bash
     remembers, not a resolved path.
 - **Full-screen programs:** one mechanism for `less`, `man`, `top`, `nano` and later `vim`.
-- **Rule evaluation** (ADR 0011): rule types plus `all`, `any`, `not`, evaluated against world
-  state and command output.
+- **Rule evaluation** (ADR 0011, ADR 0067, `src/rules.ts`): rule types plus `all`, `any`,
+  `not` as a discriminated union. `evaluateRule` checks a rule against the world, the player's
+  session and the output of the last input (`terminalOutput` of its events): paths are
+  absolute or start at the player's home `~`, and are looked up without permission checks.
+  `checkRule` validates a rule for the content tests.
 - **Events:** the engine emits structured events (output, game notices with message keys,
   screen clear, full-screen program start and end). It never produces translatable text.
 - **Determinism** (ADR 0008, ADR 0043): injected game clock and seeded random generator;
