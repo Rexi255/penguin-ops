@@ -4,6 +4,10 @@ _Last updated: 2026-11-18_
 
 ## Recently completed
 
+- M2.7 Developer mode API (`developer-mode.ts`): `levelSetup` (also used by the content
+  test), `startAtStep`, `autoPlay` of a reference solution and `inspectRules` with the state of
+  every rule, step, tip and extra goal; unknown levels, steps and solutions throw a
+  `DeveloperModeError` (ADR 0079). The UI follows in M3.16.
 - M2.6 Prototype levels 2 to 5 as test content: `printer-floor2` (`cat`, chapter
   `left-behind`), `project-folders` (`mkdir`, `touch`, two steps, extra goal),
   `switch-backup` (`cp`, `mv`, two steps, extra goal) and the incident `disk-full` (`rm`) in
@@ -31,9 +35,9 @@ _Last updated: 2026-11-18_
 
 ## Next 3 steps
 
-1. ROADMAP M2.7: developer mode API.
-2. ROADMAP M2.8: `/new-level` skill.
-3. ROADMAP M3.0a: set up the impeccable design skill.
+1. ROADMAP M2.8: `/new-level` skill.
+2. ROADMAP M3.0a: set up the impeccable design skill.
+3. ROADMAP M3.0b: visual tone and design tokens.
 
 ## Blockers and open questions
 

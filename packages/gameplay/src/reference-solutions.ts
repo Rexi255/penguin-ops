@@ -4,9 +4,10 @@
 // solved by each of its reference solutions without a tip, without an incomplete command line
 // and without anything the game does not simulate, and resume at each of its checkpoints.
 
-import { type Content, DEFAULT_WORLD_ID, levelTexts } from "@penguin-ops/content";
+import type { Content } from "@penguin-ops/content";
 import { createGameClock, type GameClock } from "@penguin-ops/engine";
 
+import { levelSetup } from "./developer-mode";
 import {
   evaluate,
   type GameEvent,
@@ -48,18 +49,10 @@ export interface SolutionProblem {
  */
 export function checkReferenceSolutions(content: Content): SolutionProblem[] {
   const problems: SolutionProblem[] = [];
-  for (const [id, level] of content.levels) {
-    const catalogs = content.levelCatalogs.get(id);
-    const world = content.worlds.get(level.world ?? DEFAULT_WORLD_ID);
-    if (catalogs === undefined || world === undefined) {
-      // loadContent never returns a level without catalogs or world.
-      throw new Error(`the content has no catalogs or world for the level "${id}"`);
-    }
+  for (const [id, catalogs] of content.levelCatalogs) {
     for (const language of ["en", "de", ...catalogs.extra.keys()]) {
-      const texts = levelTexts(catalogs, language).texts;
-      const fileTexts = new Map([...texts].map(([key, text]) => [key, text.source]));
       for (const player of REFERENCE_PLAYERS) {
-        const setup: LevelSetup = { level, world, fileTexts, player };
+        const setup = levelSetup(content, id, language, player);
         const report = (message: string, solution?: number): void => {
           problems.push({
             level: id,

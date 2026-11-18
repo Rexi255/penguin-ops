@@ -1,5 +1,17 @@
 // Public API of the gameplay package.
 export {
+  type AutoPlay,
+  autoPlay,
+  DeveloperModeError,
+  inspectRules,
+  type LevelRuleStates,
+  levelSetup,
+  type PlayedLine,
+  type RuleState,
+  startAtStep,
+  type StepStatus,
+} from "./developer-mode";
+export {
   evaluate,
   type GameEvent,
   type InputOptions,

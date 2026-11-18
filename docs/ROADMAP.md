@@ -145,8 +145,8 @@ coverage ≥ 90 %; the engine cannot import DOM or Node APIs (enforced).
 - [x] M2.6 Port the five prototype levels with English names and the prose/technical split as
       test content: `first-steps` (M2.4b), `printer-floor2`, `project-folders`, `switch-backup`
       and `disk-full` in the chapters `first-day`, `left-behind` and `tidying-up`.
-- [ ] M2.7 Developer mode API: load any level or step, auto-play a reference solution, inspect
-      rule states.
+- [x] M2.7 Developer mode API: load any level or step, auto-play a reference solution, inspect
+      rule states (ADR 0079).
 - [ ] M2.8 `/new-level` skill.
 
 **Done when:** adding a level means one folder with three files, and `npm run check` proves it

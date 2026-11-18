@@ -400,11 +400,18 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   levels that cannot start, events before the first input, solutions with incomplete or
   unsimulated command lines or tips, unsolved tickets and checkpoints that cannot resume. The
   content test (`tests/content/`, its own TypeScript project with Node types) reads
-  `content/` with `readContentFiles`, loads it and runs this check.
+  `content/` with `readContentFiles`, loads it and runs this check. It builds each level with
+  `levelSetup` of the developer mode API.
+- Developer mode API (`src/developer-mode.ts`, ADR 0079): `levelSetup` builds a level of the
+  loaded content for a language and a player, `startAtStep` starts it at any step (by resuming
+  at the checkpoint before it), `autoPlay` submits every line of a reference solution and
+  returns each result, and `inspectRules` gives the state of the goal or each step, each tip
+  and each extra goal with the state of every rule inside `all`, `any` and `not`. Unknown
+  levels, steps and solutions throw a `DeveloperModeError`. The developer mode UI (M3.16)
+  builds on it.
 - Campaign: chapters, inbox, unlocking, Story and Sandbox modes, playground (ADR 0017).
 - Progress: XP, ranks, achievements (ADR 0018).
 - Save data model with format version and migrations; settings model (ADR 0013).
-- Developer mode API: load any level or step, auto-play reference solutions, inspect rules.
 
 ## UI (`apps/ui`)
 
