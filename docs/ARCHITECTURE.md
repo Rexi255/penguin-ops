@@ -130,6 +130,11 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     numbering base, the limit from `HISTSIZE`). `recordHistory` saves an input with the rules
     of `HISTCONTROL`; the game calls it before it runs the input. `src/bash-number.ts` reads
     numbers like bash's `legal_number`.
+  - `src/completion.ts` (ADR 0065): Tab completion like bash 5.2 with readline 8.2.
+    `complete` takes the input line, the cursor, the session and the command names and returns
+    the new line and cursor, the bell and the matches for the second Tab: variables, user
+    names, command names, patterns and file names, quoted like bash. `formatCompletionList`
+    lays out the matches in columns like readline, `completionQuestion` asks before 100 or more.
   - `src/world-builder.ts`: `buildWorld` creates a checked world from a short `WorldSpec`
     (users and groups by name, files as a map from absolute paths to contents); it creates
     missing parent directories and fills in defaults for owner, group, mode and mtime
@@ -287,8 +292,10 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     owner calls `advance`. `runScript` advances it by one second per input (ADR 0047); all
     other engine functions and the commands take the read-only `Clock` view (`now()`).
   - Data generators are added when a level needs them.
-- **Completion and history:** APIs for tab completion and command history. The history list
-  itself is part of the session (`src/history.ts`, ADR 0057); navigation follows in M1.11.
+- **Completion and history:** APIs for tab completion (`src/completion.ts`, ADR 0065) and
+  command history. The history list itself is part of the session (`src/history.ts`,
+  ADR 0057); navigation follows in M1.11b. The UI owns the keys: it calls `complete` on Tab and
+  lists the matches on a second Tab that follows a Tab without a change.
 
 ## Content (`packages/content` and `content/`)
 

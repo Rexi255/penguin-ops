@@ -96,7 +96,9 @@ placeholder window; CI builds the installer.
       system (ADR 0063).
 - [x] M1.10d Commands batch 3, part 4: `grep` (`-i`, `-v`, `-n`, `-c`, `-r`, `-l` and the basic
       options around them), GNU patterns translated into JavaScript (ADR 0064).
-- [ ] M1.11 Tab completion and history navigation APIs.
+- [x] M1.11a Tab completion API: file names, commands, variables and user names, quoted like
+      bash, with readline's list for the second Tab (ADR 0065).
+- [ ] M1.11b History navigation API.
 - [ ] M1.12 Rule engine: `cwd_is`, `exists`, `file_exists`, `dir_exists`, `file_contains`,
       `same_content`, `output_contains`, `output_matches`; `all`, `any`, `not` (ADR 0011).
 
@@ -267,6 +269,9 @@ AppImage runs on Linux, and chapters 0–2 are playable in both languages.
 - Options of M1.9c that give a notice (ADR 0060): `mkdir -m` (with the mode parser of
   `chmod`), `touch -d` (gnulib's `parse_datetime`), `touch -t` and `--time`, and access times
   (`touch -a` that can be seen, `ls -lu`).
+- Completion details not simulated yet (ADR 0065): programmable completion like the
+  `bash-completion` package (options, only directories after `cd`), variables in the directory
+  part (`$HOME/Do`), hostname completion after `@`, and readline's other completion keys.
 - `CDPATH` for `cd`; until then a non-empty `CDPATH` stops `cd` with a game notice (ADR 0053).
 - A removed working directory (possible since `rm`, ADR 0061): `cd ..` finds the parent through the kernel,
   and bash forgets the directory's name after a failed `pwd -P` (ADR 0053); `ls .` and `ls ..`

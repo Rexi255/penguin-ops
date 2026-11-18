@@ -29,6 +29,15 @@ export {
 } from "./command-registry";
 export { type CalendarTime, utcCalendarTime } from "./calendar";
 export { compareNames } from "./collation";
+export {
+  complete,
+  type Completion,
+  type CompletionMatch,
+  COMPLETION_QUERY_ITEMS,
+  completionQuestion,
+  type CompletionRequest,
+  formatCompletionList,
+} from "./completion";
 export { displayWidth } from "./display-width";
 export {
   FILE_SYSTEM_BLOCK_SIZE,
