@@ -63,6 +63,20 @@ const UI = yaml(
   "  solved: '{count, plural, one {# solved} other {# solved}}'",
 );
 
+/** The standard world that levels without `world` use. */
+const OFFICE_WORLD: ContentFile = {
+  file: "content/worlds/office.yaml",
+  text: [
+    "format: 1",
+    "id: office",
+    "hosts:",
+    "  - name: desk",
+    "    groups: [{ name: root, gid: 0 }]",
+    "    users: [{ name: root, uid: 0 }]",
+    "",
+  ].join("\n"),
+};
+
 interface Files {
   readonly level?: string;
   readonly en?: string;
@@ -84,6 +98,7 @@ function load({ level = LEVEL, en, de, extra = [], ui }: Files) {
       { file: "content/ui/en.yaml", text: UI },
       { file: "content/ui/de.yaml", text: UI },
     ],
+    worlds: [OFFICE_WORLD],
   });
 }
 

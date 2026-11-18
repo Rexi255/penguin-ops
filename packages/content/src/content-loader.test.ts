@@ -69,13 +69,28 @@ const UI_CATALOGS: readonly ContentFile[] = [
   { file: "content/ui/de.yaml", text: UI_TEXT },
 ];
 
-/** Content files; catalogs that are not given are valid English and German ones. */
+/** The standard world that levels without `world` use. */
+const OFFICE_WORLD: ContentFile = {
+  file: "content/worlds/office.yaml",
+  text: [
+    "format: 1",
+    "id: office",
+    "hosts:",
+    "  - name: desk",
+    "    groups: [{ name: root, gid: 0 }]",
+    "    users: [{ name: root, uid: 0 }]",
+    "",
+  ].join("\n"),
+};
+
+/** Content files; catalogs and worlds that are not given are valid ones. */
 type Files = Pick<ContentFiles, "chapters" | "levels"> & Partial<ContentFiles>;
 
 function load(files: Files) {
   return loadContent({
     levelCatalogs: catalogsFor(files.levels),
     uiCatalogs: UI_CATALOGS,
+    worlds: [OFFICE_WORLD],
     ...files,
   });
 }
@@ -632,5 +647,127 @@ describe("loadContent: texts of the catalogs", () => {
     ).toEqual([
       'content/ui/de.yaml:3:21: status.solved: the plural option "few" does not exist in "de", which has one, other and exact numbers like =0',
     ]);
+  });
+});
+
+describe("loadContent: worlds", () => {
+  /** A world file at `file` with the ID `id` and one host per name. */
+  function worldFile(file: string, id: string, ...hosts: string[]): ContentFile {
+    const lines = ["format: 1", `id: ${id}`, "hosts:"];
+    for (const host of hosts) {
+      lines.push(
+        `  - name: ${host}`,
+        "    groups: [{ name: root, gid: 0 }, { name: staff, gid: 50 }]",
+        "    users: [{ name: root, uid: 0 }]",
+      );
+    }
+    return { file, text: yaml(...lines) };
+  }
+
+  /** A level `x` with these extra lines in its level.yaml. */
+  function levelWith(...lines: string[]): ContentFile {
+    return {
+      file: levelPath("x"),
+      text: yaml(
+        "format: 1",
+        "id: x",
+        "kind: main",
+        "teaches: [pwd]",
+        ...lines,
+        "goal: { output_contains: /home }",
+        "solutions: [[pwd]]",
+      ),
+    };
+  }
+
+  const CHAPTER_X = chaptersFile(["a", "x"]);
+
+  test("returns the worlds by their IDs", () => {
+    const result = load({
+      chapters: CHAPTER_X,
+      levels: [levelWith("world: lab")],
+      worlds: [OFFICE_WORLD, worldFile("content/worlds/lab.yaml", "lab", "bench", "rack")],
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+    expect([...result.value.worlds.keys()]).toEqual(["office", "lab"]);
+    expect(result.value.worlds.get("lab")?.hosts.map((host) => host.name)).toEqual([
+      "bench",
+      "rack",
+    ]);
+  });
+
+  test("a world file lies in the worlds folder, is named after its ID and is given once", () => {
+    expect(
+      problemsOf({
+        chapters: CHAPTER_X,
+        levels: [levelWith()],
+        worlds: [
+          OFFICE_WORLD,
+          worldFile("content/office.yaml", "office", "desk"),
+          worldFile("content/worlds/office.yaml", "office", "desk"),
+          worldFile("content/worlds/lab.yaml", "labs", "desk"),
+        ],
+      }),
+    ).toEqual([
+      "content/office.yaml:1:1: a world file must lie in the worlds folder, for example content/worlds/office.yaml",
+      'content/worlds/lab.yaml:2:1: id: the world ID "labs" must be the name of its file "lab.yaml"',
+      'content/worlds/office.yaml:1:1: the world file "office.yaml" is given twice',
+    ]);
+  });
+
+  test("the standard world office must exist for a level without a world", () => {
+    expect(problemsOf({ chapters: CHAPTER_X, levels: [levelWith()], worlds: [] })).toEqual([
+      `${levelPath("x")}:2:1: id: the level uses the standard world "office", which does not exist (no file content/worlds/office.yaml)`,
+    ]);
+  });
+
+  test("the world that a level names must exist", () => {
+    expect(problemsOf({ chapters: CHAPTER_X, levels: [levelWith("world: lab")] })).toEqual([
+      `${levelPath("x")}:5:1: world: there is no world "lab" (no file content/worlds/lab.yaml)`,
+    ]);
+  });
+
+  test("the start host must be a host of the world", () => {
+    expect(
+      problemsOf({
+        chapters: CHAPTER_X,
+        levels: [levelWith("start:", "  host: server")],
+      }),
+    ).toEqual([`${levelPath("x")}:6:3: start.host: the world "office" has no host "server"`]);
+  });
+
+  test("owners and groups of start files must exist on the start host", () => {
+    expect(
+      problemsOf({
+        chapters: CHAPTER_X,
+        levels: [
+          levelWith(
+            "world: lab",
+            "start:",
+            "  host: rack",
+            "  files:",
+            '    /srv/a: { content: "", owner: anna, group: staff }',
+            "    /srv/b/: { group: wheel }",
+          ),
+        ],
+        worlds: [OFFICE_WORLD, worldFile("content/worlds/lab.yaml", "lab", "bench", "rack")],
+      }),
+    ).toEqual([
+      `${levelPath("x")}:9:5: start.files["/srv/a"]: the owner "anna" is no user of the host "rack"`,
+      `${levelPath("x")}:10:5: start.files["/srv/b/"]: the group "wheel" is no group of the host "rack"`,
+    ]);
+  });
+
+  test("a level whose world has problems is not reported as well", () => {
+    expect(
+      problemsOf({
+        chapters: CHAPTER_X,
+        levels: [levelWith("start:", "  host: server")],
+        worlds: [{ file: "content/worlds/office.yaml", text: yaml("format: 1", "id: office") }],
+      }),
+    ).toEqual(['content/worlds/office.yaml:1:1: hosts: the required field "hosts" is missing']);
   });
 });

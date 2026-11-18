@@ -4,6 +4,11 @@ _Last updated: 2026-11-18_
 
 ## Recently completed
 
+- M2.5a Base worlds (`world-schema.ts`, `file-entries-schema.ts`): `content/worlds/<id>.yaml`
+  with hosts, groups, users and literal files (first host is the default host, standard world
+  `office`); the game adds the player's account (UID/GID 1000) to every host; `loadContent`
+  checks a level's world, start host and start file owners; `world.schema.json` for VS Code
+  (ADR 0076).
 - M2.4a Completeness checks (`catalog-completeness.ts`): `loadContent` reports texts and extra
   goal descriptions that English or German lack, unused keys in any catalog, a text key used as
   file content and as a message, explanation commands that differ from English, UI keys
@@ -25,11 +30,6 @@ _Last updated: 2026-11-18_
   language; level texts have no placeholders yet. `loadContent` checks every formatted catalog
   text and reports problems at the spot inside the text; `formatMessage` returns catalog text,
   values (never markup) and code as separate parts (ADR 0072).
-- M2.3a Catalog files (`catalog-schema.ts`, `content-loader.ts`): level catalogs need `title`,
-  `ticket`, exactly three `hints` and `explanation.text` in English and German, further
-  languages may lack any text; free keys are kebab-case text keys; UI catalogs are nested groups
-  flattened to dotted keys. `loadContent` also reads `levelCatalogs` and `uiCatalogs` and reports
-  misnamed files, catalogs without a level, duplicates and missing `en.yaml`/`de.yaml` (ADR 0071).
 
 ## In progress
 
@@ -37,16 +37,14 @@ _Last updated: 2026-11-18_
 
 ## Next 3 steps
 
-1. ROADMAP M2.5: gameplay core (level session), with the format of `content/worlds/`.
-2. ROADMAP M2.4b: content test of `content/` with the reference solutions.
-3. ROADMAP M2.6: port the five prototype levels.
+1. ROADMAP M2.5b: level session core.
+2. ROADMAP M2.5c and M2.5d: steps and checkpoints, tips and extra goals.
+3. ROADMAP M2.4b: content test of `content/` with the reference solutions.
 
-The order M2.5, M2.4b, M2.6 is proposed and waits for the owner's confirmation.
+The owner confirmed the order M2.5, M2.4b, M2.6.
 
 ## Blockers and open questions
 
-- The format and loading of `content/worlds/` are defined with the level session (M2.5), where a
-  level first needs a world (confirmed by the owner).
 - Linux is verified only by CI; the owner plays on Windows and has no Linux machine, so no
   manual Linux check is planned. CI builds the AppImage but starts the unpacked app, so the
   M5 criterion "the AppImage runs on Linux" needs CI to start the AppImage itself (ROADMAP

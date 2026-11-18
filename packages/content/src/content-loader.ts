@@ -1,10 +1,11 @@
-// Loads the game's content from the text of its files (ADR 0070, ADR 0071):
+// Loads the game's content from the text of its files (ADR 0070, ADR 0071, ADR 0076):
 // `content/chapters.yaml`, every `content/levels/<level-id>/level.yaml` with the level's text
-// catalogs `<language>.yaml` next to it, and the UI catalogs `content/ui/<language>.yaml`.
-// Each file is checked with its schema, then the files are checked against each other: a
-// level's folder name is its ID, every level that a chapter lists exists, every level is in
-// exactly one chapter, every catalog belongs to a level, and the English and German catalogs
-// exist. All problems of all files are reported together. Like the level loader, this module
+// catalogs `<language>.yaml` next to it, the base worlds `content/worlds/<world-id>.yaml` and
+// the UI catalogs `content/ui/<language>.yaml`. Each file is checked with its schema, then the
+// files are checked against each other: a level's folder name is its ID, every level that a
+// chapter lists exists, every level is in exactly one chapter, every catalog belongs to a level,
+// the English and German catalogs exist, a world's file name is its ID, and a level's world,
+// start host and the owners and groups of its start files exist. All problems of all files are reported together. Like the level loader, this module
 // never reads files (ADR 0006).
 
 import type { z } from "zod";
@@ -34,6 +35,7 @@ import { type Chapter, chaptersSchema } from "./chapters-schema";
 import { type ContentProblem, type LoadResult, sortProblems } from "./content-problem";
 import { readYaml } from "./level-loader";
 import { type Level, levelSchema } from "./level-schema";
+import { type BaseWorld, baseWorldSchema, DEFAULT_WORLD_ID } from "./world-schema";
 import { textLocale } from "./message";
 import { sourceProblem, type YamlSource } from "./yaml-source";
 
@@ -61,6 +63,8 @@ export interface ContentFiles {
   readonly levelCatalogs: readonly ContentFile[];
   /** Every `.yaml` file in `content/ui/`: the UI catalogs `content/ui/<language>.yaml`. */
   readonly uiCatalogs: readonly ContentFile[];
+  /** Every `.yaml` file in `content/worlds/`: the base worlds `<world-id>.yaml`. */
+  readonly worlds: readonly ContentFile[];
 }
 
 /** The text catalogs of a level. */
@@ -79,6 +83,8 @@ export interface Content {
   readonly levelCatalogs: ReadonlyMap<string, LevelCatalogs>;
   /** The general UI texts. */
   readonly uiCatalogs: UiCatalogs;
+  /** Every base world by its ID, in the order of the files given. */
+  readonly worlds: ReadonlyMap<string, BaseWorld>;
 }
 
 /** A level file and what reading it gave. */
@@ -98,6 +104,9 @@ const LEVEL_CATALOG_FILE_PATTERN = /(?:^|\/)levels\/([^/]+)\/([^/]+)\.yaml$/u;
 
 /** Name of a UI catalog: `.../ui/<name>.yaml`. */
 const UI_CATALOG_FILE_PATTERN = /(?:^|\/)ui\/([^/]+)\.yaml$/u;
+
+/** Name of a world file: `.../worlds/<name>.yaml`. */
+const WORLD_FILE_PATTERN = /(?:^|\/)worlds\/([^/]+)\.yaml$/u;
 
 /**
  * Reads and checks the chapters file, all level files and all catalogs (format:
@@ -152,6 +161,8 @@ export function loadContent(files: ContentFiles): LoadResult<Content> {
 
   const levelCatalogs = readLevelCatalogs(files.levelCatalogs, levels, problems);
   const uiCatalogs = readUiCatalogs(files.uiCatalogs, files.chapters.file, problems);
+  const worlds = readWorlds(files.worlds, problems);
+  problems.push(...levelWorldProblems(levels, worlds, files.chapters.file));
 
   if (chapters.result.ok) {
     problems.push(
@@ -186,8 +197,168 @@ export function loadContent(files: ContentFiles): LoadResult<Content> {
       levels: orderedLevels,
       levelCatalogs: orderedCatalogs,
       uiCatalogs,
+      worlds: validWorlds(worlds),
     },
   };
+}
+
+/** A world file and what reading it gave. */
+interface WorldEntry {
+  readonly file: string;
+  /** The world, if the file is valid. */
+  readonly world?: BaseWorld;
+}
+
+/**
+ * Reads the world files: each lies in a `worlds` folder, its name is the world's ID, and each
+ * name is given once. Returns every world file by its name, also those with problems, so that
+ * the levels that use a broken world are not reported as well.
+ */
+function readWorlds(
+  files: readonly ContentFile[],
+  problems: ContentProblem[],
+): Map<string, WorldEntry> {
+  const worlds = new Map<string, WorldEntry>();
+  for (const { file, text } of files) {
+    const name = WORLD_FILE_PATTERN.exec(file)?.[1];
+    if (name === undefined) {
+      problems.push(
+        fileProblem(
+          file,
+          "a world file must lie in the worlds folder, for example content/worlds/office.yaml",
+        ),
+      );
+      continue;
+    }
+    if (worlds.has(name)) {
+      problems.push(fileProblem(file, `the world file "${name}.yaml" is given twice`));
+      continue;
+    }
+    const { result, source } = readYaml(baseWorldSchema, file, text);
+    if (!result.ok) {
+      problems.push(...result.problems);
+      worlds.set(name, { file });
+    } else if (result.value.id !== name) {
+      problems.push(
+        located(
+          file,
+          source,
+          ["id"],
+          `the world ID "${result.value.id}" must be the name of its file "${name}.yaml"`,
+        ),
+      );
+      worlds.set(name, { file });
+    } else {
+      worlds.set(name, { file, world: result.value });
+    }
+  }
+  return worlds;
+}
+
+/** The valid worlds by their IDs. */
+function validWorlds(worlds: ReadonlyMap<string, WorldEntry>): Map<string, BaseWorld> {
+  const valid = new Map<string, BaseWorld>();
+  for (const [id, { world }] of worlds) {
+    if (world !== undefined) {
+      valid.set(id, world);
+    }
+  }
+  return valid;
+}
+
+/**
+ * Checks every valid level against its world: the world exists, the start host is one of its
+ * hosts, and the owners and groups of the start files are users and groups of the start host.
+ * The player's own account cannot be named (ADR 0019); files in `~` belong to the player by
+ * default. A level whose world file has problems is not checked.
+ */
+function levelWorldProblems(
+  levels: ReadonlyMap<string, LevelEntry>,
+  worlds: ReadonlyMap<string, WorldEntry>,
+  chaptersFile: string,
+): ContentProblem[] {
+  const problems: ContentProblem[] = [];
+  const folder = chaptersFile.slice(0, chaptersFile.lastIndexOf("/") + 1);
+  for (const { file, level, source } of levels.values()) {
+    if (level === undefined) {
+      continue;
+    }
+    const id = level.world ?? DEFAULT_WORLD_ID;
+    const entry = worlds.get(id);
+    if (entry === undefined) {
+      problems.push(
+        level.world === undefined
+          ? located(
+              file,
+              source,
+              ["id"],
+              `the level uses the standard world "${id}", which does not exist (no file ${folder}worlds/${id}.yaml)`,
+            )
+          : located(
+              file,
+              source,
+              ["world"],
+              `there is no world "${id}" (no file ${folder}worlds/${id}.yaml)`,
+            ),
+      );
+      continue;
+    }
+    if (entry.world !== undefined) {
+      problems.push(...startProblems(file, source, level, entry.world));
+    }
+  }
+  return problems;
+}
+
+/** Checks the start host and the owners and groups of the start files of a level. */
+function startProblems(
+  file: string,
+  source: YamlSource | undefined,
+  level: Level,
+  world: BaseWorld,
+): ContentProblem[] {
+  const hostName = level.start.host;
+  const host =
+    hostName === undefined
+      ? world.hosts[0]
+      : world.hosts.find((candidate) => candidate.name === hostName);
+  if (host === undefined) {
+    return [
+      located(
+        file,
+        source,
+        ["start", "host"],
+        `the world "${world.id}" has no host "${hostName ?? ""}"`,
+      ),
+    ];
+  }
+  const problems: ContentProblem[] = [];
+  const users = new Set(host.users.map((user) => user.name));
+  const groups = new Set(host.groups.map((group) => group.name));
+  for (const entry of level.start.files) {
+    const path = ["start", "files", entry.kind === "directory" ? `${entry.path}/` : entry.path];
+    if (entry.owner !== undefined && !users.has(entry.owner)) {
+      problems.push(
+        located(
+          file,
+          source,
+          path,
+          `the owner "${entry.owner}" is no user of the host "${host.name}"`,
+        ),
+      );
+    }
+    if (entry.group !== undefined && !groups.has(entry.group)) {
+      problems.push(
+        located(
+          file,
+          source,
+          path,
+          `the group "${entry.group}" is no group of the host "${host.name}"`,
+        ),
+      );
+    }
+  }
+  return problems;
 }
 
 /** The catalogs read for one level or for the UI. */

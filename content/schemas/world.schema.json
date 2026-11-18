@@ -1,0 +1,163 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PenguinOps world",
+  "description": "A base world of PenguinOps: content/worlds/<world-id>.yaml.",
+  "type": "object",
+  "properties": {
+    "format": {
+      "type": "number",
+      "const": 1,
+      "description": "World format version."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "description": "Stable world ID; must match the file name and never change."
+    },
+    "hosts": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$",
+            "description": "Host name."
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "pattern": "^[^\\s:/]+$",
+                  "description": "Group name."
+                },
+                "gid": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4294967294,
+                  "description": "Group ID."
+                },
+                "members": {
+                  "default": [],
+                  "description": "Users that have this group as a supplementary group.",
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[^\\s:/]+$"
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "gid"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Groups in /etc/group order."
+          },
+          "users": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "pattern": "^[^\\s:/]+$",
+                  "description": "User name."
+                },
+                "uid": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4294967294,
+                  "description": "User ID."
+                },
+                "group": {
+                  "type": "string",
+                  "pattern": "^[^\\s:/]+$",
+                  "description": "Primary group. Default: the group with the user's name."
+                },
+                "home": {
+                  "type": "string",
+                  "pattern": "^\\/",
+                  "description": "Home directory. Default: /root for uid 0, /home/<name> otherwise."
+                },
+                "shell": {
+                  "type": "string",
+                  "pattern": "^\\/",
+                  "description": "Login shell. Default: /bin/bash."
+                }
+              },
+              "required": [
+                "name",
+                "uid"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Users in /etc/passwd order."
+          },
+          "files": {
+            "description": "Files and directories, by path; ~/ is the player's home.",
+            "default": {},
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "description": "An absolute path or a path that starts with \"~/\"; a directory if it ends with \"/\".",
+              "pattern": "^(?:/|~/)"
+            },
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Literal content of a file: technical, always English."
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "type": "string",
+                      "description": "Literal content: technical, always English."
+                    },
+                    "owner": {
+                      "type": "string",
+                      "pattern": "^[^\\s:/]+$",
+                      "description": "Name of the owning user."
+                    },
+                    "group": {
+                      "type": "string",
+                      "pattern": "^[^\\s:/]+$",
+                      "description": "Name of the owning group."
+                    },
+                    "mode": {
+                      "description": "Permission bits like ls -l shows them, for example \"rw-r-----\".",
+                      "type": "string",
+                      "pattern": "^[r-][w-][xsS-][r-][w-][xsS-][r-][w-][xtT-]$"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ],
+              "description": "A file (literal content or { content, owner, group, mode }) or, for a path that ends with \"/\", a directory ({} or { owner, group, mode })."
+            }
+          }
+        },
+        "required": [
+          "name",
+          "groups",
+          "users"
+        ],
+        "additionalProperties": false
+      },
+      "description": "The hosts; the first one is the default host."
+    }
+  },
+  "required": [
+    "format",
+    "id",
+    "hosts"
+  ],
+  "additionalProperties": false
+}

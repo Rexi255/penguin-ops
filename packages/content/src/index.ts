@@ -18,7 +18,19 @@ export {
   type StartAttributes,
   type StartEntry,
 } from "./level-schema";
-export { levelJsonSchema } from "./level-json-schema";
+export { type FileAttributes, type FileEntry } from "./file-entries-schema";
+export {
+  type BaseWorld,
+  type BaseWorldGroup,
+  type BaseWorldHost,
+  type BaseWorldInput,
+  type BaseWorldUser,
+  baseWorldSchema,
+  DEFAULT_WORLD_ID,
+  PLAYER_ID,
+  WORLD_FORMAT_VERSION,
+} from "./world-schema";
+export { levelJsonSchema, worldJsonSchema } from "./level-json-schema";
 export { type RuleInput, rulePathSchema, ruleSchema } from "./rule-schema";
 export {
   type ContentProblem,

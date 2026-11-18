@@ -29,7 +29,7 @@ Commands (defined in `package.json`):
 | `npm run lint` | Lint with ESLint, including the package boundary rules |
 | `npm test` | Run all tests (Vitest), including the tests that prove the lint rules fire |
 | `npm run test:coverage` | Run all tests with coverage; fails below 90 % in the engine |
-| `npm run schemas:update` | Regenerate the JSON Schema of level files (`content/schemas/level.schema.json`) after a schema change |
+| `npm run schemas:update` | Regenerate the JSON Schemas of level and world files (`content/schemas/*.schema.json`) after a schema change |
 | `npm run check:licenses` | Check the licenses of all npm dependencies against `license-policy.json` |
 | `npm run dev` | Start the game in development mode with hot reload |
 | `npm run build` | Build the app into `apps/desktop/out` |

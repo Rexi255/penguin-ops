@@ -331,7 +331,18 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   `{ file, text }` pairs, then checks the files against each other: the folder name is the
   level ID, every listed level exists, every level is in exactly one chapter. It returns the
   chapters and the levels by ID in chapter order, or all problems of all files. The caller
-  finds and reads the files. Planned: worlds as a further input (M2.5).
+  finds and reads the files.
+- Base worlds (`src/world-schema.ts`, `src/file-entries-schema.ts`, ADR 0076):
+  `baseWorldSchema` checks `content/worlds/<world-id>.yaml` (hosts with groups, users and
+  literal files; the first host is the default host) and returns a `BaseWorld`; the checks
+  across the fields of a host (unique names and IDs, root, primary groups, members, owners of
+  files, UID and GID 1000 kept free for the player) run in a pipe after the fields are valid.
+  `fileEntriesSchema` is the map of files shared by worlds and `start.files`.
+  `loadContent` also takes `worlds` as `{ file, text }`, checks their names and that every
+  level's world (default `office`), start host and the owners and groups of its start files
+  exist, and returns the worlds by ID. `src/level-json-schema.ts` also generates
+  `content/schemas/world.schema.json`. Building a level's world is gameplay's job, because
+  content may only import engine types.
 - Catalogs (`src/catalog-schema.ts`, ADR 0071): `levelCatalogSchema` checks the English and
   German catalog of a level (`title`, `ticket`, three `hints`, `explanation`, `extra_goals`,
   free text keys) and returns a `LevelCatalog`; `partialLevelCatalogSchema` does the same with

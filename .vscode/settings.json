@@ -1,5 +1,6 @@
 {
   "yaml.schemas": {
-    "./content/schemas/level.schema.json": "content/levels/*/level.yaml"
+    "./content/schemas/level.schema.json": "content/levels/*/level.yaml",
+    "./content/schemas/world.schema.json": "content/worlds/*.yaml"
   }
 }

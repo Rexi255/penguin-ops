@@ -1,10 +1,10 @@
 # Level authoring
 
-> **Status: in progress.** The schemas of `level.yaml` (format 1), `content/chapters.yaml` and
-> the text catalogs, the loader and the checks of ICU, markup and completeness are
-> implemented (ADR 0068 to ADR 0075); the tests of the reference solutions follow in milestone
-> M2. Update this guide whenever the format changes. Reasons: ADR 0010, 0011, 0012, 0067 to
-> 0075.
+> **Status: in progress.** The schemas of `level.yaml` (format 1), `content/chapters.yaml`,
+> the base worlds and the text catalogs, the loader and the checks of ICU, markup and
+> completeness are implemented (ADR 0068 to ADR 0076); the tests of the reference solutions
+> follow in milestone M2. Update this guide whenever the format changes. Reasons: ADR 0010,
+> 0011, 0012, 0067 to 0076.
 
 ## Principles
 
@@ -36,9 +36,10 @@ hyphens), for example `printer-floor2`. It is stored in save files and must neve
 
 ## Editor support
 
-`content/schemas/level.schema.json` is a JSON Schema generated from the zod schema. VS Code
-with the recommended YAML extension (`redhat.vscode-yaml`) uses it for every
-`content/levels/*/level.yaml` (`.vscode/settings.json`): completion, descriptions and error
+`content/schemas/level.schema.json` and `content/schemas/world.schema.json` are JSON Schemas
+generated from the zod schemas. VS Code with the recommended YAML extension
+(`redhat.vscode-yaml`) uses them for every `content/levels/*/level.yaml` and every
+`content/worlds/*.yaml` (`.vscode/settings.json`): completion, descriptions and error
 highlighting. The zod schema stays the authority: some checks (duplicate IDs, valid regular
 expressions, "a directory has no content") only `npm run check` finds. After a schema change,
 run `npm run schemas:update`.
@@ -92,6 +93,59 @@ content/chapters.yaml:4:27: chapters[0].levels[1]: there is no level "printer-fl
 content/levels/handover/level.yaml:2:1: id: the level is in no chapter of content/chapters.yaml
 ```
 
+## Base worlds: `content/worlds/<world-id>.yaml`
+
+A base world holds the hosts of the simulated company with their groups, users and files
+(ADR 0076). Levels start from a base world and add their own start files; a level without
+`world` uses the standard world `office`.
+
+```yaml
+format: 1
+id: office
+hosts:
+  - name: desk                     # the first host is the default host
+    groups:
+      - { name: root, gid: 0 }
+      - { name: staff, gid: 50, members: [anna] }
+      - { name: anna, gid: 1001 }
+    users:
+      - { name: root, uid: 0 }
+      - { name: anna, uid: 1001 }  # primary group: the group with the user's name
+    files:
+      "/etc/motd": "Welcome to the office network.
+"
+      "/srv/share/": { owner: anna, group: staff, mode: rwxrwsr-x }
+```
+
+| Field | Required | Meaning |
+|---|---|---|
+| `format` | yes | World format version: `1`. |
+| `id` | yes | Stable kebab-case world ID; must match the file name. |
+| `hosts` | yes | At least one host; the first one is the default host. |
+| `hosts[].name` | yes | Host name: lowercase letters, digits and inner hyphens, unique. |
+| `hosts[].groups` | yes | `{ name, gid, members? }` in `/etc/group` order. |
+| `hosts[].users` | yes | `{ name, uid, group?, home?, shell? }` in `/etc/passwd` order. |
+| `hosts[].files` | no | Files and directories, written like `start.files` (see below). |
+
+- Every host has the user `root` (UID 0) and the group `root` (GID 0). Names and IDs of users
+  and groups are unique on a host; IDs are whole numbers from 0 to 4294967294.
+- A user's primary group is `group`, or the group with the user's name; it must exist.
+  `members` are users of the host. Defaults: home `/root` for UID 0 and `/home/<name>`
+  otherwise, shell `/bin/bash`.
+- **The player's account is added by the game** to every host: user and group with the
+  player's name, UID and GID 1000, home `/home/<name>`. A world must not use UID or GID 1000.
+  `~/` in a world file is the player's home.
+- World files are always literal (technical, English): worlds have no catalogs, so
+  `{ text: <key> }` is not allowed. Prose belongs in the start files of a level.
+
+```
+content/worlds/office.yaml:7:24: hosts[0].groups[1].gid: the gid 1000 belongs to the player's account
+content/levels/printer-floor2/level.yaml:6:3: start.host: the world "office" has no host "server"
+```
+
+The loader also checks that a level's world exists, that its `start.host` is a host of the
+world, and that the owners and groups of its start files are users and groups of the start host.
+
 ## `level.yaml`
 
 | Field | Required | Meaning |
@@ -102,7 +156,7 @@ content/levels/handover/level.yaml:2:1: id: the level is in no chapter of conten
 | `teaches` | yes | Commands introduced (for `review`: commands practised); at least one, each once. |
 | `xp` | no | XP for solving, a positive integer (default 100). |
 | `world` | no | Base world ID from `content/worlds/` (default: the standard office world). |
-| `start.host` | no | Host the session starts on (default: the world's default host). |
+| `start.host` | no | Host the session starts on (default: the world's first host). |
 | `start.cwd` | no | Start directory: absolute, `~` or starting with `~/` (default `~`). |
 | `start.files` | no | Files and folders to create (see below). |
 | `goal` | yes* | Rule that marks the ticket as solved. |
@@ -150,6 +204,8 @@ start:
 ```
 
 `~` is the player's home directory. Default owner: the player inside `~`, otherwise `root`.
+`owner` and `group` name users and groups of the start host's world; the player's own account
+cannot be named (rules and files never depend on the player's name).
 
 - Paths are absolute or start with `~/`, without empty components, `.` or `..`. A path that
   ends with `/` is a directory; all others are files.
@@ -398,7 +454,8 @@ explanation:
 
 ## Automated checks (run by `npm run check`)
 
-- Schema validation of every `level.yaml`, of `content/chapters.yaml` and of every catalog.
+- Schema validation of every `level.yaml`, of `content/chapters.yaml`, of every world and of
+  every catalog, and the checks of levels against their worlds.
 - ICU and markup of every text, and the completeness of the catalogs (see above).
 - Planned with the level session (ROADMAP M2.4b): every reference solution, in every language and with two different user names: the goal is
   not reached at the start, it is reached after the solution, and no tip fires on the way.

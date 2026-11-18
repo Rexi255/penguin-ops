@@ -1,12 +1,27 @@
 import { describe, expect, test } from "vitest";
 
-import { levelJsonSchema } from "./level-json-schema";
+import { levelJsonSchema, worldJsonSchema } from "./level-json-schema";
 
 describe("levelJsonSchema", () => {
   test("content/schemas/level.schema.json is up to date (npm run schemas:update updates it)", async () => {
     await expect(`${JSON.stringify(levelJsonSchema(), null, 2)}\n`).toMatchFileSnapshot(
       "../../../content/schemas/level.schema.json",
     );
+  });
+
+  test("content/schemas/world.schema.json is up to date (npm run schemas:update updates it)", async () => {
+    await expect(`${JSON.stringify(worldJsonSchema(), null, 2)}
+`).toMatchFileSnapshot("../../../content/schemas/world.schema.json");
+  });
+
+  test("describes the input form of world files for editors", () => {
+    expect(worldJsonSchema()).toMatchObject({
+      title: "PenguinOps world",
+      type: "object",
+      additionalProperties: false,
+      required: ["format", "id", "hosts"],
+      properties: { format: { const: 1 }, hosts: { type: "array", minItems: 1 } },
+    });
   });
 
   test("describes the input form of level.yaml for editors", () => {

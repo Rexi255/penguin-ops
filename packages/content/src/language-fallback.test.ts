@@ -51,6 +51,20 @@ function completeCatalog(language: string): string {
   );
 }
 
+/** The standard world that levels without `world` use. */
+const OFFICE_WORLD: ContentFile = {
+  file: "content/worlds/office.yaml",
+  text: [
+    "format: 1",
+    "id: office",
+    "hosts:",
+    "  - name: desk",
+    "    groups: [{ name: root, gid: 0 }]",
+    "    users: [{ name: root, uid: 0 }]",
+    "",
+  ].join("\n"),
+};
+
 const UI_CATALOGS: readonly ContentFile[] = [
   { file: "content/ui/en.yaml", text: yaml("menu:", "  new-game: New game", "  quit: Quit") },
   { file: "content/ui/de.yaml", text: yaml("menu:", "  new-game: Neues Spiel", "  quit: Beenden") },
@@ -64,6 +78,7 @@ function load(
   const result = loadContent({
     chapters: CHAPTERS,
     levels: [levelFile("x"), levelFile("y")],
+    worlds: [OFFICE_WORLD],
     levelCatalogs: [
       ...["x", "y"].flatMap((id) =>
         ["en", "de"].map((language) => ({
@@ -195,6 +210,7 @@ describe("levelTexts", () => {
         text: yaml("format: 1", "chapters:", "  - id: a", "    levels: [x]"),
       },
       levels: [levelFile("x")],
+      worlds: [OFFICE_WORLD],
       levelCatalogs: [
         { file: "content/levels/x/en.yaml", text: simple },
         { file: "content/levels/x/de.yaml", text: simple },
