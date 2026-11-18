@@ -179,6 +179,8 @@ Update this section whenever a script is added.
 | Commands per chapter | `docs/CURRICULUM.md` |
 | Level format | `docs/LEVEL-AUTHORING.md` |
 | Story, characters, tone, glossary | `docs/STORY.md` |
+| Product truth for design work | `PRODUCT.md` |
+| Visual world and design rules | `DESIGN.md` |
 | Contribution workflow | `CONTRIBUTING.md` |
 
 ## Skills

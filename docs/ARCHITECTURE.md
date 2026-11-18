@@ -51,6 +51,8 @@ penguin-ops/
   types/         shared type declarations (zod-url.d.ts: a type-only URL for the pure packages)
   .claude/       Claude Code skills, rules and hooks
   .impeccable/   shared configuration of the impeccable design skill (telemetry off, ADR 0080)
+  PRODUCT.md     product truth for design work: users, purpose, positioning (ADR 0039, 0081)
+  DESIGN.md      the visual world and design rules, read by impeccable (ADR 0039, 0081)
   .github/       CI workflows, Dependabot, pull request template (from M0)
   tests/content/ the content test: reads content/ and plays every reference solution (ADR 0078)
   scripts/       repository tooling in TypeScript, run directly by Node.js
@@ -428,7 +430,9 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
 
 Current state (ADR 0033): `index.html` (with the strict Content Security Policy) loads
 `src/main.tsx`, which asks the desktop API for the app info and renders the placeholder screen
-(`src/app.tsx`). `src/styles.css` holds the first design tokens. `src/desktop-api.ts` defines
+(`src/app.tsx`). `src/styles.css` holds the first design tokens. The visual world is
+"Label Tape & Patch Cable" (ADR 0081, `DESIGN.md`); the workplace screen's direction contract is
+the impeccable surface brief `.impeccable/surfaces/src-app-tsx.md`. `src/desktop-api.ts` defines
 the preload contract (`DesktopApi`); `src/index.ts` exports only its types, for
 `apps/desktop`.
 

@@ -4,6 +4,10 @@ _Last updated: 2026-11-18_
 
 ## Recently completed
 
+- M3.0b-1 Visual tone: `PRODUCT.md` from the owner's interview and a seed `DESIGN.md` in the
+  repository root; the owner chose the visual world "Label Tape & Patch Cable" on impeccable's
+  decision page (ADR 0081); direction contract in `apps/ui/.impeccable/surfaces/`. impeccable
+  finds the root files from `apps/ui`.
 - M3.0a impeccable design skill: byte-for-byte copy of release `cli-v4.9.1` in
   `.claude/skills/impeccable/` without hook and subagents, telemetry off in
   `.impeccable/config.json`, `.gitignore` block, guarded by `scripts/impeccable-setup.test.ts`;
@@ -15,10 +19,6 @@ _Last updated: 2026-11-18_
   test), `startAtStep`, `autoPlay` of a reference solution and `inspectRules` with the state of
   every rule, step, tip and extra goal; unknown levels, steps and solutions throw a
   `DeveloperModeError` (ADR 0079). The UI follows in M3.16.
-- M2.6 Prototype levels 2 to 5 as test content: `printer-floor2` (`cat`, chapter
-  `left-behind`), `project-folders` (`mkdir`, `touch`, two steps, extra goal),
-  `switch-backup` (`cp`, `mv`, two steps, extra goal) and the incident `disk-full` (`rm`) in
-  chapter `tidying-up`; the content test plays all their reference solutions.
 
 ## In progress
 
@@ -26,8 +26,8 @@ _Last updated: 2026-11-18_
 
 ## Next 3 steps
 
-1. ROADMAP M3.0b: visual tone and design tokens (check that root `PRODUCT.md` and `DESIGN.md`
-   are picked up from `apps/ui`, ADR 0080).
+1. ROADMAP M3.0b-2: design tokens from `DESIGN.md`, WCAG AA contrast test, regenerate
+   `DESIGN.md` with `/impeccable document`.
 2. ROADMAP M3.0c: styleguide page.
 3. ROADMAP M3.0d: typography.
 

@@ -12,3 +12,9 @@ content/schemas/
 
 # Third-party skill copied unchanged from its pinned release (ADR 0080).
 .claude/skills/impeccable/
+
+# impeccable's local runtime output (sketches, decision pages, review captures). Its folders
+# ignore themselves for git with their own .gitignore, which Prettier does not read (ADR 0081).
+**/.impeccable/mocks/
+**/.impeccable/questions/
+**/.impeccable/review/

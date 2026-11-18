@@ -160,10 +160,12 @@ inventing it along the way.
 - [x] M3.0a Set up the impeccable design skill: project install of the skill only, pinned
       version, no design hook, telemetry off, live mode not used, `.gitignore` entries; check
       that it works in cloud sessions and on Windows.
-- [ ] M3.0b Visual tone and design tokens: `PRODUCT.md` and `DESIGN.md` with `/impeccable init`
-      and `document`; semantic tokens for colours (default dark scheme, designed so that the
-      colour schemes of M3.9 only swap values), spacing, radii, shadows and motion in
-      `apps/ui`; a test that text and background token pairs meet WCAG AA contrast.
+- [x] M3.0b-1 Visual tone: `PRODUCT.md` and a seed `DESIGN.md` with `/impeccable init` and the
+      direction workshop; the owner chose "Label Tape & Patch Cable" (ADR 0081).
+- [ ] M3.0b-2 Design tokens: semantic tokens for colours (default dark scheme, designed so
+      that the colour schemes of M3.9 only swap values), spacing, radii, shadows and motion in
+      `apps/ui`, following `DESIGN.md`; a test that text and background token pairs meet WCAG
+      AA contrast; `DESIGN.md` regenerated from the tokens with `/impeccable document`.
 - [ ] M3.0c Styleguide page: a page outside the packaged app that renders all tokens with the
       real styles, opened by an npm script; Playwright test with axe check.
 - [ ] M3.0d Typography: check JetBrains Mono and Inter (ADR 0020) against alternatives and
