@@ -11,13 +11,14 @@ import { head } from "./head";
 import { history } from "./history";
 import { ls } from "./ls";
 import { mkdir } from "./mkdir";
+import { mv } from "./mv";
 import { pwd } from "./pwd";
 import { rm } from "./rm";
 import { tail } from "./tail";
 import { touch } from "./touch";
 import { whoami } from "./whoami";
 
-export { cat, cd, clear, cp, echo, head, history, ls, mkdir, pwd, rm, tail, touch, whoami };
+export { cat, cd, clear, cp, echo, head, history, ls, mkdir, mv, pwd, rm, tail, touch, whoami };
 
 /** All simulated commands, sorted by name. */
 export const COMMANDS: readonly RegisteredCommand[] = [
@@ -30,6 +31,7 @@ export const COMMANDS: readonly RegisteredCommand[] = [
   history,
   ls,
   mkdir,
+  mv,
   pwd,
   rm,
   tail,

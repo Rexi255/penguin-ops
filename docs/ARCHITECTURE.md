@@ -161,7 +161,8 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     (ADR 0060). `changeMode` is chmod(2) for root and the owner (ADR 0062).
   - `src/fs-remove.ts`: `removeEntry` is unlink(2) or rmdir(2) in the kernel's order of checks:
     write and search permission on the directory, the sticky bit (`EPERM`), the kind of the
-    entry and `ENOTEMPTY` (ADR 0061).
+    entry and `ENOTEMPTY` (ADR 0061). `src/fs-rename.ts`: `renameEntry` is renameat2(2) with or
+    without `RENAME_NOREPLACE`; the node keeps its mtime (ADR 0063).
   - `src/fs-read.ts`: `openForReading` opens a file or directory like `open(2)` with
     `O_RDONLY` (lookup errors, read permission); a file gives its canonical path and content, a
     directory only errors on reading (ADR 0049). `readOpenFile` reads an opened file again
@@ -253,10 +254,10 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   - `src/commands/` holds the commands, one module each, and `COMMANDS`, the list for
     `createCommandLookup`. `cd`, `pwd`, `echo` and `history` are builtins (`history` lists, clears
     and deletes entries of the session's history list, ADR 0057); `whoami`, `ls`, `cat`, `head`,
-    `tail`, `mkdir`, `touch`, `rm` and `cp` use `defineCommand`. `clear` is ncurses' program with
-    plain `getopt`: on the terminal it clears the screen, into a pipe or a file it writes the escape
-    sequences of `xterm-256color`, the `TERM` that `createSession` sets (ADR 0056). `ls` follows
-    coreutils' `ls.c`: columns on a terminal, one name per line otherwise (ADR 0054);
+    `tail`, `mkdir`, `touch`, `rm`, `cp` and `mv` use `defineCommand`. `clear` is ncurses' program
+    with plain `getopt`: on the terminal it clears the screen, into a pipe or a file it writes the
+    escape sequences of `xterm-256color`, the `TERM` that `createSession` sets (ADR 0056). `ls`
+    follows coreutils' `ls.c`: columns on a terminal, one name per line otherwise (ADR 0054);
     `long-listing.ts` writes its long format with `-l`, `-g`, `-o`, `-G` and `-n` (ADR 0055). `cat`
     reads files and standard input and refuses to read its own output file like `cat.c`;
     `cat-format.ts` is the state machine of its formatting options, kept across all inputs of one
@@ -267,9 +268,10 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     like remove.c with gnulib's fts and stops with a notice where it would ask a question on the
     terminal (ADR 0061). `cp` follows `copy_internal` of copy.c, with the names of copies in a
     target directory from `file-names.ts` and copies of a directory into itself found by canonical
-    paths (ADR 0062). `directory-names.ts` works out working directory names like bash (by text,
-    keeping a leading `//`) and checks them like chdir(2) and getcwd(3); the session's `cwd` is the
-    name bash remembers, not a resolved path.
+    paths (ADR 0062). `mv` tries rename(2) first and follows the move mode of `copy_internal` (ADR
+    0063). `directory-names.ts` works out working directory names like bash (by text, keeping a
+    leading `//`) and checks them like chdir(2) and getcwd(3); the session's `cwd` is the name bash
+    remembers, not a resolved path.
 - **Full-screen programs:** one mechanism for `less`, `man`, `top`, `nano` and later `vim`.
 - **Rule evaluation** (ADR 0011): rule types plus `all`, `any`, `not`, evaluated against world
   state and command output.

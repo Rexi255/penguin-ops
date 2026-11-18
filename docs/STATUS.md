@@ -4,6 +4,11 @@ _Last updated: 2026-11-18_
 
 ## Recently completed
 
+- M1.10c `mv` (coreutils 9.7): rename first without replacing, then the target directory;
+  move-mode checks of `copy_internal` (same file, directory over file, just-created
+  destinations, repeated directories), the errors "subdirectory of itself", "cannot overwrite"
+  and "cannot move", `-f`, `-v`, `-t`, `-T`, `--strip-trailing-slashes`; the question before a
+  write-protected destination stops with a notice. New `fs-rename.ts` (ADR 0063).
 - M1.10b `cp` (coreutils 9.7): files and `-r` like `copy_internal` (target directory, same
   file, overwrite checks, new files with the source's bits minus the umask, directories filled
   with owner rights and fixed afterwards, "into itself" and repeated operands by canonical
@@ -19,20 +24,16 @@ _Last updated: 2026-11-18_
   `-c`, `-f`, `-h`, `-m`, `-r` and `-`, and touch.c's choice between "cannot touch" and
   "setting times of". New `makeDirectory` and `setTimes` (utimensat permissions) in
   `fs-write.ts` (ADR 0060).
-- M1.9b `head` and `tail` (coreutils 9.7): `-n`, `-c` (`head` with `-N` for "all but the
-  last", `tail` with `+N` from the start), headers with `-q`/`-v`, `-z`, the obsolete forms
-  (`head -5c`, `tail +5`, `tail -5f`), gnulib's counts with suffixes (`src/xstrtol.ts`), how far
-  a `-` reads a pipe or file. `defineCommand` gets the hooks `obsoleteSyntax` and `checkOption`;
-  `tail -f` gives a notice (ADR 0059).
+
 ## In progress
 
 - Nothing.
 
 ## Next 3 steps
 
-1. ROADMAP M1.10c: `mv`.
-2. ROADMAP M1.10d: `grep`.
-3. ROADMAP M1.11: tab completion and history navigation APIs.
+1. ROADMAP M1.10d: `grep`.
+2. ROADMAP M1.11: tab completion and history navigation APIs.
+3. ROADMAP M1.12: rule engine.
 
 ## Blockers and open questions
 
@@ -43,6 +44,6 @@ _Last updated: 2026-11-18_
 - The logo colours are provisional until M3.0f-2 aligns them with the design tokens.
 - Steam release is assumed to be "maybe later" (ADR 0002); confirm with the owner when it
   becomes relevant.
-- Some details of `ls`, `clear`, `history`, `cat`, `head`, `tail`, `touch`, `rm` and `cp` could
-  not be checked against a real Debian 13 (tests marked `@differential`, ADR 0054 to ADR 0062);
-  M6 verifies them.
+- Some details of `ls`, `clear`, `history`, `cat`, `head`, `tail`, `touch`, `rm`, `cp` and `mv`
+  could not be checked against a real Debian 13 (tests marked `@differential`, ADR 0054 to
+  ADR 0063); M6 verifies them.
