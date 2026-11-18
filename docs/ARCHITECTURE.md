@@ -127,9 +127,9 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     `pam_umask`, ADR 0048), `setVariable` (sets a shell variable; a new `HISTSIZE` applies to
     the history at once) and `userAtHost` (the `\u@\h` part of the prompt).
   - `src/history.ts` (ADR 0057, ADR 0066): the history list as readline 8.2 keeps it (entries
-    with the player's unsaved edits, the numbering base, the limit from `HISTSIZE`). `recordHistory` saves an input with the rules
-    of `HISTCONTROL`; the game calls it before it runs the input. `src/bash-number.ts` reads
-    numbers like bash's `legal_number`.
+    with the player's unsaved edits, the numbering base, the limit from `HISTSIZE`).
+    `recordHistory` saves an input with the rules of `HISTCONTROL`; the game calls it before it
+    runs the input. `src/bash-number.ts` reads numbers like bash's `legal_number`.
   - `src/history-navigation.ts` (ADR 0066): Up and Down like readline's `previous-history`
     and `next-history`. `previousHistory` and `nextHistory` take the session, a
     `HistoryNavigation` (shown entry and saved new line) and the input line, keep the edit of
