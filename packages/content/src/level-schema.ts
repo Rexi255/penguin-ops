@@ -130,7 +130,8 @@ const ACCOUNT_NAME_PATTERN = /^[^\s:/]+$/u;
 /** Permission bits as `ls -l` shows them, with setuid, setgid and sticky. */
 const MODE_PATTERN = /^[r-][w-][xsS-][r-][w-][xsS-][r-][w-][xtT-]$/u;
 
-function idSchema(what: string) {
+/** A string schema for a stable kebab-case ID; `what` names the ID in the message. */
+export function idSchema(what: string) {
   return z.string().regex(ID_PATTERN, {
     error: `${what} must be kebab-case: lowercase letters and digits, separated by single hyphens`,
   });
@@ -475,7 +476,7 @@ export function parseMode(mode: string): number {
 }
 
 /** Adds an issue at every repeated value of the list. */
-function reportDuplicates(
+export function reportDuplicates(
   values: readonly string[],
   what: string,
   context: z.RefinementCtx,

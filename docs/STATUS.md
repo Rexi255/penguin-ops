@@ -4,6 +4,12 @@ _Last updated: 2026-11-18_
 
 ## Recently completed
 
+- M2.2b Chapters file and loading all content (`chapters-schema.ts`, `content-loader.ts`):
+  `content/chapters.yaml` holds `format: 1` and chapters with an ID and their level IDs in
+  order; `loadContent({ chapters, levels })` reads it and every `level.yaml` from
+  `{ file, text }` and checks across files (folder name is the level ID, listed levels exist,
+  every level in exactly one chapter), reporting all problems together (ADR 0070). M2.2 is
+  complete.
 - M2.2a Loading one YAML file from its text (`level-loader.ts`, `yaml-source.ts`,
   `schema-problems.ts`, `content-problem.ts`): `loadLevel(file, text)` reads YAML 1.2 with the
   `yaml` library and reports problems as `file:line:column: path: message`; map entries are
@@ -26,11 +32,6 @@ _Last updated: 2026-11-18_
   readline's Up and Down (saved new line, bell at the oldest entry, cursor at the end), edits
   of history entries kept until the line is run (`HistoryEntry.original`, `*` in `history`),
   `acceptHistoryLine` for Enter (ADR 0066). M1.11 is complete.
-- M1.11a Tab completion (`completion.ts`): `complete` gives the new line, cursor, bell and the
-  matches of the second Tab like bash 5.2 with readline 8.2, measured on a real bash: variables,
-  `~user`, command names (also after `;`, `|`, assignments), patterns with one match, file
-  names with bash's backslash or quote style; `formatCompletionList` and `completionQuestion`
-  for readline's list (ADR 0065).
 
 ## In progress
 
@@ -38,15 +39,14 @@ _Last updated: 2026-11-18_
 
 ## Next 3 steps
 
-1. ROADMAP M2.2b: `content/chapters.yaml` schema and loading all levels from a list of files,
-   with cross-checks (folder name is the level ID, every level in exactly one chapter).
-2. ROADMAP M2.3: translation catalogs and ICU formatting.
-3. ROADMAP M2.4: content tests (schema, catalog completeness, reference solutions).
+1. ROADMAP M2.3: translation catalogs and ICU formatting.
+2. ROADMAP M2.4: content tests (schema, catalog completeness, reference solutions).
+3. ROADMAP M2.5: gameplay core (level session, steps, extra goals) with the world format.
 
 ## Blockers and open questions
 
-- The format and loading of `content/worlds/` have no ROADMAP item yet; proposed: define them
-  with the level session (M2.5), where a level first needs a world. Confirm with the owner.
+- The format and loading of `content/worlds/` are defined with the level session (M2.5), where a
+  level first needs a world (confirmed by the owner).
 - Linux is verified only by CI; the owner plays on Windows and has no Linux machine, so no
   manual Linux check is planned. CI builds the AppImage but starts the unpacked app, so the
   M5 criterion "the AppImage runs on Linux" needs CI to start the AppImage itself (ROADMAP

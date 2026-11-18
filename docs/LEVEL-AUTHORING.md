@@ -57,6 +57,39 @@ content/levels/printer-floor2/level.yaml:14:1: tipps: unknown field "tipps"
 A problem of a field points at the line that names the field, a problem of a list item at the
 item. A missing required field points at the map that lacks it.
 
+## `content/chapters.yaml`
+
+The chapters file sets the order of the chapters and of the levels in each chapter (ADR 0070).
+Chapter titles and texts belong in the translation catalogs, so the file holds only IDs:
+
+```yaml
+format: 1
+chapters:
+  - id: first-day
+    levels: [first-steps, printer-floor2]
+  - id: left-behind
+    levels:
+      - handover
+```
+
+| Field | Required | Meaning |
+|---|---|---|
+| `format` | yes | Chapters file format version, currently `1`. |
+| `chapters` | yes | The chapters in game order, at least one. |
+| `chapters[].id` | yes | Stable kebab-case chapter ID, unique; stored in save files, never changed. |
+| `chapters[].levels` | yes | Level IDs in the order the game offers them, at least one. |
+
+The loader also checks the levels against this file and against their folders:
+
+- The `id` of a level is the name of its folder (`content/levels/<level-id>/level.yaml`).
+- Every level that a chapter lists has a `level.yaml`.
+- Every level is in exactly one chapter, and only once.
+
+```
+content/chapters.yaml:4:27: chapters[0].levels[1]: there is no level "printer-flor2" (no file levels/printer-flor2/level.yaml)
+content/levels/handover/level.yaml:2:1: id: the level is in no chapter of content/chapters.yaml
+```
+
 ## `level.yaml`
 
 | Field | Required | Meaning |

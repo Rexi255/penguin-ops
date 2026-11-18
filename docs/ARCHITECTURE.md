@@ -324,8 +324,14 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   path inside the data (`src/content-problem.ts`, `formatProblem` writes
   `file:line:column: path: message`). `src/yaml-source.ts` reads YAML 1.2 with the `yaml`
   library and finds the position of a path in the file; `src/schema-problems.ts` turns zod's
-  issues into problems (unknown and missing fields, flattened unions). Planned: loading
-  `content/chapters.yaml`, all levels, worlds and catalogs (M2.2b, M2.3).
+  issues into problems (unknown and missing fields, flattened unions).
+- Chapters and all content (`src/chapters-schema.ts`, `src/content-loader.ts`, ADR 0070):
+  `chaptersSchema` checks `content/chapters.yaml` (chapter IDs and their level IDs in order).
+  `loadContent({ chapters, levels })` reads the chapters file and every `level.yaml` from
+  `{ file, text }` pairs, then checks the files against each other: the folder name is the
+  level ID, every listed level exists, every level is in exactly one chapter. It returns the
+  chapters and the levels by ID in chapter order, or all problems of all files. The caller
+  finds and reads the files. Planned: worlds and catalogs as further inputs (M2.3, M2.5).
 - Translation catalogs per level and for the UI; ICU MessageFormat; small text markup without
   HTML; English fallback for extra languages (ADR 0012).
 - Format details: `docs/LEVEL-AUTHORING.md`.

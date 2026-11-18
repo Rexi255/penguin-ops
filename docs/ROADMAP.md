@@ -110,12 +110,12 @@ coverage ≥ 90 %; the engine cannot import DOM or Node APIs (enforced).
 ## M2 Level system
 
 - [x] M2.1 Level schema v1 (zod) and generated JSON Schema for VS Code (ADR 0068).
-- [ ] M2.2 Loader: `content/levels/*`, `content/chapters.yaml`, validation errors with file and
+- [x] M2.2 Loader: `content/levels/*`, `content/chapters.yaml`, validation errors with file and
       line.
   - [x] M2.2a Load one YAML file from its text: YAML 1.2, problems with file, line, column and
         path, readable zod issues (ADR 0069).
-  - [ ] M2.2b `content/chapters.yaml` schema and loading all levels from a list of files, with
-        cross-checks (folder name is the level ID, every level in exactly one chapter).
+  - [x] M2.2b `content/chapters.yaml` schema and loading all levels from a list of files, with
+        cross-checks (folder name is the level ID, every level in exactly one chapter) (ADR 0070).
 - [ ] M2.3 Translations: level catalogs and `content/ui/<lang>.yaml`, ICU formatting, text markup
       (code, bold, lists, paragraphs) without HTML; English fallback for extra languages.
 - [ ] M2.4 Content tests: schema, German/English completeness, reference solutions per language
@@ -250,6 +250,7 @@ AppImage runs on Linux, and chapters 0–2 are playable in both languages.
   checklist, ADR 0033).
 - Electron fuses for the packaged app, for example disabling `ELECTRON_RUN_AS_NODE` and Node.js
   command line options (ADR 0034).
+- A generated JSON Schema for `content/chapters.yaml`, like the one for level files (ADR 0070).
 - Upgrade to TypeScript 7 once `typescript-eslint` supports it (ADR 0026).
 - Lint rules that enforce ADR 0008 in engine and gameplay: ban `Date.now()`, `new Date()`
   without arguments, `performance.now()` and `Math.random()`.

@@ -28,6 +28,14 @@ export {
 } from "./content-problem";
 export { loadLevel, loadYaml } from "./level-loader";
 export {
+  type Chapter,
+  type Chapters,
+  type ChaptersInput,
+  CHAPTERS_FORMAT_VERSION,
+  chaptersSchema,
+} from "./chapters-schema";
+export { type Content, type ContentFile, type ContentFiles, loadContent } from "./content-loader";
+export {
   parseYaml,
   type SourcePosition,
   type YamlParseResult,
