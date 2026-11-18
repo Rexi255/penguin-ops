@@ -126,13 +126,13 @@ coverage ≥ 90 %; the engine cannot import DOM or Node APIs (enforced).
         (ADR 0073).
   - [x] M2.3d English fallback for further languages; missing texts reported, not errors
         (ADR 0074).
-- [ ] M2.4 Content tests: schema, German/English completeness, reference solutions per language
+- [x] M2.4 Content tests: schema, German/English completeness, reference solutions per language
       and with two user names, not solved at start, no tips on reference solutions.
   - [x] M2.4a Completeness checks in the loader: catalog keys against `level.yaml`, German
         against English, the same commands and placeholders in every language (ADR 0075).
-  - [ ] M2.4b Content test of `content/`: load it, report missing texts of further languages,
-        play every reference solution per language and with two user names (needs the level
-        session of M2.5).
+  - [x] M2.4b Content test of `content/`: load it, report missing texts of further languages,
+        play every reference solution per language and with two user names (ADR 0078); with
+        the standard world `office` and the first prototype level `first-steps`.
 - [x] M2.5 Gameplay core: level session (start, run command, evaluate goal, tips), steps and
       checkpoints, extra goals.
   - [x] M2.5a Base worlds: format of `content/worlds/<world-id>.yaml`, loading with the content,
@@ -143,7 +143,7 @@ coverage ≥ 90 %; the engine cannot import DOM or Node APIs (enforced).
   - [x] M2.5d Tips and extra goals: each tip once while the ticket is open, extra goals once
         (ADR 0077 for M2.5b to M2.5d).
 - [ ] M2.6 Port the five prototype levels with English names and the prose/technical split as
-      test content.
+      test content. Level 1 (`first-steps`) came with M2.4b; levels 2 to 5 remain.
 - [ ] M2.7 Developer mode API: load any level or step, auto-play a reference solution, inspect
       rule states.
 - [ ] M2.8 `/new-level` skill.

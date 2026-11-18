@@ -1,0 +1,19 @@
+# Test content ported from the prototype's first level (ROADMAP M2.6); rewritten as a real
+# ticket in M4.
+format: 1
+id: first-steps
+kind: main
+teaches: [pwd, ls, cd]
+start:
+  files:
+    ~/welcome/checklist.txt: { text: checklist }
+    ~/tickets/: {}
+goal:
+  cwd_is: ~/welcome
+tips:
+  - when: { output_contains: "No such file or directory" }
+    say: tip-spelling
+solutions:
+  - [pwd, ls, cd welcome]
+  - [cd ~/welcome]
+  - [cd /home, ls, cd, cd welcome]

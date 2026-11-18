@@ -24,6 +24,8 @@ const BOUNDARIES = [
   { folder: "packages/gameplay", allowed: ["engine", "content"], typeOnly: [], node: false },
   { folder: "apps/ui", allowed: ["engine", "content", "gameplay"], typeOnly: [], node: false },
   { folder: "apps/desktop", allowed: [], typeOnly: ["ui"], node: true },
+  // The content tests read content/ from disk and play it (ADR 0078).
+  { folder: "tests/content", allowed: ["engine", "content", "gameplay"], typeOnly: [], node: true },
 ];
 
 /**

@@ -41,7 +41,7 @@ penguin-ops/
     ui/          React renderer
     desktop/     Electron main process, preload, packaging config
   content/       data only
-    schemas/     generated JSON Schemas for editors (level.schema.json)
+    schemas/     generated JSON Schemas for editors (level.schema.json, world.schema.json)
     chapters.yaml
     levels/<level-id>/level.yaml, de.yaml, en.yaml
     ui/de.yaml, ui/en.yaml
@@ -51,12 +51,13 @@ penguin-ops/
   types/         shared type declarations (zod-url.d.ts: a type-only URL for the pure packages)
   .claude/       Claude Code skills, rules and hooks
   .github/       CI workflows, Dependabot, pull request template (from M0)
+  tests/content/ the content test: reads content/ and plays every reference solution (ADR 0078)
   scripts/       repository tooling in TypeScript, run directly by Node.js
                  (license-check/: the dependency license checker; docs-duty/: the
                  documentation duty check; adr/: new decision records)
   package.json         npm workspaces, root scripts, pinned Node.js version (engines)
   tsconfig.base.json   shared strict compiler options
-  tsconfig.json        solution file: references all workspaces and the tooling for `tsc --build`
+  tsconfig.json        solution file: references all workspaces, the content tests and the tooling for `tsc --build`
   tsconfig.tooling.json  TypeScript project for `eslint.config.js`, `vitest.config.ts` and `scripts/`
   vitest.config.ts     test projects and coverage thresholds
   eslint.config.js     lint rules, including the package boundaries
@@ -394,6 +395,12 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   tips while unsolved. It returns the new immutable `LevelSession`, the `TerminalEvent`s and
   the `GameEvent`s (`step-completed`, `solved`, `extra-goal`, `tip`).
   `lastCompletedStep` is the checkpoint that save games keep.
+- Reference solutions (`src/reference-solutions.ts`, ADR 0078): `checkReferenceSolutions`
+  plays every level of the content in every language and with two player names and reports
+  levels that cannot start, events before the first input, solutions with incomplete or
+  unsimulated command lines or tips, unsolved tickets and checkpoints that cannot resume. The
+  content test (`tests/content/`, its own TypeScript project with Node types) reads
+  `content/` with `readContentFiles`, loads it and runs this check.
 - Campaign: chapters, inbox, unlocking, Story and Sandbox modes, playground (ADR 0017).
 - Progress: XP, ranks, achievements (ADR 0018).
 - Save data model with format version and migrations; settings model (ADR 0013).

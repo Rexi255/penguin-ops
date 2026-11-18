@@ -1,0 +1,16 @@
+// The content tests (ADR 0078): they read the repository's content/ folder with Node.js and play
+// it with the gameplay package, so they get Node types and see engine, content and gameplay.
+// zod's declarations need the type-only URL declaration (ADR 0068).
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "${configDir}",
+    "types": ["node"]
+  },
+  "include": ["${configDir}/*.ts", "../../types/zod-url.d.ts"],
+  "references": [
+    { "path": "../../packages/engine/tsconfig.lib.json" },
+    { "path": "../../packages/content/tsconfig.lib.json" },
+    { "path": "../../packages/gameplay/tsconfig.lib.json" }
+  ]
+}

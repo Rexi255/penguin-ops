@@ -2,9 +2,9 @@
 
 > **Status: in progress.** The schemas of `level.yaml` (format 1), `content/chapters.yaml`,
 > the base worlds and the text catalogs, the loader and the checks of ICU, markup and
-> completeness and the level session are implemented (ADR 0068 to ADR 0077); the tests of the
-> reference solutions follow in milestone M2. Update this guide whenever the format changes. Reasons: ADR 0010,
-> 0011, 0012, 0067 to 0077.
+> completeness, the level session and the content test of the reference solutions are
+> implemented (ADR 0068 to ADR 0078). Update this guide whenever the format changes. Reasons: ADR 0010,
+> 0011, 0012, 0067 to 0078.
 
 ## Principles
 
@@ -481,8 +481,14 @@ explanation:
 - Schema validation of every `level.yaml`, of `content/chapters.yaml`, of every world and of
   every catalog, and the checks of levels against their worlds.
 - ICU and markup of every text, and the completeness of the catalogs (see above).
-- Planned with the level session (ROADMAP M2.4b): every reference solution, in every language and with two different user names: the goal is
-  not reached at the start, it is reached after the solution, and no tip fires on the way.
+- The content test (`tests/content/`, ADR 0078) loads `content/` and plays every reference
+  solution in English, German and every further language, with the player names `alice` and
+  `max-2`. It fails if a level cannot start, if the goal, a step, a tip or an extra goal fires
+  before the first input, if a command line is incomplete or uses something the game does not
+  simulate, if a tip fires during a solution, if a solution does not solve the ticket, or if a
+  checkpoint cannot resume. Any other file in `content/` fails it too. Run it alone with
+  `npx vitest run --project content-tests`.
+- The texts that further languages lack are printed by the content test; they are not errors.
 
 ## Checklist for a new level
 

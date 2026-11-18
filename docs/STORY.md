@@ -30,7 +30,7 @@ permissions). Resolved in chapter 14.
 |---|---|
 | Company name and industry | TBD |
 | Internal domain | TBD (English, e.g. `<company>.lan`) |
-| Host names | TBD (English; the prototype used `itdesk`) |
+| Host names | TBD (English; the office world uses the prototype's `itdesk` provisionally) |
 | In-game OS | Debian 13 (ADR 0004) |
 | Calendar | Chapters as training weeks or months; in-game day shown in the top bar |
 

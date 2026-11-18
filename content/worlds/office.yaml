@@ -1,0 +1,15 @@
+# The standard office world (ADR 0076). Host and account names are provisional until the story
+# workshop (ROADMAP M4.1); the prototype's host was called itdesk.
+format: 1
+id: office
+hosts:
+  - name: itdesk
+    groups:
+      - { name: root, gid: 0 }
+    users:
+      - { name: root, uid: 0 }
+    files:
+      /etc/hostname: "itdesk\n"
+      /root/: { mode: rwx------ }
+      /tmp/: { mode: rwxrwxrwt }
+      /var/log/: {}
