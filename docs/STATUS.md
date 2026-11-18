@@ -41,6 +41,8 @@ _Last updated: 2026-11-18_
 2. ROADMAP M2.4b: content test of `content/` with the reference solutions.
 3. ROADMAP M2.6: port the five prototype levels.
 
+The order M2.5, M2.4b, M2.6 is proposed and waits for the owner's confirmation.
+
 ## Blockers and open questions
 
 - The format and loading of `content/worlds/` are defined with the level session (M2.5), where a
