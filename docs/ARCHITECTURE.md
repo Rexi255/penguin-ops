@@ -152,10 +152,15 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     the changed path, puts the new root into a new world with `replaceHostRoot` and returns the
     file's canonical path. `writeToOpenFile` adds text to a file that a redirection opened
     before, without permission checks, and drops it if the file is gone (ADR 0049).
+    The helpers for the immutable tree (finding the directory that holds a path's last
+    component, copying the directories on a changed path) are in `src/fs-tree.ts`.
     `makeDirectory` is mkdir(2) (`EEXIST`, write permission on the parent, setgid inherited)
     and `setTimes` is utimensat(2) with its two permission rules: the current time for the
     owner or writers, other times for the owner only (`EPERM`). Access times are not kept
     (ADR 0060).
+  - `src/fs-remove.ts`: `removeEntry` is unlink(2) or rmdir(2) in the kernel's order of checks:
+    write and search permission on the directory, the sticky bit (`EPERM`), the kind of the
+    entry and `ENOTEMPTY` (ADR 0061).
   - `src/fs-read.ts`: `openForReading` opens a file or directory like `open(2)` with
     `O_RDONLY` (lookup errors, read permission); a file gives its canonical path and content, a
     directory only errors on reading (ADR 0049). `readOpenFile` reads an opened file again
@@ -192,7 +197,8 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     status in `$?`, and assignments (shell variables, or only for one command before its name).
     Commands are `ShellCommand` functions found through a `CommandLookup`; they get a
     `CommandContext` with `stdout` and `stderr` writers and return a `CommandExit` (exit status
-    and a changed world or session), a `CommandStop` with a `CommandNotice` (ADR 0052) or a
+    and a changed world or session), a `CommandStop` with a `CommandNotice` (ADR 0052; it may
+    keep the world changes made before the stop, ADR 0061) or a
     `CommandDiscard`, which ends the rest of the input like bash's `DISCARD` (only the subshell
     inside a pipeline, ADR 0057). The
     result has `ShellEvent`s: output, and game notices for unsupported features (`unsupported`)
@@ -227,7 +233,8 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     gets only valid, simulated options and its operands. Two optional hooks keep the order of
     the real command (ADR 0059): `obsoleteSyntax` reads a form that the command handles before
     `getopt_long` (`head -5`, `tail +5`), and `checkOption` rejects an option argument as soon
-    as the command reads it (`head -n abc`). `createCommandLookup` turns the registered
+    as the command reads it (`head -n abc`); `usageErrorNote` adds lines before the Try line
+    (`rm`'s hint for names that start with `-`, ADR 0061). `createCommandLookup` turns the registered
     commands (also plain `ShellCommand`s such as `echo`) into the interpreter's
     `CommandLookup`.
   - `src/xstrtol.ts` (ADR 0059): gnulib's `xstrtoumax` and `xnumtoumax` for counts in
@@ -245,7 +252,7 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   - `src/commands/` holds the commands, one module each, and `COMMANDS`, the list for
     `createCommandLookup`. `cd`, `pwd`, `echo` and `history` are builtins (`history` lists, clears
     and deletes entries of the session's history list, ADR 0057); `whoami`, `ls`, `cat`, `head`,
-    `tail`, `mkdir` and `touch` use `defineCommand`. `clear` is ncurses' program with plain
+    `tail`, `mkdir`, `touch` and `rm` use `defineCommand`. `clear` is ncurses' program with plain
     `getopt`: on the terminal it clears the screen, into a pipe or a file it writes the escape
     sequences of `xterm-256color`, the `TERM` that `createSession` sets (ADR 0056). `ls` follows
     coreutils' `ls.c`: columns on a terminal, one name per line otherwise (ADR 0054);
@@ -255,9 +262,11 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     run (ADR 0058). `head` and `tail` share `head-tail.ts` (headers, counts, opening inputs, output
     that must be valid UTF-8) and follow `head.c` and `tail.c`, also in how far a `-` reads standard
     input (ADR 0059). `mkdir -p` creates the directories on the way like gnulib's `mkancesdirs`, and
-    `touch` combines open(2) and utimensat(2) like `touch.c` (ADR 0060). `directory-names.ts` works
-    out working directory names like bash (by text, keeping a leading `//`) and checks them like
-    chdir(2) and getcwd(3); the session's `cwd` is the name bash remembers, not a resolved path.
+    `touch` combines open(2) and utimensat(2) like `touch.c` (ADR 0060). `rm` walks its operands
+    like remove.c with gnulib's fts and stops with a notice where it would ask a question on the
+    terminal (ADR 0061). `directory-names.ts` works out working directory names like bash (by text,
+    keeping a leading `//`) and checks them like chdir(2) and getcwd(3); the session's `cwd` is the
+    name bash remembers, not a resolved path.
 - **Full-screen programs:** one mechanism for `less`, `man`, `top`, `nano` and later `vim`.
 - **Rule evaluation** (ADR 0011): rule types plus `all`, `any`, `not`, evaluated against world
   state and command output.

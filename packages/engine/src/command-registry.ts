@@ -53,6 +53,11 @@ export interface CommandDefinition<Id extends string = string> {
    * before an error of a later argument.
    */
   readonly checkOption?: (option: ParsedOption<Id>) => OptionFailure | undefined;
+  /**
+   * Lines that the real command writes after glibc's message for an invalid option and before
+   * the "Try ... --help" line, such as `rm`'s hint for a file name that starts with `-`.
+   */
+  readonly usageErrorNote?: (context: CommandContext) => string;
   /** Runs the command with valid, simulated options. */
   readonly run: (invocation: CommandInvocation<Id>) => CommandResult;
 }
@@ -93,8 +98,9 @@ export interface RegisteredCommand {
  * - An option that `checkOption` rejects writes its error like an obsolete option and returns
  *   `usageErrorStatus`.
  *
- * Then, if the arguments have an error, it writes glibc's message and the coreutils'
- * "Try ... --help" line to standard error and returns `usageErrorStatus`. Else it runs the
+ * Then, if the arguments have an error, it writes glibc's message, the `usageErrorNote` if the
+ * definition has one, and the coreutils' "Try ... --help" line to standard error and returns
+ * `usageErrorStatus`. Else it runs the
  * command with the options (the obsolete ones first) and operands.
  *
  * Messages name the command as the player wrote it. Throws an Error if the definition is
@@ -111,6 +117,7 @@ export function defineCommand<Id extends string>(
     usageErrorStatus,
     obsoleteSyntax,
     checkOption,
+    usageErrorNote,
     run,
   } = definition;
   validateName(name);
@@ -150,8 +157,9 @@ export function defineCommand<Id extends string>(
         }
       }
       if (!parsed.ok) {
+        const note = usageErrorNote?.(context) ?? "";
         context.stderr(
-          optionErrorMessage(context.name, parsed.error) + tryHelpMessage(context.name),
+          optionErrorMessage(context.name, parsed.error) + note + tryHelpMessage(context.name),
         );
         return { exitStatus: usageErrorStatus };
       }

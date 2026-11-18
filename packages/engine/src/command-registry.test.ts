@@ -346,6 +346,30 @@ describe("defineCommand: option checks", () => {
   });
 });
 
+describe("defineCommand: usage error notes", () => {
+  const noted = defineCommand({
+    name: "noted",
+    options: [{ id: "all", short: "a", argument: "none" }],
+    simulated: ["all"],
+    usageErrorStatus: 1,
+    usageErrorNote: ({ args }) => `note for ${args.join(" ")}\n`,
+    run: report,
+  });
+  const lookupNoted = createCommandLookup([noted]);
+
+  test("come between glibc's message and the Try line", () => {
+    expect(run("noted -x b", lookupNoted).events).toEqual([
+      stderr(
+        "noted: invalid option -- 'x'\nnote for -x b\nTry 'noted --help' for more information.\n",
+      ),
+    ]);
+  });
+
+  test("are not written without an error", () => {
+    expect(run("noted -a", lookupNoted).events).toEqual([stdout("option all -a -\n")]);
+  });
+});
+
 describe("defineCommand: invalid definitions", () => {
   const valid: CommandDefinition = {
     name: "head",

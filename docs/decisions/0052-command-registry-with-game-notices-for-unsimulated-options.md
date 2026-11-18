@@ -1,6 +1,8 @@
 # 0052. Command registry with game notices for unsimulated options
 
-- Status: Accepted
+- Status: Accepted; partly superseded by
+  [0061](0061-rm-after-coreutils-9-7-with-unlink-and-rmdir-and-questions-that-stop-the-input.md)
+  (what a stopping command may change)
 - Date: 2026-11-17
 - Supersedes: –
 

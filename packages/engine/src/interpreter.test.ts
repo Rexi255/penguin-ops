@@ -138,11 +138,15 @@ const testCommands: Record<string, ShellCommand> = {
     stdout("moved\n");
     return { exitStatus: 0, session: { ...session, cwd: args[0] ?? "/" } };
   },
-  /** Writes to both streams, then stops with a notice. */
-  halt: ({ stdout: out, stderr: err }) => {
+  /**
+   * Writes to both streams, then stops with a notice; with the argument `stamped` it sets the
+   * root directory's mtime to the game time before it stops.
+   */
+  halt: ({ args, world: current, clock, stdout: out, stderr: err }) => {
     out("partial\n");
     err("warning\n");
-    return { stop: { key: "option-not-simulated", option: "-Z" } };
+    const stop = { key: "option-not-simulated", option: "-Z" } as const;
+    return args[0] === "stamped" ? { stop, world: withRootMtime(current, clock.now()) } : { stop };
   },
   /**
    * Writes to both streams, then discards the rest of the input; with an argument it changes the
@@ -1025,6 +1029,17 @@ describe("runScript: commands that stop", () => {
     expect(result.events).toEqual([stderr("warning\n"), notice]);
     expect(rootMtime(result.world)).toBe(START + TIME_PER_INPUT);
     expect(result.session.exitStatus).toBe(1);
+  });
+
+  test("a stop keeps the world changes the command made before it", () => {
+    const result = runFiles("halt stamped > out.txt");
+    expect(rootMtime(result.world)).toBe(START + TIME_PER_INPUT);
+    expect(contentOf(result.world, "/home/alice/out.txt")).toBe("partial\n");
+    expect(rootMtime(run("halt").world)).toBe(START);
+  });
+
+  test("a stop inside a pipeline keeps the world changes the command made", () => {
+    expect(rootMtime(run("halt stamped | upper").world)).toBe(START + TIME_PER_INPUT);
   });
 
   test("a stop at the end of a pipeline shows its output", () => {

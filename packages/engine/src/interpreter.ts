@@ -152,11 +152,14 @@ export interface CommandExit {
 
 /**
  * A command that met something the game does not simulate. The interpreter reports `stop` as a
- * notice and stops the rest of the input like after an unsupported shell feature. The command
- * changes nothing; the output it wrote before stays.
+ * notice and stops the rest of the input like after an unsupported shell feature. The output it
+ * wrote before stays. `world` holds the changes the command made before it stopped, such as the
+ * files `rm` removed before it would ask a question (ADR 0061); a missing `world` means
+ * unchanged.
  */
 export interface CommandStop {
   readonly stop: CommandNotice;
+  readonly world?: World;
 }
 
 /**
@@ -682,8 +685,10 @@ class Runner {
       },
     });
     if ("stop" in result) {
-      // Like after an unsupported redirection: the files opened before the stop stay.
-      this.lastState = { world: streams.flush(opened, this.clock), session: state.session };
+      // Like after an unsupported redirection: the files opened before the stop stay, and so do
+      // the changes the command made before it.
+      const world = streams.flush(result.world ?? opened, this.clock);
+      this.lastState = { world, session: state.session };
       throw new Abort({ kind: "notice", command: name, notice: result.stop });
     }
     if ("discard" in result) {

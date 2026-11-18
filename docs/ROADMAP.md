@@ -88,8 +88,11 @@ placeholder window; CI builds the installer.
       files), with their obsolete forms and gnulib's counts (ADR 0059).
 - [x] M1.9c Commands batch 2, part 3: `mkdir` (`-p`, `-v`) and `touch` (`-a`, `-c`, `-h`, `-m`,
       `-r`), with mkdir(2) and utimensat(2) in the file system (ADR 0060).
-- [ ] M1.10 Commands batch 3: `cp` (`-r`), `mv`, `rm` (`-r`, `-f`), `grep` (`-i`, `-v`, `-n`,
-      `-c`, `-r`, `-l`).
+- [x] M1.10a Commands batch 3, part 1: `rm` (`-r`, `-f`, `-d`, `-v`), unlink(2) and rmdir(2) in
+      the file system, questions on the terminal as a notice (ADR 0061).
+- [ ] M1.10b Commands batch 3, part 2: `cp` (`-r`).
+- [ ] M1.10c Commands batch 3, part 3: `mv`.
+- [ ] M1.10d Commands batch 3, part 4: `grep` (`-i`, `-v`, `-n`, `-c`, `-r`, `-l`).
 - [ ] M1.11 Tab completion and history navigation APIs.
 - [ ] M1.12 Rule engine: `cwd_is`, `exists`, `file_exists`, `dir_exists`, `file_contains`,
       `same_content`, `output_contains`, `output_matches`; `all`, `any`, `not` (ADR 0011).
@@ -252,11 +255,13 @@ AppImage runs on Linux, and chapters 0–2 are playable in both languages.
   `history -a/-n/-r/-w`, history kept across sessions), `HISTIGNORE` (setting it has no effect
   so far), time stamps with `HISTTIMEFORMAT`, `history -s`, `history -p`, and bash's `cmdhist`
   joining of multi-line commands with `;`.
+- `rm -i`, `-I` and the answers to rm's questions, once the game simulates typing into a
+  running command; `rm --no-preserve-root` with a safety net (ADR 0061).
 - Options of M1.9c that give a notice (ADR 0060): `mkdir -m` (with the mode parser of
   `chmod`), `touch -d` (gnulib's `parse_datetime`), `touch -t` and `--time`, and access times
   (`touch -a` that can be seen, `ls -lu`).
 - `CDPATH` for `cd`; until then a non-empty `CDPATH` stops `cd` with a game notice (ADR 0053).
-- A removed working directory (needs `rm`, M1.10): `cd ..` finds the parent through the kernel,
+- A removed working directory (possible since `rm`, ADR 0061): `cd ..` finds the parent through the kernel,
   and bash forgets the directory's name after a failed `pwd -P` (ADR 0053); `ls .` and `ls ..`
   still work there (ADR 0054).
 - Aliases and Debian's `alias ls='ls --color=auto'` from `/etc/skel/.bashrc`, with colour
