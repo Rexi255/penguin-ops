@@ -4,6 +4,9 @@ _Last updated: 2026-11-18_
 
 ## Recently completed
 
+- M2.8 `/new-level` skill (`.claude/skills/new-level/`): clarify chapter, kind, commands and
+  ID, design the data and texts from the closest existing level, register the level, prove it
+  with the content tests and get the owner's OK of the texts. M2 is complete.
 - M2.7 Developer mode API (`developer-mode.ts`): `levelSetup` (also used by the content
   test), `startAtStep`, `autoPlay` of a reference solution and `inspectRules` with the state of
   every rule, step, tip and extra goal; unknown levels, steps and solutions throw a
@@ -17,17 +20,6 @@ _Last updated: 2026-11-18_
   `max-2` (start events, incomplete or unsimulated command lines, tips, unsolved tickets,
   checkpoints); first content: world `office` (host `itdesk`, provisional), chapter
   `first-day`, prototype level 1 as `first-steps` (ADR 0078). M2.4 is complete.
-- M2.5b–d Level session (`level-world.ts`, `level-session.ts`): `startLevel` builds the
-  level's world with the player's account and starts in `start.cwd`; `runInput` handles
-  incomplete input, bash syntax errors (exit status 2) and unsupported syntax, records the
-  history and evaluates the goal or the steps in order, extra goals once, tips once while
-  unsolved; checkpoints resume by replaying the first reference solution (ADR 0077). M2.5 is
-  complete.
-- M2.5a Base worlds (`world-schema.ts`, `file-entries-schema.ts`): `content/worlds/<id>.yaml`
-  with hosts, groups, users and literal files (first host is the default host, standard world
-  `office`); the game adds the player's account (UID/GID 1000) to every host; `loadContent`
-  checks a level's world, start host and start file owners; `world.schema.json` for VS Code
-  (ADR 0076).
 
 ## In progress
 
@@ -35,15 +27,12 @@ _Last updated: 2026-11-18_
 
 ## Next 3 steps
 
-1. ROADMAP M2.8: `/new-level` skill.
-2. ROADMAP M3.0a: set up the impeccable design skill.
-3. ROADMAP M3.0b: visual tone and design tokens.
+1. ROADMAP M3.0a: set up the impeccable design skill.
+2. ROADMAP M3.0b: visual tone and design tokens.
+3. ROADMAP M3.0c: styleguide page.
 
 ## Blockers and open questions
 
-- `CLAUDE.md` still describes `npm run schemas:update` as regenerating only
-  `level.schema.json`; it now also writes `world.schema.json`. Changing `CLAUDE.md` waits
-  for the owner's OK.
 - The texts of the five prototype levels and the office world's host name `itdesk` were
   written as test content without the owner's review (the prototype's source is not in the
   repository, so levels 2 to 5 follow the titles in `docs/CURRICULUM.md`); the story workshop

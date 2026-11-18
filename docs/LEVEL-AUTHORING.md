@@ -493,7 +493,8 @@ explanation:
 ## Checklist for a new level
 
 1. Pick the chapter and the commands from `docs/CURRICULUM.md`.
-2. Create the folder with `level.yaml`, `de.yaml`, `en.yaml` (use `/new-level` once it exists).
+2. Create the folder with `level.yaml`, `de.yaml`, `en.yaml` (the `/new-level` skill guides
+   Claude Code through this checklist).
 3. Prose files use `{ text: key }`; technical files are literal English.
 4. Write at least one reference solution; add alternatives that should also work.
 5. Add tips for typical mistakes.

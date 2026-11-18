@@ -143,8 +143,9 @@ Commands are defined only as npm scripts in `package.json`. Existing:
   change code or content (CI runs it for every push and pull request).
 - `npm run adr:new -- "Title"`: create the next decision record from the template; options
   `--supersedes <number>` and `--partly "<number>:<scope>"` (used by `/adr`).
-- `npm run schemas:update`: regenerate `content/schemas/level.schema.json` from the zod schema
-  after a schema change (a test fails while it is stale).
+- `npm run schemas:update`: regenerate `content/schemas/level.schema.json` and
+  `content/schemas/world.schema.json` from the zod schemas after a schema change (a test fails
+  while one is stale).
 
 Planned:
 
@@ -185,4 +186,6 @@ Update this section whenever a script is added.
 - `/next`: propose the next small work package and wait for the user's OK.
 - `/wrap-up`: end-of-session check (only the user starts it).
 - `/adr`: create a decision record with the next number and handle superseded records.
-- Planned: `/new-level` (M2.8), `/playtest` (M3.17), `/release` (M5.5).
+- `/new-level`: create a level folder with its three files, add it to its chapter and prove it
+  with the content tests.
+- Planned: `/playtest` (M3.17), `/release` (M5.5).
