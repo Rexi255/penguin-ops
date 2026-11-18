@@ -31,10 +31,11 @@ _Last updated: 2026-11-18_
 2. ROADMAP M2.7: developer mode API.
 3. ROADMAP M2.8: `/new-level` skill.
 
-The owner confirmed the order M2.5, M2.4b, M2.6.
-
 ## Blockers and open questions
 
+- `CLAUDE.md` still describes `npm run schemas:update` as regenerating only
+  `level.schema.json`; it now also writes `world.schema.json`. Changing `CLAUDE.md` waits
+  for the owner's OK.
 - The texts of `first-steps` and the office world's host name `itdesk` were written as test
   content without the owner's review; the story workshop (M4) replaces them.
 - Linux is verified only by CI; the owner plays on Windows and has no Linux machine, so no
