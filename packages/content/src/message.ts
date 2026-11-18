@@ -62,7 +62,7 @@ export interface MessageRules {
 }
 
 /** How a placeholder is used, which decides the type of its value. */
-type PlaceholderUse = "text" | "number" | "select";
+export type PlaceholderUse = "text" | "number" | "select";
 
 /** A placeholder that is shown as a part of its own: a code span or a simple placeholder. */
 type Atom =
@@ -167,6 +167,18 @@ export function checkMessage(
     offset,
     message: `level texts have no placeholders, because the game passes no values to them: {${name}}`,
   }));
+}
+
+/**
+ * The placeholders of a valid text by name, each with how it is used (text, number or select),
+ * or `undefined` for an invalid text. Code spans are not placeholders.
+ */
+export function messagePlaceholders(
+  source: string,
+  language: string,
+): ReadonlyMap<string, ReadonlySet<PlaceholderUse>> | undefined {
+  const compiled = compileMessage(source, language);
+  return compiled.ok ? compiled.message.uses : undefined;
 }
 
 /**

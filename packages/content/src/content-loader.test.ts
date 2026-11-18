@@ -447,7 +447,12 @@ describe("loadContent: texts of the catalogs", () => {
 
   function catalogProblems(language: string, text: string, level = LEVEL_WITH_TEXTS): string[] {
     const file = `content/levels/x/${language}.yaml`;
-    const levelCatalogs = catalogsFor([level]).filter((catalog) => catalog.file !== file);
+    const levelCatalogs = ["en", "de"]
+      .map((other) => ({
+        file: `content/levels/x/${other}.yaml`,
+        text: yaml(CATALOG_TEXT, "handover: x", "tip-wrong: x"),
+      }))
+      .filter((catalog) => catalog.file !== file);
     return problemsOf({
       chapters: chaptersFile(["a", "x"]),
       levels: [level],

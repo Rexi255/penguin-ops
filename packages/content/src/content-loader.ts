@@ -23,6 +23,12 @@ import {
   type UiCatalog,
   uiCatalogSchema,
 } from "./catalog-schema";
+import {
+  type CheckedCatalog,
+  type CheckedCatalogs,
+  levelCompletenessProblems,
+  uiCompletenessProblems,
+} from "./catalog-completeness";
 import { levelCatalogTextProblems, uiCatalogTextProblems } from "./catalog-texts";
 import { type Chapter, chaptersSchema } from "./chapters-schema";
 import { type ContentProblem, type LoadResult, sortProblems } from "./content-problem";
@@ -188,12 +194,14 @@ export function loadContent(files: ContentFiles): LoadResult<Content> {
 interface CatalogsRead<Complete, Partial> {
   readonly mandatory: Map<MandatoryLanguage, Complete>;
   readonly extra: Map<string, Partial>;
+  /** The sources of the valid catalogs by language, for checks across files. */
+  readonly sources: Map<string, YamlSource>;
   /** Every language given, also those whose file has problems. */
   readonly given: Set<string>;
 }
 
 function emptyCatalogsRead<Complete, Partial>(): CatalogsRead<Complete, Partial> {
-  return { mandatory: new Map(), extra: new Map(), given: new Set() };
+  return { mandatory: new Map(), extra: new Map(), sources: new Map(), given: new Set() };
 }
 
 /**
@@ -254,6 +262,11 @@ function readLevelCatalogs(
         ),
       );
     }
+    if (entry.level !== undefined && entry.source !== undefined) {
+      problems.push(
+        ...levelCompletenessProblems(entry.level, entry.source, checkedCatalogs(catalogs)),
+      );
+    }
     const built = toCatalogs(catalogs);
     if (built !== undefined) {
       complete.set(entry.folder, built);
@@ -298,7 +311,25 @@ function readUiCatalogs(
       ),
     );
   }
+  problems.push(...uiCompletenessProblems(checkedCatalogs(catalogs)));
   return toCatalogs(catalogs);
+}
+
+/** The valid catalogs read, with their sources, for the completeness checks. */
+function checkedCatalogs<Complete, Partial>(
+  catalogs: CatalogsRead<Complete, Partial>,
+): CheckedCatalogs<Complete, Partial> {
+  const checked = <T>(language: string, value: T | undefined): CheckedCatalog<T>[] => {
+    const source = catalogs.sources.get(language);
+    return value === undefined || source === undefined ? [] : [{ language, value, source }];
+  };
+  const [en] = checked("en", catalogs.mandatory.get("en"));
+  const [de] = checked("de", catalogs.mandatory.get("de"));
+  return {
+    ...(en === undefined ? {} : { en }),
+    ...(de === undefined ? {} : { de }),
+    extra: [...catalogs.extra].flatMap(([language, value]) => checked(language, value)),
+  };
 }
 
 /** How to read the catalogs of one kind. */
@@ -347,33 +378,38 @@ function readCatalog<Complete, Partial>(
     return;
   }
   if (isMandatoryLanguage(language)) {
-    const value = readCatalogFile(kind.complete, kind.checkTexts, { file, text }, problems);
-    if (value !== undefined) {
-      catalogs.mandatory.set(language, value);
+    const read = readCatalogFile(kind.complete, kind.checkTexts, { file, text }, problems);
+    if (read !== undefined) {
+      catalogs.mandatory.set(language, read.value);
+      catalogs.sources.set(language, read.source);
     }
   } else {
-    const value = readCatalogFile(kind.partial, kind.checkTexts, { file, text }, problems);
-    if (value !== undefined) {
-      catalogs.extra.set(language, value);
+    const read = readCatalogFile(kind.partial, kind.checkTexts, { file, text }, problems);
+    if (read !== undefined) {
+      catalogs.extra.set(language, read.value);
+      catalogs.sources.set(language, read.source);
     }
   }
 }
 
-/** Reads a catalog file with a schema and checks its texts; returns it if it has no problems. */
+/**
+ * Reads a catalog file with a schema and checks its texts; returns it and its source if it has
+ * no problems.
+ */
 function readCatalogFile<T>(
   schema: z.ZodType<T>,
   checkTexts: (catalog: T, source: YamlSource) => ContentProblem[],
   { file, text }: ContentFile,
   problems: ContentProblem[],
-): T | undefined {
+): { readonly value: T; readonly source: YamlSource } | undefined {
   const { result, source } = readYaml(schema, file, text);
-  if (!result.ok) {
-    problems.push(...result.problems);
+  if (!result.ok || source === undefined) {
+    problems.push(...(result.ok ? [] : result.problems));
     return undefined;
   }
-  const textProblems = source === undefined ? [] : checkTexts(result.value, source);
+  const textProblems = checkTexts(result.value, source);
   problems.push(...textProblems);
-  return textProblems.length === 0 ? result.value : undefined;
+  return textProblems.length === 0 ? { value: result.value, source } : undefined;
 }
 
 /** The mandatory languages without a catalog file. */

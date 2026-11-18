@@ -128,6 +128,11 @@ coverage ≥ 90 %; the engine cannot import DOM or Node APIs (enforced).
         (ADR 0074).
 - [ ] M2.4 Content tests: schema, German/English completeness, reference solutions per language
       and with two user names, not solved at start, no tips on reference solutions.
+  - [x] M2.4a Completeness checks in the loader: catalog keys against `level.yaml`, German
+        against English, the same commands and placeholders in every language (ADR 0075).
+  - [ ] M2.4b Content test of `content/`: load it, report missing texts of further languages,
+        play every reference solution per language and with two user names (needs the level
+        session of M2.5).
 - [ ] M2.5 Gameplay core: level session (start, run command, evaluate goal, tips), steps and
       checkpoints, extra goals.
 - [ ] M2.6 Port the five prototype levels with English names and the prose/technical split as

@@ -4,6 +4,12 @@ _Last updated: 2026-11-18_
 
 ## Recently completed
 
+- M2.4a Completeness checks (`catalog-completeness.ts`): `loadContent` reports texts and extra
+  goal descriptions that English or German lack, unused keys in any catalog, a text key used as
+  file content and as a message, explanation commands that differ from English, UI keys
+  missing in German or unknown to English, and UI placeholders that differ from English
+  (ADR 0075). M2.4 is split: the content test over `content/` with the reference solutions
+  (M2.4b) needs the level session of M2.5.
 - M2.3d English fallback (`language-fallback.ts`): `levelTexts` and `uiTexts` give every text in
   a language as `{ language, source }`; further languages fall back to English text by text
   (hints and option table as a whole), each text formatted in its own language;
@@ -24,12 +30,6 @@ _Last updated: 2026-11-18_
   languages may lack any text; free keys are kebab-case text keys; UI catalogs are nested groups
   flattened to dotted keys. `loadContent` also reads `levelCatalogs` and `uiCatalogs` and reports
   misnamed files, catalogs without a level, duplicates and missing `en.yaml`/`de.yaml` (ADR 0071).
-- M2.2b Chapters file and loading all content (`chapters-schema.ts`, `content-loader.ts`):
-  `content/chapters.yaml` holds `format: 1` and chapters with an ID and their level IDs in
-  order; `loadContent({ chapters, levels })` reads it and every `level.yaml` from
-  `{ file, text }` and checks across files (folder name is the level ID, listed levels exist,
-  every level in exactly one chapter), reporting all problems together (ADR 0070). M2.2 is
-  complete.
 
 ## In progress
 
@@ -37,8 +37,8 @@ _Last updated: 2026-11-18_
 
 ## Next 3 steps
 
-1. ROADMAP M2.4: content tests.
-2. ROADMAP M2.5: gameplay core (level session).
+1. ROADMAP M2.5: gameplay core (level session), with the format of `content/worlds/`.
+2. ROADMAP M2.4b: content test of `content/` with the reference solutions.
 3. ROADMAP M2.6: port the five prototype levels.
 
 ## Blockers and open questions

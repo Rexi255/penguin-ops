@@ -355,6 +355,11 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   `checkText` adds the markup checks (bold closed on its line and in its option, no empty bold,
   no empty list items) to the ICU checks. The UI renders the tree with its own elements, never
   as HTML.
+- Completeness (`src/catalog-completeness.ts`, ADR 0075): `loadContent` compares every valid
+  level's catalogs with the text keys and extra goals of its `level.yaml` (English and German
+  complete, no unused keys in any language, a key never both file content and message, the
+  same explanation commands as English) and the UI catalogs with English (German complete, no
+  unknown keys, the same placeholders used in the same way).
 - Language fallback (`src/language-fallback.ts`, ADR 0074): `levelTexts(catalogs, language)`
   and `uiTexts(catalogs, language)` give every text of a level or of the UI as a `CatalogText`
   (`{ language, source }`); a further language falls back to English text by text (hints and

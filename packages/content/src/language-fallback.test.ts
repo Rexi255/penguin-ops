@@ -159,8 +159,8 @@ describe("levelTexts", () => {
         text: yaml(
           "explanation:",
           "  options:",
-          "    - [cat -n file, Numérote]",
-          "  example: cat -A a",
+          "    - [cat file, Affiche]",
+          "  example: cat -n a",
           "extra_goals:",
           "  fast: Vite",
         ),
@@ -169,8 +169,8 @@ describe("levelTexts", () => {
     const texts = levelTexts(catalogsOf(own), "fr");
     expect(texts.explanation).toEqual({
       text: t("en", "Explanation (en)"),
-      options: [{ option: "cat -n file", description: t("fr", "Numérote") }],
-      example: "cat -A a",
+      options: [{ option: "cat file", description: t("fr", "Affiche") }],
+      example: "cat -n a",
     });
     expect(texts.extraGoals).toEqual(new Map([["fast", t("fr", "Vite")]]));
     expect(texts.hints).toEqual([

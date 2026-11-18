@@ -1,9 +1,10 @@
 # Level authoring
 
 > **Status: in progress.** The schemas of `level.yaml` (format 1), `content/chapters.yaml` and
-> the text catalogs, the loader and the checks of ICU and markup in texts are implemented
-> (ADR 0068 to ADR 0074); the content tests follow in milestone M2. Update this guide whenever
-> the format changes. Reasons: ADR 0010, 0011, 0012, 0067 to 0074.
+> the text catalogs, the loader and the checks of ICU, markup and completeness are
+> implemented (ADR 0068 to ADR 0075); the tests of the reference solutions follow in milestone
+> M2. Update this guide whenever the format changes. Reasons: ADR 0010, 0011, 0012, 0067 to
+> 0075.
 
 ## Principles
 
@@ -199,7 +200,7 @@ table when the engine gains them.
 ## Texts: `de.yaml` and `en.yaml`
 
 Every level has an English (`en.yaml`) and a German (`de.yaml`) catalog next to its
-`level.yaml`; both must contain exactly the same keys (ADR 0012, ADR 0071).
+`level.yaml`; both must contain exactly the same keys (ADR 0012, ADR 0071, ADR 0075).
 
 | Key | Required | Meaning |
 |---|---|---|
@@ -238,8 +239,26 @@ content/levels/printer-floor2/notes.yaml:1:1: "notes.yaml" is not named after a 
 content/levels/printer-floor2/en.yaml:9:1: hints: a level has exactly three hints: a tip, a concrete tip and the solution
 ```
 
-Whether both catalogs hold exactly the keys that `level.yaml` uses is checked by the content
-tests (ROADMAP M2.4).
+### Completeness
+
+The loader also compares the catalogs with `level.yaml` and with English (ADR 0075):
+
+- English and German hold every text key that `level.yaml` uses (`{ text: <key> }`, the `say`
+  of tips and steps) and `extra_goals.<id>` for every extra goal.
+- No catalog holds a free text or an extra goal that `level.yaml` does not use: delete
+  leftovers, fix typos.
+- A text key is either a file content or a message (tip, step), never both.
+- `explanation.options` and `explanation.example` are commands and the same in every language:
+  German repeats them exactly, in the same order. A further language may leave them out or
+  write `options: []` for no table.
+- UI catalogs: German has every key of English; no catalog has keys that English lacks. A UI
+  text uses the same placeholders as its English text, in the same way.
+
+```
+content/levels/printer-floor2/de.yaml:1:1: the text "tip-wrong-printer" is missing: level.yaml uses it
+content/levels/printer-floor2/en.yaml:12:1: ["tip-old"]: level.yaml does not use the text "tip-old"
+content/ui/de.yaml:2:1: status.solved: the placeholders must be the same as in English: {count} (number)
+```
 
 ### Markup
 
@@ -380,8 +399,8 @@ explanation:
 ## Automated checks (run by `npm run check`)
 
 - Schema validation of every `level.yaml`, of `content/chapters.yaml` and of every catalog.
-- German and English catalogs contain exactly the keys the level needs.
-- Every reference solution, in every language and with two different user names: the goal is
+- ICU and markup of every text, and the completeness of the catalogs (see above).
+- Planned with the level session (ROADMAP M2.4b): every reference solution, in every language and with two different user names: the goal is
   not reached at the start, it is reached after the solution, and no tip fires on the way.
 
 ## Checklist for a new level
