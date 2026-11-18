@@ -78,6 +78,8 @@ export default defineConfig(
     "blob-report/",
     "reports/",
     ".stryker-tmp/",
+    // Third-party skill copied unchanged from its pinned release (ADR 0080).
+    ".claude/skills/impeccable/",
   ]),
 
   {

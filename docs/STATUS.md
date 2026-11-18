@@ -4,6 +4,10 @@ _Last updated: 2026-11-18_
 
 ## Recently completed
 
+- M3.0a impeccable design skill: byte-for-byte copy of release `cli-v4.9.1` in
+  `.claude/skills/impeccable/` without hook and subagents, telemetry off in
+  `.impeccable/config.json`, `.gitignore` block, guarded by `scripts/impeccable-setup.test.ts`;
+  verified on Windows (ADR 0080). Newer releases 4.9.2 and 4.10.0 ship without engine checksums.
 - M2.8 `/new-level` skill (`.claude/skills/new-level/`): clarify chapter, kind, commands and
   ID, design the data and texts from the closest existing level, register the level, prove it
   with the content tests and get the owner's OK of the texts. M2 is complete.
@@ -15,11 +19,6 @@ _Last updated: 2026-11-18_
   `left-behind`), `project-folders` (`mkdir`, `touch`, two steps, extra goal),
   `switch-backup` (`cp`, `mv`, two steps, extra goal) and the incident `disk-full` (`rm`) in
   chapter `tidying-up`; the content test plays all their reference solutions.
-- M2.4b Content test (`tests/content/`, `reference-solutions.ts`): `npm test` reads `content/`,
-  loads it and plays every reference solution in every language with the players `alice` and
-  `max-2` (start events, incomplete or unsimulated command lines, tips, unsolved tickets,
-  checkpoints); first content: world `office` (host `itdesk`, provisional), chapter
-  `first-day`, prototype level 1 as `first-steps` (ADR 0078). M2.4 is complete.
 
 ## In progress
 
@@ -27,12 +26,15 @@ _Last updated: 2026-11-18_
 
 ## Next 3 steps
 
-1. ROADMAP M3.0a: set up the impeccable design skill.
-2. ROADMAP M3.0b: visual tone and design tokens.
-3. ROADMAP M3.0c: styleguide page.
+1. ROADMAP M3.0b: visual tone and design tokens (check that root `PRODUCT.md` and `DESIGN.md`
+   are picked up from `apps/ui`, ADR 0080).
+2. ROADMAP M3.0c: styleguide page.
+3. ROADMAP M3.0d: typography.
 
 ## Blockers and open questions
 
+- impeccable is not yet verified in a cloud session (engine download from GitHub releases,
+  writable `~/.impeccable/`); check it in the next cloud session (ADR 0039, ADR 0080).
 - The texts of the five prototype levels and the office world's host name `itdesk` were
   written as test content without the owner's review (the prototype's source is not in the
   repository, so levels 2 to 5 follow the titles in `docs/CURRICULUM.md`); the story workshop

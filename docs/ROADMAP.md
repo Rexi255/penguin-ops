@@ -157,7 +157,7 @@ complete and solvable in both languages.
 The design language comes first (M3.0a–f), so that the screens are built on it instead of
 inventing it along the way.
 
-- [ ] M3.0a Set up the impeccable design skill: project install of the skill only, pinned
+- [x] M3.0a Set up the impeccable design skill: project install of the skill only, pinned
       version, no design hook, telemetry off, live mode not used, `.gitignore` entries; check
       that it works in cloud sessions and on Windows.
 - [ ] M3.0b Visual tone and design tokens: `PRODUCT.md` and `DESIGN.md` with `/impeccable init`

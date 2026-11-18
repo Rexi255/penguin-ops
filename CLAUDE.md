@@ -188,4 +188,7 @@ Update this section whenever a script is added.
 - `/adr`: create a decision record with the next number and handle superseded records.
 - `/new-level`: create a level folder with its three files, add it to its chapter and prove it
   with the content tests.
+- `/impeccable`: third-party design skill, pinned to one release (ADR 0039, ADR 0080). Never use
+  its live mode, `/impeccable hooks on`, `npx impeccable install` or `npx impeccable update`;
+  an update is a deliberate work package.
 - Planned: `/playtest` (M3.17), `/release` (M5.5).

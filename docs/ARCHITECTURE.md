@@ -50,6 +50,7 @@ penguin-ops/
   docs/          documentation (see CLAUDE.md, "Where to find what")
   types/         shared type declarations (zod-url.d.ts: a type-only URL for the pure packages)
   .claude/       Claude Code skills, rules and hooks
+  .impeccable/   shared configuration of the impeccable design skill (telemetry off, ADR 0080)
   .github/       CI workflows, Dependabot, pull request template (from M0)
   tests/content/ the content test: reads content/ and plays every reference solution (ADR 0078)
   scripts/       repository tooling in TypeScript, run directly by Node.js
@@ -501,9 +502,13 @@ end-to-end tests in `apps/desktop/e2e/` (`*.spec.ts`).
 - `CLAUDE.md`: rules for every session; imports `docs/STATUS.md`.
 - `.claude/rules/`: path-scoped rules (`engine.md`, `content.md`, `ui.md`) that load only when
   matching files are read.
-- `.claude/skills/`: `/next`, `/wrap-up`, `/adr`; more are planned in the roadmap. `/adr` runs
+- `.claude/skills/`: `/next`, `/wrap-up`, `/adr`, `/new-level`; more are planned in the roadmap. `/adr` runs
   `npm run adr:new` (`scripts/new-adr.ts`, logic in `scripts/adr/`), which creates the next
   record from the template and updates the status lines of superseded records (ADR 0038).
+- `.claude/skills/impeccable/`: the third-party design skill impeccable, a byte-for-byte copy
+  of release `cli-v4.9.1` without its hook and subagents (ADR 0039, ADR 0080). Its launchers
+  download a checksum-verified engine into `~/.impeccable/bin/`. Prettier and ESLint skip the
+  folder; `scripts/impeccable-setup.test.ts` guards the pin, telemetry and the missing hook.
 - `.claude/settings.json` and `.claude/hooks/session-start.mjs`: a SessionStart hook that adds
   the git state to the context. It runs `node` in exec form, so it works on Windows and Linux.
 - Details and reasons: ADR 0025.

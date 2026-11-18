@@ -9,3 +9,6 @@ package-lock.json
 
 # Generated from the zod schemas; a content test keeps it up to date (ADR 0068).
 content/schemas/
+
+# Third-party skill copied unchanged from its pinned release (ADR 0080).
+.claude/skills/impeccable/
