@@ -14,6 +14,20 @@ export default defineConfig({
       },
       {
         test: {
+          name: "content",
+          include: ["packages/content/src/**/*.test.ts"],
+          environment: "node",
+        },
+      },
+      {
+        test: {
+          name: "gameplay",
+          include: ["packages/gameplay/src/**/*.test.ts"],
+          environment: "node",
+        },
+      },
+      {
+        test: {
           name: "desktop",
           include: ["apps/desktop/src/**/*.test.ts", "apps/desktop/*.test.ts"],
           environment: "node",

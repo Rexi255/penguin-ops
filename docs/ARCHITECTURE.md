@@ -41,12 +41,14 @@ penguin-ops/
     ui/          React renderer
     desktop/     Electron main process, preload, packaging config
   content/       data only
+    schemas/     generated JSON Schemas for editors (level.schema.json)
     chapters.yaml
     levels/<level-id>/level.yaml, de.yaml, en.yaml
     ui/de.yaml, ui/en.yaml
     worlds/      shared base worlds (e.g. the company network, the playground)
   assets/brand/  logo SVGs and web icons, with usage rules (ADR 0040)
   docs/          documentation (see CLAUDE.md, "Where to find what")
+  types/         shared type declarations (zod-url.d.ts: a type-only URL for the pure packages)
   .claude/       Claude Code skills, rules and hooks
   .github/       CI workflows, Dependabot, pull request template (from M0)
   scripts/       repository tooling in TypeScript, run directly by Node.js
@@ -309,8 +311,13 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
 
 ## Content (`packages/content` and `content/`)
 
-- Level schema (zod) with a format version; generated JSON Schema for editor support
-  (ADR 0010).
+- Level schema v1 (`src/level-schema.ts`, ADR 0010, ADR 0068): `levelSchema` checks a parsed
+  `level.yaml` with zod and turns it into a `Level` with engine rules, numeric modes, a list of
+  start files and filled-in defaults. `src/rule-schema.ts` holds the YAML form of the rules
+  (one key per rule) and repeats the engine's rule checks, because content may only import
+  engine types; a gameplay test keeps both in line. `src/level-json-schema.ts` generates the
+  draft-07 JSON Schema `content/schemas/level.schema.json` (`npm run schemas:update`; a test
+  fails when it is stale), which `.vscode/settings.json` maps to the level files.
 - Loader for `content/chapters.yaml`, levels, worlds and catalogs; validation errors with file
   and line.
 - Translation catalogs per level and for the UI; ICU MessageFormat; small text markup without

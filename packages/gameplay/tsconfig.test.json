@@ -1,0 +1,17 @@
+// Tests of the gameplay package. Vitest's type declarations need Node.js globals, so only this
+// project gets Node types. ESLint still forbids Node.js imports in every gameplay file, tests
+// included (ADR 0030).
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "${configDir}/dist/test",
+    "tsBuildInfoFile": "${configDir}/dist/test/tsconfig.tsbuildinfo",
+    "types": ["node"]
+  },
+  "include": ["${configDir}/src/**/*.test.ts"],
+  "references": [
+    { "path": "./tsconfig.lib.json" },
+    { "path": "../engine/tsconfig.lib.json" },
+    { "path": "../content/tsconfig.lib.json" }
+  ]
+}

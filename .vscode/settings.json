@@ -1,0 +1,5 @@
+{
+  "yaml.schemas": {
+    "./content/schemas/level.schema.json": "content/levels/*/level.yaml"
+  }
+}

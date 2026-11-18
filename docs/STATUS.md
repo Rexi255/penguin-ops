@@ -4,6 +4,12 @@ _Last updated: 2026-11-18_
 
 ## Recently completed
 
+- M2.1 Level schema v1 (`level-schema.ts`, `rule-schema.ts`): zod 4 checks a parsed
+  `level.yaml` and returns a `Level` with engine rules, numeric modes (`rw-r-----`) and a list of
+  start files; rules are objects with one key; steps are `{ id, goal, say? }`; unknown fields are
+  errors. The draft-07 JSON Schema `content/schemas/level.schema.json` is kept up to date by a
+  test (`npm run schemas:update`) and mapped to the level files in `.vscode/settings.json`. A
+  gameplay test keeps the schema's rule checks in line with the engine's `checkRule` (ADR 0068).
 - M1.12 Rule engine (`rules.ts`): `Rule` union with the eight rule types and `all`/`any`/`not`,
   `evaluateRule` (paths absolute or from the player's home, no permission checks, output of
   the last input from `terminalOutput`, `output_matches` as JavaScript regex with `m`/`u`),
@@ -30,10 +36,10 @@ _Last updated: 2026-11-18_
 
 ## Next 3 steps
 
-1. ROADMAP M2.1: level schema v1 (zod) with the YAML form of the rules, and the generated JSON
-   Schema.
-2. ROADMAP M2.2: level loader with validation errors that name file and line.
-3. ROADMAP M2.3: translation catalogs and ICU formatting.
+1. ROADMAP M2.2: level loader with validation errors that name file and line (flatten zod's
+   "invalid union" issue of start files, ADR 0068).
+2. ROADMAP M2.3: translation catalogs and ICU formatting.
+3. ROADMAP M2.4: content tests (schema, catalog completeness, reference solutions).
 
 ## Blockers and open questions
 

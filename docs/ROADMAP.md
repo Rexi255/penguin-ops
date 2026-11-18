@@ -109,7 +109,7 @@ coverage ≥ 90 %; the engine cannot import DOM or Node APIs (enforced).
 
 ## M2 Level system
 
-- [ ] M2.1 Level schema v1 (zod) and generated JSON Schema for VS Code.
+- [x] M2.1 Level schema v1 (zod) and generated JSON Schema for VS Code (ADR 0068).
 - [ ] M2.2 Loader: `content/levels/*`, `content/chapters.yaml`, validation errors with file and
       line.
 - [ ] M2.3 Translations: level catalogs and `content/ui/<lang>.yaml`, ICU formatting, text markup

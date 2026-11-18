@@ -9,6 +9,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@penguin-ops/engine": "0.0.0"
+    "@penguin-ops/engine": "0.0.0",
+    "zod": "^4.6.7"
   }
 }

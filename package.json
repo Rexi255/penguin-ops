@@ -24,6 +24,7 @@
     "lint": "eslint --max-warnings 0 .",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "schemas:update": "vitest run packages/content/src/level-json-schema.test.ts --update",
     "check:licenses": "node scripts/check-licenses.ts",
     "check:docs-duty": "node scripts/check-docs-duty.ts",
     "adr:new": "node scripts/new-adr.ts",

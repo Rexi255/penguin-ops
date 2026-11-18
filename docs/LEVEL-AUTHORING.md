@@ -1,7 +1,8 @@
 # Level authoring
 
-> **Status: draft.** The format is implemented in milestone M2. This guide describes the
-> target. Update it whenever the schema changes. Reasons: ADR 0010, 0011, 0012.
+> **Status: in progress.** The schema of `level.yaml` (format 1) is implemented (ADR 0068); the
+> loader, the text catalogs and the content tests follow in milestone M2. Update this guide
+> whenever the schema changes. Reasons: ADR 0010, 0011, 0012, 0067, 0068.
 
 ## Principles
 
@@ -28,29 +29,61 @@ content/
   worlds/<world-id>.yaml        shared base worlds
 ```
 
-`<level-id>` is a stable kebab-case ID, for example `printer-floor2`. It is stored in save
-files and must never change.
+`<level-id>` is a stable kebab-case ID (lowercase letters and digits, separated by single
+hyphens), for example `printer-floor2`. It is stored in save files and must never change.
+
+## Editor support
+
+`content/schemas/level.schema.json` is a JSON Schema generated from the zod schema. VS Code
+with the recommended YAML extension (`redhat.vscode-yaml`) uses it for every
+`content/levels/*/level.yaml` (`.vscode/settings.json`): completion, descriptions and error
+highlighting. The zod schema stays the authority: some checks (duplicate IDs, valid regular
+expressions, "a directory has no content") only `npm run check` finds. After a schema change,
+run `npm run schemas:update`.
 
 ## `level.yaml`
 
 | Field | Required | Meaning |
 |---|---|---|
-| `format` | yes | Level format version (starts at 1). |
+| `format` | yes | Level format version: `1`. |
 | `id` | yes | Stable level ID; must match the folder name. |
 | `kind` | yes | `main`, `review`, `side` or `incident`. |
-| `teaches` | yes | Commands introduced (for `review`: commands practised). |
-| `xp` | no | XP for solving (default 100). |
-| `world` | no | Base world from `content/worlds/` (default: the standard office host). |
-| `start.host` | no | Host the session starts on. |
-| `start.cwd` | no | Start directory (default `~`). |
+| `teaches` | yes | Commands introduced (for `review`: commands practised); at least one, each once. |
+| `xp` | no | XP for solving, a positive integer (default 100). |
+| `world` | no | Base world ID from `content/worlds/` (default: the standard office world). |
+| `start.host` | no | Host the session starts on (default: the world's default host). |
+| `start.cwd` | no | Start directory: absolute, `~` or starting with `~/` (default `~`). |
 | `start.files` | no | Files and folders to create (see below). |
 | `goal` | yes* | Rule that marks the ticket as solved. |
-| `steps` | yes* | Alternative to `goal` for multi-step tickets: a list of `{ goal, on_complete }`. |
+| `steps` | yes* | Alternative to `goal` for multi-step tickets (see below). |
 | `tips` | no | List of `{ when: <rule>, say: <text key> }`; each tip is shown once. |
-| `extra_goals` | no | List of `{ id, when: <rule>, xp }`; optional bonus goals. |
-| `solutions` | yes | One or more reference solutions, each a list of commands. |
+| `extra_goals` | no | List of `{ id, when: <rule>, xp }`; optional bonus goals with unique IDs. |
+| `solutions` | yes | One or more reference solutions, each a list of command lines. |
 
 \* Exactly one of `goal` and `steps`.
+
+Unknown fields are errors everywhere, so a typo such as `tipps:` is found at once.
+
+- **IDs** (`id`, `world`, step and extra goal IDs) are kebab-case. Step and extra goal IDs are
+  unique within the level and stable, like the level ID.
+- **Text keys** (`say`, `{ text: ... }`) are kebab-case and start with a letter, for example
+  `tip-wrong-printer`. `title`, `ticket`, `hints` and `explanation` are reserved for the
+  catalog's own texts.
+- **Command lines** in `solutions` are single lines and not empty.
+
+### Multi-step tickets
+
+```yaml
+steps:
+  - id: find-log
+    goal: { cwd_is: /var/log }
+    say: found-the-logs          # optional text key, shown when the step is completed
+  - id: read-log
+    goal: { output_contains: "disk full" }
+```
+
+A multi-step ticket has at least two steps, each with a unique `id` and a `goal`. Save games
+remember the last completed step (checkpoint). Use `goal` for a single-step ticket.
 
 ### Files in `start.files`
 
@@ -58,7 +91,7 @@ files and must never change.
 start:
   files:
     "~/tickets/printer-floor2.txt": |        # literal content: technical, always English
-      Device:     Kyocera ECOSYS M3655idn
+      Device:     Inkwell P4200
       IP address: 10.20.2.50
     "~/tickets/handover.txt": { text: handover }   # prose: text from de.yaml / en.yaml
     "~/projects/": {}                         # empty directory (path ends with /)
@@ -66,6 +99,16 @@ start:
 ```
 
 `~` is the player's home directory. Default owner: the player inside `~`, otherwise `root`.
+
+- Paths are absolute or start with `~/`, without empty components, `.` or `..`. A path that
+  ends with `/` is a directory; all others are files.
+- A file is a string (its content) or an object with either `content` or `text`, and optionally
+  `owner`, `group` and `mode`. A directory is `{}` or an object with only `owner`, `group` and
+  `mode`.
+- `mode` is written like `ls -l` shows it: `rw-r-----`, `rwxr-xr-x`, with `s`/`S` for setuid
+  and setgid and `t`/`T` for the sticky bit. Octal numbers are not accepted, because YAML reads
+  `0640` as the decimal number 640.
+- A path cannot be both a file and a directory, and nothing can lie inside a file.
 Planned later: `{ generate: <generator>, seed: <n>, ... }` for deterministic generated data
 (e.g. large logs).
 
@@ -84,6 +127,9 @@ Planned later: `{ generate: <generator>, seed: <n>, ... }` for deterministic gen
 | `all: [<rule>, ...]` | All rules are true. |
 | `any: [<rule>, ...]` | At least one rule is true. |
 | `not: <rule>` | The rule is false. |
+
+A rule is an object with exactly one key, the rule type. Several conditions are combined with
+`all`, `any` or `not`, never by writing two rule types into one object.
 
 How rules see the world (ADR 0067):
 
@@ -132,10 +178,10 @@ start:
   files:
     "~/tickets/handover.txt": { text: handover }
     "~/tickets/printer-floor2.txt": |
-      Device:     Kyocera ECOSYS M3655idn
+      Device:     Inkwell P4200
       IP address: 10.20.2.50
     "~/tickets/printer-ground.txt": |
-      Device:     Brother HL-L5100DN
+      Device:     Inkwell P300
       IP address: 10.20.0.41
 goal:
   output_contains: "10.20.2.50"

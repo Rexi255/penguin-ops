@@ -10,7 +10,7 @@
   },
   "references": [
     { "path": "../../packages/engine/tsconfig.lib.json" },
-    { "path": "../../packages/content" },
-    { "path": "../../packages/gameplay" }
+    { "path": "../../packages/content/tsconfig.lib.json" },
+    { "path": "../../packages/gameplay/tsconfig.lib.json" }
   ]
 }

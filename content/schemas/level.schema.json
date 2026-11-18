@@ -1,0 +1,350 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PenguinOps level",
+  "description": "A level of PenguinOps: content/levels/<level-id>/level.yaml.",
+  "type": "object",
+  "properties": {
+    "format": {
+      "type": "number",
+      "const": 1,
+      "description": "Level format version."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "description": "Stable level ID; must match the folder name and never change."
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "main",
+        "review",
+        "side",
+        "incident"
+      ],
+      "description": "The kind of level."
+    },
+    "teaches": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9._+-]*$"
+      },
+      "description": "Commands introduced (for review levels: commands practised)."
+    },
+    "xp": {
+      "default": 100,
+      "description": "XP for solving. Default: 100.",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "world": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "description": "Base world from content/worlds/. Default: the standard office world."
+    },
+    "start": {
+      "default": {},
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "pattern": "^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$",
+          "description": "The host the session starts on. Default: the world's default host."
+        },
+        "cwd": {
+          "default": "~",
+          "description": "The start directory. Default: \"~\", the player's home.",
+          "type": "string",
+          "pattern": "^(?:/|~$|~/)"
+        },
+        "files": {
+          "description": "Files and directories to create, by path.",
+          "default": {},
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "description": "An absolute path or a path that starts with \"~/\"; a directory if it ends with \"/\".",
+            "pattern": "^(?:/|~/)"
+          },
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Literal content of a file: technical, always English."
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "content": {
+                    "type": "string",
+                    "description": "Literal content: technical, always English."
+                  },
+                  "text": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+                    "description": "Prose content: a key of the level's text catalogs."
+                  },
+                  "owner": {
+                    "type": "string",
+                    "pattern": "^[^\\s:/]+$",
+                    "description": "Name of the owning user."
+                  },
+                  "group": {
+                    "type": "string",
+                    "pattern": "^[^\\s:/]+$",
+                    "description": "Name of the owning group."
+                  },
+                  "mode": {
+                    "description": "Permission bits like ls -l shows them, for example \"rw-r-----\".",
+                    "type": "string",
+                    "pattern": "^[r-][w-][xsS-][r-][w-][xsS-][r-][w-][xtT-]$"
+                  }
+                },
+                "additionalProperties": false,
+                "not": {
+                  "required": [
+                    "content",
+                    "text"
+                  ]
+                }
+              }
+            ],
+            "description": "A file (literal content, { text: key } or { content, owner, group, mode }) or, for a path that ends with \"/\", a directory ({} or { owner, group, mode })."
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "goal": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/rule"
+        }
+      ]
+    },
+    "steps": {
+      "minItems": 2,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            "description": "Stable ID of the step, unique in the level."
+          },
+          "goal": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/rule"
+              }
+            ]
+          },
+          "say": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+            "description": "Text key of a message shown when the step is completed."
+          }
+        },
+        "required": [
+          "id",
+          "goal"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Steps of a multi-step ticket, instead of goal."
+    },
+    "tips": {
+      "description": "Tips, each shown once.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "when": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/rule"
+              }
+            ]
+          },
+          "say": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+            "description": "Text key of the tip."
+          }
+        },
+        "required": [
+          "when",
+          "say"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "extra_goals": {
+      "description": "Optional bonus goals.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            "description": "Stable ID, unique in the level; the catalogs describe it as extra_goals.<id>."
+          },
+          "when": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/rule"
+              }
+            ]
+          },
+          "xp": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "description": "XP for reaching the extra goal."
+          }
+        },
+        "required": [
+          "id",
+          "when",
+          "xp"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "solutions": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "minItems": 1,
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "description": "Reference solutions, each a list of command lines."
+    }
+  },
+  "required": [
+    "format",
+    "id",
+    "kind",
+    "teaches",
+    "solutions"
+  ],
+  "additionalProperties": false,
+  "oneOf": [
+    {
+      "required": [
+        "goal"
+      ]
+    },
+    {
+      "required": [
+        "steps"
+      ]
+    }
+  ],
+  "definitions": {
+    "rule": {
+      "type": "object",
+      "properties": {
+        "cwd_is": {
+          "type": "string",
+          "description": "The current directory is the directory at the path.",
+          "pattern": "^(?:/|~$|~/)"
+        },
+        "exists": {
+          "type": "string",
+          "description": "A file or directory exists at the path.",
+          "pattern": "^(?:/|~$|~/)"
+        },
+        "file_exists": {
+          "type": "string",
+          "description": "A regular file exists at the path.",
+          "pattern": "^(?:/|~$|~/)"
+        },
+        "dir_exists": {
+          "type": "string",
+          "description": "A directory exists at the path.",
+          "pattern": "^(?:/|~$|~/)"
+        },
+        "file_contains": {
+          "type": "array",
+          "items": [
+            {
+              "type": "string",
+              "description": "An absolute path, \"~\" (the player's home) or a path that starts with \"~/\".",
+              "pattern": "^(?:/|~$|~/)"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "additionalItems": false,
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "[path, text]: a regular file exists at the path and contains the text."
+        },
+        "same_content": {
+          "type": "array",
+          "items": [
+            {
+              "type": "string",
+              "description": "An absolute path, \"~\" (the player's home) or a path that starts with \"~/\".",
+              "pattern": "^(?:/|~$|~/)"
+            },
+            {
+              "type": "string",
+              "description": "An absolute path, \"~\" (the player's home) or a path that starts with \"~/\".",
+              "pattern": "^(?:/|~$|~/)"
+            }
+          ],
+          "additionalItems": false,
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "[path, path]: regular files exist at both paths and have the same content."
+        },
+        "output_contains": {
+          "type": "string",
+          "description": "The output of the last input contains the text."
+        },
+        "output_matches": {
+          "type": "string",
+          "description": "The output of the last input matches the regular expression."
+        },
+        "all": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rule"
+          },
+          "description": "All rules are true."
+        },
+        "any": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rule"
+          },
+          "description": "At least one rule is true."
+        },
+        "not": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/rule"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "description": "A check rule: an object with exactly one rule type.",
+      "minProperties": 1,
+      "maxProperties": 1
+    }
+  }
+}

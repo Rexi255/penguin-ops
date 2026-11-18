@@ -1,0 +1,12 @@
+// Pure package: no DOM library, no Node types. May use engine and content (ADR 0006). zod's
+// declarations, which reach this package through content, need the type-only URL declaration
+// (ADR 0068).
+{
+  "extends": "../../tsconfig.base.json",
+  "include": ["${configDir}/src", "../../types/zod-url.d.ts"],
+  "exclude": ["${configDir}/src/**/*.test.ts"],
+  "references": [
+    { "path": "../engine/tsconfig.lib.json" },
+    { "path": "../content/tsconfig.lib.json" }
+  ]
+}
