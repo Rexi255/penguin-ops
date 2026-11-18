@@ -4,6 +4,10 @@ _Last updated: 2026-11-18_
 
 ## Recently completed
 
+- impeccable verified in a cloud session (Linux x64): the launcher downloads engine 0.1.24
+  into `~/.impeccable/bin/`, its SHA-256 matches `engine-checksums.txt`, `impeccable context`
+  from `apps/ui` loads `PRODUCT.md`, `DESIGN.md` and the surface brief, `impeccable detect`
+  runs and telemetry reports off; no repository files change.
 - M3.0b-1 Visual tone: `PRODUCT.md` from the owner's interview and a seed `DESIGN.md` in the
   repository root; the owner chose the visual world "Label Tape & Patch Cable" on impeccable's
   decision page (ADR 0081); direction contract in `apps/ui/.impeccable/surfaces/`. impeccable
@@ -15,10 +19,6 @@ _Last updated: 2026-11-18_
 - M2.8 `/new-level` skill (`.claude/skills/new-level/`): clarify chapter, kind, commands and
   ID, design the data and texts from the closest existing level, register the level, prove it
   with the content tests and get the owner's OK of the texts. M2 is complete.
-- M2.7 Developer mode API (`developer-mode.ts`): `levelSetup` (also used by the content
-  test), `startAtStep`, `autoPlay` of a reference solution and `inspectRules` with the state of
-  every rule, step, tip and extra goal; unknown levels, steps and solutions throw a
-  `DeveloperModeError` (ADR 0079). The UI follows in M3.16.
 
 ## In progress
 
@@ -33,8 +33,6 @@ _Last updated: 2026-11-18_
 
 ## Blockers and open questions
 
-- impeccable is not yet verified in a cloud session (engine download from GitHub releases,
-  writable `~/.impeccable/`); check it in the next cloud session (ADR 0039, ADR 0080).
 - The texts of the five prototype levels and the office world's host name `itdesk` were
   written as test content without the owner's review (the prototype's source is not in the
   repository, so levels 2 to 5 follow the titles in `docs/CURRICULUM.md`); the story workshop
