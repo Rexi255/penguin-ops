@@ -1,13 +1,14 @@
-// Checks the texts of a loaded catalog (ADR 0072): every text that the game formats must be a
-// valid message (code spans, ICU MessageFormat). Some catalog texts are literal and never
-// formatted: the commands of an explanation (`example`, the option of each `options` row) and
-// the prose file contents that level.yaml references with `{ text: <key> }`, which become the
-// content of a file in the simulated world.
+// Checks the texts of a loaded catalog (ADR 0072, ADR 0073): every text that the game formats
+// must be a valid message (code spans, ICU MessageFormat) with valid markup. Some catalog texts
+// are literal and never formatted: the commands of an explanation (`example`, the option of each
+// `options` row) and the prose file contents that level.yaml references with `{ text: <key> }`,
+// which become the content of a file in the simulated world.
 
 import type { LevelCatalog, PartialLevelCatalog, UiCatalog } from "./catalog-schema";
 import { type ContentProblem, formatDataPath } from "./content-problem";
 import type { Level } from "./level-schema";
-import { checkMessage, type MessageRules } from "./message";
+import { checkText } from "./markup";
+import type { MessageRules } from "./message";
 import type { YamlSource } from "./yaml-source";
 
 /** A text that the game formats, and where it is in the catalog. */
@@ -90,7 +91,7 @@ function messageProblems(
   language: string,
   rules: MessageRules,
 ): ContentProblem[] {
-  return checkMessage(text, language, rules).map((problem) => ({
+  return checkText(text, language, rules).map((problem) => ({
     file: source.file,
     ...source.locateInText(path, problem.offset),
     path: formatDataPath(path),

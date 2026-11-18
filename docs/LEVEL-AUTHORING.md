@@ -1,9 +1,9 @@
 # Level authoring
 
 > **Status: in progress.** The schemas of `level.yaml` (format 1), `content/chapters.yaml` and
-> the text catalogs, the loader and the ICU checks of texts are implemented (ADR 0068 to
-> ADR 0072); markup and the content tests follow in milestone M2. Update this guide whenever
-> the format changes. Reasons: ADR 0010, 0011, 0012, 0067 to 0072.
+> the text catalogs, the loader and the checks of ICU and markup in texts are implemented
+> (ADR 0068 to ADR 0073); the content tests follow in milestone M2. Update this guide whenever
+> the format changes. Reasons: ADR 0010, 0011, 0012, 0067 to 0073.
 
 ## Principles
 
@@ -236,8 +236,35 @@ content/levels/printer-floor2/en.yaml:9:1: hints: a level has exactly three hint
 Whether both catalogs hold exactly the keys that `level.yaml` uses is checked by the content
 tests (ROADMAP M2.4).
 
-Markup in texts: `` `code` ``, `**bold**`, lines starting with `- ` form a list, an empty line
-starts a new paragraph. No HTML. (The markup is checked from ROADMAP M2.3c on.)
+### Markup
+
+Texts have a small markup (ADR 0073); there is no HTML, so `<b>` is shown as written.
+
+```yaml
+ticket: |
+  Hi,
+  the printer on the second floor prints **blank pages**.
+  Please check:
+  - the toner
+  - the queue with `lpq`
+
+  Thanks, Petra
+```
+
+- **Lines:** a line break is kept as written. An empty line (or one of spaces) starts a new
+  paragraph.
+- **Lists:** a line that starts with `- ` (hyphen and space) is a list item; consecutive items
+  form a list, also right after a paragraph line. A line without `- ` ends the list. There are
+  no nested or numbered lists.
+- **Bold:** `**bold**`, opened and closed on the same line (and inside the same plural or
+  select option). A single `*` is text.
+- **Code:** `` `code` `` (see below); asterisks and hyphens inside code are not markup.
+- Values that the game puts into placeholders are never markup.
+
+The loader reports bold that is not closed on its line or in its option, empty bold, bold
+around a plural or select option with a line break, and an empty list item. Prose file texts
+(`{ text: <key> }`), `explanation.example` and the option column of `explanation.options` are
+not markup.
 
 ### Placeholders, plurals and code (ICU MessageFormat)
 

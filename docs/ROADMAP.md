@@ -122,7 +122,8 @@ coverage ≥ 90 %; the engine cannot import DOM or Node APIs (enforced).
         checks of file names and mandatory languages (ADR 0071).
   - [x] M2.3b ICU MessageFormat with `intl-messageformat`: syntax checked when loading,
         formatting with values and plurals (ADR 0072).
-  - [ ] M2.3c Text markup (`code`, **bold**, lists, paragraphs) parsed into a tree without HTML.
+  - [x] M2.3c Text markup (`code`, **bold**, lists, paragraphs) parsed into a tree without HTML
+        (ADR 0073).
   - [ ] M2.3d English fallback for further languages; missing texts reported, not errors.
 - [ ] M2.4 Content tests: schema, German/English completeness, reference solutions per language
       and with two user names, not solved at start, no tips on reference solutions.

@@ -70,8 +70,13 @@ type Atom =
   | { readonly kind: "value"; readonly name: string };
 
 /** A parsed text, ready to be formatted. */
-interface CompiledMessage {
+export interface CompiledMessage {
+  /** The syntax tree, with locations in `icu`. */
   readonly elements: MessageFormatElement[];
+  /** The ICU source that was parsed: the text without code spans, apostrophes doubled. */
+  readonly icu: string;
+  /** The offset in the original text of an offset in `icu`. */
+  readonly at: (icuOffset: number) => number;
   /** The atoms by the number in their internal placeholder name. */
   readonly atoms: readonly Atom[];
   /** How each placeholder of the author is used. */
@@ -80,7 +85,7 @@ interface CompiledMessage {
   readonly offsets: ReadonlyMap<string, number>;
 }
 
-type CompileResult =
+export type CompileResult =
   | { readonly ok: true; readonly message: CompiledMessage }
   | { readonly ok: false; readonly problems: readonly MessageProblem[] };
 
@@ -151,7 +156,7 @@ export function checkMessage(
   language: string,
   rules: MessageRules,
 ): MessageProblem[] {
-  const compiled = compile(source, language);
+  const compiled = compileMessage(source, language);
   if (!compiled.ok) {
     return [...compiled.problems];
   }
@@ -173,7 +178,7 @@ export function formatMessage(text: CatalogText, values: TextValues = {}): Messa
   if (locale === undefined) {
     throw new Error(`cannot format texts in the unknown language "${text.language}"`);
   }
-  const compiled = compile(text.source, text.language);
+  const compiled = compileMessage(text.source, text.language);
   if (!compiled.ok) {
     const problems = compiled.problems.map((problem) => problem.message).join("; ");
     throw new Error(`invalid text "${text.source}": ${problems}`);
@@ -308,8 +313,11 @@ function prepare(source: string): PrepareResult {
     : { ok: true, prepared: { icu, origin, codeAt } };
 }
 
-/** Parses a text and turns its code spans and simple placeholders into atoms. */
-function compile(source: string, language: string): CompileResult {
+/**
+ * Parses a text and turns its code spans and simple placeholders into atoms. Used by the
+ * markup checks; not part of the package's API.
+ */
+export function compileMessage(source: string, language: string): CompileResult {
   const preparedResult = prepare(source);
   if (!preparedResult.ok) {
     return preparedResult;
@@ -416,7 +424,7 @@ function compile(source: string, language: string): CompileResult {
   const compiled = walk(elements);
   return problems.length > 0
     ? { ok: false, problems }
-    : { ok: true, message: { elements: compiled, atoms, uses, offsets } };
+    : { ok: true, message: { elements: compiled, icu, at, atoms, uses, offsets } };
 }
 
 /** Problems of plural options that the language does not have. */

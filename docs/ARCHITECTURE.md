@@ -349,8 +349,13 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   commands of an explanation and the prose file contents) and reports problems at the spot in
   the text (`YamlSource.locateInText`); `loadContent` runs it for every catalog and rejects
   languages that `Intl` does not know.
-- Planned: small text markup without HTML (M2.3c), English fallback for further languages
-  (M2.3d) (ADR 0012).
+- Markup (`src/markup.ts`, ADR 0073): `parseMarkup(parts)` turns the parts of a formatted
+  message into `RichText`, a list of paragraphs and lists with text, code, bold and line breaks;
+  only catalog text is searched for markers, never values. `formatText` formats and parses;
+  `checkText` adds the markup checks (bold closed on its line and in its option, no empty bold,
+  no empty list items) to the ICU checks. The UI renders the tree with its own elements, never
+  as HTML.
+- Planned: English fallback for further languages (M2.3d) (ADR 0012).
 - Format details: `docs/LEVEL-AUTHORING.md`.
 
 ## Gameplay (`packages/gameplay`)

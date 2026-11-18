@@ -78,3 +78,11 @@ export {
   type TextValue,
   type TextValues,
 } from "./message";
+export {
+  checkText,
+  formatText,
+  parseMarkup,
+  type RichText,
+  type RichTextBlock,
+  type RichTextInline,
+} from "./markup";

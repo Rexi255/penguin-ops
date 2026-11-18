@@ -4,6 +4,11 @@ _Last updated: 2026-11-18_
 
 ## Recently completed
 
+- M2.3c Text markup (`markup.ts`): `formatText` and `parseMarkup` turn a formatted message into
+  `RichText` (paragraphs with kept line breaks, `- ` lists, bold on one line, code); values are
+  never markup and nothing is HTML. `checkText` adds markup checks to the ICU checks of
+  `loadContent`: unclosed or empty bold, bold around an option with a line break, empty list
+  items (ADR 0073).
 - M2.3b ICU MessageFormat (`message.ts`, `catalog-texts.ts`): `intl-messageformat` 12.1.4 and its
   parser; code spans are never ICU and apostrophes are always literal; placeholders are camelCase
   (`number`, `plural`, `selectordinal`, `select`, no dates), plural options must exist in the
@@ -27,12 +32,6 @@ _Last updated: 2026-11-18_
   located at their key, list items at the item; unknown and missing fields and unions get
   readable messages; parser warnings, empty files and aliases without anchors are problems
   (ADR 0069).
-- M2.1 Level schema v1 (`level-schema.ts`, `rule-schema.ts`): zod 4 checks a parsed
-  `level.yaml` and returns a `Level` with engine rules, numeric modes (`rw-r-----`) and a list of
-  start files; rules are objects with one key; steps are `{ id, goal, say? }`; unknown fields are
-  errors. The draft-07 JSON Schema `content/schemas/level.schema.json` is kept up to date by a
-  test (`npm run schemas:update`) and mapped to the level files in `.vscode/settings.json`. A
-  gameplay test keeps the schema's rule checks in line with the engine's `checkRule` (ADR 0068).
 
 ## In progress
 
@@ -40,9 +39,9 @@ _Last updated: 2026-11-18_
 
 ## Next 3 steps
 
-1. ROADMAP M2.3c: text markup parsed into a tree.
-2. ROADMAP M2.3d: English fallback for further languages.
-3. ROADMAP M2.4: content tests.
+1. ROADMAP M2.3d: English fallback for further languages.
+2. ROADMAP M2.4: content tests.
+3. ROADMAP M2.5: gameplay core (level session).
 
 ## Blockers and open questions
 

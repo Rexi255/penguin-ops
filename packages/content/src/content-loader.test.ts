@@ -552,6 +552,31 @@ describe("loadContent: texts of the catalogs", () => {
     ]);
   });
 
+  test("markup problems are reported at their place; prose files are not markup", () => {
+    expect(
+      catalogProblems(
+        "en",
+        yaml(
+          "title: Title",
+          "ticket: |",
+          "  Find the **IP address",
+          "  Check:",
+          "  - ",
+          "hints: [Tip, Concrete tip, Solution]",
+          "explanation:",
+          "  text: Explanation",
+          "handover: |",
+          "  **unclosed and `unclosed",
+          "  - ",
+          "tip-wrong: x",
+        ),
+      ),
+    ).toEqual([
+      "content/levels/x/en.yaml:3:12: ticket: bold is not closed: the closing ** is missing on its line",
+      "content/levels/x/en.yaml:5:3: ticket: a list item must not be empty",
+    ]);
+  });
+
   test("level texts have no placeholders", () => {
     expect(
       catalogProblems("de", yaml(CATALOG_TEXT, "handover: x", "tip-wrong: Hallo {name}")),
