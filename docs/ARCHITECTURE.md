@@ -331,9 +331,17 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   `{ file, text }` pairs, then checks the files against each other: the folder name is the
   level ID, every listed level exists, every level is in exactly one chapter. It returns the
   chapters and the levels by ID in chapter order, or all problems of all files. The caller
-  finds and reads the files. Planned: worlds and catalogs as further inputs (M2.3, M2.5).
-- Translation catalogs per level and for the UI; ICU MessageFormat; small text markup without
-  HTML; English fallback for extra languages (ADR 0012).
+  finds and reads the files. Planned: worlds as a further input (M2.5).
+- Catalogs (`src/catalog-schema.ts`, ADR 0071): `levelCatalogSchema` checks the English and
+  German catalog of a level (`title`, `ticket`, three `hints`, `explanation`, `extra_goals`,
+  free text keys) and returns a `LevelCatalog`; `partialLevelCatalogSchema` does the same with
+  every field optional for further languages; `uiCatalogSchema` flattens the nested UI texts to
+  dotted keys. `loadContent` also takes `levelCatalogs` and `uiCatalogs` as `{ file, text }`,
+  checks their names (language codes), that each level catalog belongs to a level, that none is
+  given twice and that English and German exist, and returns `Catalogs` (`en`, `de`, `extra`)
+  per level and for the UI.
+- Planned: ICU MessageFormat (M2.3b), small text markup without HTML (M2.3c), English fallback
+  for further languages (M2.3d) (ADR 0012).
 - Format details: `docs/LEVEL-AUTHORING.md`.
 
 ## Gameplay (`packages/gameplay`)

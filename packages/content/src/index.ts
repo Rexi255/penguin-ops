@@ -14,6 +14,7 @@ export {
   levelSchema,
   parseMode,
   RESERVED_TEXT_KEYS,
+  TEXT_KEY_PATTERN,
   type StartAttributes,
   type StartEntry,
 } from "./level-schema";
@@ -34,7 +35,31 @@ export {
   CHAPTERS_FORMAT_VERSION,
   chaptersSchema,
 } from "./chapters-schema";
-export { type Content, type ContentFile, type ContentFiles, loadContent } from "./content-loader";
+export {
+  type Content,
+  type ContentFile,
+  type ContentFiles,
+  type LevelCatalogs,
+  loadContent,
+  type UiCatalogs,
+} from "./content-loader";
+export {
+  type Catalogs,
+  isMandatoryLanguage,
+  LANGUAGE_NAMES,
+  LANGUAGE_PATTERN,
+  type LevelCatalog,
+  levelCatalogSchema,
+  type LevelExplanation,
+  type LevelHints,
+  type LevelOption,
+  MANDATORY_LANGUAGES,
+  type MandatoryLanguage,
+  type PartialLevelCatalog,
+  partialLevelCatalogSchema,
+  type UiCatalog,
+  uiCatalogSchema,
+} from "./catalog-schema";
 export {
   parseYaml,
   type SourcePosition,

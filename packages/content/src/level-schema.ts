@@ -121,7 +121,8 @@ export type Level = LevelFields &
   );
 
 const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
-const TEXT_KEY_PATTERN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
+/** Text keys of the catalogs: kebab-case, starting with a letter. */
+export const TEXT_KEY_PATTERN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
 const COMMAND_NAME_PATTERN = /^[a-z][a-z0-9._+-]*$/u;
 /** Host names as the engine allows them (ADR 0009). */
 const HOST_NAME_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/u;

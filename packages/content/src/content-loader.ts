@@ -1,9 +1,28 @@
-// Loads the game's content from the text of its files (ADR 0070): `content/chapters.yaml` and
-// every `content/levels/<level-id>/level.yaml`. Each file is checked with its schema, then the
-// files are checked against each other: a level's folder name is its ID, every level that a
-// chapter lists exists, and every level is in exactly one chapter. All problems of all files
-// are reported together. Like the level loader, this module never reads files (ADR 0006).
+// Loads the game's content from the text of its files (ADR 0070, ADR 0071):
+// `content/chapters.yaml`, every `content/levels/<level-id>/level.yaml` with the level's text
+// catalogs `<language>.yaml` next to it, and the UI catalogs `content/ui/<language>.yaml`.
+// Each file is checked with its schema, then the files are checked against each other: a
+// level's folder name is its ID, every level that a chapter lists exists, every level is in
+// exactly one chapter, every catalog belongs to a level, and the English and German catalogs
+// exist. All problems of all files are reported together. Like the level loader, this module
+// never reads files (ADR 0006).
 
+import type { z } from "zod";
+
+import {
+  type Catalogs,
+  isMandatoryLanguage,
+  LANGUAGE_NAMES,
+  LANGUAGE_PATTERN,
+  type LevelCatalog,
+  levelCatalogSchema,
+  MANDATORY_LANGUAGES,
+  type MandatoryLanguage,
+  type PartialLevelCatalog,
+  partialLevelCatalogSchema,
+  type UiCatalog,
+  uiCatalogSchema,
+} from "./catalog-schema";
 import { type Chapter, chaptersSchema } from "./chapters-schema";
 import { type ContentProblem, type LoadResult, sortProblems } from "./content-problem";
 import { readYaml } from "./level-loader";
@@ -26,7 +45,21 @@ export interface ContentFiles {
   readonly chapters: ContentFile;
   /** Every `content/levels/<level-id>/level.yaml`, in any order. */
   readonly levels: readonly ContentFile[];
+  /**
+   * Every other `.yaml` file in a level folder, in any order: the level's text catalogs
+   * `content/levels/<level-id>/<language>.yaml`. Pass all of them, so that a misnamed file
+   * is reported instead of ignored.
+   */
+  readonly levelCatalogs: readonly ContentFile[];
+  /** Every `.yaml` file in `content/ui/`: the UI catalogs `content/ui/<language>.yaml`. */
+  readonly uiCatalogs: readonly ContentFile[];
 }
+
+/** The text catalogs of a level. */
+export type LevelCatalogs = Catalogs<LevelCatalog, PartialLevelCatalog>;
+
+/** The UI catalogs. */
+export type UiCatalogs = Catalogs<UiCatalog, UiCatalog>;
 
 /** The game's checked content. */
 export interface Content {
@@ -34,6 +67,10 @@ export interface Content {
   readonly chapters: readonly Chapter[];
   /** Every level by its ID, in the order of the chapters. */
   readonly levels: ReadonlyMap<string, Level>;
+  /** The text catalogs of every level by the level's ID, in the order of the chapters. */
+  readonly levelCatalogs: ReadonlyMap<string, LevelCatalogs>;
+  /** The general UI texts. */
+  readonly uiCatalogs: UiCatalogs;
 }
 
 /** A level file and what reading it gave. */
@@ -48,7 +85,16 @@ interface LevelEntry {
 /** Folder and file name of a level file: `.../levels/<folder>/level.yaml`. */
 const LEVEL_FILE_PATTERN = /(?:^|\/)levels\/([^/]+)\/level\.yaml$/u;
 
-/** Reads and checks the chapters file and all level files (format: docs/LEVEL-AUTHORING.md). */
+/** Folder and name of a level catalog: `.../levels/<folder>/<name>.yaml`. */
+const LEVEL_CATALOG_FILE_PATTERN = /(?:^|\/)levels\/([^/]+)\/([^/]+)\.yaml$/u;
+
+/** Name of a UI catalog: `.../ui/<name>.yaml`. */
+const UI_CATALOG_FILE_PATTERN = /(?:^|\/)ui\/([^/]+)\.yaml$/u;
+
+/**
+ * Reads and checks the chapters file, all level files and all catalogs (format:
+ * docs/LEVEL-AUTHORING.md).
+ */
 export function loadContent(files: ContentFiles): LoadResult<Content> {
   const problems: ContentProblem[] = [];
 
@@ -96,6 +142,9 @@ export function loadContent(files: ContentFiles): LoadResult<Content> {
     });
   }
 
+  const levelCatalogs = readLevelCatalogs(files.levelCatalogs, levels, problems);
+  const uiCatalogs = readUiCatalogs(files.uiCatalogs, files.chapters.file, problems);
+
   if (chapters.result.ok) {
     problems.push(
       ...chapterProblems(
@@ -107,19 +156,208 @@ export function loadContent(files: ContentFiles): LoadResult<Content> {
     );
   }
 
-  if (problems.length > 0 || !chapters.result.ok) {
+  if (problems.length > 0 || !chapters.result.ok || uiCatalogs === undefined) {
     return { ok: false, problems: sortProblems(problems) };
   }
-  const ordered = new Map<string, Level>();
+  const orderedLevels = new Map<string, Level>();
+  const orderedCatalogs = new Map<string, LevelCatalogs>();
   for (const chapter of chapters.result.value.chapters) {
     for (const id of chapter.levels) {
       const level = levels.get(id)?.level;
-      if (level !== undefined) {
-        ordered.set(id, level);
+      const catalogs = levelCatalogs.get(id);
+      if (level !== undefined && catalogs !== undefined) {
+        orderedLevels.set(id, level);
+        orderedCatalogs.set(id, catalogs);
       }
     }
   }
-  return { ok: true, value: { chapters: chapters.result.value.chapters, levels: ordered } };
+  return {
+    ok: true,
+    value: {
+      chapters: chapters.result.value.chapters,
+      levels: orderedLevels,
+      levelCatalogs: orderedCatalogs,
+      uiCatalogs,
+    },
+  };
+}
+
+/** The catalogs read for one level or for the UI. */
+interface CatalogsRead<Complete, Partial> {
+  readonly mandatory: Map<MandatoryLanguage, Complete>;
+  readonly extra: Map<string, Partial>;
+  /** Every language given, also those whose file has problems. */
+  readonly given: Set<string>;
+}
+
+function emptyCatalogsRead<Complete, Partial>(): CatalogsRead<Complete, Partial> {
+  return { mandatory: new Map(), extra: new Map(), given: new Set() };
+}
+
+/**
+ * Reads the level catalogs and checks them against the level folders: each lies in the folder
+ * of an existing level, is named after its language and is given once; every level has an
+ * English and a German catalog. Returns the catalogs of every level whose mandatory catalogs
+ * are valid.
+ */
+function readLevelCatalogs(
+  files: readonly ContentFile[],
+  levels: ReadonlyMap<string, LevelEntry>,
+  problems: ContentProblem[],
+): Map<string, LevelCatalogs> {
+  const read = new Map<string, CatalogsRead<LevelCatalog, PartialLevelCatalog>>();
+  for (const { file, text } of files) {
+    const match = LEVEL_CATALOG_FILE_PATTERN.exec(file);
+    const folder = match?.[1];
+    const language = match?.[2];
+    if (folder === undefined || language === undefined) {
+      problems.push(
+        fileProblem(
+          file,
+          "a level catalog must lie in the folder of its level, for example " +
+            "content/levels/first-steps/de.yaml",
+        ),
+      );
+      continue;
+    }
+    if (!levels.has(folder)) {
+      problems.push(
+        fileProblem(
+          file,
+          `there is no level "${folder}" for this catalog (no file levels/${folder}/level.yaml)`,
+        ),
+      );
+      continue;
+    }
+    const catalogs = read.get(folder) ?? emptyCatalogsRead();
+    read.set(folder, catalogs);
+    readCatalog(catalogs, { file, text }, language, problems, {
+      complete: levelCatalogSchema,
+      partial: partialLevelCatalogSchema,
+      twice: `the ${language} catalog of the level "${folder}" is given twice`,
+    });
+  }
+
+  const complete = new Map<string, LevelCatalogs>();
+  for (const entry of levels.values()) {
+    const catalogs = read.get(entry.folder) ?? emptyCatalogsRead();
+    for (const language of missingLanguages(catalogs)) {
+      problems.push(
+        fileProblem(
+          entry.file.replace(/level\.yaml$/u, `${language}.yaml`),
+          `the ${LANGUAGE_NAMES[language]} catalog is missing: every level needs ` +
+            MANDATORY_LANGUAGES.map((code) => `${code}.yaml`).join(" and "),
+        ),
+      );
+    }
+    const built = toCatalogs(catalogs);
+    if (built !== undefined) {
+      complete.set(entry.folder, built);
+    }
+  }
+  return complete;
+}
+
+/**
+ * Reads the UI catalogs: each lies in a `ui` folder, is named after its language and is given
+ * once; English and German exist. A missing one is reported at the file where it belongs, in
+ * the folder of `chaptersFile`. Returns `undefined` if a mandatory catalog is missing or broken.
+ */
+function readUiCatalogs(
+  files: readonly ContentFile[],
+  chaptersFile: string,
+  problems: ContentProblem[],
+): UiCatalogs | undefined {
+  const catalogs = emptyCatalogsRead<UiCatalog, UiCatalog>();
+  for (const { file, text } of files) {
+    const language = UI_CATALOG_FILE_PATTERN.exec(file)?.[1];
+    if (language === undefined) {
+      problems.push(
+        fileProblem(file, "a UI catalog must lie in the ui folder, for example content/ui/de.yaml"),
+      );
+      continue;
+    }
+    readCatalog(catalogs, { file, text }, language, problems, {
+      complete: uiCatalogSchema,
+      partial: uiCatalogSchema,
+      twice: `the ${language} UI catalog is given twice`,
+    });
+  }
+  const folder = chaptersFile.slice(0, chaptersFile.lastIndexOf("/") + 1);
+  for (const language of missingLanguages(catalogs)) {
+    problems.push(
+      fileProblem(
+        `${folder}ui/${language}.yaml`,
+        `the ${LANGUAGE_NAMES[language]} UI catalog is missing: the game needs ` +
+          MANDATORY_LANGUAGES.map((code) => `ui/${code}.yaml`).join(" and "),
+      ),
+    );
+  }
+  return toCatalogs(catalogs);
+}
+
+/** How to read the catalogs of one kind. */
+interface CatalogKind<Complete, Partial> {
+  /** Schema of an English or German catalog. */
+  readonly complete: z.ZodType<Complete>;
+  /** Schema of a catalog of a further language. */
+  readonly partial: z.ZodType<Partial>;
+  /** The problem of a language given twice. */
+  readonly twice: string;
+}
+
+/** Reads one catalog file into `catalogs`, after checking its name and that it is new. */
+function readCatalog<Complete, Partial>(
+  catalogs: CatalogsRead<Complete, Partial>,
+  { file, text }: ContentFile,
+  language: string,
+  problems: ContentProblem[],
+  kind: CatalogKind<Complete, Partial>,
+): void {
+  if (!LANGUAGE_PATTERN.test(language)) {
+    problems.push(
+      fileProblem(
+        file,
+        `"${language}.yaml" is not named after a language: a catalog is named after its ` +
+          "language code, for example de.yaml, en.yaml or pt-br.yaml",
+      ),
+    );
+    return;
+  }
+  if (catalogs.given.has(language)) {
+    problems.push(fileProblem(file, kind.twice));
+    return;
+  }
+  catalogs.given.add(language);
+  if (isMandatoryLanguage(language)) {
+    const { result } = readYaml(kind.complete, file, text);
+    if (result.ok) {
+      catalogs.mandatory.set(language, result.value);
+    } else {
+      problems.push(...result.problems);
+    }
+  } else {
+    const { result } = readYaml(kind.partial, file, text);
+    if (result.ok) {
+      catalogs.extra.set(language, result.value);
+    } else {
+      problems.push(...result.problems);
+    }
+  }
+}
+
+/** The mandatory languages without a catalog file. */
+function missingLanguages(catalogs: CatalogsRead<unknown, unknown>): MandatoryLanguage[] {
+  return MANDATORY_LANGUAGES.filter((language) => !catalogs.given.has(language));
+}
+
+/** The catalogs read, or `undefined` if a mandatory one is missing or broken. */
+function toCatalogs<Complete, Partial>(
+  catalogs: CatalogsRead<Complete, Partial>,
+): Catalogs<Complete, Partial> | undefined {
+  const en = catalogs.mandatory.get("en");
+  const de = catalogs.mandatory.get("de");
+  return en === undefined || de === undefined ? undefined : { en, de, extra: catalogs.extra };
 }
 
 /**

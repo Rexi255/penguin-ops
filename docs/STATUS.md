@@ -4,6 +4,11 @@ _Last updated: 2026-11-18_
 
 ## Recently completed
 
+- M2.3a Catalog files (`catalog-schema.ts`, `content-loader.ts`): level catalogs need `title`,
+  `ticket`, exactly three `hints` and `explanation.text` in English and German, further
+  languages may lack any text; free keys are kebab-case text keys; UI catalogs are nested groups
+  flattened to dotted keys. `loadContent` also reads `levelCatalogs` and `uiCatalogs` and reports
+  misnamed files, catalogs without a level, duplicates and missing `en.yaml`/`de.yaml` (ADR 0071).
 - M2.2b Chapters file and loading all content (`chapters-schema.ts`, `content-loader.ts`):
   `content/chapters.yaml` holds `format: 1` and chapters with an ID and their level IDs in
   order; `loadContent({ chapters, levels })` reads it and every `level.yaml` from
@@ -28,10 +33,6 @@ _Last updated: 2026-11-18_
   `checkRule` for validation (ADR 0067). M1 is complete: all Linux commands of the prototype exist
   (the game commands `help` and `hint` follow in M3.6), engine coverage is 97.6 % (threshold
   90 %), and lint rules and the engine's TypeScript libraries keep DOM and Node APIs out.
-- M1.11b History navigation (`history-navigation.ts`): `previousHistory`/`nextHistory` like
-  readline's Up and Down (saved new line, bell at the oldest entry, cursor at the end), edits
-  of history entries kept until the line is run (`HistoryEntry.original`, `*` in `history`),
-  `acceptHistoryLine` for Enter (ADR 0066). M1.11 is complete.
 
 ## In progress
 
@@ -39,9 +40,9 @@ _Last updated: 2026-11-18_
 
 ## Next 3 steps
 
-1. ROADMAP M2.3: translation catalogs and ICU formatting.
-2. ROADMAP M2.4: content tests (schema, catalog completeness, reference solutions).
-3. ROADMAP M2.5: gameplay core (level session, steps, extra goals) with the world format.
+1. ROADMAP M2.3b: ICU MessageFormat with `intl-messageformat` (license check first).
+2. ROADMAP M2.3c: text markup parsed into a tree.
+3. ROADMAP M2.3d: English fallback for further languages.
 
 ## Blockers and open questions
 

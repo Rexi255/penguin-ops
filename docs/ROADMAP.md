@@ -118,6 +118,12 @@ coverage ≥ 90 %; the engine cannot import DOM or Node APIs (enforced).
         cross-checks (folder name is the level ID, every level in exactly one chapter) (ADR 0070).
 - [ ] M2.3 Translations: level catalogs and `content/ui/<lang>.yaml`, ICU formatting, text markup
       (code, bold, lists, paragraphs) without HTML; English fallback for extra languages.
+  - [x] M2.3a Catalog files: schemas of level and UI catalogs, loading them with the content,
+        checks of file names and mandatory languages (ADR 0071).
+  - [ ] M2.3b ICU MessageFormat with `intl-messageformat`: syntax checked when loading,
+        formatting with values and plurals.
+  - [ ] M2.3c Text markup (`code`, **bold**, lists, paragraphs) parsed into a tree without HTML.
+  - [ ] M2.3d English fallback for further languages; missing texts reported, not errors.
 - [ ] M2.4 Content tests: schema, German/English completeness, reference solutions per language
       and with two user names, not solved at start, no tips on reference solutions.
 - [ ] M2.5 Gameplay core: level session (start, run command, evaluate goal, tips), steps and
@@ -250,7 +256,8 @@ AppImage runs on Linux, and chapters 0–2 are playable in both languages.
   checklist, ADR 0033).
 - Electron fuses for the packaged app, for example disabling `ELECTRON_RUN_AS_NODE` and Node.js
   command line options (ADR 0034).
-- A generated JSON Schema for `content/chapters.yaml`, like the one for level files (ADR 0070).
+- A generated JSON Schema for `content/chapters.yaml`, like the one for level files (ADR 0070),
+  and for the translation catalogs (ADR 0071).
 - Upgrade to TypeScript 7 once `typescript-eslint` supports it (ADR 0026).
 - Lint rules that enforce ADR 0008 in engine and gameplay: ban `Date.now()`, `new Date()`
   without arguments, `performance.now()` and `Math.random()`.

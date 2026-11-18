@@ -1,8 +1,9 @@
 # Level authoring
 
-> **Status: in progress.** The schema of `level.yaml` (format 1) is implemented (ADR 0068); the
-> loader, the text catalogs and the content tests follow in milestone M2. Update this guide
-> whenever the schema changes. Reasons: ADR 0010, 0011, 0012, 0067, 0068.
+> **Status: in progress.** The schemas of `level.yaml` (format 1), `content/chapters.yaml` and
+> the text catalogs and the loader are implemented (ADR 0068 to ADR 0071); ICU checks, markup and
+> the content tests follow in milestone M2. Update this guide whenever the format changes.
+> Reasons: ADR 0010, 0011, 0012, 0067 to 0071.
 
 ## Principles
 
@@ -197,22 +198,64 @@ table when the engine gains them.
 
 ## Texts: `de.yaml` and `en.yaml`
 
-Both files must contain exactly the same keys.
+Every level has an English (`en.yaml`) and a German (`de.yaml`) catalog next to its
+`level.yaml`; both must contain exactly the same keys (ADR 0012, ADR 0071).
 
-| Key | Meaning |
-|---|---|
-| `title` | Ticket title. |
-| `ticket` | Ticket text shown in the ticket panel. |
-| `hints` | Exactly three hints: tip, concrete tip, solution. |
-| `explanation.text` | Explanation shown after solving. |
-| `explanation.options` | List of `[option, description]` pairs. |
-| `explanation.example` | A command to try. |
-| `extra_goals.<id>` | Description of each extra goal. |
-| any other key | Prose file contents and tip texts referenced from `level.yaml`. |
+| Key | Required | Meaning |
+|---|---|---|
+| `title` | yes | Ticket title. |
+| `ticket` | yes | Ticket text shown in the ticket panel. |
+| `hints` | yes | Exactly three hints: tip, concrete tip, solution. |
+| `explanation.text` | yes | Explanation shown after solving. |
+| `explanation.options` | no | List of `[option, description]` pairs. |
+| `explanation.example` | no | A command to try. |
+| `extra_goals.<id>` | no | Description of each extra goal, by its ID. |
+| any other key | no | Prose file contents, tips and step messages referenced from `level.yaml`. |
+
+- Every text is a string and not empty. Long texts use a YAML block (`|`), which keeps the
+  line breaks and ends with one.
+- Other keys are text keys: kebab-case, starting with a letter, like in `level.yaml`.
+  `explanation` takes no other fields; unknown fields are errors.
+- Catalogs have no `format` field; they follow the format of their level.
+
+**Further languages** (`fr.yaml`, `pt-br.yaml`, ...) may be incomplete: every key is optional,
+and missing texts fall back to English. What is there is checked like in English: three hints,
+options as pairs, valid keys. A catalog file is named after its language code: two or three
+lowercase letters, optionally a hyphen and a lowercase region (`de`, `en`, `pt-br`).
+
+The loader reports a catalog without `level.yaml` in its folder, a file name that is not a
+language code (for example `notes.yaml`), a catalog given twice and a missing English or German
+catalog:
+
+```
+content/levels/printer-floor2/de.yaml:1:1: the German catalog is missing: every level needs en.yaml and de.yaml
+content/levels/printer-floor2/notes.yaml:1:1: "notes.yaml" is not named after a language: a catalog is named after its language code, for example de.yaml, en.yaml or pt-br.yaml
+content/levels/printer-floor2/en.yaml:9:1: hints: a level has exactly three hints: a tip, a concrete tip and the solution
+```
+
+Whether both catalogs hold exactly the keys that `level.yaml` uses is checked by the content
+tests (ROADMAP M2.4).
 
 Markup in texts: `` `code` ``, `**bold**`, lines starting with `- ` form a list, an empty line
 starts a new paragraph. No HTML. Placeholders and plurals use ICU MessageFormat, e.g.
-`{count, plural, one {# file} other {# files}}`.
+`{count, plural, one {# file} other {# files}}`. (Both are checked from ROADMAP M2.3b and
+M2.3c on.)
+
+## UI texts: `content/ui/<language>.yaml`
+
+General texts of the game (menus, settings, messages) live in `content/ui/en.yaml`,
+`content/ui/de.yaml` and optionally further languages. A UI catalog groups texts in nested
+maps; the game uses the dotted key, for example `menu.new-game`:
+
+```yaml
+menu:
+  new-game: New game
+  settings:
+    title: Settings
+```
+
+Keys are kebab-case and start with a letter; a group is never empty; every text is a string
+and not empty. English and German are mandatory.
 
 ## Example
 
@@ -266,7 +309,7 @@ explanation:
 
 ## Automated checks (run by `npm run check`)
 
-- Schema validation of every `level.yaml` and of `content/chapters.yaml`.
+- Schema validation of every `level.yaml`, of `content/chapters.yaml` and of every catalog.
 - German and English catalogs contain exactly the keys the level needs.
 - Every reference solution, in every language and with two different user names: the goal is
   not reached at the start, it is reached after the solution, and no tip fires on the way.
