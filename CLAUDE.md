@@ -143,6 +143,8 @@ Commands are defined only as npm scripts in `package.json`. Existing:
   change code or content (CI runs it for every push and pull request).
 - `npm run adr:new -- "Title"`: create the next decision record from the template; options
   `--supersedes <number>` and `--partly "<number>:<scope>"` (used by `/adr`).
+- `npm run schemas:update`: regenerate `content/schemas/level.schema.json` from the zod schema
+  after a schema change (a test fails while it is stale).
 
 Planned:
 
