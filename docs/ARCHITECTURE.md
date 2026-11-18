@@ -120,11 +120,16 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     Hosts have no services, processes or network yet.
   - `src/credentials.ts`: `Credentials` (UID, primary GID, all GIDs), fixed at login.
   - `src/session.ts`: `Session` with host name, credentials, working directory (as bash names
-    it, ADR 0053), shell
-    variables, the last exit status and the umask; `createSession` (starts in the home
-    directory, or in `/` if the user cannot enter it, sets the login variables such as `HOME`
-    and `PATH`, ADR 0046, `TERM=xterm-256color`, ADR 0056, and the umask of Debian 13's `pam_umask`, ADR 0048) and `userAtHost`
-    (the `\u@\h` part of the prompt).
+    it, ADR 0053), shell variables, the last exit status, the umask and the history list;
+    `createSession` (starts in the home directory, or in `/` if the user cannot enter it, sets
+    the login variables such as `HOME` and `PATH`, ADR 0046, `TERM=xterm-256color`, ADR 0056,
+    the history variables of Debian's `.bashrc`, ADR 0057, and the umask of Debian 13's
+    `pam_umask`, ADR 0048), `setVariable` (sets a shell variable; a new `HISTSIZE` applies to
+    the history at once) and `userAtHost` (the `\u@\h` part of the prompt).
+  - `src/history.ts` (ADR 0057): the history list as readline 8.2 keeps it (entries, the
+    numbering base, the limit from `HISTSIZE`). `recordHistory` saves an input with the rules
+    of `HISTCONTROL`; the game calls it before it runs the input. `src/bash-number.ts` reads
+    numbers like bash's `legal_number`.
   - `src/world-builder.ts`: `buildWorld` creates a checked world from a short `WorldSpec`
     (users and groups by name, files as a map from absolute paths to contents); it creates
     missing parent directories and fills in defaults for owner, group, mode and mtime
@@ -183,7 +188,9 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     status in `$?`, and assignments (shell variables, or only for one command before its name).
     Commands are `ShellCommand` functions found through a `CommandLookup`; they get a
     `CommandContext` with `stdout` and `stderr` writers and return a `CommandExit` (exit status
-    and a changed world or session) or a `CommandStop` with a `CommandNotice` (ADR 0052). The
+    and a changed world or session), a `CommandStop` with a `CommandNotice` (ADR 0052) or a
+    `CommandDiscard`, which ends the rest of the input like bash's `DISCARD` (only the subshell
+    inside a pipeline, ADR 0057). The
     result has `ShellEvent`s: output, and game notices for unsupported features (`unsupported`)
     and from commands (`notice`), which stop the rest of the input. Unknown commands give
     bash's `command not found` and exit status 127. `ScriptRun.terminal` carries the
@@ -215,16 +222,17 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     registered commands (also plain `ShellCommand`s such as `echo`) into the interpreter's
     `CommandLookup`.
   - `src/builtins.ts` (ADR 0053): `defineBuiltin` builds a bash builtin; `parseBuiltinOptions`
-    reads options like bash's `internal_getopt`, invalid options give `bash: NAME: -x: invalid
-    option`, the usage line and exit status 2, and `--help` or unsimulated letters give the
-    notice `option-not-simulated`.
+    reads options like bash's `internal_getopt`, also options with an argument (ADR 0057);
+    invalid options and missing arguments give bash's message, the usage line and exit status
+    2, and `--help` or unsimulated letters give the notice `option-not-simulated`.
   - `src/quote.ts`: `localeQuote` quotes operands in coreutils messages with `‘…’` like gnulib's
     `quote` in an English UTF-8 locale. `shellQuoteAlways` quotes file names in messages of
     `ls` and other file commands like `quoteaf` (`'x'`, `"it's"`, `$'\n'`), and `shellQuote`
     quotes only names that need it, as `ls` does on a terminal (ADR 0054). `src/utf8.ts`
     converts between text and UTF-8 bytes.
   - `src/commands/` holds the commands, one module each, and `COMMANDS`, the list for
-    `createCommandLookup`. `cd`, `pwd` and `echo` are builtins, `whoami` and `ls` use
+    `createCommandLookup`. `cd`, `pwd`, `echo` and `history` are builtins (`history` lists,
+    clears and deletes entries of the session's history list, ADR 0057), `whoami` and `ls` use
     `defineCommand`. `clear` is ncurses' program with plain `getopt`: on the terminal it clears
     the screen, into a pipe or a file it writes the escape sequences of `xterm-256color`, the
     `TERM` that `createSession` sets (ADR 0056). `ls` follows coreutils' `ls.c`: columns on a
@@ -245,7 +253,8 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     owner calls `advance`. `runScript` advances it by one second per input (ADR 0047); all
     other engine functions and the commands take the read-only `Clock` view (`now()`).
   - Data generators are added when a level needs them.
-- **Completion and history:** APIs for tab completion and command history.
+- **Completion and history:** APIs for tab completion and command history. The history list
+  itself is part of the session (`src/history.ts`, ADR 0057); navigation follows in M1.11.
 
 ## Content (`packages/content` and `content/`)
 

@@ -4,6 +4,7 @@
 // Linux.
 
 import type { Credentials } from "./credentials";
+import { applyHistorySize, EMPTY_HISTORY, type History } from "./history";
 import { lookup } from "./lookup";
 import { hasPermission } from "./permissions";
 import {
@@ -17,7 +18,7 @@ import {
   type World,
 } from "./world";
 
-/** The state of one shell. The history follows with ROADMAP M1.11. */
+/** The state of one shell. */
 export interface Session {
   /** The name of the host the session runs on. */
   readonly host: string;
@@ -39,6 +40,8 @@ export interface Session {
    * directories do not get. A new file gets the mode `0o666 & ~umask`.
    */
   readonly umask: number;
+  /** The history list of the shell (ADR 0057), which `history` shows. */
+  readonly history: History;
 }
 
 /** Debian 13's `PATH` from `/etc/profile` for root and for all other users. */
@@ -53,6 +56,16 @@ export const TERMINAL_TYPE = "xterm-256color";
 
 /** Bash's default `IFS`: space, tab and line break. */
 export const DEFAULT_IFS = " \t\n";
+
+/**
+ * The history variables of Debian 13's `/etc/skel/.bashrc`, which every user but root gets. Root's
+ * `.bashrc` from `base-files` sets none, so bash's default `HISTSIZE` applies.
+ */
+const USER_HISTORY_CONTROL = "ignoreboth";
+const USER_HISTORY_SIZE = "1000";
+
+/** The `HISTSIZE` bash sets when no startup file did, `HISTSIZE_DEFAULT`. */
+const DEFAULT_HISTORY_SIZE = "500";
 
 /** The `UMASK` of Debian 13's `/etc/login.defs`. */
 const LOGIN_UMASK = 0o022;
@@ -81,6 +94,10 @@ function loginUmask(host: Host, user: User): number {
  * (the home from the user list, as written there), `USER`, `LOGNAME`, `SHELL`, `PATH`, `PWD`,
  * `HOSTNAME` and `IFS`, and `TERM` from the terminal (`TERMINAL_TYPE`). `OLDPWD` is unset until
  * the first `cd`. The umask comes from `loginUmask`.
+ *
+ * The history (ADR 0057) starts empty, because the history file is not simulated. Users other
+ * than root get `HISTCONTROL=ignoreboth` and `HISTSIZE=1000` from Debian's `/etc/skel/.bashrc`;
+ * root gets bash's default `HISTSIZE=500` and no `HISTCONTROL`.
  */
 export function createSession(world: World, hostName: string, userName: string): Session {
   const host = findHost(world, hostName);
@@ -102,6 +119,7 @@ export function createSession(world: World, hostName: string, userName: string):
   const cwd = canEnterHome ? home.path : "/";
   const variables = new Map([
     ["HOME", user.home],
+    ["HISTSIZE", user.uid === 0 ? DEFAULT_HISTORY_SIZE : USER_HISTORY_SIZE],
     ["HOSTNAME", host.name],
     ["IFS", DEFAULT_IFS],
     ["LOGNAME", user.name],
@@ -111,6 +129,9 @@ export function createSession(world: World, hostName: string, userName: string):
     ["TERM", TERMINAL_TYPE],
     ["USER", user.name],
   ]);
+  if (user.uid !== 0) {
+    variables.set("HISTCONTROL", USER_HISTORY_CONTROL);
+  }
   return {
     host: host.name,
     credentials,
@@ -118,7 +139,23 @@ export function createSession(world: World, hostName: string, userName: string):
     variables,
     exitStatus: 0,
     umask: loginUmask(host, user),
+    history: applyHistorySize(EMPTY_HISTORY, variables.get("HISTSIZE")),
   };
+}
+
+/**
+ * Sets the shell variable `name` to `value`, or unsets it if `value` is `undefined`. Like bash's
+ * special variables, a new `HISTSIZE` applies to the history at once (`applyHistorySize`).
+ */
+export function setVariable(session: Session, name: string, value: string | undefined): Session {
+  const variables = new Map(session.variables);
+  if (value === undefined) {
+    variables.delete(name);
+  } else {
+    variables.set(name, value);
+  }
+  const history = name === "HISTSIZE" ? applyHistorySize(session.history, value) : session.history;
+  return { ...session, variables, history };
 }
 
 /** What bash shows for `\u` when the session's user ID has no user, for example after `userdel`. */

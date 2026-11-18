@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import type { DirectoryNode, FileNode, FsNode } from "./fs-node";
 import { toGid, toUid } from "./ids";
-import { createSession, type Session, userAtHost } from "./session";
+import { createSession, type Session, setVariable, userAtHost } from "./session";
 import { createWorld, type Host, type User, type World } from "./world";
 
 function dir(entries: Record<string, FsNode>, mode = 0o755, owner = 0, group = 0): DirectoryNode {
@@ -66,6 +66,8 @@ describe("createSession", () => {
   test("@differential sets the shell variables of a Debian login", () => {
     const session = createSession(world, "ws01", "alice");
     expect(Object.fromEntries(session.variables)).toEqual({
+      HISTCONTROL: "ignoreboth",
+      HISTSIZE: "1000",
       HOME: "/home/alice",
       HOSTNAME: "ws01",
       IFS: " \t\n",
@@ -84,6 +86,27 @@ describe("createSession", () => {
     expect(createSession(world, "ws01", "root").variables.get("PATH")).toBe(
       "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
     );
+  });
+
+  test("@differential gives root bash's default HISTSIZE and no HISTCONTROL", () => {
+    const session = createSession(world, "ws01", "root");
+    expect(session.variables.get("HISTSIZE")).toBe("500");
+    expect(session.variables.has("HISTCONTROL")).toBe(false);
+    expect(session.history).toEqual({ entries: [], base: 1, limit: 500 });
+  });
+
+  test("starts with an empty history limited by HISTSIZE", () => {
+    expect(createSession(world, "ws01", "alice").history).toEqual({
+      entries: [],
+      base: 1,
+      limit: 1000,
+    });
+  });
+
+  test("leaves the history file variables unset, as the file is not simulated", () => {
+    const session = createSession(world, "ws01", "alice");
+    expect(session.variables.has("HISTFILE")).toBe(false);
+    expect(session.variables.has("HISTFILESIZE")).toBe(false);
   });
 
   test("@differential gives a user with a private group the umask 002 and root 022", () => {
@@ -181,6 +204,34 @@ describe("createSession", () => {
     });
     expect(session.credentials.groups).toEqual([1000, 27]);
     expect(createSession(changed, "ws01", "alice").credentials.groups).toEqual([1000]);
+  });
+});
+
+describe("setVariable", () => {
+  const alice = createSession(world, "ws01", "alice");
+
+  test("sets and unsets a variable without changing the session it got", () => {
+    const set = setVariable(alice, "GREETING", "hi");
+    expect(set.variables.get("GREETING")).toBe("hi");
+    expect(alice.variables.has("GREETING")).toBe(false);
+    expect(setVariable(set, "GREETING", undefined).variables.has("GREETING")).toBe(false);
+  });
+
+  test("a new HISTSIZE limits the history at once", () => {
+    const withEntries: Session = {
+      ...alice,
+      history: { entries: ["a", "b", "c"], base: 1, limit: 1000 },
+    };
+    expect(setVariable(withEntries, "HISTSIZE", "2").history).toEqual({
+      entries: ["b", "c"],
+      base: 1,
+      limit: 2,
+    });
+    expect(setVariable(withEntries, "HISTSIZE", undefined).history.limit).toBeUndefined();
+  });
+
+  test("other variables leave the history alone", () => {
+    expect(setVariable(alice, "HISTFILESIZE", "0").history).toBe(alice.history);
   });
 });
 

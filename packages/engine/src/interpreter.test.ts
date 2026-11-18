@@ -130,6 +130,16 @@ const testCommands: Record<string, ShellCommand> = {
     err("warning\n");
     return { stop: { key: "option-not-simulated", option: "-Z" } };
   },
+  /**
+   * Writes to both streams, then discards the rest of the input; with an argument it changes the
+   * working directory to it first.
+   */
+  drop: ({ args, session, stdout: out, stderr: err }) => {
+    out("partial\n");
+    err("bash: drop: too many arguments\n");
+    const [cwd] = args;
+    return cwd === undefined ? { discard: true } : { discard: true, session: { ...session, cwd } };
+  },
   /** Writes its name and arguments, one per line, and sets exit status 0. */
   args: ({ name, args, stdout }) => {
     stdout([name, ...args].map((field) => `[${field}]\n`).join(""));
@@ -977,5 +987,54 @@ describe("runScript: commands that stop", () => {
   test("a stop at the end of a pipeline shows its output", () => {
     const result = run("say a | halt");
     expect(result.events).toEqual([stdout("partial\n"), stderr("warning\n"), notice]);
+  });
+});
+
+describe("runScript: commands that discard the input", () => {
+  const message = stderr("bash: drop: too many arguments\n");
+
+  test("a discard keeps the output before it and ends the input without an event", () => {
+    const result = run("say a; drop; say b");
+    expect(result.events).toEqual([stdout("a\npartial\n"), message]);
+    expect(result.session.exitStatus).toBe(1);
+  });
+
+  test("a discard ends and-or lists", () => {
+    expect(run("false || drop || say no").events).toEqual([stdout("partial\n"), message]);
+  });
+
+  test("a discard keeps a non-zero exit status from before", () => {
+    expect(run("mixed; drop").session.exitStatus).toBe(2);
+  });
+
+  test("a discard keeps the changes before it and the command's own session changes", () => {
+    const result = run("X=1; stamp; drop /tmp");
+    expect(result.session.variables.get("X")).toBe("1");
+    expect(result.session.cwd).toBe("/tmp");
+    expect(rootMtime(result.world)).toBe(START + TIME_PER_INPUT);
+  });
+
+  test("a discard undoes the assignments before the command name", () => {
+    expect(run("Y=2 drop").session.variables.has("Y")).toBe(false);
+  });
+
+  test("a discard keeps the files its redirections opened, with the output written to them", () => {
+    const result = runFiles("drop > out.txt 2> err.txt; say no");
+    expect(contentOf(result.world, "/home/alice/out.txt")).toBe("partial\n");
+    expect(contentOf(result.world, "/home/alice/err.txt")).toBe("bash: drop: too many arguments\n");
+    expect(result.events).toEqual([]);
+  });
+
+  test("inside a pipeline a discard ends only its subshell, with exit status 1", () => {
+    const result = run("stamp | drop /tmp | upper; say $?");
+    expect(result.events).toEqual([message, stdout("PARTIAL\n0\n")]);
+    expect(rootMtime(result.world)).toBe(START + TIME_PER_INPUT);
+    expect(result.session.cwd).toBe("/home/alice");
+  });
+
+  test("at the end of a pipeline a discard gives the pipeline exit status 1", () => {
+    const result = run("say a | drop; say $?");
+    expect(result.events).toEqual([stdout("partial\n"), message, stdout("1\n")]);
+    expect(result.session.exitStatus).toBe(0);
   });
 });

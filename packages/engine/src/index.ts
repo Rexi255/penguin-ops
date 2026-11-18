@@ -17,8 +17,9 @@ export {
   defineBuiltin,
   parseBuiltinOptions,
 } from "./builtins";
+export { legalNumber, toCInt } from "./bash-number";
 export { type Clock, createGameClock, type GameClock } from "./clock";
-export { cd, clear, COMMANDS, echo, ls, pwd, whoami } from "./commands";
+export { cd, clear, COMMANDS, echo, history, ls, pwd, whoami } from "./commands";
 export {
   type CommandDefinition,
   type CommandInvocation,
@@ -61,9 +62,22 @@ export {
   type WriteMode,
   type WriteResult,
 } from "./fs-write";
+export {
+  addHistoryEntry,
+  applyHistorySize,
+  clearHistory,
+  EMPTY_HISTORY,
+  type History,
+  type HistoryControl,
+  historyControl,
+  recordHistory,
+  removeHistoryRange,
+  stifleHistory,
+} from "./history";
 export { type Gid, MAX_ID, toGid, toUid, type Uid } from "./ids";
 export {
   type CommandContext,
+  type CommandDiscard,
   type CommandExit,
   type CommandLookup,
   type CommandNotice,
@@ -138,7 +152,14 @@ export { joinAbsolute, type PathParts, splitPath } from "./path";
 export { type Access, hasPermission } from "./permissions";
 export { localeQuote, shellQuote, shellQuoteAlways } from "./quote";
 export { createRandom, type RandomGenerator } from "./random";
-export { createSession, DEFAULT_IFS, type Session, TERMINAL_TYPE, userAtHost } from "./session";
+export {
+  createSession,
+  DEFAULT_IFS,
+  type Session,
+  setVariable,
+  TERMINAL_TYPE,
+  userAtHost,
+} from "./session";
 export { decodeUtf8, encodeCodePoint, encodeUtf8, isScalarValue } from "./utf8";
 export {
   createWorld,

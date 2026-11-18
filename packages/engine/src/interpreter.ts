@@ -12,7 +12,7 @@ import { expandAssignment, expandWords, type UnsupportedParameter } from "./expa
 import { openForReading, readOpenFile } from "./fs-read";
 import { writeFile, type WriteError, writeToOpenFile } from "./fs-write";
 import type { AndOrList, Assignment, Pipeline, Redirection, Script, SimpleCommand } from "./parser";
-import type { Session } from "./session";
+import { type Session, setVariable } from "./session";
 import type { World } from "./world";
 
 /** The output streams of a command. */
@@ -127,8 +127,23 @@ export interface CommandStop {
   readonly stop: CommandNotice;
 }
 
+/**
+ * A bash builtin that met an error after which bash discards the rest of the input
+ * (`jump_to_top_level (DISCARD)`), such as `history 1 2` with "too many arguments" (ADR 0057).
+ * The builtin has written its message. `session` holds the changes it made before the error; a
+ * missing `session` means unchanged.
+ *
+ * Run by the shell itself, the rest of the input does not run, and the exit status becomes 1
+ * unless it was already non-zero. In a pipeline the builtin runs in a subshell, which exits with
+ * status 1, and the pipeline goes on.
+ */
+export interface CommandDiscard {
+  readonly discard: true;
+  readonly session?: Session;
+}
+
 /** What a command returns. */
-export type CommandResult = CommandExit | CommandStop;
+export type CommandResult = CommandExit | CommandStop | CommandDiscard;
 
 /** A simulated command. `defineCommand` builds commands with an option table on this. */
 export type ShellCommand = (context: CommandContext) => CommandResult;
@@ -229,6 +244,19 @@ class Abort extends Error {
   }
 }
 
+/**
+ * Discards the rest of an input after a `CommandDiscard`. `state` is the state after the command,
+ * with the exit status the shell had before it.
+ */
+class Discard extends Error {
+  constructor(readonly state: ShellState) {
+    super("discarded");
+  }
+}
+
+/** The exit status of a subshell whose builtin discarded the input (`subshell_exit`). */
+const DISCARD_STATUS = 1;
+
 /** Stops the rest of an input after an unsupported shell feature at the offset `start`. */
 function unsupported(feature: UnsupportedExecution, start: number): Abort {
   return new Abort({ kind: "unsupported", feature, start });
@@ -270,7 +298,8 @@ interface ShellState {
  * redirections (`0>`, `1<`) and command names with a `/` stop the rest of the input with an
  * "unsupported" event and exit status 1. A command that returns a `CommandStop` stops it the
  * same way with a "notice" event, after the files its redirections opened and the standard
- * error it wrote. A command learns whether its standard output goes to the terminal (neither
+ * error it wrote. A `CommandDiscard` ends the rest of the input without an event, or only its
+ * subshell inside a pipeline (ADR 0057). A command learns whether its standard output goes to the terminal (neither
  * piped nor redirected to a file) and how wide the terminal is; only then can it clear the
  * screen, which gives a "clear-screen" event.
  *
@@ -291,27 +320,22 @@ export function runScript(run: ScriptRun): ScriptResult {
       state = runner.runAndOrList(state, list);
     }
   } catch (failure) {
-    if (!(failure instanceof Abort)) {
+    if (failure instanceof Discard) {
+      // `reader_loop` keeps a non-zero status, for example 130 after a signal.
+      const before = failure.state.session.exitStatus;
+      state = withExitStatus(failure.state, before === 0 ? DISCARD_STATUS : before);
+    } else if (failure instanceof Abort) {
+      runner.events.push(failure.event);
+      state = withExitStatus(runner.lastState ?? state, ABORT_STATUS);
+    } else {
       throw failure;
     }
-    runner.events.push(failure.event);
-    state = withExitStatus(runner.lastState ?? state, ABORT_STATUS);
   }
   return { world: state.world, session: state.session, events: runner.events };
 }
 
 function withExitStatus(state: ShellState, exitStatus: number): ShellState {
   return { world: state.world, session: { ...state.session, exitStatus } };
-}
-
-function withVariable(session: Session, name: string, value: string | undefined): Session {
-  const variables = new Map(session.variables);
-  if (value === undefined) {
-    variables.delete(name);
-  } else {
-    variables.set(name, value);
-  }
-  return { ...session, variables };
 }
 
 /** Where a command writes its output. */
@@ -514,6 +538,11 @@ class Runner {
       let result: ShellState;
       try {
         result = this.runCommand({ world, session: state.session }, command, stdin, output);
+      } catch (failure) {
+        if (!(failure instanceof Discard)) {
+          throw failure;
+        }
+        result = withExitStatus(failure.state, DISCARD_STATUS);
       } finally {
         // Also when the input stops, the standard error written before goes to the terminal.
         for (const event of buffer.events) {
@@ -623,6 +652,12 @@ class Runner {
       this.lastState = { world: streams.flush(opened, this.clock), session: state.session };
       throw new Abort({ kind: "notice", command: name, notice: result.stop });
     }
+    if ("discard" in result) {
+      const changed = result.session ?? commandSession;
+      const session = restoreVariables(changed, state.session, command.assignments);
+      const world = streams.flush(opened, this.clock);
+      throw new Discard({ world, session: { ...session, exitStatus: state.session.exitStatus } });
+    }
     checkExitStatus(name, result.exitStatus);
     const session = restoreVariables(
       result.session ?? commandSession,
@@ -644,7 +679,7 @@ class Runner {
         throw unsupported(expanded.error.feature, expanded.error.start);
       }
       const previous = assignment.append ? (current.variables.get(assignment.name) ?? "") : "";
-      current = withVariable(current, assignment.name, previous + expanded.value);
+      current = setVariable(current, assignment.name, previous + expanded.value);
     }
     return current;
   }
@@ -724,7 +759,7 @@ function restoreVariables(
 ): Session {
   let current = session;
   for (const name of new Set(assignments.map((assignment) => assignment.name))) {
-    current = withVariable(current, name, before.variables.get(name));
+    current = setVariable(current, name, before.variables.get(name));
   }
   return current;
 }

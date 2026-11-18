@@ -5,11 +5,12 @@ import type { RegisteredCommand } from "../command-registry";
 import { cd } from "./cd";
 import { clear } from "./clear";
 import { echo } from "./echo";
+import { history } from "./history";
 import { ls } from "./ls";
 import { pwd } from "./pwd";
 import { whoami } from "./whoami";
 
-export { cd, clear, echo, ls, pwd, whoami };
+export { cd, clear, echo, history, ls, pwd, whoami };
 
 /** All simulated commands, sorted by name. */
-export const COMMANDS: readonly RegisteredCommand[] = [cd, clear, echo, ls, pwd, whoami];
+export const COMMANDS: readonly RegisteredCommand[] = [cd, clear, echo, history, ls, pwd, whoami];
