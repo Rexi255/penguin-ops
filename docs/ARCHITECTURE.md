@@ -220,9 +220,15 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     table, the ids of its simulated options and its usage error status. It parses the arguments
     before the command runs: an unsimulated option before the first error stops the input with
     the notice `option-not-simulated`, a parse error writes the usage error, and the command
-    gets only valid, simulated options and its operands. `createCommandLookup` turns the
-    registered commands (also plain `ShellCommand`s such as `echo`) into the interpreter's
+    gets only valid, simulated options and its operands. Two optional hooks keep the order of
+    the real command (ADR 0059): `obsoleteSyntax` reads a form that the command handles before
+    `getopt_long` (`head -5`, `tail +5`), and `checkOption` rejects an option argument as soon
+    as the command reads it (`head -n abc`). `createCommandLookup` turns the registered
+    commands (also plain `ShellCommand`s such as `echo`) into the interpreter's
     `CommandLookup`.
+  - `src/xstrtol.ts` (ADR 0059): gnulib's `xstrtoumax` and `xnumtoumax` for counts in
+    arguments, with multiplier suffixes (`5k`, `2MiB`, `1kB`) and saturation at
+    `UINTMAX_MAX`, as bigints.
   - `src/builtins.ts` (ADR 0053): `defineBuiltin` builds a bash builtin; `parseBuiltinOptions`
     reads options like bash's `internal_getopt`, also options with an argument (ADR 0057);
     invalid options and missing arguments give bash's message, the usage line and exit status
@@ -233,18 +239,19 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     quotes only names that need it, as `ls` does on a terminal (ADR 0054). `src/utf8.ts`
     converts between text and UTF-8 bytes.
   - `src/commands/` holds the commands, one module each, and `COMMANDS`, the list for
-    `createCommandLookup`. `cd`, `pwd`, `echo` and `history` are builtins (`history` lists,
-    clears and deletes entries of the session's history list, ADR 0057); `whoami`, `ls` and
-    `cat` use `defineCommand`. `clear` is ncurses' program with plain `getopt`: on the terminal
-    it clears the screen, into a pipe or a file it writes the escape sequences of
-    `xterm-256color`, the `TERM` that `createSession` sets (ADR 0056). `ls` follows coreutils'
-    `ls.c`: columns on a terminal, one name per line otherwise (ADR 0054); `long-listing.ts`
-    writes its long format with `-l`, `-g`, `-o`, `-G` and `-n` (ADR 0055). `cat` reads files
-    and standard input and refuses to read its own output file like `cat.c`; `cat-format.ts`
-    is the state machine of its formatting options, kept across all inputs of one run
-    (ADR 0058). `directory-names.ts` works out working directory names like bash (by text,
-    keeping a leading `//`) and checks them like chdir(2) and getcwd(3); the session's `cwd`
-    is the name bash remembers, not a resolved path.
+    `createCommandLookup`. `cd`, `pwd`, `echo` and `history` are builtins (`history` lists, clears
+    and deletes entries of the session's history list, ADR 0057); `whoami`, `ls`, `cat`, `head` and
+    `tail` use `defineCommand`. `clear` is ncurses' program with plain `getopt`: on the terminal it
+    clears the screen, into a pipe or a file it writes the escape sequences of `xterm-256color`, the
+    `TERM` that `createSession` sets (ADR 0056). `ls` follows coreutils' `ls.c`: columns on a
+    terminal, one name per line otherwise (ADR 0054); `long-listing.ts` writes its long format with
+    `-l`, `-g`, `-o`, `-G` and `-n` (ADR 0055). `cat` reads files and standard input and refuses to
+    read its own output file like `cat.c`; `cat-format.ts` is the state machine of its formatting
+    options, kept across all inputs of one run (ADR 0058). `head` and `tail` share `head-tail.ts`
+    (headers, counts, opening inputs, output that must be valid UTF-8) and follow `head.c` and
+    `tail.c`, also in how far a `-` reads standard input (ADR 0059). `directory-names.ts` works out
+    working directory names like bash (by text, keeping a leading `//`) and checks them like
+    chdir(2) and getcwd(3); the session's `cwd` is the name bash remembers, not a resolved path.
 - **Full-screen programs:** one mechanism for `less`, `man`, `top`, `nano` and later `vim`.
 - **Rule evaluation** (ADR 0011): rule types plus `all`, `any`, `not`, evaluated against world
   state and command output.

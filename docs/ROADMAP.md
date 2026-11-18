@@ -84,8 +84,8 @@ placeholder window; CI builds the installer.
 - [x] M1.9a Commands batch 2, part 1: `cat` with all its formatting options, standard input,
       errors and "input file is output file"; commands learn the files of their standard
       streams (ADR 0058).
-- [ ] M1.9b Commands batch 2, part 2: `head` and `tail` (`-n`, `-c`, headers for several
-      files).
+- [x] M1.9b Commands batch 2, part 2: `head` and `tail` (`-n`, `-c`, headers for several
+      files), with their obsolete forms and gnulib's counts (ADR 0059).
 - [ ] M1.9c Commands batch 2, part 3: `mkdir` (`-p`) and `touch`.
 - [ ] M1.10 Commands batch 3: `cp` (`-r`), `mv`, `rm` (`-r`, `-f`), `grep` (`-i`, `-v`, `-n`,
       `-c`, `-r`, `-l`).

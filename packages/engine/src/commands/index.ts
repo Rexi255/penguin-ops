@@ -6,12 +6,14 @@ import { cat } from "./cat";
 import { cd } from "./cd";
 import { clear } from "./clear";
 import { echo } from "./echo";
+import { head } from "./head";
 import { history } from "./history";
 import { ls } from "./ls";
 import { pwd } from "./pwd";
+import { tail } from "./tail";
 import { whoami } from "./whoami";
 
-export { cat, cd, clear, echo, history, ls, pwd, whoami };
+export { cat, cd, clear, echo, head, history, ls, pwd, tail, whoami };
 
 /** All simulated commands, sorted by name. */
 export const COMMANDS: readonly RegisteredCommand[] = [
@@ -19,8 +21,10 @@ export const COMMANDS: readonly RegisteredCommand[] = [
   cd,
   clear,
   echo,
+  head,
   history,
   ls,
   pwd,
+  tail,
   whoami,
 ];

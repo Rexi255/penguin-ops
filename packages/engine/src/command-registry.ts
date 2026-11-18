@@ -39,9 +39,41 @@ export interface CommandDefinition<Id extends string = string> {
   readonly order?: OptionOrder;
   /** The exit status after a usage error: 2 for `ls` and `grep`, 1 for most other coreutils. */
   readonly usageErrorStatus: number;
+  /**
+   * Reads an obsolete option syntax that the real command handles before `getopt_long`, such as
+   * `head -5` or `tail +5`. Returns `undefined` if the arguments do not have that form; else the
+   * options it stands for, which come before all other options, and the arguments left for the
+   * option parser, or the error after which the command exits.
+   */
+  readonly obsoleteSyntax?: (args: readonly string[]) => ObsoleteOptions<Id> | undefined;
+  /**
+   * Checks one option as the real command does while it reads its options, such as the number
+   * of `head -n abc`. Returns `undefined` if the option is valid, else the error after which the
+   * command exits. It sees the simulated options in the order written, and an error here comes
+   * before an error of a later argument.
+   */
+  readonly checkOption?: (option: ParsedOption<Id>) => OptionFailure | undefined;
   /** Runs the command with valid, simulated options. */
   readonly run: (invocation: CommandInvocation<Id>) => CommandResult;
 }
+
+/**
+ * An error in the options after which the real command exits with its usage error status:
+ * `message` (without the command name) and, if `tryHelp` is true, the "Try ... --help" line.
+ */
+export interface OptionFailure {
+  readonly message: string;
+  readonly tryHelp: boolean;
+}
+
+/** The result of `obsoleteSyntax`: the options and the arguments left, or an error. */
+export type ObsoleteOptions<Id extends string> =
+  | {
+      readonly ok: true;
+      readonly options: readonly ParsedOption<Id>[];
+      readonly args: readonly string[];
+    }
+  | { readonly ok: false; readonly failure: OptionFailure };
 
 /** A command for the registry: its name and the function the interpreter calls. */
 export interface RegisteredCommand {
@@ -50,16 +82,20 @@ export interface RegisteredCommand {
 }
 
 /**
- * Builds the command of `definition`. When it runs, it parses its arguments with
- * `parseOptions` and then:
+ * Builds the command of `definition`. When it runs, it reads an obsolete option syntax first if
+ * the definition has one (an error there writes `NAME: MESSAGE` and maybe the "Try ... --help"
+ * line and returns `usageErrorStatus`), parses the other arguments with `parseOptions` and then
+ * goes through the options before the first error in order:
  *
- * - If an option the game does not simulate comes before the first error (or there is no error),
- *   it returns a stop with the notice `option-not-simulated` for the first such option. The real
- *   command might act on that option at once (`--help` exits before later errors), so the game
- *   cannot know what it would print.
- * - Else, if the arguments have an error, it writes glibc's message and the coreutils'
- *   "Try ... --help" line to standard error and returns `usageErrorStatus`.
- * - Else it runs the command with the options and operands.
+ * - An option the game does not simulate returns a stop with the notice `option-not-simulated`.
+ *   The real command might act on that option at once (`--help` exits before later errors), so
+ *   the game cannot know what it would print.
+ * - An option that `checkOption` rejects writes its error like an obsolete option and returns
+ *   `usageErrorStatus`.
+ *
+ * Then, if the arguments have an error, it writes glibc's message and the coreutils'
+ * "Try ... --help" line to standard error and returns `usageErrorStatus`. Else it runs the
+ * command with the options (the obsolete ones first) and operands.
  *
  * Messages name the command as the player wrote it. Throws an Error if the definition is
  * invalid: an empty name or one with `/`, an invalid option table (see `validateOptionSpecs`), a
@@ -68,7 +104,15 @@ export interface RegisteredCommand {
 export function defineCommand<Id extends string>(
   definition: CommandDefinition<Id>,
 ): RegisteredCommand {
-  const { name, options: specs, order = "permute", usageErrorStatus, run } = definition;
+  const {
+    name,
+    options: specs,
+    order = "permute",
+    usageErrorStatus,
+    obsoleteSyntax,
+    checkOption,
+    run,
+  } = definition;
   validateName(name);
   validateOptionSpecs(specs);
   const simulated = new Set<Id>(definition.simulated);
@@ -85,10 +129,25 @@ export function defineCommand<Id extends string>(
   return {
     name,
     run: (context) => {
-      const parsed = parseOptions(context.args, specs, order);
-      const unsimulated = parsed.options.find((option) => !simulated.has(option.id));
-      if (unsimulated !== undefined) {
-        return { stop: { key: "option-not-simulated", option: unsimulated.name } };
+      const fail = (failure: OptionFailure): CommandResult => {
+        const tryHelp = failure.tryHelp ? tryHelpMessage(context.name) : "";
+        context.stderr(`${context.name}: ${failure.message}\n${tryHelp}`);
+        return { exitStatus: usageErrorStatus };
+      };
+      const obsolete = obsoleteSyntax?.(context.args);
+      if (obsolete?.ok === false) {
+        return fail(obsolete.failure);
+      }
+      const parsed = parseOptions(obsolete?.args ?? context.args, specs, order);
+      const options = [...(obsolete?.options ?? []), ...parsed.options];
+      for (const option of options) {
+        if (!simulated.has(option.id)) {
+          return { stop: { key: "option-not-simulated", option: option.name } };
+        }
+        const failure = checkOption?.(option);
+        if (failure !== undefined) {
+          return fail(failure);
+        }
       }
       if (!parsed.ok) {
         context.stderr(
@@ -96,7 +155,7 @@ export function defineCommand<Id extends string>(
         );
         return { exitStatus: usageErrorStatus };
       }
-      return run({ ...context, options: parsed.options, operands: parsed.operands });
+      return run({ ...context, options, operands: parsed.operands });
     },
   };
 }

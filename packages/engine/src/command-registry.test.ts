@@ -252,6 +252,100 @@ describe("defineCommand: usage errors", () => {
   });
 });
 
+/** A command with an obsolete form `-N` and a check of `-n`, like the real `head`. */
+const counted = defineCommand<"lines" | "quiet" | "follow">({
+  name: "counted",
+  options: [
+    { id: "lines", short: "n", argument: "required" },
+    { id: "quiet", short: "q", argument: "none" },
+    { id: "follow", short: "f", argument: "none" },
+  ],
+  simulated: ["lines", "quiet"],
+  usageErrorStatus: 4,
+  obsoleteSyntax: (args) => {
+    const [first, ...rest] = args;
+    if (first === undefined || !/^-\d/u.test(first)) {
+      return undefined;
+    }
+    if (first.endsWith("x")) {
+      return { ok: false, failure: { message: "bad obsolete option", tryHelp: true } };
+    }
+    if (first.endsWith("f")) {
+      return { ok: true, options: [{ id: "follow", name: "-f", argument: undefined }], args: rest };
+    }
+    return {
+      ok: true,
+      options: [{ id: "lines", name: "-n", argument: first.slice(1) }],
+      args: rest,
+    };
+  },
+  checkOption: (option) =>
+    option.id === "lines" && !/^\d+$/u.test(option.argument ?? "")
+      ? { message: `bad count ${option.argument ?? ""}`, tryHelp: false }
+      : undefined,
+  run: report,
+});
+
+function runCounted(input: string): ScriptResult {
+  return run(input, createCommandLookup([counted]));
+}
+
+describe("defineCommand: obsolete syntax", () => {
+  test("its options come before the other options", () => {
+    expect(runCounted("counted -5 -q a -n 2").events).toEqual([
+      stdout("option lines -n 5\noption quiet -q -\noption lines -n 2\noperand a\n"),
+    ]);
+  });
+
+  test("arguments of another form go to the option parser", () => {
+    expect(runCounted("counted -q -5").events).toEqual([
+      stderr("counted: invalid option -- '5'\nTry 'counted --help' for more information.\n"),
+    ]);
+  });
+
+  test("an error writes its message and maybe the Try line, with the usage error status", () => {
+    const result = runCounted("counted -5x -n");
+    expect(result.events).toEqual([
+      stderr("counted: bad obsolete option\nTry 'counted --help' for more information.\n"),
+    ]);
+    expect(result.session.exitStatus).toBe(4);
+  });
+
+  test("an option it stands for that the game does not simulate stops the input", () => {
+    expect(runCounted("counted -5f").events).toEqual([notice("counted", "-f")]);
+  });
+});
+
+describe("defineCommand: option checks", () => {
+  test("a rejected option writes its message with the usage error status", () => {
+    const result = runCounted("counted -n abc");
+    expect(result.events).toEqual([stderr("counted: bad count abc\n")]);
+    expect(result.session.exitStatus).toBe(4);
+  });
+
+  test("a rejected option comes before a later invalid option", () => {
+    expect(runCounted("counted -n abc -x").events).toEqual([stderr("counted: bad count abc\n")]);
+  });
+
+  test("an invalid option before it is reported instead", () => {
+    expect(runCounted("counted -x -n abc").events).toEqual([
+      stderr("counted: invalid option -- 'x'\nTry 'counted --help' for more information.\n"),
+    ]);
+  });
+
+  test("an option the game does not simulate before it stops the input", () => {
+    expect(runCounted("counted -f -n abc").events).toEqual([notice("counted", "-f")]);
+  });
+
+  test("a rejected option before an unsimulated one wins, as the real command exits first", () => {
+    expect(runCounted("counted -n abc -f").events).toEqual([stderr("counted: bad count abc\n")]);
+  });
+
+  test("an obsolete option is checked too", () => {
+    expect(runCounted("counted -5a").events).toEqual([stderr("counted: bad count 5a\n")]);
+  });
+});
+
 describe("defineCommand: invalid definitions", () => {
   const valid: CommandDefinition = {
     name: "head",

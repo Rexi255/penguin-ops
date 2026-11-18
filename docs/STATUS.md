@@ -4,6 +4,11 @@ _Last updated: 2026-11-18_
 
 ## Recently completed
 
+- M1.9b `head` and `tail` (coreutils 9.7): `-n`, `-c` (`head` with `-N` for "all but the
+  last", `tail` with `+N` from the start), headers with `-q`/`-v`, `-z`, the obsolete forms
+  (`head -5c`, `tail +5`, `tail -5f`), gnulib's counts with suffixes (`src/xstrtol.ts`), how far
+  a `-` reads a pipe or file. `defineCommand` gets the hooks `obsoleteSyntax` and `checkOption`;
+  `tail -f` gives a notice (ADR 0059).
 - M1.9a `cat` (coreutils 9.7): files and standard input (`-`, read once), all formatting
   options (`-b`, `-n`, `-s`, `-v`, `-E`, `-T`, `-A`, `-e`, `-t`, `-u`) as a translation of
   `cat.c`'s state machine that carries over between files, errors with `quotef` names, "input
@@ -25,12 +30,6 @@ _Last updated: 2026-11-18_
   six-month rule, `?` lines and exit status 1 for entries that cannot be stat'ed. New
   `fileStatus`, `modeString`, `utcCalendarTime`; `openDirectory` returns the kind of each entry;
   the simulated hosts run on UTC (ADR 0055).
-- M1.8b-1 `ls` without the long format: `-a`, `-1`, several operands (files first, then
-  directories with `NAME:`), columns for the terminal's width with tabs like GNU `ls`, shell
-  quoting of names on a terminal (`'my file'`, `"it's"`), one name per line into pipes and
-  files, `cannot access`/`cannot open directory` with exit status 2. Commands learn whether
-  their output goes to the terminal and its width (`ScriptRun.terminal`); new `openDirectory`,
-  `shellQuote`, `shellQuoteAlways`, `displayWidth` (ADR 0054).
 
 ## In progress
 
@@ -38,9 +37,9 @@ _Last updated: 2026-11-18_
 
 ## Next 3 steps
 
-1. ROADMAP M1.9b: `head` and `tail`.
-2. ROADMAP M1.9c: `mkdir` (`-p`) and `touch`.
-3. ROADMAP M1.10: commands batch 3 (`cp`, `mv`, `rm`, `grep`).
+1. ROADMAP M1.9c: `mkdir` (`-p`) and `touch`.
+2. ROADMAP M1.10: commands batch 3 (`cp`, `mv`, `rm`, `grep`).
+3. ROADMAP M1.11: tab completion and history navigation APIs.
 
 ## Blockers and open questions
 
@@ -51,5 +50,5 @@ _Last updated: 2026-11-18_
 - The logo colours are provisional until M3.0f-2 aligns them with the design tokens.
 - Steam release is assumed to be "maybe later" (ADR 0002); confirm with the owner when it
   becomes relevant.
-- Some `ls`, `clear`, `history` and `cat` details could not be checked against a real Debian 13
-  (tests marked `@differential`, ADR 0054 to ADR 0058); M6 verifies them.
+- Some `ls`, `clear`, `history`, `cat`, `head` and `tail` details could not be checked against a
+  real Debian 13 (tests marked `@differential`, ADR 0054 to ADR 0059); M6 verifies them.
