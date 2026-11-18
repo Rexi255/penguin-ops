@@ -4,6 +4,12 @@ _Last updated: 2026-11-18_
 
 ## Recently completed
 
+- M2.3b ICU MessageFormat (`message.ts`, `catalog-texts.ts`): `intl-messageformat` 12.1.4 and its
+  parser; code spans are never ICU and apostrophes are always literal; placeholders are camelCase
+  (`number`, `plural`, `selectordinal`, `select`, no dates), plural options must exist in the
+  language; level texts have no placeholders yet. `loadContent` checks every formatted catalog
+  text and reports problems at the spot inside the text; `formatMessage` returns catalog text,
+  values (never markup) and code as separate parts (ADR 0072).
 - M2.3a Catalog files (`catalog-schema.ts`, `content-loader.ts`): level catalogs need `title`,
   `ticket`, exactly three `hints` and `explanation.text` in English and German, further
   languages may lack any text; free keys are kebab-case text keys; UI catalogs are nested groups
@@ -27,12 +33,6 @@ _Last updated: 2026-11-18_
   errors. The draft-07 JSON Schema `content/schemas/level.schema.json` is kept up to date by a
   test (`npm run schemas:update`) and mapped to the level files in `.vscode/settings.json`. A
   gameplay test keeps the schema's rule checks in line with the engine's `checkRule` (ADR 0068).
-- M1.12 Rule engine (`rules.ts`): `Rule` union with the eight rule types and `all`/`any`/`not`,
-  `evaluateRule` (paths absolute or from the player's home, no permission checks, output of
-  the last input from `terminalOutput`, `output_matches` as JavaScript regex with `m`/`u`),
-  `checkRule` for validation (ADR 0067). M1 is complete: all Linux commands of the prototype exist
-  (the game commands `help` and `hint` follow in M3.6), engine coverage is 97.6 % (threshold
-  90 %), and lint rules and the engine's TypeScript libraries keep DOM and Node APIs out.
 
 ## In progress
 
@@ -40,9 +40,9 @@ _Last updated: 2026-11-18_
 
 ## Next 3 steps
 
-1. ROADMAP M2.3b: ICU MessageFormat with `intl-messageformat` (license check first).
-2. ROADMAP M2.3c: text markup parsed into a tree.
-3. ROADMAP M2.3d: English fallback for further languages.
+1. ROADMAP M2.3c: text markup parsed into a tree.
+2. ROADMAP M2.3d: English fallback for further languages.
+3. ROADMAP M2.4: content tests.
 
 ## Blockers and open questions
 

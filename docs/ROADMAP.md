@@ -120,8 +120,8 @@ coverage ≥ 90 %; the engine cannot import DOM or Node APIs (enforced).
       (code, bold, lists, paragraphs) without HTML; English fallback for extra languages.
   - [x] M2.3a Catalog files: schemas of level and UI catalogs, loading them with the content,
         checks of file names and mandatory languages (ADR 0071).
-  - [ ] M2.3b ICU MessageFormat with `intl-messageformat`: syntax checked when loading,
-        formatting with values and plurals.
+  - [x] M2.3b ICU MessageFormat with `intl-messageformat`: syntax checked when loading,
+        formatting with values and plurals (ADR 0072).
   - [ ] M2.3c Text markup (`code`, **bold**, lists, paragraphs) parsed into a tree without HTML.
   - [ ] M2.3d English fallback for further languages; missing texts reported, not errors.
 - [ ] M2.4 Content tests: schema, German/English completeness, reference solutions per language

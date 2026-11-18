@@ -9,7 +9,9 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
+    "@formatjs/icu-messageformat-parser": "^3.5.22",
     "@penguin-ops/engine": "0.0.0",
+    "intl-messageformat": "^12.1.4",
     "yaml": "^2.9.1",
     "zod": "^4.6.7"
   }

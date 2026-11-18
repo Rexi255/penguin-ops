@@ -1,9 +1,9 @@
 # Level authoring
 
 > **Status: in progress.** The schemas of `level.yaml` (format 1), `content/chapters.yaml` and
-> the text catalogs and the loader are implemented (ADR 0068 to ADR 0071); ICU checks, markup and
-> the content tests follow in milestone M2. Update this guide whenever the format changes.
-> Reasons: ADR 0010, 0011, 0012, 0067 to 0071.
+> the text catalogs, the loader and the ICU checks of texts are implemented (ADR 0068 to
+> ADR 0072); markup and the content tests follow in milestone M2. Update this guide whenever
+> the format changes. Reasons: ADR 0010, 0011, 0012, 0067 to 0072.
 
 ## Principles
 
@@ -237,9 +237,47 @@ Whether both catalogs hold exactly the keys that `level.yaml` uses is checked by
 tests (ROADMAP M2.4).
 
 Markup in texts: `` `code` ``, `**bold**`, lines starting with `- ` form a list, an empty line
-starts a new paragraph. No HTML. Placeholders and plurals use ICU MessageFormat, e.g.
-`{count, plural, one {# file} other {# files}}`. (Both are checked from ROADMAP M2.3b and
-M2.3c on.)
+starts a new paragraph. No HTML. (The markup is checked from ROADMAP M2.3c on.)
+
+### Placeholders, plurals and code (ICU MessageFormat)
+
+Placeholders and plurals use ICU MessageFormat (ADR 0072), with three simplifications for texts
+about the shell:
+
+- **Code is literal.** Everything between two backticks on one line stays exactly as written:
+  `` `awk '{print $1}' file` `` and `` `find . -exec rm {} \;` `` need no escaping. A code span
+  must be closed on its line and must not be empty.
+- **Apostrophes are literal.** `It's` and `geht's` keep their apostrophes, also before a brace;
+  ICU's quoting with `'{'` does not exist. A literal brace outside code is not possible: put it
+  in code.
+- **Tags are text.** `<file>` and `a > b` are shown as written; there is no HTML.
+
+Outside code, `{` starts a placeholder:
+
+| Form | Example |
+|---|---|
+| Text value | `Hello {name}` |
+| Number in the language's format | `{size, number}` |
+| Plural | `{count, plural, =0 {no files} one {# file} other {# files}}` |
+| Ordinal | `{place, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}` |
+| Choice | `{kind, select, file {a file} other {a folder}}` |
+
+- Placeholder names are camelCase (`fileCount`). `plural`, `selectordinal` and `select` need
+  an `other` option; plural options must exist in the catalog's language (`few` is fine in
+  Polish, a problem in English). Dates and times are not supported.
+- **Level texts have no placeholders yet:** the game passes no values to them. UI texts may use
+  placeholders.
+- Not formatted at all (neither ICU nor markup): `explanation.example`, the option column of
+  `explanation.options`, and texts used as file contents with `{ text: <key> }`. A note in the
+  simulated world may contain braces and backticks.
+
+Problems point at the spot inside the text (exactly for `|` blocks and one-line texts without
+escapes):
+
+```
+content/levels/printer-floor2/en.yaml:9:8: ["tip-wrong"]: a placeholder is not closed: "}" is missing
+content/ui/de.yaml:3:21: status.solved: the plural option "few" does not exist in "de", which has one, other and exact numbers like =0
+```
 
 ## UI texts: `content/ui/<language>.yaml`
 

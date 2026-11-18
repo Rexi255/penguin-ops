@@ -12,6 +12,7 @@ import {
   isSeq,
   LineCounter,
   parseDocument,
+  type Scalar,
   visit,
 } from "yaml";
 
@@ -34,6 +35,11 @@ export interface YamlSource {
    * the entry that holds the alias.
    */
   locate(path: readonly PropertyKey[]): SourcePosition;
+  /**
+   * The position of a UTF-16 offset into the text at `path`. Exact for literal blocks (`|`)
+   * and for texts on one line without escapes; otherwise the position of the text's start.
+   */
+  locateInText(path: readonly PropertyKey[], offset: number): SourcePosition;
 }
 
 /** The result of reading a YAML file. */
@@ -102,7 +108,15 @@ export function parseYaml(file: string, text: string): YamlParseResult {
     source: {
       file,
       value,
-      locate: (path) => positionAt(locateOffset(document, path)),
+      locate: (path) => positionAt(findNode(document, path).offset),
+      locateInText: (path, offset) => {
+        const found = findNode(document, path);
+        return positionAt(
+          found.complete && isScalar(found.node)
+            ? textOffset(text, found.node, offset)
+            : found.offset,
+        );
+      },
     },
   };
 }
@@ -121,11 +135,20 @@ export function sourceProblem(
   };
 }
 
+/** The node found along a path. */
+interface FoundNode {
+  /** Where the path's data is located. */
+  readonly offset: number;
+  /** The node at the end of the path, if the whole path was found. */
+  readonly node: unknown;
+  readonly complete: boolean;
+}
+
 /**
  * Walks down the nodes along `path` as far as they go. A map entry is located at its key, a
  * list item at its start, the whole file at its first node.
  */
-function locateOffset(document: Document, path: readonly PropertyKey[]): number {
+function findNode(document: Document, path: readonly PropertyKey[]): FoundNode {
   let node: unknown = document.contents;
   let offset = offsetOf(node);
   for (const segment of path) {
@@ -134,7 +157,7 @@ function locateOffset(document: Document, path: readonly PropertyKey[]): number 
         (item) => isScalar(item.key) && String(item.key.value) === String(segment),
       );
       if (pair === undefined) {
-        break;
+        return { offset, node, complete: false };
       }
       offset = offsetOf(pair.key);
       node = pair.value;
@@ -143,10 +166,66 @@ function locateOffset(document: Document, path: readonly PropertyKey[]): number 
       offset = offsetOf(node);
     } else {
       // A scalar, an alias or an empty value: the data behind it has no nodes of its own.
-      break;
+      return { offset, node, complete: false };
     }
   }
-  return offset;
+  return { offset, node, complete: true };
+}
+
+/**
+ * The file offset of an offset into a scalar's text: exact for literal blocks and for scalars
+ * on one line whose text is their source (without escapes), else the scalar's start.
+ */
+function textOffset(text: string, scalar: Scalar, offset: number): number {
+  const [start, end] = scalar.range ?? [0, 0];
+  const value = String(scalar.value);
+  const raw = text.slice(start, end);
+  const type: Scalar.Type | undefined = scalar.type;
+  switch (type) {
+    case "BLOCK_LITERAL":
+      return blockOffset(text, start, end, value, offset);
+    case "PLAIN":
+      return raw.startsWith(value) ? start + offset : start;
+    case "QUOTE_SINGLE":
+    case "QUOTE_DOUBLE":
+      return raw.slice(1, -1) === value ? start + 1 + offset : start;
+    case "BLOCK_FOLDED":
+    case undefined:
+      // Folded lines are joined with spaces, so offsets in the text do not map to the file.
+      return start;
+  }
+}
+
+/**
+ * The file offset of an offset into a literal block: each line of the text is a line of the
+ * block, indented by the block's indentation.
+ */
+function blockOffset(
+  text: string,
+  start: number,
+  end: number,
+  value: string,
+  offset: number,
+): number {
+  const header = text.indexOf("\n", start);
+  if (header === -1 || header >= end || /\d/u.test(text.slice(start, header))) {
+    // No content lines, or an explicit indentation indicator: keep the block's start.
+    return start;
+  }
+  const lines = text.slice(header + 1, end).split("\n");
+  const indent = Math.min(
+    ...lines
+      .filter((line) => line.trim() !== "")
+      .map((line) => line.length - line.trimStart().length),
+  );
+  const before = value.slice(0, offset).split("\n");
+  const lineIndex = before.length - 1;
+  const column = before.at(-1)?.length ?? 0;
+  let lineStart = header + 1;
+  for (const line of lines.slice(0, lineIndex)) {
+    lineStart += line.length + 1;
+  }
+  return Number.isFinite(indent) ? lineStart + indent + column : start;
 }
 
 function offsetOf(node: unknown): number {

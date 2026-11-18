@@ -422,3 +422,185 @@ describe("loadContent: UI catalogs", () => {
     ).toEqual(["content/ui/de.yaml:1:1: UI texts are a map of keys and texts or groups of texts"]);
   });
 });
+
+describe("loadContent: texts of the catalogs", () => {
+  /** A level `x` with a prose file `handover` and a tip `tip-wrong`. */
+  const LEVEL_WITH_TEXTS: ContentFile = {
+    file: levelPath("x"),
+    text: yaml(
+      "format: 1",
+      "id: x",
+      "kind: main",
+      "teaches: [cat]",
+      "start:",
+      "  files:",
+      '    "~/handover.txt": { text: handover }',
+      "goal:",
+      "  output_contains: printer",
+      "tips:",
+      "  - when: { output_contains: ground }",
+      "    say: tip-wrong",
+      "solutions:",
+      "  - [cat ~/handover.txt]",
+    ),
+  };
+
+  function catalogProblems(language: string, text: string, level = LEVEL_WITH_TEXTS): string[] {
+    const file = `content/levels/x/${language}.yaml`;
+    const levelCatalogs = catalogsFor([level]).filter((catalog) => catalog.file !== file);
+    return problemsOf({
+      chapters: chaptersFile(["a", "x"]),
+      levels: [level],
+      levelCatalogs: [...levelCatalogs, { file, text }],
+    });
+  }
+
+  test("valid messages, literal commands and a prose file with braces", () => {
+    const result = load({
+      chapters: chaptersFile(["a", "x"]),
+      levels: [LEVEL_WITH_TEXTS],
+      levelCatalogs: ["en", "de"].map((language) => ({
+        file: `content/levels/x/${language}.yaml`,
+        text: yaml(
+          "title: It's the printer",
+          "ticket: |",
+          "  Run `awk '{print $1}' file`.",
+          "  Then it's **done**.",
+          "hints: [Tip, Concrete tip, '`cat {a,b}`']",
+          "explanation:",
+          "  text: Explanation",
+          "  options:",
+          '    - ["echo {a,b}", "Brace expansion: `{a,b}`"]',
+          '  example: "find . -exec cat {} +"',
+          "handover: |",
+          "  Settings: { user: mehmet }",
+          "tip-wrong: That's the wrong one.",
+        ),
+      })),
+    });
+    expect(result.ok).toBe(true);
+  });
+
+  test("ICU problems are reported at their place in a literal block", () => {
+    expect(
+      catalogProblems(
+        "en",
+        yaml(CATALOG_TEXT, "handover: x", "tip-wrong: |", "  Line one", "  Line {two"),
+      ),
+    ).toEqual([
+      'content/levels/x/en.yaml:10:8: ["tip-wrong"]: a placeholder is not closed: "}" is missing',
+    ]);
+  });
+
+  test("ICU problems in plain and quoted texts on one line", () => {
+    expect(
+      catalogProblems(
+        "en",
+        yaml(
+          "title: The {title",
+          "ticket: 'It''s {x'",
+          'hints: [Tip, "a {", "\\u0041 {"]',
+          "explanation:",
+          "  text: Explanation",
+          "  options:",
+          '    - [ls, "List {"]',
+          "extra_goals:",
+          "  fast: Be {fast",
+          "handover: x",
+          "tip-wrong: x",
+        ),
+      ),
+    ).toEqual([
+      'content/levels/x/en.yaml:1:12: title: a placeholder is not closed: "}" is missing',
+      // An escaped apostrophe: the text's start.
+      'content/levels/x/en.yaml:2:9: ticket: a placeholder is not closed: "}" is missing',
+      'content/levels/x/en.yaml:3:17: hints[1]: a placeholder is not closed: "}" is missing',
+      // An escape sequence: the text's start.
+      'content/levels/x/en.yaml:3:21: hints[2]: a placeholder is not closed: "}" is missing',
+      'content/levels/x/en.yaml:7:18: explanation.options[0][1]: a placeholder is not closed: "}" is missing',
+      'content/levels/x/en.yaml:9:12: extra_goals.fast: a placeholder is not closed: "}" is missing',
+    ]);
+  });
+
+  test("a literal block with an indentation indicator is located at its start", () => {
+    expect(
+      catalogProblems("en", yaml(CATALOG_TEXT, "handover: x", "tip-wrong: |2", "   Line {two")),
+    ).toEqual([
+      'content/levels/x/en.yaml:8:12: ["tip-wrong"]: a placeholder is not closed: "}" is missing',
+    ]);
+  });
+
+  test("a literal block keeps empty lines and deeper indentation", () => {
+    expect(
+      catalogProblems(
+        "en",
+        yaml(CATALOG_TEXT, "handover: x", "tip-wrong: |", "", "  Line one", "    - `ls"),
+      ),
+    ).toEqual([
+      'content/levels/x/en.yaml:11:7: ["tip-wrong"]: a code span is not closed: the closing ` is missing on this line',
+    ]);
+  });
+
+  test("a folded block is located at its start", () => {
+    expect(
+      catalogProblems(
+        "en",
+        yaml(CATALOG_TEXT, "handover: x", "tip-wrong: >", "  Line one", "  Line {two"),
+      ),
+    ).toEqual([
+      'content/levels/x/en.yaml:8:12: ["tip-wrong"]: a placeholder is not closed: "}" is missing',
+    ]);
+  });
+
+  test("level texts have no placeholders", () => {
+    expect(
+      catalogProblems("de", yaml(CATALOG_TEXT, "handover: x", "tip-wrong: Hallo {name}")),
+    ).toEqual([
+      'content/levels/x/de.yaml:8:18: ["tip-wrong"]: level texts have no placeholders, because the game passes no values to them: {name}',
+    ]);
+  });
+
+  test("free texts are not checked while the level is broken", () => {
+    const broken: ContentFile = { file: levelPath("x"), text: yaml("format: 1", "id: x") };
+    const problems = catalogProblems(
+      "en",
+      yaml(CATALOG_TEXT, "handover: '{'", "ticket2: '{'"),
+      broken,
+    );
+    expect(problems.filter((problem) => problem.includes("en.yaml"))).toEqual([]);
+  });
+
+  test("further languages are checked with their own plural rules", () => {
+    expect(
+      catalogProblems(
+        "fr",
+        yaml("title: '`{x}` {n, plural, one {#} other {#}}'", "tip-wrong: '`ls` {'"),
+      ),
+    ).toEqual([
+      "content/levels/x/fr.yaml:1:15: title: level texts have no placeholders, because the game passes no values to them: {n}",
+      'content/levels/x/fr.yaml:2:18: ["tip-wrong"]: a placeholder is not closed: "}" is missing',
+    ]);
+  });
+
+  test("a language code that Intl does not know", () => {
+    expect(catalogProblems("xx", yaml("title: Title"))).toEqual([
+      'content/levels/x/xx.yaml:1:1: "xx" is not a language that the game can format texts in (plurals and numbers): use an ISO 639 language code',
+    ]);
+  });
+
+  test("UI texts may have placeholders and are located by their dotted key", () => {
+    const uiText = (language: string, count: string): ContentFile => ({
+      file: `content/ui/${language}.yaml`,
+      text: yaml("status:", "  solved: |", `    {count, plural, ${count} other {# solved}}`),
+    });
+    expect(
+      problemsOf({
+        chapters: chaptersFile(["a", "x"]),
+        levels: [levelFile("x")],
+        uiCatalogs: [uiText("en", "one {# solved}"), uiText("de", "few {# gelöst}")],
+      }),
+    ).toEqual([
+      'content/ui/de.yaml:3:21: status.solved: the plural option "few" does not exist in "de", which has one, other and exact numbers like =0',
+    ]);
+  });
+});

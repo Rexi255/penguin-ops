@@ -23,10 +23,12 @@ import {
   type UiCatalog,
   uiCatalogSchema,
 } from "./catalog-schema";
+import { levelCatalogTextProblems, uiCatalogTextProblems } from "./catalog-texts";
 import { type Chapter, chaptersSchema } from "./chapters-schema";
 import { type ContentProblem, type LoadResult, sortProblems } from "./content-problem";
 import { readYaml } from "./level-loader";
 import { type Level, levelSchema } from "./level-schema";
+import { textLocale } from "./message";
 import { sourceProblem, type YamlSource } from "./yaml-source";
 
 /** A content file: its name and its text. */
@@ -231,10 +233,12 @@ function readLevelCatalogs(
     }
     const catalogs = read.get(folder) ?? emptyCatalogsRead();
     read.set(folder, catalogs);
+    const level = levels.get(folder)?.level;
     readCatalog(catalogs, { file, text }, language, problems, {
       complete: levelCatalogSchema,
       partial: partialLevelCatalogSchema,
       twice: `the ${language} catalog of the level "${folder}" is given twice`,
+      checkTexts: (catalog, source) => levelCatalogTextProblems(source, catalog, language, level),
     });
   }
 
@@ -281,6 +285,7 @@ function readUiCatalogs(
       complete: uiCatalogSchema,
       partial: uiCatalogSchema,
       twice: `the ${language} UI catalog is given twice`,
+      checkTexts: (catalog, source) => uiCatalogTextProblems(source, catalog, language),
     });
   }
   const folder = chaptersFile.slice(0, chaptersFile.lastIndexOf("/") + 1);
@@ -304,6 +309,8 @@ interface CatalogKind<Complete, Partial> {
   readonly partial: z.ZodType<Partial>;
   /** The problem of a language given twice. */
   readonly twice: string;
+  /** Checks the texts of a catalog that passed its schema (ICU MessageFormat, markup). */
+  readonly checkTexts: (catalog: Complete | Partial, source: YamlSource) => ContentProblem[];
 }
 
 /** Reads one catalog file into `catalogs`, after checking its name and that it is new. */
@@ -329,21 +336,44 @@ function readCatalog<Complete, Partial>(
     return;
   }
   catalogs.given.add(language);
+  if (textLocale(language) === undefined) {
+    problems.push(
+      fileProblem(
+        file,
+        `"${language}" is not a language that the game can format texts in (plurals and ` +
+          "numbers): use an ISO 639 language code",
+      ),
+    );
+    return;
+  }
   if (isMandatoryLanguage(language)) {
-    const { result } = readYaml(kind.complete, file, text);
-    if (result.ok) {
-      catalogs.mandatory.set(language, result.value);
-    } else {
-      problems.push(...result.problems);
+    const value = readCatalogFile(kind.complete, kind.checkTexts, { file, text }, problems);
+    if (value !== undefined) {
+      catalogs.mandatory.set(language, value);
     }
   } else {
-    const { result } = readYaml(kind.partial, file, text);
-    if (result.ok) {
-      catalogs.extra.set(language, result.value);
-    } else {
-      problems.push(...result.problems);
+    const value = readCatalogFile(kind.partial, kind.checkTexts, { file, text }, problems);
+    if (value !== undefined) {
+      catalogs.extra.set(language, value);
     }
   }
+}
+
+/** Reads a catalog file with a schema and checks its texts; returns it if it has no problems. */
+function readCatalogFile<T>(
+  schema: z.ZodType<T>,
+  checkTexts: (catalog: T, source: YamlSource) => ContentProblem[],
+  { file, text }: ContentFile,
+  problems: ContentProblem[],
+): T | undefined {
+  const { result, source } = readYaml(schema, file, text);
+  if (!result.ok) {
+    problems.push(...result.problems);
+    return undefined;
+  }
+  const textProblems = source === undefined ? [] : checkTexts(result.value, source);
+  problems.push(...textProblems);
+  return textProblems.length === 0 ? result.value : undefined;
 }
 
 /** The mandatory languages without a catalog file. */

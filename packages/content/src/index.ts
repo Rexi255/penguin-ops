@@ -66,3 +66,15 @@ export {
   type YamlParseResult,
   type YamlSource,
 } from "./yaml-source";
+export {
+  type CatalogText,
+  checkMessage,
+  type CodeValue,
+  formatMessage,
+  type MessagePart,
+  type MessageProblem,
+  type MessageRules,
+  textLocale,
+  type TextValue,
+  type TextValues,
+} from "./message";

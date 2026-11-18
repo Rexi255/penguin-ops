@@ -340,8 +340,17 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   checks their names (language codes), that each level catalog belongs to a level, that none is
   given twice and that English and German exist, and returns `Catalogs` (`en`, `de`, `extra`)
   per level and for the UI.
-- Planned: ICU MessageFormat (M2.3b), small text markup without HTML (M2.3c), English fallback
-  for further languages (M2.3d) (ADR 0012).
+- ICU MessageFormat (`src/message.ts`, ADR 0072): `checkMessage` parses a text with
+  `@formatjs/icu-messageformat-parser` after taking out its code spans (literal) and doubling its
+  apostrophes (always literal), and checks placeholder names and types and the plural options
+  of the language; `formatMessage({ language, source }, values)` formats with
+  `intl-messageformat` into parts: catalog text (may hold markup), values (never markup) and
+  code. `src/catalog-texts.ts` checks every formatted text of a loaded catalog (not the literal
+  commands of an explanation and the prose file contents) and reports problems at the spot in
+  the text (`YamlSource.locateInText`); `loadContent` runs it for every catalog and rejects
+  languages that `Intl` does not know.
+- Planned: small text markup without HTML (M2.3c), English fallback for further languages
+  (M2.3d) (ADR 0012).
 - Format details: `docs/LEVEL-AUTHORING.md`.
 
 ## Gameplay (`packages/gameplay`)
