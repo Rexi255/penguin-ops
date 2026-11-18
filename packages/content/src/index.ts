@@ -86,3 +86,12 @@ export {
   type RichTextBlock,
   type RichTextInline,
 } from "./markup";
+export {
+  type LevelTextOption,
+  type LevelTexts,
+  levelTexts,
+  type MissingTexts,
+  missingTexts,
+  type UiTexts,
+  uiTexts,
+} from "./language-fallback";

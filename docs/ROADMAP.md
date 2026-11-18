@@ -116,7 +116,7 @@ coverage ≥ 90 %; the engine cannot import DOM or Node APIs (enforced).
         path, readable zod issues (ADR 0069).
   - [x] M2.2b `content/chapters.yaml` schema and loading all levels from a list of files, with
         cross-checks (folder name is the level ID, every level in exactly one chapter) (ADR 0070).
-- [ ] M2.3 Translations: level catalogs and `content/ui/<lang>.yaml`, ICU formatting, text markup
+- [x] M2.3 Translations: level catalogs and `content/ui/<lang>.yaml`, ICU formatting, text markup
       (code, bold, lists, paragraphs) without HTML; English fallback for extra languages.
   - [x] M2.3a Catalog files: schemas of level and UI catalogs, loading them with the content,
         checks of file names and mandatory languages (ADR 0071).
@@ -124,7 +124,8 @@ coverage ≥ 90 %; the engine cannot import DOM or Node APIs (enforced).
         formatting with values and plurals (ADR 0072).
   - [x] M2.3c Text markup (`code`, **bold**, lists, paragraphs) parsed into a tree without HTML
         (ADR 0073).
-  - [ ] M2.3d English fallback for further languages; missing texts reported, not errors.
+  - [x] M2.3d English fallback for further languages; missing texts reported, not errors
+        (ADR 0074).
 - [ ] M2.4 Content tests: schema, German/English completeness, reference solutions per language
       and with two user names, not solved at start, no tips on reference solutions.
 - [ ] M2.5 Gameplay core: level session (start, run command, evaluate goal, tips), steps and

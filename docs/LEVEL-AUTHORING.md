@@ -2,8 +2,8 @@
 
 > **Status: in progress.** The schemas of `level.yaml` (format 1), `content/chapters.yaml` and
 > the text catalogs, the loader and the checks of ICU and markup in texts are implemented
-> (ADR 0068 to ADR 0073); the content tests follow in milestone M2. Update this guide whenever
-> the format changes. Reasons: ADR 0010, 0011, 0012, 0067 to 0073.
+> (ADR 0068 to ADR 0074); the content tests follow in milestone M2. Update this guide whenever
+> the format changes. Reasons: ADR 0010, 0011, 0012, 0067 to 0074.
 
 ## Principles
 
@@ -219,9 +219,14 @@ Every level has an English (`en.yaml`) and a German (`de.yaml`) catalog next to 
 - Catalogs have no `format` field; they follow the format of their level.
 
 **Further languages** (`fr.yaml`, `pt-br.yaml`, ...) may be incomplete: every key is optional,
-and missing texts fall back to English. What is there is checked like in English: three hints,
-options as pairs, valid keys. A catalog file is named after its language code: two or three
-lowercase letters, optionally a hyphen and a lowercase region (`de`, `en`, `pt-br`).
+and missing texts fall back to English (ADR 0074). Each text falls back on its own; the three
+hints and the option table only as a whole, so give all three hints or none. A level without a
+catalog in the language is shown in English. A fallback text keeps English plurals and
+numbers. What is there is checked like in English: three hints, options as pairs, valid keys,
+ICU and markup. A catalog file is named after its language code: two or three lowercase
+letters, optionally a hyphen and a lowercase region (`de`, `en`, `pt-br`); `Intl` must know the
+language. The content tests list the missing texts of every further language; they are not
+errors.
 
 The loader reports a catalog without `level.yaml` in its folder, a file name that is not a
 language code (for example `notes.yaml`), a catalog given twice and a missing English or German

@@ -4,6 +4,10 @@ _Last updated: 2026-11-18_
 
 ## Recently completed
 
+- M2.3d English fallback (`language-fallback.ts`): `levelTexts` and `uiTexts` give every text in
+  a language as `{ language, source }`; further languages fall back to English text by text
+  (hints and option table as a whole), each text formatted in its own language;
+  `missingTexts(content)` lists what falls back, not as errors (ADR 0074). M2.3 is complete.
 - M2.3c Text markup (`markup.ts`): `formatText` and `parseMarkup` turn a formatted message into
   `RichText` (paragraphs with kept line breaks, `- ` lists, bold on one line, code); values are
   never markup and nothing is HTML. `checkText` adds markup checks to the ICU checks of
@@ -26,12 +30,6 @@ _Last updated: 2026-11-18_
   `{ file, text }` and checks across files (folder name is the level ID, listed levels exist,
   every level in exactly one chapter), reporting all problems together (ADR 0070). M2.2 is
   complete.
-- M2.2a Loading one YAML file from its text (`level-loader.ts`, `yaml-source.ts`,
-  `schema-problems.ts`, `content-problem.ts`): `loadLevel(file, text)` reads YAML 1.2 with the
-  `yaml` library and reports problems as `file:line:column: path: message`; map entries are
-  located at their key, list items at the item; unknown and missing fields and unions get
-  readable messages; parser warnings, empty files and aliases without anchors are problems
-  (ADR 0069).
 
 ## In progress
 
@@ -39,9 +37,9 @@ _Last updated: 2026-11-18_
 
 ## Next 3 steps
 
-1. ROADMAP M2.3d: English fallback for further languages.
-2. ROADMAP M2.4: content tests.
-3. ROADMAP M2.5: gameplay core (level session).
+1. ROADMAP M2.4: content tests.
+2. ROADMAP M2.5: gameplay core (level session).
+3. ROADMAP M2.6: port the five prototype levels.
 
 ## Blockers and open questions
 

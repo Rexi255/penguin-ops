@@ -355,7 +355,12 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   `checkText` adds the markup checks (bold closed on its line and in its option, no empty bold,
   no empty list items) to the ICU checks. The UI renders the tree with its own elements, never
   as HTML.
-- Planned: English fallback for further languages (M2.3d) (ADR 0012).
+- Language fallback (`src/language-fallback.ts`, ADR 0074): `levelTexts(catalogs, language)`
+  and `uiTexts(catalogs, language)` give every text of a level or of the UI as a `CatalogText`
+  (`{ language, source }`); a further language falls back to English text by text (hints and
+  the option table as a whole), and each text keeps its own language for formatting.
+  `missingTexts(content)` lists the texts of further languages that fall back, per catalog; they
+  are reported, not errors.
 - Format details: `docs/LEVEL-AUTHORING.md`.
 
 ## Gameplay (`packages/gameplay`)
