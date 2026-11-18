@@ -203,7 +203,9 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     `writeFile`). The command gets its `stdin` as a `StandardInput` (`terminal`, `text` or
     `directory`); a file from `<` is read with `readOpenFile` when the command starts, so
     `< f > f` sees the emptied file (ADR 0050). Output for a file is collected and added with
-    `writeToOpenFile` after the command. A failed redirection writes bash's message and gives exit status 1 without running
+    `writeToOpenFile` after the command. Commands learn which files their standard streams use:
+    `text` input from `<` carries its `file`, and `CommandContext.stdoutFile` names the file of
+    `>` or `>>` (ADR 0058). A failed redirection writes bash's message and gives exit status 1 without running
     the command; file descriptors from 3 on and reversed forms (`0>`, `1<`) are game notices.
 - **Commands:** registry of command implementations with declared options, a shared option
   parser and coreutils-style errors, matching Debian 13 (ADR 0004).
@@ -232,15 +234,17 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     converts between text and UTF-8 bytes.
   - `src/commands/` holds the commands, one module each, and `COMMANDS`, the list for
     `createCommandLookup`. `cd`, `pwd`, `echo` and `history` are builtins (`history` lists,
-    clears and deletes entries of the session's history list, ADR 0057), `whoami` and `ls` use
-    `defineCommand`. `clear` is ncurses' program with plain `getopt`: on the terminal it clears
-    the screen, into a pipe or a file it writes the escape sequences of `xterm-256color`, the
-    `TERM` that `createSession` sets (ADR 0056). `ls` follows coreutils' `ls.c`: columns on a
-    terminal, one name per line otherwise (ADR 0054); `long-listing.ts` writes its long format
-    with `-l`, `-g`, `-o`, `-G` and `-n` (ADR 0055).
-    `directory-names.ts` works out working directory names like bash (by text, keeping a
-    leading `//`) and checks them like chdir(2) and getcwd(3); the session's `cwd` is the name
-    bash remembers, not a resolved path.
+    clears and deletes entries of the session's history list, ADR 0057); `whoami`, `ls` and
+    `cat` use `defineCommand`. `clear` is ncurses' program with plain `getopt`: on the terminal
+    it clears the screen, into a pipe or a file it writes the escape sequences of
+    `xterm-256color`, the `TERM` that `createSession` sets (ADR 0056). `ls` follows coreutils'
+    `ls.c`: columns on a terminal, one name per line otherwise (ADR 0054); `long-listing.ts`
+    writes its long format with `-l`, `-g`, `-o`, `-G` and `-n` (ADR 0055). `cat` reads files
+    and standard input and refuses to read its own output file like `cat.c`; `cat-format.ts`
+    is the state machine of its formatting options, kept across all inputs of one run
+    (ADR 0058). `directory-names.ts` works out working directory names like bash (by text,
+    keeping a leading `//`) and checks them like chdir(2) and getcwd(3); the session's `cwd`
+    is the name bash remembers, not a resolved path.
 - **Full-screen programs:** one mechanism for `less`, `man`, `top`, `nano` and later `vim`.
 - **Rule evaluation** (ADR 0011): rule types plus `all`, `any`, `not`, evaluated against world
   state and command output.

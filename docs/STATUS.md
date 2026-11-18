@@ -4,6 +4,12 @@ _Last updated: 2026-11-18_
 
 ## Recently completed
 
+- M1.9a `cat` (coreutils 9.7): files and standard input (`-`, read once), all formatting
+  options (`-b`, `-n`, `-s`, `-v`, `-E`, `-T`, `-A`, `-e`, `-t`, `-u`) as a translation of
+  `cat.c`'s state machine that carries over between files, errors with `quotef` names, "input
+  file is output file" like `cat.c` (`cat a >> a`), and the new notice
+  `terminal-input-not-simulated` for `cat` on the terminal. Commands learn the files of `<` and
+  `>`/`>>` (`stdin.file`, `stdoutFile`) (ADR 0058).
 - M1.8c-2 `history`: the session keeps a history list (`recordHistory` with
   `HISTCONTROL=ignoreboth`, `HISTSIZE` applied on assignment with readline's numbering);
   `history`, `history N`, `-c`, `-d` with positions, negative offsets and ranges, bash's errors;
@@ -25,11 +31,6 @@ _Last updated: 2026-11-18_
   files, `cannot access`/`cannot open directory` with exit status 2. Commands learn whether
   their output goes to the terminal and its width (`ScriptRun.terminal`); new `openDirectory`,
   `shellQuote`, `shellQuoteAlways`, `displayWidth` (ADR 0054).
-- M1.8a First commands: `cd` (`-L`, `-P`, `-e`, `cd -`, names worked out by text like bash, with
-  its fallback to chdir), `pwd` (`-L`, `-P`), `echo` (`-n`, `-e`, `-E`) and `whoami`;
-  `defineBuiltin` gives bash builtins bash's option parsing and usage errors; new notices
-  `variable-not-simulated` (`CDPATH`) and `invalid-utf8-not-simulated` (`echo -e '\xff'`);
-  coreutils operands are quoted with `‘…’` (ADR 0053).
 
 ## In progress
 
@@ -37,9 +38,9 @@ _Last updated: 2026-11-18_
 
 ## Next 3 steps
 
-1. ROADMAP M1.9: commands batch 2 (`cat`, `head`, `tail`, `mkdir`, `touch`).
-2. ROADMAP M1.10: commands batch 3 (`cp`, `mv`, `rm`, `grep`).
-3. ROADMAP M1.11: tab completion and history navigation APIs.
+1. ROADMAP M1.9b: `head` and `tail`.
+2. ROADMAP M1.9c: `mkdir` (`-p`) and `touch`.
+3. ROADMAP M1.10: commands batch 3 (`cp`, `mv`, `rm`, `grep`).
 
 ## Blockers and open questions
 
@@ -50,5 +51,5 @@ _Last updated: 2026-11-18_
 - The logo colours are provisional until M3.0f-2 aligns them with the design tokens.
 - Steam release is assumed to be "maybe later" (ADR 0002); confirm with the owner when it
   becomes relevant.
-- Some `ls`, `clear` and `history` details could not be checked against a real Debian 13
-  (tests marked `@differential`, ADR 0054 to ADR 0057); M6 verifies them.
+- Some `ls`, `clear`, `history` and `cat` details could not be checked against a real Debian 13
+  (tests marked `@differential`, ADR 0054 to ADR 0058); M6 verifies them.

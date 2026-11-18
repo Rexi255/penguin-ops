@@ -18,12 +18,28 @@ import type { World } from "./world";
 /** The output streams of a command. */
 export type OutputStream = "stdout" | "stderr";
 
+/** A regular file that a redirection opened: its host and canonical absolute path. */
+export interface OpenFile {
+  readonly host: string;
+  readonly path: string;
+}
+
+/** A regular file that standard output or standard error goes to (`>`, `>>`, `2>`, `2>>`). */
+export interface OutputFile extends OpenFile {
+  /** Whether the file was opened with `O_APPEND` (`>>`), so every write goes to its end. */
+  readonly append: boolean;
+}
+
 /** The standard input of a command. */
 export type StandardInput =
   /** The terminal. The game does not simulate typing into a running command. */
   | { readonly kind: "terminal" }
-  /** Text from the previous command of a pipeline, or the content of a file (`< file`). */
-  | { readonly kind: "text"; readonly text: string }
+  /**
+   * Text from the previous command of a pipeline, or the content of a file (`< file`) at the
+   * time the command starts. `file` names that file; commands that refuse to read their own
+   * output file (`cat < f >> f`) compare it with `CommandContext.stdoutFile` (ADR 0058).
+   */
+  | { readonly kind: "text"; readonly text: string; readonly file?: OpenFile }
   /** A directory (`< /tmp`): bash opens it, but every read fails with "Is a directory". */
   | { readonly kind: "directory" };
 
@@ -66,6 +82,12 @@ export interface CommandContext {
    * `clear` its escape sequences).
    */
   readonly terminal: CommandTerminal | undefined;
+  /**
+   * The file that standard output goes to after `>` or `>>`; `undefined` for the terminal and a
+   * pipe. The game has no inodes, so the file is known by its path (ADR 0058). Output to it is
+   * added after the command, so the command must count what it wrote itself.
+   */
+  readonly stdoutFile: OutputFile | undefined;
   /** The game time; commands may read it (for example for mtimes), but never advance it. */
   readonly clock: Clock;
   /** Writes `text` to the command's standard output. */
@@ -101,11 +123,21 @@ export interface InvalidUtf8NotSimulated {
 }
 
 /**
+ * The command would read from the terminal (`cat` without a file operand), where the player
+ * would type its input and end it with Ctrl+D. The game does not simulate typing into a running
+ * command (ADR 0047, ADR 0058).
+ */
+export interface TerminalInputNotSimulated {
+  readonly key: "terminal-input-not-simulated";
+}
+
+/**
  * A game notice from a command, with a message key; the UI renders it in the player's language.
  * Each key is one message, and the other fields are the values the message shows. Later
  * commands add keys to this union (ADR 0052).
  */
-export type CommandNotice = OptionNotSimulated | VariableNotSimulated | InvalidUtf8NotSimulated;
+export type CommandNotice =
+  OptionNotSimulated | VariableNotSimulated | InvalidUtf8NotSimulated | TerminalInputNotSimulated;
 
 /**
  * A command that ran: its exit status (a whole number from 0 to 255), and the changed world and
@@ -374,12 +406,6 @@ class OutputBuffer implements Output {
 /** The streams a redirection can connect to a file. */
 type RedirectedStream = "stdin" | OutputStream;
 
-/** A file that a redirection opened for output: its host and canonical absolute path. */
-interface OpenFile {
-  readonly host: string;
-  readonly path: string;
-}
-
 /**
  * The result of the redirections of one command: all opened, one failed (bash's message is
  * written), or one the game does not simulate. `world` holds the files opened until then.
@@ -431,7 +457,7 @@ type RedirectedInput = StandardInput | ({ readonly kind: "file" } & OpenFile);
  * the world while it runs.
  */
 class CommandStreams {
-  private readonly files = new Map<OutputStream, OpenFile>();
+  private readonly files = new Map<OutputStream, OutputFile>();
   private readonly pending: { file: OpenFile; text: string }[] = [];
 
   constructor(
@@ -445,8 +471,13 @@ class CommandStreams {
   }
 
   /** Sends the output of `stream` to `file` from now on. */
-  redirect(stream: OutputStream, file: OpenFile): void {
+  redirect(stream: OutputStream, file: OutputFile): void {
     this.files.set(stream, file);
+  }
+
+  /** The file that standard output goes to, or `undefined` for the terminal or the pipe. */
+  stdoutFile(): OutputFile | undefined {
+    return this.files.get("stdout");
   }
 
   /** Whether standard output goes to the terminal: not redirected to a file and not piped. */
@@ -462,8 +493,10 @@ class CommandStreams {
       case "text":
       case "directory":
         return input;
-      case "file":
-        return { kind: "text", text: readOpenFile(world, input.host, input.path) };
+      case "file": {
+        const file: OpenFile = { host: input.host, path: input.path };
+        return { kind: "text", text: readOpenFile(world, input.host, input.path), file };
+      }
     }
   }
 
@@ -639,6 +672,7 @@ class Runner {
       args,
       stdin: streams.stdin(opened),
       terminal: streams.stdoutIsTerminal() ? this.commandTerminal() : undefined,
+      stdoutFile: streams.stdoutFile(),
       clock: this.clock,
       stdout: (text) => {
         streams.write("stdout", text);
@@ -746,7 +780,7 @@ class Runner {
     if (!written.ok) {
       return { kind: "failed", error: written.error };
     }
-    streams.redirect(stream, { host: session.host, path: written.path });
+    streams.redirect(stream, { host: session.host, path: written.path, append: mode === "append" });
     return { kind: "opened", world: written.world };
   }
 }

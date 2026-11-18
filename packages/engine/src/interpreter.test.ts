@@ -119,6 +119,20 @@ const testCommands: Record<string, ShellCommand> = {
     stdout("after\n");
     return { exitStatus: 0 };
   },
+  /**
+   * Writes to standard error the file its standard input comes from and the file its standard
+   * output goes to (`+` for `>>`), or `-` for none.
+   */
+  files: ({ stdin, stdoutFile, stderr }) => {
+    const input = stdin.kind === "text" && stdin.file !== undefined ? stdin.file : undefined;
+    const from = input === undefined ? "-" : `${input.host}:${input.path}`;
+    const to =
+      stdoutFile === undefined
+        ? "-"
+        : `${stdoutFile.append ? "+" : ""}${stdoutFile.host}:${stdoutFile.path}`;
+    stderr(`${from} ${to}\n`);
+    return { exitStatus: 0 };
+  },
   /** Changes the working directory to its argument without any checks, and says so. */
   go: ({ args, session, stdout }) => {
     stdout("moved\n");
@@ -801,6 +815,35 @@ describe("runScript: input redirections", () => {
 
   test("a later < wins over an earlier one", () => {
     expect(runFiles("upper < docs < notes.txt").events).toEqual([stdout("HELLO\n")]);
+  });
+});
+
+describe("runScript: the files of the standard streams", () => {
+  test("a command learns the files of < and > by their canonical paths", () => {
+    expect(runFiles("files < ./docs/../notes.txt > out.txt").events).toEqual([
+      stderr("ws01:/home/alice/notes.txt ws01:/home/alice/out.txt\n"),
+    ]);
+  });
+
+  test(">> marks the output file as opened for appending", () => {
+    expect(runFiles("files >> /home/alice/out.txt").events).toEqual([
+      stderr("- +ws01:/home/alice/out.txt\n"),
+    ]);
+  });
+
+  test("the terminal, a pipe and 2> give no files", () => {
+    expect(runFiles("files 2> err.txt; say hi | files").events).toEqual([stderr("- -\n")]);
+    expect(contentOf(runFiles("files 2> err.txt").world, "/home/alice/err.txt")).toBe("- -\n");
+  });
+
+  test("the last output redirection names the file", () => {
+    expect(runFiles("files > a.txt >> b.txt").events).toEqual([
+      stderr("- +ws01:/home/alice/b.txt\n"),
+    ]);
+  });
+
+  test("a directory from < has no file", () => {
+    expect(runFiles("files < docs").events).toEqual([stderr("- -\n")]);
   });
 });
 

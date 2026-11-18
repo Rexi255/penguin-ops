@@ -81,7 +81,12 @@ placeholder window; CI builds the installer.
       into pipes and files, `TERM` in the session (ADR 0056).
 - [x] M1.8c-2 Commands batch 1, part 3b: `history` (session history, `-c`, `-d`,
       `HISTCONTROL`, `HISTSIZE`) and option arguments for builtins (ADR 0057).
-- [ ] M1.9 Commands batch 2: `cat` (`-n`), `head`, `tail`, `mkdir` (`-p`), `touch`.
+- [x] M1.9a Commands batch 2, part 1: `cat` with all its formatting options, standard input,
+      errors and "input file is output file"; commands learn the files of their standard
+      streams (ADR 0058).
+- [ ] M1.9b Commands batch 2, part 2: `head` and `tail` (`-n`, `-c`, headers for several
+      files).
+- [ ] M1.9c Commands batch 2, part 3: `mkdir` (`-p`) and `touch`.
 - [ ] M1.10 Commands batch 3: `cp` (`-r`), `mv`, `rm` (`-r`, `-f`), `grep` (`-i`, `-v`, `-n`,
       `-c`, `-r`, `-l`).
 - [ ] M1.11 Tab completion and history navigation APIs.
