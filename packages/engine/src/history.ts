@@ -6,10 +6,22 @@
 import { legalNumber, toCInt } from "./bash-number";
 import type { Session } from "./session";
 
+/**
+ * One entry of the history list, readline's `HIST_ENTRY`. The player can edit an entry while
+ * moving through the history without running it (ADR 0066); readline keeps such edits until
+ * the line is run from that entry, and `history` marks the entry with `*`.
+ */
+export interface HistoryEntry {
+  /** The line as the history shows it now. */
+  readonly line: string;
+  /** The line as it was saved, if the player edited the entry; readline's undo list. */
+  readonly original?: string;
+}
+
 /** The history list of one shell. */
 export interface History {
   /** The entries, oldest first. */
-  readonly entries: readonly string[];
+  readonly entries: readonly HistoryEntry[];
   /**
    * The number that `history` shows for the first entry, readline's `history_base`. It starts at
    * 1 and grows when old entries make room for new ones.
@@ -56,13 +68,14 @@ export function historyControl(value: string | undefined): HistoryControl {
  */
 export function addHistoryEntry(history: History, line: string): History {
   const { entries, base, limit } = history;
+  const entry: HistoryEntry = { line };
   if (limit !== undefined && entries.length >= limit) {
     if (entries.length === 0) {
       return history;
     }
-    return { entries: [...entries.slice(1), line], base: base + 1, limit };
+    return { entries: [...entries.slice(1), entry], base: base + 1, limit };
   }
-  return { entries: [...entries, line], base, limit };
+  return { entries: [...entries, entry], base, limit };
 }
 
 /**
@@ -130,6 +143,8 @@ export function removeHistoryRange(
  * - With `ignoredups`, an input equal to the newest entry is not saved.
  * - With `erasedups`, all older entries equal to the input are removed before it is saved.
  *
+ * Entries are compared as the history shows them, with the player's edits (ADR 0066).
+ *
  * `HISTIGNORE` is not simulated. An input of several lines is saved as one entry with its line
  * breaks.
  */
@@ -142,11 +157,11 @@ export function recordHistory(session: Session, input: string): Session {
   if (control.ignoreSpace && input.startsWith(" ")) {
     return session;
   }
-  if (control.ignoreDups && history.entries.at(-1) === input) {
+  if (control.ignoreDups && history.entries.at(-1)?.line === input) {
     return session;
   }
   const kept: History = control.eraseDups
-    ? { ...history, entries: history.entries.filter((entry) => entry !== input) }
+    ? { ...history, entries: history.entries.filter((entry) => entry.line !== input) }
     : history;
   return { ...session, history: addHistoryEntry(kept, input) };
 }

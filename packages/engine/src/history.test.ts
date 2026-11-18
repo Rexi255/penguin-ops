@@ -15,8 +15,8 @@ import {
 import { createSession, type Session, setVariable } from "./session";
 import { buildWorld } from "./world-builder";
 
-function history(entries: readonly string[], base = 1, limit?: number): History {
-  return { entries, base, limit };
+function history(lines: readonly string[], base = 1, limit?: number): History {
+  return { entries: lines.map((line) => ({ line })), base, limit };
 }
 
 describe("historyControl", () => {
@@ -161,7 +161,7 @@ describe("recordHistory", () => {
   const alice = createSession(world, "ws01", "alice");
 
   function record(session: Session, ...inputs: string[]): readonly string[] {
-    return inputs.reduce(recordHistory, session).history.entries;
+    return inputs.reduce(recordHistory, session).history.entries.map((entry) => entry.line);
   }
 
   test("saves each input as one entry", () => {
@@ -193,6 +193,16 @@ describe("recordHistory", () => {
   test("erasedups removes older equal entries before it saves the input", () => {
     const erasing = setVariable(alice, "HISTCONTROL", "erasedups");
     expect(record(erasing, "ls", "pwd", "ls", "cd", "ls")).toEqual(["pwd", "cd", "ls"]);
+  });
+
+  test("repeats are found by the line the history shows, with the player's edits", () => {
+    const edited: Session = {
+      ...alice,
+      history: { entries: [{ line: "ls -l", original: "ls" }], base: 1, limit: undefined },
+    };
+    expect(record(edited, "ls -l")).toEqual(["ls -l"]);
+    const erasing = setVariable(edited, "HISTCONTROL", "erasedups");
+    expect(recordHistory(erasing, "ls -l").history.entries).toEqual([{ line: "ls -l" }]);
   });
 
   test("ignorespace wins over erasedups", () => {

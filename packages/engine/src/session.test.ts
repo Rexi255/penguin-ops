@@ -220,10 +220,10 @@ describe("setVariable", () => {
   test("a new HISTSIZE limits the history at once", () => {
     const withEntries: Session = {
       ...alice,
-      history: { entries: ["a", "b", "c"], base: 1, limit: 1000 },
+      history: { entries: [{ line: "a" }, { line: "b" }, { line: "c" }], base: 1, limit: 1000 },
     };
     expect(setVariable(withEntries, "HISTSIZE", "2").history).toEqual({
-      entries: ["b", "c"],
+      entries: [{ line: "b" }, { line: "c" }],
       base: 1,
       limit: 2,
     });

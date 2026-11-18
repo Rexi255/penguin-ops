@@ -98,7 +98,8 @@ placeholder window; CI builds the installer.
       options around them), GNU patterns translated into JavaScript (ADR 0064).
 - [x] M1.11a Tab completion API: file names, commands, variables and user names, quoted like
       bash, with readline's list for the second Tab (ADR 0065).
-- [ ] M1.11b History navigation API.
+- [x] M1.11b History navigation API: Up and Down like readline, with the kept edits of history
+      entries that `history` marks with `*` (ADR 0066).
 - [ ] M1.12 Rule engine: `cwd_is`, `exists`, `file_exists`, `dir_exists`, `file_contains`,
       `same_content`, `output_contains`, `output_matches`; `all`, `any`, `not` (ADR 0011).
 
@@ -256,6 +257,8 @@ AppImage runs on Linux, and chapters 0–2 are playable in both languages.
   the special parameters `$$` and `$-`.
 - Command lookup through `PATH` and executable files (`./run.sh`, `/bin/ls`), so that
   `PATH= ls` fails like in bash (ADR 0047).
+- History searches and keys (ADR 0066): Ctrl+R and the other incremental searches,
+  `history-search-backward`, `beginning-of-history`/`end-of-history`, `M-.`.
 - History details not simulated yet (ADR 0057): the history file (`HISTFILE`, `~/.bash_history`,
   `history -a/-n/-r/-w`, history kept across sessions), `HISTIGNORE` (setting it has no effect
   so far), time stamps with `HISTTIMEFORMAT`, `history -s`, `history -p`, and bash's `cmdhist`

@@ -126,10 +126,15 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     the history variables of Debian's `.bashrc`, ADR 0057, and the umask of Debian 13's
     `pam_umask`, ADR 0048), `setVariable` (sets a shell variable; a new `HISTSIZE` applies to
     the history at once) and `userAtHost` (the `\u@\h` part of the prompt).
-  - `src/history.ts` (ADR 0057): the history list as readline 8.2 keeps it (entries, the
-    numbering base, the limit from `HISTSIZE`). `recordHistory` saves an input with the rules
+  - `src/history.ts` (ADR 0057, ADR 0066): the history list as readline 8.2 keeps it (entries
+    with the player's unsaved edits, the numbering base, the limit from `HISTSIZE`). `recordHistory` saves an input with the rules
     of `HISTCONTROL`; the game calls it before it runs the input. `src/bash-number.ts` reads
     numbers like bash's `legal_number`.
+  - `src/history-navigation.ts` (ADR 0066): Up and Down like readline's `previous-history`
+    and `next-history`. `previousHistory` and `nextHistory` take the session, a
+    `HistoryNavigation` (shown entry and saved new line) and the input line, keep the edit of
+    the entry that was left in the history, and return the line to show and the bell;
+    `acceptHistoryLine` gives the entry of a line that is run its original back.
   - `src/completion.ts` (ADR 0065): Tab completion like bash 5.2 with readline 8.2.
     `complete` takes the input line, the cursor, the session and the command names and returns
     the new line and cursor, the bell and the matches for the second Tab: variables, user
@@ -293,9 +298,11 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     other engine functions and the commands take the read-only `Clock` view (`now()`).
   - Data generators are added when a level needs them.
 - **Completion and history:** APIs for tab completion (`src/completion.ts`, ADR 0065) and
-  command history. The history list itself is part of the session (`src/history.ts`,
-  ADR 0057); navigation follows in M1.11b. The UI owns the keys: it calls `complete` on Tab and
-  lists the matches on a second Tab that follows a Tab without a change.
+  history navigation (`src/history-navigation.ts`, ADR 0066). The history list itself is part
+  of the session (`src/history.ts`, ADR 0057). The UI owns the keys: it calls `complete` on Tab
+  and lists the matches on a second Tab that follows a Tab without a change; it keeps a
+  `HistoryNavigation` between Up and Down, and calls `acceptHistoryLine` and `recordHistory`
+  on Enter.
 
 ## Content (`packages/content` and `content/`)
 

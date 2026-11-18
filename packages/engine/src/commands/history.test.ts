@@ -121,15 +121,29 @@ describe("history: listing", () => {
   test("numbers wider than five digits push the line to the right", () => {
     const session: Session = {
       ...plain,
-      history: { entries: ["a"], base: 123456, limit: undefined },
+      history: { entries: [{ line: "a" }], base: 123456, limit: undefined },
     };
     expect(play(["history"], session).events).toEqual([stdout("123456  a\n123457  history\n")]);
+  });
+
+  test("an entry the player edited without running it is marked with *", () => {
+    const session: Session = {
+      ...plain,
+      history: {
+        entries: [{ line: "echo a" }, { line: "echo bX", original: "echo b" }],
+        base: 1,
+        limit: undefined,
+      },
+    };
+    expect(play(["history"], session).events).toEqual([
+      stdout("    1  echo a\n    2* echo bX\n    3  history\n"),
+    ]);
   });
 
   test("an entry of several lines is shown with its line breaks", () => {
     const session: Session = {
       ...plain,
-      history: { entries: ["echo 'a\nb'"], base: 1, limit: undefined },
+      history: { entries: [{ line: "echo 'a\nb'" }], base: 1, limit: undefined },
     };
     expect(play(["history"], session).events).toEqual([
       stdout("    1  echo 'a\nb'\n    2  history\n"),
@@ -220,14 +234,14 @@ describe("history -c", () => {
     const cleared = play(["a", "b", "history -c"]);
     expect(cleared.events).toEqual([]);
     expect(cleared.session.exitStatus).toBe(0);
-    expect(cleared.session.history.entries).toEqual([]);
+    expect(cleared.session.history.entries.map((entry) => entry.line)).toEqual([]);
     expect(play(["history"], cleared.session).events).toEqual([stdout(listing(["history"]))]);
   });
 
   test("with N it clears and then lists the empty history", () => {
     const result = play(["a", "history -c 5"]);
     expect(result.events).toEqual([]);
-    expect(result.session.history.entries).toEqual([]);
+    expect(result.session.history.entries.map((entry) => entry.line)).toEqual([]);
   });
 
   test("ignores -d without operands, because it is done after clearing", () => {
@@ -240,19 +254,19 @@ describe("history -c", () => {
     const result = play(["a", "history -c abc"]);
     expect(result.events).toEqual([stderr("bash: history: abc: numeric argument required\n")]);
     expect(result.session.exitStatus).toBe(1);
-    expect(result.session.history.entries).toEqual([]);
+    expect(result.session.history.entries.map((entry) => entry.line)).toEqual([]);
   });
 
   test("too many arguments after clearing keep the history cleared", () => {
     const result = play(["a", "history -c 1 2; echo after"]);
     expect(result.events).toEqual([stderr("bash: history: too many arguments\n")]);
-    expect(result.session.history.entries).toEqual([]);
+    expect(result.session.history.entries.map((entry) => entry.line)).toEqual([]);
   });
 
   test("-d after clearing with an operand finds nothing to delete", () => {
     const result = play(["a", "history -c -d 1 5"]);
     expect(result.events).toEqual([outOfRange("1")]);
-    expect(result.session.history.entries).toEqual([]);
+    expect(result.session.history.entries.map((entry) => entry.line)).toEqual([]);
   });
 });
 
@@ -261,11 +275,17 @@ describe("history -d", () => {
     const result = play(["a", "b", "c", "history -d 2"]);
     expect(result.events).toEqual([]);
     expect(result.session.exitStatus).toBe(0);
-    expect(result.session.history.entries).toEqual(["a", "c", "history -d 2"]);
+    expect(result.session.history.entries.map((entry) => entry.line)).toEqual([
+      "a",
+      "c",
+      "history -d 2",
+    ]);
   });
 
   test("takes its argument from the same word", () => {
-    expect(play(["a", "b", "history -d1"]).session.history.entries).toEqual(["b", "history -d1"]);
+    expect(
+      play(["a", "b", "history -d1"]).session.history.entries.map((entry) => entry.line),
+    ).toEqual(["b", "history -d1"]);
   });
 
   test("counts positions from the base of a full list", () => {
@@ -273,48 +293,48 @@ describe("history -d", () => {
     const result = play(["a", "b", "c", "d", "history -d 3"], small);
     // The list holds c (3), d (4) and the history line (5).
     expect(result.session.history).toEqual({
-      entries: ["d", "history -d 3"],
+      entries: [{ line: "d" }, { line: "history -d 3" }],
       base: 3,
       limit: 3,
     });
   });
 
   test("-1 deletes the newest entry, the history -d line itself", () => {
-    expect(play(["a", "history -d -1"]).session.history.entries).toEqual(["a"]);
+    expect(play(["a", "history -d -1"]).session.history.entries.map((entry) => entry.line)).toEqual(
+      ["a"],
+    );
   });
 
   test("a negative offset counts back from the end", () => {
-    expect(play(["a", "b", "history -d -3"]).session.history.entries).toEqual([
-      "b",
-      "history -d -3",
-    ]);
+    expect(
+      play(["a", "b", "history -d -3"]).session.history.entries.map((entry) => entry.line),
+    ).toEqual(["b", "history -d -3"]);
   });
 
   test("deletes a range of positions, both ends included", () => {
-    expect(play(["a", "b", "c", "d", "history -d 2-3"]).session.history.entries).toEqual([
-      "a",
-      "d",
-      "history -d 2-3",
-    ]);
+    expect(
+      play(["a", "b", "c", "d", "history -d 2-3"]).session.history.entries.map(
+        (entry) => entry.line,
+      ),
+    ).toEqual(["a", "d", "history -d 2-3"]);
   });
 
   test("deletes a range given by negative offsets", () => {
-    expect(play(["a", "b", "c", "history -d -3--2"]).session.history.entries).toEqual([
-      "a",
-      "history -d -3--2",
-    ]);
+    expect(
+      play(["a", "b", "c", "history -d -3--2"]).session.history.entries.map((entry) => entry.line),
+    ).toEqual(["a", "history -d -3--2"]);
   });
 
   test("a range may mix a position and a negative offset", () => {
-    expect(play(["a", "b", "c", "history -d 2--1"]).session.history.entries).toEqual(["a"]);
+    expect(
+      play(["a", "b", "c", "history -d 2--1"]).session.history.entries.map((entry) => entry.line),
+    ).toEqual(["a"]);
   });
 
   test("a range from 0 starts at the first entry", () => {
-    expect(play(["a", "b", "c", "history -d 0-1"]).session.history.entries).toEqual([
-      "b",
-      "c",
-      "history -d 0-1",
-    ]);
+    expect(
+      play(["a", "b", "c", "history -d 0-1"]).session.history.entries.map((entry) => entry.line),
+    ).toEqual(["b", "c", "history -d 0-1"]);
   });
 
   test.each([
@@ -332,18 +352,24 @@ describe("history -d", () => {
     const result = play(["a", input]);
     expect(result.events).toEqual([outOfRange(position)]);
     expect(result.session.exitStatus).toBe(1);
-    expect(result.session.history.entries).toEqual(["a", input]);
+    expect(result.session.history.entries.map((entry) => entry.line)).toEqual(["a", input]);
   });
 
   test("a range whose start comes after its end fails without a message", () => {
     const result = play(["a", "b", "history -d 2-1"]);
     expect(result.events).toEqual([]);
     expect(result.session.exitStatus).toBe(1);
-    expect(result.session.history.entries).toEqual(["a", "b", "history -d 2-1"]);
+    expect(result.session.history.entries.map((entry) => entry.line)).toEqual([
+      "a",
+      "b",
+      "history -d 2-1",
+    ]);
   });
 
   test("ignores operands", () => {
-    expect(play(["a", "history -d 1 abc"]).session.history.entries).toEqual(["history -d 1 abc"]);
+    expect(
+      play(["a", "history -d 1 abc"]).session.history.entries.map((entry) => entry.line),
+    ).toEqual(["history -d 1 abc"]);
   });
 
   test("without an argument it gives bash's usage error with exit status 2", () => {

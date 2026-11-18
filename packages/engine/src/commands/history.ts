@@ -85,9 +85,11 @@ export const history = defineBuiltin({
     if (first < count && (session.variables.get("HISTTIMEFORMAT") ?? "") !== "") {
       return { stop: { key: "variable-not-simulated", variable: "HISTTIMEFORMAT" } };
     }
-    const lines = current.entries
-      .slice(first)
-      .map((line, offset) => `${String(current.base + first + offset).padStart(5)}  ${line}\n`);
+    // `history` marks an entry the player edited without running it with `*` (ADR 0066).
+    const lines = current.entries.slice(first).map((entry, offset) => {
+      const number = String(current.base + first + offset).padStart(5);
+      return `${number}${entry.original === undefined ? " " : "*"} ${entry.line}\n`;
+    });
     stdout(lines.join(""));
     return exit(0);
   },

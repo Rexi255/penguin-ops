@@ -4,6 +4,10 @@ _Last updated: 2026-11-18_
 
 ## Recently completed
 
+- M1.11b History navigation (`history-navigation.ts`): `previousHistory`/`nextHistory` like
+  readline's Up and Down (saved new line, bell at the oldest entry, cursor at the end), edits
+  of history entries kept until the line is run (`HistoryEntry.original`, `*` in `history`),
+  `acceptHistoryLine` for Enter (ADR 0066). M1.11 is complete.
 - M1.11a Tab completion (`completion.ts`): `complete` gives the new line, cursor, bell and the
   matches of the second Tab like bash 5.2 with readline 8.2, measured on a real bash: variables,
   `~user`, command names (also after `;`, `|`, assignments), patterns with one match, file
@@ -18,20 +22,16 @@ _Last updated: 2026-11-18_
   destinations, repeated directories), the errors "subdirectory of itself", "cannot overwrite"
   and "cannot move", `-f`, `-v`, `-t`, `-T`, `--strip-trailing-slashes`; the question before a
   write-protected destination stops with a notice. New `fs-rename.ts` (ADR 0063).
-- M1.10b `cp` (coreutils 9.7): files and `-r` like `copy_internal` (target directory, same
-  file, overwrite checks, new files with the source's bits minus the umask, directories filled
-  with owner rights and fixed afterwards, "into itself" and repeated operands by canonical
-  paths), `-f`, `-v`, `-t`, `-T`. New `changeMode`, `createMode`, mkdir modes and
-  `file-names.ts` (ADR 0062).
+
 ## In progress
 
 - Nothing.
 
 ## Next 3 steps
 
-1. ROADMAP M1.11b: history navigation API.
-2. ROADMAP M1.12: rule engine.
-3. Check the M1 "Done when" criteria (engine coverage, no DOM or Node APIs in the engine).
+1. ROADMAP M1.12: rule engine.
+2. Check the M1 "Done when" criteria (engine coverage, no DOM or Node APIs in the engine).
+3. ROADMAP M2.1: the first work package of the level system.
 
 ## Blockers and open questions
 
@@ -45,5 +45,5 @@ _Last updated: 2026-11-18_
 - Some details of `ls`, `clear`, `history`, `cat`, `head`, `tail`, `touch`, `rm`, `cp`, `mv` and
   `grep` could not be checked against a real Debian 13 (tests marked `@differential`, ADR 0054
   to ADR 0064); grep 3.11's own source could not be fetched, so grep follows an earlier 3.x
-  and its NEWS. Tab completion was measured on bash 5.2.21, not on Debian 13's 5.2.37
-  (ADR 0065). M6 verifies them.
+  and its NEWS. Tab completion and history navigation were measured on bash 5.2.21, not on
+  Debian 13's 5.2.37 (ADR 0065, ADR 0066). M6 verifies them.

@@ -78,11 +78,20 @@ export {
   EMPTY_HISTORY,
   type History,
   type HistoryControl,
+  type HistoryEntry,
   historyControl,
   recordHistory,
   removeHistoryRange,
   stifleHistory,
 } from "./history";
+export {
+  acceptHistoryLine,
+  AT_NEW_LINE,
+  type HistoryNavigation,
+  type HistoryStep,
+  nextHistory,
+  previousHistory,
+} from "./history-navigation";
 export { type Gid, MAX_ID, toGid, toUid, type Uid } from "./ids";
 export {
   type CommandContext,
