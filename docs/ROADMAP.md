@@ -94,7 +94,8 @@ placeholder window; CI builds the installer.
       source's permission bits, copies of a directory into itself (ADR 0062).
 - [x] M1.10c Commands batch 3, part 3: `mv` (`-f`, `-v`, `-t`, `-T`), rename(2) in the file
       system (ADR 0063).
-- [ ] M1.10d Commands batch 3, part 4: `grep` (`-i`, `-v`, `-n`, `-c`, `-r`, `-l`).
+- [x] M1.10d Commands batch 3, part 4: `grep` (`-i`, `-v`, `-n`, `-c`, `-r`, `-l` and the basic
+      options around them), GNU patterns translated into JavaScript (ADR 0064).
 - [ ] M1.11 Tab completion and history navigation APIs.
 - [ ] M1.12 Rule engine: `cwd_is`, `exists`, `file_exists`, `dir_exists`, `file_contains`,
       `same_content`, `output_contains`, `output_matches`; `all`, `any`, `not` (ADR 0011).
@@ -259,6 +260,8 @@ AppImage runs on Linux, and chapters 0–2 are playable in both languages.
   joining of multi-line commands with `;`.
 - `cp -p`, `-a`, `-i`, `-n`, `-u`, `--parents`, `--backup` and links (`-l`, `-s`) (ADR 0062);
   `mv -i`, `-n`, `-u`, `--backup` and `--exchange` (ADR 0063).
+- `grep -o`, `--color`, context (`-A`, `-B`, `-C`, `-NUM`), `-m`, `-f`, `-P`, `--include` and
+  `--exclude` (ADR 0064).
 - `rm -i`, `-I` and the answers to rm's questions, once the game simulates typing into a
   running command; `rm --no-preserve-root` with a safety net (ADR 0061).
 - Options of M1.9c that give a notice (ADR 0060): `mkdir -m` (with the mode parser of
