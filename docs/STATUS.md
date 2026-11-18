@@ -4,6 +4,11 @@ _Last updated: 2026-11-18_
 
 ## Recently completed
 
+- M1.9c `mkdir` and `touch` (coreutils 9.7): `mkdir` with `-p` like gnulib's `mkancesdirs`
+  (umask of the directories on the way, chdir and mkdir errors) and `-v`; `touch` with `-a`,
+  `-c`, `-f`, `-h`, `-m`, `-r` and `-`, and touch.c's choice between "cannot touch" and
+  "setting times of". New `makeDirectory` and `setTimes` (utimensat permissions) in
+  `fs-write.ts` (ADR 0060).
 - M1.9b `head` and `tail` (coreutils 9.7): `-n`, `-c` (`head` with `-N` for "all but the
   last", `tail` with `+N` from the start), headers with `-q`/`-v`, `-z`, the obsolete forms
   (`head -5c`, `tail +5`, `tail -5f`), gnulib's counts with suffixes (`src/xstrtol.ts`), how far
@@ -25,21 +30,15 @@ _Last updated: 2026-11-18_
   ncurses' usage text, `TERM` errors and notices. Sessions set `TERM=xterm-256color`; commands
   on the terminal get a `CommandTerminal`; `parseOptions` has a `getopt` syntax without long
   options (ADR 0056).
-- M1.8b-2 `ls -l` and `-g`, `-o`, `-G`, `-n`: mode string with `s`/`t`, links, owner and group
-  names (IDs without a name), sizes, `total` in KiB of 4 KiB blocks, dates in UTC with the
-  six-month rule, `?` lines and exit status 1 for entries that cannot be stat'ed. New
-  `fileStatus`, `modeString`, `utcCalendarTime`; `openDirectory` returns the kind of each entry;
-  the simulated hosts run on UTC (ADR 0055).
-
 ## In progress
 
 - Nothing.
 
 ## Next 3 steps
 
-1. ROADMAP M1.9c: `mkdir` (`-p`) and `touch`.
-2. ROADMAP M1.10: commands batch 3 (`cp`, `mv`, `rm`, `grep`).
-3. ROADMAP M1.11: tab completion and history navigation APIs.
+1. ROADMAP M1.10: commands batch 3 (`cp`, `mv`, `rm`, `grep`).
+2. ROADMAP M1.11: tab completion and history navigation APIs.
+3. ROADMAP M1.12: rule engine.
 
 ## Blockers and open questions
 
@@ -50,5 +49,6 @@ _Last updated: 2026-11-18_
 - The logo colours are provisional until M3.0f-2 aligns them with the design tokens.
 - Steam release is assumed to be "maybe later" (ADR 0002); confirm with the owner when it
   becomes relevant.
-- Some `ls`, `clear`, `history`, `cat`, `head` and `tail` details could not be checked against a
-  real Debian 13 (tests marked `@differential`, ADR 0054 to ADR 0059); M6 verifies them.
+- Some details of `ls`, `clear`, `history`, `cat`, `head`, `tail` and `touch` could not be
+  checked against a real Debian 13 (tests marked `@differential`, ADR 0054 to ADR 0060); M6
+  verifies them.

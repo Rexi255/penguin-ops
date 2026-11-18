@@ -86,7 +86,8 @@ placeholder window; CI builds the installer.
       streams (ADR 0058).
 - [x] M1.9b Commands batch 2, part 2: `head` and `tail` (`-n`, `-c`, headers for several
       files), with their obsolete forms and gnulib's counts (ADR 0059).
-- [ ] M1.9c Commands batch 2, part 3: `mkdir` (`-p`) and `touch`.
+- [x] M1.9c Commands batch 2, part 3: `mkdir` (`-p`, `-v`) and `touch` (`-a`, `-c`, `-h`, `-m`,
+      `-r`), with mkdir(2) and utimensat(2) in the file system (ADR 0060).
 - [ ] M1.10 Commands batch 3: `cp` (`-r`), `mv`, `rm` (`-r`, `-f`), `grep` (`-i`, `-v`, `-n`,
       `-c`, `-r`, `-l`).
 - [ ] M1.11 Tab completion and history navigation APIs.
@@ -251,6 +252,9 @@ AppImage runs on Linux, and chapters 0–2 are playable in both languages.
   `history -a/-n/-r/-w`, history kept across sessions), `HISTIGNORE` (setting it has no effect
   so far), time stamps with `HISTTIMEFORMAT`, `history -s`, `history -p`, and bash's `cmdhist`
   joining of multi-line commands with `;`.
+- Options of M1.9c that give a notice (ADR 0060): `mkdir -m` (with the mode parser of
+  `chmod`), `touch -d` (gnulib's `parse_datetime`), `touch -t` and `--time`, and access times
+  (`touch -a` that can be seen, `ls -lu`).
 - `CDPATH` for `cd`; until then a non-empty `CDPATH` stops `cd` with a game notice (ADR 0053).
 - A removed working directory (needs `rm`, M1.10): `cd ..` finds the parent through the kernel,
   and bash forgets the directory's name after a failed `pwd -P` (ADR 0053); `ls .` and `ls ..`

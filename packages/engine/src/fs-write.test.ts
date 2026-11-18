@@ -4,6 +4,11 @@ import { createGameClock } from "./clock";
 import type { FsNode } from "./fs-node";
 import {
   type FileWrite,
+  makeDirectory,
+  type MakeDirectoryResult,
+  setTimes,
+  type SetTimesResult,
+  type TimesUpdate,
   writeFile,
   type WriteMode,
   type WriteResult,
@@ -388,5 +393,167 @@ describe("writeToOpenFile", () => {
     expect(() => writeToOpenFile(world, "gone", "/tmp/a", "x", clock)).toThrow(
       `the host "gone" is not part of the world`,
     );
+  });
+});
+
+function mkdir(user: string, path: string, cwd?: string): MakeDirectoryResult {
+  return makeDirectory(world, session(user, cwd), path, clock);
+}
+
+/** Returns the changed world of a successful mkdir, or fails the test. */
+function made(result: MakeDirectoryResult): World {
+  if (!result.ok) {
+    throw new Error(`mkdir failed with ${result.error}`);
+  }
+  return result.world;
+}
+
+describe("makeDirectory", () => {
+  test("@differential creates an empty directory with the user, group, 0o777 & ~umask and time", () => {
+    const result = mkdir("alice", "/home/alice/new");
+    expect(result).toMatchObject({ ok: true, path: "/home/alice/new" });
+    expect(nodeAt(made(result), "/home/alice/new")).toEqual({
+      kind: "directory",
+      owner: 1000,
+      group: 1000,
+      mode: 0o775,
+      mtime: NOW,
+      entries: new Map(),
+    });
+  });
+
+  test("sets the mtime of the parent, but not of the directories above", () => {
+    const after = made(mkdir("alice", "/home/alice/new"));
+    expect(nodeAt(after, "/home/alice")?.mtime).toBe(NOW);
+    expect(nodeAt(after, "/home")?.mtime).toBe(BUILT);
+  });
+
+  test("resolves relative paths and allows a trailing slash", () => {
+    const result = mkdir("alice", "docs//sub/", "/home/alice");
+    expect(result).toMatchObject({ ok: true, path: "/home/alice/docs/sub" });
+    expect(nodeAt(made(result), "/home/alice/docs/sub")?.kind).toBe("directory");
+  });
+
+  test("uses the session's umask", () => {
+    const strict: Session = { ...session("alice"), umask: 0o077 };
+    const after = made(makeDirectory(world, strict, "/home/alice/new", clock));
+    expect(nodeAt(after, "/home/alice/new")?.mode).toBe(0o700);
+  });
+
+  test("inherits the group and the setgid bit of a setgid parent", () => {
+    const after = made(mkdir("alice", "/srv/shared/team"));
+    expect(nodeAt(after, "/srv/shared/team")).toMatchObject({
+      owner: 1000,
+      group: 2000,
+      mode: 0o2775,
+    });
+  });
+
+  test.each([
+    ["/home/alice/docs"],
+    ["/home/alice/notes.txt"],
+    ["/home/alice/notes.txt/"],
+    ["/"],
+    ["/home/alice/."],
+    ["/home/alice/docs/.."],
+  ])("fails with EEXIST for %s", (path) => {
+    expect(mkdir("alice", path)).toEqual({ ok: false, error: "EEXIST" });
+  });
+
+  test.each([
+    ["", "ENOENT"],
+    ["/home/alice/missing/new", "ENOENT"],
+    ["/etc/hostname/new", "ENOTDIR"],
+    ["/etc/hostname/.", "ENOTDIR"],
+    ["/srv/closed/new", "EACCES"],
+    ["/home/alice/private/new", "EACCES"],
+    ["/srv/readonly/new", "EACCES"],
+    ["/etc/new", "EACCES"],
+  ])("fails for %j with %s", (path, error) => {
+    expect(mkdir("alice", path)).toEqual({ ok: false, error });
+  });
+
+  test("lets root create directories everywhere", () => {
+    expect(mkdir("root", "/srv/readonly/new")).toMatchObject({ ok: true });
+  });
+
+  test("by throwing when the session's host is not part of the world", () => {
+    const lost: Session = { ...session("alice"), host: "gone" };
+    expect(() => makeDirectory(world, lost, "/tmp/a", clock)).toThrow(
+      `the session's host "gone" is not part of the world`,
+    );
+  });
+});
+
+function times(user: string, path: string, update: TimesUpdate): SetTimesResult {
+  return setTimes(world, session(user), path, update, clock);
+}
+
+/** The mtime of `path` after a successful setTimes, or fails the test. */
+function mtimeAfter(result: SetTimesResult, path: string): number | undefined {
+  if (!result.ok) {
+    throw new Error(`setTimes failed with ${result.error}`);
+  }
+  return nodeAt(result.world, path)?.mtime;
+}
+
+describe("setTimes", () => {
+  test("sets the mtime of a file to the clock's time, without changing its directory", () => {
+    const result = times("alice", "/home/alice/notes.txt", { kind: "now" });
+    expect(mtimeAfter(result, "/home/alice/notes.txt")).toBe(NOW);
+    expect(mtimeAfter(result, "/home/alice")).toBe(BUILT);
+  });
+
+  test("sets a given mtime, the clock's time, or none", () => {
+    const path = "/home/alice/notes.txt";
+    expect(mtimeAfter(times("alice", path, { kind: "explicit", mtime: 42 }), path)).toBe(42);
+    expect(mtimeAfter(times("alice", path, { kind: "explicit", mtime: "now" }), path)).toBe(NOW);
+    const omitted = times("alice", path, { kind: "explicit", mtime: "omit" });
+    expect(omitted).toEqual({ ok: true, world });
+  });
+
+  test("works on directories and on the root", () => {
+    expect(
+      mtimeAfter(times("alice", "/home/alice/docs", { kind: "now" }), "/home/alice/docs"),
+    ).toBe(NOW);
+    expect(mtimeAfter(times("root", "/", { kind: "explicit", mtime: 7 }), "/")).toBe(7);
+  });
+
+  test("lets the owner set the time of a file without write permission", () => {
+    const result = times("alice", "/home/alice/locked.txt", { kind: "now" });
+    expect(mtimeAfter(result, "/home/alice/locked.txt")).toBe(NOW);
+  });
+
+  test("lets others with write permission set the current time, but no other time", () => {
+    const path = "/srv/readonly/open.txt";
+    expect(mtimeAfter(times("alice", path, { kind: "now" }), path)).toBe(NOW);
+    expect(times("alice", path, { kind: "explicit", mtime: 42 })).toEqual({
+      ok: false,
+      error: "EPERM",
+    });
+    expect(times("alice", path, { kind: "explicit", mtime: "omit" })).toEqual({
+      ok: false,
+      error: "EPERM",
+    });
+  });
+
+  test("fails with EACCES for others without write permission", () => {
+    expect(times("bob", "/home/alice/notes.txt", { kind: "now" })).toEqual({
+      ok: false,
+      error: "EACCES",
+    });
+  });
+
+  test("lets root set every time", () => {
+    const path = "/home/alice/notes.txt";
+    expect(mtimeAfter(times("root", path, { kind: "explicit", mtime: 42 }), path)).toBe(42);
+  });
+
+  test.each([
+    ["/home/alice/missing", "ENOENT"],
+    ["/home/alice/notes.txt/", "ENOTDIR"],
+    ["/srv/closed/x", "EACCES"],
+  ])("fails for %s with %s", (path, error) => {
+    expect(times("alice", path, { kind: "now" })).toEqual({ ok: false, error });
   });
 });
