@@ -1,0 +1,28 @@
+# Test content ported from the prototype's second level (ROADMAP M2.6); rewritten as a real
+# ticket in M4.
+format: 1
+id: printer-floor2
+kind: main
+teaches: [cat]
+start:
+  files:
+    ~/tickets/handover.txt: { text: handover }
+    ~/tickets/printer-floor2.txt: |
+      Device:     Inkwell P4200
+      Location:   2nd floor, next to the kitchen
+      IP address: 10.20.2.50
+    ~/tickets/printer-ground.txt: |
+      Device:     Inkwell P300
+      Location:   ground floor, reception
+      IP address: 10.20.0.41
+goal:
+  output_contains: "10.20.2.50"
+tips:
+  - when: { output_contains: "10.20.0.41" }
+    say: tip-wrong-printer
+  - when: { output_contains: "Is a directory" }
+    say: tip-directory
+solutions:
+  - ["cat ~/tickets/handover.txt", "cat ~/tickets/printer-floor2.txt"]
+  - ["cd tickets", "ls", "cat printer-floor2.txt"]
+  - ["cd ~/tickets", "cat handover.txt printer-floor2.txt"]

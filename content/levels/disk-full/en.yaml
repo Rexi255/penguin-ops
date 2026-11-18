@@ -1,0 +1,25 @@
+title: Disk full!
+ticket: |
+  **Incident:** the app writes "no space left on device". Your predecessor never deleted
+  anything.
+
+  Delete the old log files in `~/logs/old`. The current log `~/logs/app.log` stays.
+tip-current-log: |
+  That was the current log. `rm` has no recycle bin, so it is gone for good. The ticket can
+  still be solved, but next time look before you delete: `ls` first, then `rm`.
+tip-directory: |
+  `rm` removes files. A folder needs `rm -r`, which deletes it with everything inside.
+hints:
+  - Look into `~/logs/old` first. One command deletes files.
+  - "`rm file` deletes a file, and `*` stands for any name: `*.log` means all files ending in `.log`."
+  - "Type `rm ~/logs/old/*.log`."
+explanation:
+  text: |
+    `rm` (remove) deletes files for good: there is no recycle bin. With `-r` it also deletes
+    folders with everything in them, so check the path twice.
+  options:
+    - ["rm -i file", "Ask before deleting each file."]
+    - ["rm -r folder", "Delete a folder with everything in it."]
+  example: rm -i ~/logs/old/*.log
+extra_goals:
+  careful: Clean up without touching the current log.

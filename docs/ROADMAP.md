@@ -142,8 +142,9 @@ coverage ≥ 90 %; the engine cannot import DOM or Node APIs (enforced).
   - [x] M2.5c Steps and checkpoints: steps in order, step messages, resuming at a checkpoint.
   - [x] M2.5d Tips and extra goals: each tip once while the ticket is open, extra goals once
         (ADR 0077 for M2.5b to M2.5d).
-- [ ] M2.6 Port the five prototype levels with English names and the prose/technical split as
-      test content. Level 1 (`first-steps`) came with M2.4b; levels 2 to 5 remain.
+- [x] M2.6 Port the five prototype levels with English names and the prose/technical split as
+      test content: `first-steps` (M2.4b), `printer-floor2`, `project-folders`, `switch-backup`
+      and `disk-full` in the chapters `first-day`, `left-behind` and `tidying-up`.
 - [ ] M2.7 Developer mode API: load any level or step, auto-play a reference solution, inspect
       rule states.
 - [ ] M2.8 `/new-level` skill.

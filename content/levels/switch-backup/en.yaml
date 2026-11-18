@@ -1,0 +1,29 @@
+title: Backup before the switch update
+ticket: |
+  Tonight the switch on the second floor gets new firmware. Before that:
+  - copy its configuration `~/network/switch-floor2.conf` into the folder `~/backup`
+  - move the new firmware `~/downloads/firmware-3.0.bin` into `~/network/firmware`
+
+  `cp` copies, `mv` moves.
+step-backup: |
+  The backup is safe. Now the firmware still has to move to `~/network/firmware`.
+tip-moved-config: |
+  The configuration is now only in `~/backup`: `mv` moved it instead of copying it. Move it
+  back with `mv ~/backup/switch-floor2.conf ~/network/` and use `cp` for the backup.
+tip-copied-firmware: |
+  The firmware is now in two places. The ticket asks to move it: use `mv`, or remove the copy
+  in `~/downloads`.
+hints:
+  - A backup is a copy. Moving a file is a different command.
+  - "`cp source target` copies a file, `mv source target` moves it. The target may be a folder."
+  - "Type `cp ~/network/switch-floor2.conf ~/backup/`, then `mv ~/downloads/firmware-3.0.bin ~/network/firmware/`."
+explanation:
+  text: |
+    `cp` (copy) copies files, `mv` (move) moves or renames them. If the target is a folder,
+    the file keeps its name inside it.
+  options:
+    - ["cp -r folder target", "Copy a folder with everything in it."]
+    - ["mv old new", "Rename a file."]
+  example: cp ~/network/switch-floor1.conf ~/backup/
+extra_goals:
+  floor1: The switch on the first floor is next. Back up its configuration too.

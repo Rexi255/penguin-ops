@@ -1,0 +1,54 @@
+# Test content ported from the prototype's fourth level (ROADMAP M2.6); rewritten as a real
+# ticket in M4.
+format: 1
+id: switch-backup
+kind: main
+teaches: [cp, mv]
+start:
+  files:
+    ~/network/switch-floor1.conf: |
+      hostname sw-floor1
+      version 2.1.4
+      vlan 10 name office
+    ~/network/switch-floor2.conf: |
+      hostname sw-floor2
+      version 2.1.4
+      vlan 10 name office
+      vlan 20 name printers
+    ~/network/firmware/: {}
+    ~/backup/: {}
+    ~/downloads/firmware-3.0.bin: |
+      SWITCH FIRMWARE 3.0.0
+steps:
+  - id: backup
+    goal:
+      same_content: [~/network/switch-floor2.conf, ~/backup/switch-floor2.conf]
+    say: step-backup
+  - id: firmware
+    goal:
+      all:
+        - file_exists: ~/network/firmware/firmware-3.0.bin
+        - not: { exists: ~/downloads/firmware-3.0.bin }
+tips:
+  - when:
+      all:
+        - not: { exists: ~/network/switch-floor2.conf }
+        - file_exists: ~/backup/switch-floor2.conf
+    say: tip-moved-config
+  - when:
+      all:
+        - file_exists: ~/network/firmware/firmware-3.0.bin
+        - exists: ~/downloads/firmware-3.0.bin
+    say: tip-copied-firmware
+extra_goals:
+  - id: floor1
+    when: { same_content: [~/network/switch-floor1.conf, ~/backup/switch-floor1.conf] }
+    xp: 20
+solutions:
+  - - cp ~/network/switch-floor2.conf ~/backup/
+    - mv ~/downloads/firmware-3.0.bin ~/network/firmware/
+  - - cd network
+    - cp switch-floor2.conf ../backup/switch-floor2.conf
+    - mv ../downloads/firmware-3.0.bin firmware/
+  - - cp ~/network/*.conf ~/backup
+    - mv ~/downloads/firmware-3.0.bin ~/network/firmware

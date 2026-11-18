@@ -46,13 +46,13 @@ About 25–30 tickets. Commands needed by the engine: everything from the protot
 The prototype's five levels map to the MVP as follows (they are ported in M2.6 as test
 content and rewritten as real tickets in M4):
 
-| Prototype level | Chapter |
-|---|---|
-| 1 First working day (`pwd`, `ls`, `cd`) | 0 |
-| 2 The printer on the 2nd floor (`cat`) | 1 |
-| 3 New project folders (`mkdir`, `touch`) | 2 |
-| 4 Backup before the switch update (`cp`, `mv`) | 2 |
-| 5 Disk full (`rm`) | 2 (incident) |
+| Prototype level | Level ID | Chapter |
+|---|---|---|
+| 1 First working day (`pwd`, `ls`, `cd`) | `first-steps` | 0 (`first-day`) |
+| 2 The printer on the 2nd floor (`cat`) | `printer-floor2` | 1 (`left-behind`) |
+| 3 New project folders (`mkdir`, `touch`) | `project-folders` | 2 (`tidying-up`) |
+| 4 Backup before the switch update (`cp`, `mv`) | `switch-backup` | 2 (`tidying-up`) |
+| 5 Disk full (`rm`) | `disk-full` | 2 (`tidying-up`, incident) |
 
 ## Later (ideas, not planned)
 

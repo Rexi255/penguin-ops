@@ -1,0 +1,41 @@
+# Test content ported from the prototype's fifth level (ROADMAP M2.6); rewritten as a real
+# ticket in M4.
+format: 1
+id: disk-full
+kind: incident
+teaches: [rm]
+xp: 150
+start:
+  files:
+    ~/logs/app.log: |
+      2026-01-05 07:58:12 INFO  app started
+      2026-01-05 07:59:40 ERROR no space left on device
+    ~/logs/old/app-2024-01.log: |
+      2024-01-31 23:59:59 INFO  app stopped
+    ~/logs/old/app-2024-02.log: |
+      2024-02-29 23:59:59 INFO  app stopped
+    ~/logs/old/app-2024-03.log: |
+      2024-03-31 23:59:59 INFO  app stopped
+goal:
+  all:
+    - not: { exists: ~/logs/old/app-2024-01.log }
+    - not: { exists: ~/logs/old/app-2024-02.log }
+    - not: { exists: ~/logs/old/app-2024-03.log }
+tips:
+  - when: { not: { exists: ~/logs/app.log } }
+    say: tip-current-log
+  - when: { output_contains: "Is a directory" }
+    say: tip-directory
+extra_goals:
+  - id: careful
+    when:
+      all:
+        - not: { exists: ~/logs/old/app-2024-01.log }
+        - not: { exists: ~/logs/old/app-2024-02.log }
+        - not: { exists: ~/logs/old/app-2024-03.log }
+        - file_exists: ~/logs/app.log
+    xp: 50
+solutions:
+  - ["rm ~/logs/old/*.log"]
+  - [cd logs/old, ls, rm app-2024-01.log app-2024-02.log app-2024-03.log]
+  - ["rm -r ~/logs/old"]

@@ -1,0 +1,28 @@
+title: Neue Projektordner
+ticket: |
+  Das Marketing startet den Website-Relaunch und braucht einen Platz für seine Dateien. Lege
+  bitte in `~/projects` an:
+  - einen Ordner `relaunch` mit den Unterordnern `docs` und `drafts`
+  - eine leere Datei `notes.txt` in `docs`
+
+  Ordner legst du mit `mkdir` an, leere Dateien mit `touch`.
+step-folders: |
+  Die Ordner sind da. Jetzt noch die leere Datei `notes.txt` in `docs`.
+tip-wrong-place: |
+  Der Ordner ist in deinem Home-Verzeichnis gelandet. Das Projekt gehört nach `~/projects`:
+  Wechsle zuerst mit `cd projects` dorthin oder gib den ganzen Pfad an.
+hints:
+  - Erst die Ordner, dann die Datei. Jedes braucht einen eigenen Befehl.
+  - "`mkdir name` legt einen Ordner an, `touch name` eine leere Datei. Beide verstehen auch Pfade wie `relaunch/docs`."
+  - "Tippe `cd projects`, dann `mkdir relaunch relaunch/docs relaunch/drafts` und `touch relaunch/docs/notes.txt`."
+explanation:
+  text: |
+    `mkdir` (make directory) legt Ordner an, `touch` legt leere Dateien an. Mit `-p` legt
+    `mkdir` auch fehlende übergeordnete Ordner an und beschwert sich nicht über Ordner, die es
+    schon gibt.
+  options:
+    - ["mkdir -p a/b/c", "Legt den Ordner mit allen übergeordneten Ordnern an."]
+    - ["touch file", "Legt eine leere Datei an oder aktualisiert die Zeit einer vorhandenen."]
+  example: mkdir -p ~/projects/relaunch/images
+extra_goals:
+  readme: Das Marketing liebt READMEs. Lege eine leere `README.txt` im Projektordner an.

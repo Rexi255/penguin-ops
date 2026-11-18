@@ -1,0 +1,27 @@
+title: The printer on the second floor
+ticket: |
+  The office calls: the printer on the second floor does not print. Again.
+
+  Your predecessor left a handover in `~/tickets/handover.txt`. Read it with `cat` and find
+  the printer's **IP address**.
+handover: |
+  Handover
+
+  Everything about the printer on the second floor is in printer-floor2.txt in this folder.
+  It usually just needs a restart. It always just needs a restart.
+tip-wrong-printer: |
+  That is the printer on the ground floor. The ticket is about the one on the second floor.
+tip-directory: |
+  `cat` prints files, not folders. Use `ls` to see the files inside a folder.
+hints:
+  - The handover is a text file. One command simply prints the content of a file.
+  - "`cat` followed by a file name prints the file. The handover names the file with the printer's data."
+  - "Type `cat ~/tickets/printer-floor2.txt`."
+explanation:
+  text: |
+    `cat` (concatenate) prints the content of files. With several files it prints them one
+    after the other.
+  options:
+    - ["cat file", "Print the content of the file."]
+    - ["cat -n file", "Print it with line numbers."]
+  example: cat -n ~/tickets/handover.txt

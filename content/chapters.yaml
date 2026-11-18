@@ -2,3 +2,7 @@ format: 1
 chapters:
   - id: first-day
     levels: [first-steps]
+  - id: left-behind
+    levels: [printer-floor2]
+  - id: tidying-up
+    levels: [project-folders, switch-backup, disk-full]

@@ -1,0 +1,35 @@
+# Test content ported from the prototype's third level (ROADMAP M2.6); rewritten as a real
+# ticket in M4.
+format: 1
+id: project-folders
+kind: main
+teaches: [mkdir, touch]
+start:
+  files:
+    ~/projects/intranet-2019/notes.txt: |
+      TODO: replace the intranet
+    ~/tickets/: {}
+steps:
+  - id: folders
+    goal:
+      all:
+        - dir_exists: ~/projects/relaunch/docs
+        - dir_exists: ~/projects/relaunch/drafts
+    say: step-folders
+  - id: notes
+    goal:
+      file_exists: ~/projects/relaunch/docs/notes.txt
+tips:
+  - when: { any: [dir_exists: ~/relaunch, dir_exists: ~/docs, dir_exists: ~/drafts] }
+    say: tip-wrong-place
+extra_goals:
+  - id: readme
+    when: { file_exists: ~/projects/relaunch/README.txt }
+    xp: 20
+solutions:
+  - - mkdir ~/projects/relaunch
+    - mkdir ~/projects/relaunch/docs ~/projects/relaunch/drafts
+    - touch ~/projects/relaunch/docs/notes.txt
+  - - mkdir -p ~/projects/relaunch/docs ~/projects/relaunch/drafts
+    - touch ~/projects/relaunch/docs/notes.txt ~/projects/relaunch/README.txt
+  - [cd projects, mkdir relaunch, cd relaunch, mkdir docs drafts, touch docs/notes.txt]

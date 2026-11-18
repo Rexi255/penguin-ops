@@ -4,6 +4,10 @@ _Last updated: 2026-11-18_
 
 ## Recently completed
 
+- M2.6 Prototype levels 2 to 5 as test content: `printer-floor2` (`cat`, chapter
+  `left-behind`), `project-folders` (`mkdir`, `touch`, two steps, extra goal),
+  `switch-backup` (`cp`, `mv`, two steps, extra goal) and the incident `disk-full` (`rm`) in
+  chapter `tidying-up`; the content test plays all their reference solutions.
 - M2.4b Content test (`tests/content/`, `reference-solutions.ts`): `npm test` reads `content/`,
   loads it and plays every reference solution in every language with the players `alice` and
   `max-2` (start events, incomplete or unsimulated command lines, tips, unsolved tickets,
@@ -27,17 +31,19 @@ _Last updated: 2026-11-18_
 
 ## Next 3 steps
 
-1. ROADMAP M2.6: port prototype levels 2 to 5.
-2. ROADMAP M2.7: developer mode API.
-3. ROADMAP M2.8: `/new-level` skill.
+1. ROADMAP M2.7: developer mode API.
+2. ROADMAP M2.8: `/new-level` skill.
+3. ROADMAP M3.0a: set up the impeccable design skill.
 
 ## Blockers and open questions
 
 - `CLAUDE.md` still describes `npm run schemas:update` as regenerating only
   `level.schema.json`; it now also writes `world.schema.json`. Changing `CLAUDE.md` waits
   for the owner's OK.
-- The texts of `first-steps` and the office world's host name `itdesk` were written as test
-  content without the owner's review; the story workshop (M4) replaces them.
+- The texts of the five prototype levels and the office world's host name `itdesk` were
+  written as test content without the owner's review (the prototype's source is not in the
+  repository, so levels 2 to 5 follow the titles in `docs/CURRICULUM.md`); the story workshop
+  (M4) replaces them.
 - Linux is verified only by CI; the owner plays on Windows and has no Linux machine, so no
   manual Linux check is planned. CI builds the AppImage but starts the unpacked app, so the
   M5 criterion "the AppImage runs on Linux" needs CI to start the AppImage itself (ROADMAP

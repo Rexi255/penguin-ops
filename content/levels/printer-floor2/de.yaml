@@ -1,0 +1,27 @@
+title: Der Drucker im zweiten Stock
+ticket: |
+  Das Büro ruft an: Der Drucker im zweiten Stock druckt nicht. Mal wieder.
+
+  Dein Vorgänger hat eine Übergabe in `~/tickets/handover.txt` hinterlassen. Lies sie mit
+  `cat` und finde die **IP-Adresse** des Druckers.
+handover: |
+  Übergabe
+
+  Alles zum Drucker im zweiten Stock steht in printer-floor2.txt in diesem Ordner.
+  Meistens hilft ein Neustart. Eigentlich hilft immer ein Neustart.
+tip-wrong-printer: |
+  Das ist der Drucker im Erdgeschoss. Im Ticket geht es um den im zweiten Stock.
+tip-directory: |
+  `cat` gibt Dateien aus, keine Ordner. Mit `ls` siehst du die Dateien in einem Ordner.
+hints:
+  - Die Übergabe ist eine Textdatei. Ein Befehl gibt einfach den Inhalt einer Datei aus.
+  - "`cat` mit einem Dateinamen gibt die Datei aus. Die Übergabe nennt die Datei mit den Daten des Druckers."
+  - "Tippe `cat ~/tickets/printer-floor2.txt`."
+explanation:
+  text: |
+    `cat` (concatenate, aneinanderhängen) gibt den Inhalt von Dateien aus. Bei mehreren
+    Dateien gibt es sie nacheinander aus.
+  options:
+    - ["cat file", "Gibt den Inhalt der Datei aus."]
+    - ["cat -n file", "Gibt sie mit Zeilennummern aus."]
+  example: cat -n ~/tickets/handover.txt
