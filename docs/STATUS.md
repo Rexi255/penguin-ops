@@ -4,6 +4,11 @@ _Last updated: 2026-11-18_
 
 ## Recently completed
 
+- M1.10b `cp` (coreutils 9.7): files and `-r` like `copy_internal` (target directory, same
+  file, overwrite checks, new files with the source's bits minus the umask, directories filled
+  with owner rights and fixed afterwards, "into itself" and repeated operands by canonical
+  paths), `-f`, `-v`, `-t`, `-T`. New `changeMode`, `createMode`, mkdir modes and
+  `file-names.ts` (ADR 0062).
 - M1.10a `rm` (coreutils 9.7): files, `-r`/`-R` like remove.c's fts walk (entries that stay
   keep their directories without a message, unreadable empty directories go), `-d`, `-f`, `-v`,
   `--preserve-root`, refusal of `.`/`..` and `/`, the `./-x` hint; questions on the terminal
@@ -19,22 +24,15 @@ _Last updated: 2026-11-18_
   (`head -5c`, `tail +5`, `tail -5f`), gnulib's counts with suffixes (`src/xstrtol.ts`), how far
   a `-` reads a pipe or file. `defineCommand` gets the hooks `obsoleteSyntax` and `checkOption`;
   `tail -f` gives a notice (ADR 0059).
-- M1.9a `cat` (coreutils 9.7): files and standard input (`-`, read once), all formatting
-  options (`-b`, `-n`, `-s`, `-v`, `-E`, `-T`, `-A`, `-e`, `-t`, `-u`) as a translation of
-  `cat.c`'s state machine that carries over between files, errors with `quotef` names, "input
-  file is output file" like `cat.c` (`cat a >> a`), and the new notice
-  `terminal-input-not-simulated` for `cat` on the terminal. Commands learn the files of `<` and
-  `>`/`>>` (`stdin.file`, `stdoutFile`) (ADR 0058).
-
 ## In progress
 
 - Nothing.
 
 ## Next 3 steps
 
-1. ROADMAP M1.10b: `cp` (`-r`).
-2. ROADMAP M1.10c: `mv`.
-3. ROADMAP M1.10d: `grep`.
+1. ROADMAP M1.10c: `mv`.
+2. ROADMAP M1.10d: `grep`.
+3. ROADMAP M1.11: tab completion and history navigation APIs.
 
 ## Blockers and open questions
 
@@ -45,6 +43,6 @@ _Last updated: 2026-11-18_
 - The logo colours are provisional until M3.0f-2 aligns them with the design tokens.
 - Steam release is assumed to be "maybe later" (ADR 0002); confirm with the owner when it
   becomes relevant.
-- Some details of `ls`, `clear`, `history`, `cat`, `head`, `tail`, `touch` and `rm` could not
-  be checked against a real Debian 13 (tests marked `@differential`, ADR 0054 to ADR 0061); M6
-  verifies them.
+- Some details of `ls`, `clear`, `history`, `cat`, `head`, `tail`, `touch`, `rm` and `cp` could
+  not be checked against a real Debian 13 (tests marked `@differential`, ADR 0054 to ADR 0062);
+  M6 verifies them.

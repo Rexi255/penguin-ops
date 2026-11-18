@@ -154,10 +154,11 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     before, without permission checks, and drops it if the file is gone (ADR 0049).
     The helpers for the immutable tree (finding the directory that holds a path's last
     component, copying the directories on a changed path) are in `src/fs-tree.ts`.
+    `FileWrite.createMode` gives a new file other permission bits (`cp`, ADR 0062).
     `makeDirectory` is mkdir(2) (`EEXIST`, write permission on the parent, setgid inherited)
     and `setTimes` is utimensat(2) with its two permission rules: the current time for the
     owner or writers, other times for the owner only (`EPERM`). Access times are not kept
-    (ADR 0060).
+    (ADR 0060). `changeMode` is chmod(2) for root and the owner (ADR 0062).
   - `src/fs-remove.ts`: `removeEntry` is unlink(2) or rmdir(2) in the kernel's order of checks:
     write and search permission on the directory, the sticky bit (`EPERM`), the kind of the
     entry and `ENOTEMPTY` (ADR 0061).
@@ -252,8 +253,8 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   - `src/commands/` holds the commands, one module each, and `COMMANDS`, the list for
     `createCommandLookup`. `cd`, `pwd`, `echo` and `history` are builtins (`history` lists, clears
     and deletes entries of the session's history list, ADR 0057); `whoami`, `ls`, `cat`, `head`,
-    `tail`, `mkdir`, `touch` and `rm` use `defineCommand`. `clear` is ncurses' program with plain
-    `getopt`: on the terminal it clears the screen, into a pipe or a file it writes the escape
+    `tail`, `mkdir`, `touch`, `rm` and `cp` use `defineCommand`. `clear` is ncurses' program with
+    plain `getopt`: on the terminal it clears the screen, into a pipe or a file it writes the escape
     sequences of `xterm-256color`, the `TERM` that `createSession` sets (ADR 0056). `ls` follows
     coreutils' `ls.c`: columns on a terminal, one name per line otherwise (ADR 0054);
     `long-listing.ts` writes its long format with `-l`, `-g`, `-o`, `-G` and `-n` (ADR 0055). `cat`
@@ -264,7 +265,9 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     input (ADR 0059). `mkdir -p` creates the directories on the way like gnulib's `mkancesdirs`, and
     `touch` combines open(2) and utimensat(2) like `touch.c` (ADR 0060). `rm` walks its operands
     like remove.c with gnulib's fts and stops with a notice where it would ask a question on the
-    terminal (ADR 0061). `directory-names.ts` works out working directory names like bash (by text,
+    terminal (ADR 0061). `cp` follows `copy_internal` of copy.c, with the names of copies in a
+    target directory from `file-names.ts` and copies of a directory into itself found by canonical
+    paths (ADR 0062). `directory-names.ts` works out working directory names like bash (by text,
     keeping a leading `//`) and checks them like chdir(2) and getcwd(3); the session's `cwd` is the
     name bash remembers, not a resolved path.
 - **Full-screen programs:** one mechanism for `less`, `man`, `top`, `nano` and later `vim`.

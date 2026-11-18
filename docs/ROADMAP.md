@@ -90,7 +90,8 @@ placeholder window; CI builds the installer.
       `-r`), with mkdir(2) and utimensat(2) in the file system (ADR 0060).
 - [x] M1.10a Commands batch 3, part 1: `rm` (`-r`, `-f`, `-d`, `-v`), unlink(2) and rmdir(2) in
       the file system, questions on the terminal as a notice (ADR 0061).
-- [ ] M1.10b Commands batch 3, part 2: `cp` (`-r`).
+- [x] M1.10b Commands batch 3, part 2: `cp` (`-r`, `-f`, `-v`, `-t`, `-T`), new files with the
+      source's permission bits, copies of a directory into itself (ADR 0062).
 - [ ] M1.10c Commands batch 3, part 3: `mv`.
 - [ ] M1.10d Commands batch 3, part 4: `grep` (`-i`, `-v`, `-n`, `-c`, `-r`, `-l`).
 - [ ] M1.11 Tab completion and history navigation APIs.
@@ -255,6 +256,7 @@ AppImage runs on Linux, and chapters 0–2 are playable in both languages.
   `history -a/-n/-r/-w`, history kept across sessions), `HISTIGNORE` (setting it has no effect
   so far), time stamps with `HISTTIMEFORMAT`, `history -s`, `history -p`, and bash's `cmdhist`
   joining of multi-line commands with `;`.
+- `cp -p`, `-a`, `-i`, `-n`, `-u`, `--parents`, `--backup` and links (`-l`, `-s`) (ADR 0062).
 - `rm -i`, `-I` and the answers to rm's questions, once the game simulates typing into a
   running command; `rm --no-preserve-root` with a safety net (ADR 0061).
 - Options of M1.9c that give a notice (ADR 0060): `mkdir -m` (with the mode parser of

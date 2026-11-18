@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import { createGameClock } from "./clock";
 import type { FsNode } from "./fs-node";
 import {
+  changeMode,
   type FileWrite,
   makeDirectory,
   type MakeDirectoryResult,
@@ -555,5 +556,71 @@ describe("setTimes", () => {
     ["/srv/closed/x", "EACCES"],
   ])("fails for %s with %s", (path, error) => {
     expect(times("alice", path, { kind: "now" })).toEqual({ ok: false, error });
+  });
+});
+
+describe("writeFile and makeDirectory with a mode", () => {
+  test("a new file gets the permission bits of createMode minus the umask", () => {
+    const after = changed(
+      writeFile(
+        world,
+        session("alice"),
+        { path: "/home/alice/run.sh", text: "", mode: "truncate", createMode: 0o4755 },
+        clock,
+      ),
+    );
+    expect(nodeAt(after, "/home/alice/run.sh")?.mode).toBe(0o755);
+  });
+
+  test("an existing file keeps its mode", () => {
+    const after = changed(
+      writeFile(
+        world,
+        session("alice"),
+        { path: "/home/alice/notes.txt", text: "x", mode: "truncate", createMode: 0o600 },
+        clock,
+      ),
+    );
+    expect(nodeAt(after, "/home/alice/notes.txt")?.mode).toBe(0o644);
+  });
+
+  test("a new directory keeps the sticky bit of its mode, but not setuid and setgid", () => {
+    const after = made(makeDirectory(world, session("alice"), "/home/alice/t", clock, 0o7777));
+    expect(nodeAt(after, "/home/alice/t")?.mode).toBe(0o1775);
+  });
+});
+
+describe("changeMode", () => {
+  test("sets the mode of the owner's node without changing its mtime", () => {
+    const result = changeMode(world, session("alice"), "/home/alice/notes.txt", 0o600);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(nodeAt(result.world, "/home/alice/notes.txt")).toMatchObject({
+        mode: 0o600,
+        mtime: BUILT,
+      });
+    }
+  });
+
+  test("lets root change every mode", () => {
+    expect(changeMode(world, session("root"), "/home/alice/docs", 0o700).ok).toBe(true);
+    expect(changeMode(world, session("root"), "/", 0o755).ok).toBe(true);
+  });
+
+  test("fails with EPERM for other users and with lookup errors", () => {
+    expect(changeMode(world, session("bob"), "/home/alice/notes.txt", 0o777)).toEqual({
+      ok: false,
+      error: "EPERM",
+    });
+    expect(changeMode(world, session("alice"), "/home/alice/missing", 0o777)).toEqual({
+      ok: false,
+      error: "ENOENT",
+    });
+  });
+
+  test("throws for an invalid mode", () => {
+    expect(() => changeMode(world, session("alice"), "/home/alice/notes.txt", 0o10000)).toThrow(
+      RangeError,
+    );
   });
 });

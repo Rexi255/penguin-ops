@@ -341,6 +341,23 @@ describe("defineCommand: option checks", () => {
     expect(runCounted("counted -n abc -f").events).toEqual([stderr("counted: bad count abc\n")]);
   });
 
+  test("sees the options before the one it checks", () => {
+    const seen = defineCommand<"name">({
+      name: "seen",
+      options: [{ id: "name", short: "t", argument: "required" }],
+      simulated: ["name"],
+      usageErrorStatus: 1,
+      checkOption: (option, before) =>
+        before.length > 0
+          ? { message: `${option.argument ?? ""} after ${String(before.length)}`, tryHelp: false }
+          : undefined,
+      run: report,
+    });
+    expect(run("seen -t a -t b -t c", createCommandLookup([seen])).events).toEqual([
+      stderr("seen: b after 1\n"),
+    ]);
+  });
+
   test("an obsolete option is checked too", () => {
     expect(runCounted("counted -5a").events).toEqual([stderr("counted: bad count 5a\n")]);
   });

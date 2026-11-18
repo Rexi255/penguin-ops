@@ -48,11 +48,15 @@ export interface CommandDefinition<Id extends string = string> {
   readonly obsoleteSyntax?: (args: readonly string[]) => ObsoleteOptions<Id> | undefined;
   /**
    * Checks one option as the real command does while it reads its options, such as the number
-   * of `head -n abc`. Returns `undefined` if the option is valid, else the error after which the
-   * command exits. It sees the simulated options in the order written, and an error here comes
-   * before an error of a later argument.
+   * of `head -n abc`, or `cp -t` given twice. Returns `undefined` if the option is valid, else
+   * the error after which the command exits. It sees the simulated options in the order
+   * written, with the options before it in `before`, and an error here comes before an error of
+   * a later argument.
    */
-  readonly checkOption?: (option: ParsedOption<Id>) => OptionFailure | undefined;
+  readonly checkOption?: (
+    option: ParsedOption<Id>,
+    before: readonly ParsedOption<Id>[],
+  ) => OptionFailure | undefined;
   /**
    * Lines that the real command writes after glibc's message for an invalid option and before
    * the "Try ... --help" line, such as `rm`'s hint for a file name that starts with `-`.
@@ -147,11 +151,11 @@ export function defineCommand<Id extends string>(
       }
       const parsed = parseOptions(obsolete?.args ?? context.args, specs, order);
       const options = [...(obsolete?.options ?? []), ...parsed.options];
-      for (const option of options) {
+      for (const [index, option] of options.entries()) {
         if (!simulated.has(option.id)) {
           return { stop: { key: "option-not-simulated", option: option.name } };
         }
-        const failure = checkOption?.(option);
+        const failure = checkOption?.(option, options.slice(0, index));
         if (failure !== undefined) {
           return fail(failure);
         }

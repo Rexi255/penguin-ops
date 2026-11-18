@@ -6,7 +6,7 @@
 
 import type { Clock } from "./clock";
 import type { Credentials } from "./credentials";
-import type { DirectoryNode, FileNode, FsNode } from "./fs-node";
+import { type DirectoryNode, type FileNode, type FsNode, isValidMode } from "./fs-node";
 import { lookup, type LookupError, nodeAtCanonicalPath } from "./lookup";
 import { joinAbsolute, splitPath } from "./path";
 import { hasPermission } from "./permissions";
@@ -28,6 +28,11 @@ export interface FileWrite {
   readonly path: string;
   readonly text: string;
   readonly mode: WriteMode;
+  /**
+   * The permission bits that open(2) asks for when it creates the file, before the umask:
+   * 0o666 by default, as bash asks for; `cp` asks for the source's bits (ADR 0062).
+   */
+  readonly createMode?: number;
 }
 
 /**
@@ -43,6 +48,12 @@ const NEW_FILE_MODE = 0o666;
 
 /** The setgid bit. On a directory, new entries get the directory's group instead of the creator's. */
 const SETGID = 0o2000;
+
+/** The sticky bit, which mkdir(2) keeps from the mode it is given. */
+const STICKY = 0o1000;
+
+/** The read, write and execute bits of owner, group and others. */
+const PERMISSION_BITS = 0o777;
 
 /**
  * Writes `write.text` to the file at `write.path` on the session's host, as the session's user
@@ -97,7 +108,14 @@ export function writeFile(
       if (!hasPermission(directory, session.credentials, "write")) {
         return { ok: false, error: "EACCES" };
       }
-      const file = createFile(directory, session.credentials, session.umask, write.text, now);
+      const createMode = write.createMode ?? NEW_FILE_MODE;
+      const file = createFile(
+        directory,
+        session.credentials,
+        createMode & ~session.umask,
+        write.text,
+        now,
+      );
       changed = withEntry(directory, name, file, now);
       break;
     }
@@ -165,8 +183,8 @@ export type MakeDirectoryResult =
 const NEW_DIRECTORY_MODE = 0o777;
 
 /**
- * Creates a directory at `path` on the session's host like mkdir(2) with the mode 0777, as the
- * session's user with its working directory and umask:
+ * Creates a directory at `path` on the session's host like mkdir(2) with `mode` (0777 by default,
+ * as mkdir(1) asks for), as the session's user with its working directory and umask:
  *
  * - The path up to the last component is resolved like `lookup` (ENOENT, ENOTDIR, EACCES); the
  *   directory that holds the last component must allow searching (else EACCES). A trailing
@@ -175,8 +193,9 @@ const NEW_DIRECTORY_MODE = 0o777;
  *   entry of any kind.
  * - The directory that holds it needs write permission (else EACCES).
  * - The new directory is empty and gets the session's user as owner, the session's primary
- *   group (or the parent's group and its setgid bit if the parent has the setgid bit), the mode
- *   `0o777 & ~umask` and the clock's time as mtime; the parent's mtime becomes the clock's time.
+ *   group (or the parent's group and its setgid bit if the parent has the setgid bit), the
+ *   permission and sticky bits of `mode & ~umask` and the clock's time as mtime; the parent's
+ *   mtime becomes the clock's time.
  *
  * Throws an Error if the session's host is not part of `world`.
  */
@@ -185,6 +204,7 @@ export function makeDirectory(
   session: Session,
   path: string,
   clock: Clock,
+  mode = NEW_DIRECTORY_MODE,
 ): MakeDirectoryResult {
   const host = hostOf(world, session);
   const parent = resolveParent(host.root, session, path);
@@ -209,7 +229,7 @@ export function makeDirectory(
     kind: "directory",
     owner: session.credentials.uid,
     group: inherited !== 0 ? directory.group : session.credentials.gid,
-    mode: (NEW_DIRECTORY_MODE & ~session.umask) | inherited,
+    mode: (mode & (PERMISSION_BITS | STICKY) & ~session.umask) | inherited,
     mtime: now,
     entries: new Map(),
   };
@@ -221,6 +241,46 @@ export function makeDirectory(
     world: replaceHostRoot(world, host.name, root),
     path: joinAbsolute([...directoryComponents, name]),
   };
+}
+
+/** Errors of chmod(2): a lookup error, or EPERM for a user who does not own the node. */
+export type ChangeModeError = LookupError | "EPERM";
+
+/** The result of `changeMode`: the changed world, or an error code. */
+export type ChangeModeResult =
+  | { readonly ok: true; readonly world: World }
+  | { readonly ok: false; readonly error: ChangeModeError };
+
+/**
+ * Sets the mode of the node at `path` on the session's host to `mode` (0 to 0o7777) like
+ * chmod(2), as the session's user with its working directory: the path resolves like `lookup`,
+ * and only root and the owner may change the mode (else EPERM). The mtime stays. The kernel's
+ * clearing of the setgid bit for files of a group the user is not in is not simulated yet.
+ *
+ * Throws a RangeError for an invalid mode and an Error if the session's host is not part of
+ * `world`.
+ */
+export function changeMode(
+  world: World,
+  session: Session,
+  path: string,
+  mode: number,
+): ChangeModeResult {
+  if (!isValidMode(mode)) {
+    throw new RangeError(`${String(mode)} is not a valid mode`);
+  }
+  const host = hostOf(world, session);
+  const found = lookup(host.root, session.credentials, session.cwd, path);
+  if (!found.ok) {
+    return found;
+  }
+  const { uid } = session.credentials;
+  if (uid !== 0 && uid !== found.node.owner) {
+    return { ok: false, error: "EPERM" };
+  }
+  const changed: FsNode = { ...found.node, mode };
+  const root = replaceNode(host.root, splitPath(found.path).components, changed);
+  return { ok: true, world: replaceHostRoot(world, host.name, root) };
 }
 
 /**
@@ -329,7 +389,7 @@ function writeToFile(file: FileNode, write: FileWrite, now: number): FileNode {
 function createFile(
   directory: DirectoryNode,
   credentials: Credentials,
-  umask: number,
+  mode: number,
   text: string,
   now: number,
 ): FileNode {
@@ -337,7 +397,7 @@ function createFile(
     kind: "file",
     owner: credentials.uid,
     group: (directory.mode & SETGID) !== 0 ? directory.group : credentials.gid,
-    mode: NEW_FILE_MODE & ~umask,
+    mode: mode & PERMISSION_BITS,
     mtime: now,
     content: text,
   };
