@@ -41,6 +41,22 @@ highlighting. The zod schema stays the authority: some checks (duplicate IDs, va
 expressions, "a directory has no content") only `npm run check` finds. After a schema change,
 run `npm run schemas:update`.
 
+## YAML and error messages
+
+Level files are YAML 1.2: `yes` and `no` are strings, `0640` is the decimal number 640 (write
+modes as `rw-r-----`), and a repeated key is an error. Tabs as indentation, unknown tags such as
+`!big`, a second document after `---`, an alias without its anchor and an empty file are errors
+too. The loader (ADR 0069) reports every problem with file, line and column, followed by the
+path inside the level:
+
+```
+content/levels/printer-floor2/level.yaml:11:5: start.files["notes.txt"]: a start file path must be absolute or start with "~/" (the player's home)
+content/levels/printer-floor2/level.yaml:14:1: tipps: unknown field "tipps"
+```
+
+A problem of a field points at the line that names the field, a problem of a list item at the
+item. A missing required field points at the map that lacks it.
+
 ## `level.yaml`
 
 | Field | Required | Meaning |

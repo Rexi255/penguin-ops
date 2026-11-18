@@ -174,10 +174,16 @@ const fileObjectSchema = z
   .meta({ not: { required: ["content", "text"] } });
 
 const startFileValueSchema = z
-  .union([
-    z.string().meta({ description: "Literal content of a file: technical, always English." }),
-    fileObjectSchema,
-  ])
+  .union(
+    [
+      z.string().meta({ description: "Literal content of a file: technical, always English." }),
+      fileObjectSchema,
+    ],
+    {
+      error:
+        "a start file is its content (a string) or an object with content or text; a directory is {} or an object with owner, group and mode",
+    },
+  )
   .meta({
     description:
       'A file (literal content, { text: key } or { content, owner, group, mode }) or, for a path that ends with "/", a directory ({} or { owner, group, mode }).',

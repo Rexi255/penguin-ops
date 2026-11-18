@@ -481,10 +481,12 @@ describe("levelSchema: start files", () => {
   });
 
   test("a file is a string or an object", () => {
-    expect(problems(level({ start: { files: { "~/a": 42 } } }))[0]?.path).toEqual([
-      "start",
-      "files",
-      "~/a",
+    expect(problems(level({ start: { files: { "~/a": 42 } } }))).toEqual([
+      {
+        path: ["start", "files", "~/a"],
+        message:
+          "a start file is its content (a string) or an object with content or text; a directory is {} or an object with owner, group and mode",
+      },
     ]);
   });
 });

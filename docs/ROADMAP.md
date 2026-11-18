@@ -112,6 +112,10 @@ coverage ≥ 90 %; the engine cannot import DOM or Node APIs (enforced).
 - [x] M2.1 Level schema v1 (zod) and generated JSON Schema for VS Code (ADR 0068).
 - [ ] M2.2 Loader: `content/levels/*`, `content/chapters.yaml`, validation errors with file and
       line.
+  - [x] M2.2a Load one YAML file from its text: YAML 1.2, problems with file, line, column and
+        path, readable zod issues (ADR 0069).
+  - [ ] M2.2b `content/chapters.yaml` schema and loading all levels from a list of files, with
+        cross-checks (folder name is the level ID, every level in exactly one chapter).
 - [ ] M2.3 Translations: level catalogs and `content/ui/<lang>.yaml`, ICU formatting, text markup
       (code, bold, lists, paragraphs) without HTML; English fallback for extra languages.
 - [ ] M2.4 Content tests: schema, German/English completeness, reference solutions per language

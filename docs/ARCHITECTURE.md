@@ -318,8 +318,14 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   engine types; a gameplay test keeps both in line. `src/level-json-schema.ts` generates the
   draft-07 JSON Schema `content/schemas/level.schema.json` (`npm run schemas:update`; a test
   fails when it is stale), which `.vscode/settings.json` maps to the level files.
-- Loader for `content/chapters.yaml`, levels, worlds and catalogs; validation errors with file
-  and line.
+- Loader (`src/level-loader.ts`, ADR 0069): `loadYaml(schema, file, text)` and
+  `loadLevel(file, text)` take the text of a file that the caller has read (content stays
+  pure) and return the value or a list of `ContentProblem`s with file, line, column and the
+  path inside the data (`src/content-problem.ts`, `formatProblem` writes
+  `file:line:column: path: message`). `src/yaml-source.ts` reads YAML 1.2 with the `yaml`
+  library and finds the position of a path in the file; `src/schema-problems.ts` turns zod's
+  issues into problems (unknown and missing fields, flattened unions). Planned: loading
+  `content/chapters.yaml`, all levels, worlds and catalogs (M2.2b, M2.3).
 - Translation catalogs per level and for the UI; ICU MessageFormat; small text markup without
   HTML; English fallback for extra languages (ADR 0012).
 - Format details: `docs/LEVEL-AUTHORING.md`.

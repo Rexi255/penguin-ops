@@ -4,6 +4,12 @@ _Last updated: 2026-11-18_
 
 ## Recently completed
 
+- M2.2a Loading one YAML file from its text (`level-loader.ts`, `yaml-source.ts`,
+  `schema-problems.ts`, `content-problem.ts`): `loadLevel(file, text)` reads YAML 1.2 with the
+  `yaml` library and reports problems as `file:line:column: path: message`; map entries are
+  located at their key, list items at the item; unknown and missing fields and unions get
+  readable messages; parser warnings, empty files and aliases without anchors are problems
+  (ADR 0069).
 - M2.1 Level schema v1 (`level-schema.ts`, `rule-schema.ts`): zod 4 checks a parsed
   `level.yaml` and returns a `Level` with engine rules, numeric modes (`rw-r-----`) and a list of
   start files; rules are objects with one key; steps are `{ id, goal, say? }`; unknown fields are
@@ -25,10 +31,6 @@ _Last updated: 2026-11-18_
   `~user`, command names (also after `;`, `|`, assignments), patterns with one match, file
   names with bash's backslash or quote style; `formatCompletionList` and `completionQuestion`
   for readline's list (ADR 0065).
-- M1.10d `grep` (3.11): basic, extended and fixed patterns (`grep-pattern.ts` translates GNU
-  patterns into JavaScript with regcomp's errors and dfa's warnings), `-e`, `-i`, `-v`, `-w`,
-  `-x`, `-n`, `-c`, `-l`, `-L`, `-q`, `-s`, `-H`, `-h`, `-r`/`-R`, binary files, "input file is
-  also the output", exit statuses 0/1/2 (ADR 0064). M1.10 is complete.
 
 ## In progress
 
@@ -36,13 +38,15 @@ _Last updated: 2026-11-18_
 
 ## Next 3 steps
 
-1. ROADMAP M2.2: level loader with validation errors that name file and line (flatten zod's
-   "invalid union" issue of start files, ADR 0068).
+1. ROADMAP M2.2b: `content/chapters.yaml` schema and loading all levels from a list of files,
+   with cross-checks (folder name is the level ID, every level in exactly one chapter).
 2. ROADMAP M2.3: translation catalogs and ICU formatting.
 3. ROADMAP M2.4: content tests (schema, catalog completeness, reference solutions).
 
 ## Blockers and open questions
 
+- The format and loading of `content/worlds/` have no ROADMAP item yet; proposed: define them
+  with the level session (M2.5), where a level first needs a world. Confirm with the owner.
 - Linux is verified only by CI; the owner plays on Windows and has no Linux machine, so no
   manual Linux check is planned. CI builds the AppImage but starts the unpacked app, so the
   M5 criterion "the AppImage runs on Linux" needs CI to start the AppImage itself (ROADMAP
