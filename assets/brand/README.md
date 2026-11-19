@@ -21,8 +21,11 @@ player learns, and the wordmark `Penguin>_Ops` repeats the same prompt.
 
 Mono variants use pure `#ffffff` (on dark backgrounds) or `#000000` (on light backgrounds).
 
-The colours are provisional until ROADMAP M3.0f aligns them with the design tokens. If a colour
-changes, all SVG and raster files are regenerated together.
+[ADR 0088](../../docs/decisions/0088-logo-colours-aligned-with-the-interface-tokens.md) aligns the
+colours with the design tokens: black becomes `#0f1114` (`surface-terminal`), white becomes
+`#e8e6e1` (`text`), and orange stays `#e0701a` (`player`). The files are regenerated in these
+colours in ROADMAP M3.0f-2b; until then they still carry the values in the table above. If a
+colour changes, all SVG and raster files are regenerated together.
 
 ## Font
 

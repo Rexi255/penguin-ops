@@ -4,6 +4,12 @@ _Last updated: 2026-11-19_
 
 ## Recently completed
 
+- M3.0f-2a Logo colours: the logo compared in three colour variants (unchanged, interface
+  tokens, label tape tokens) on the four surface tokens and two light backgrounds at 2x and 1x;
+  the owner chose the interface tokens: black `#0f1114` (`surface-terminal`), white `#e8e6e1`
+  (`text`), orange `#e0701a` (`player`) unchanged; mono variants stay pure black and white
+  (ADR 0088, partly superseding ADR 0040). M3.0f-2 is split into the choice (f-2a) and the
+  regenerated files (f-2b).
 - M3.0e-2 Icons: the 14 own icons as SVG files in `apps/ui/src/icons/` in a fixed form, drawn
   by the `Icon` component through a strict reader; tests check every file for whole-pixel
   coordinates, the margin with caps and miter tips, butt caps only on dots, and the component's
@@ -24,11 +30,6 @@ _Last updated: 2026-11-19_
   mock-up with the real tokens; all nine are SIL OFL 1.1. The owner chose Barlow Condensed for
   tape, Inter for the interface and JetBrains Mono for the terminal (ADR 0084); `DESIGN.md` and
   `PRODUCT.md` name them. M3.0d is split into the choice (d-1) and the bundling (d-2).
-- M3.0c Styleguide page: `apps/ui/styleguide.html` shows every token of `tokens.css` with a
-  sample drawn by the real stylesheets, its value and note, plus the contrast pairs; new
-  development-only workspace `apps/styleguide` serves it (`npm run styleguide`) and runs
-  Playwright tests with axe-core in Playwright's Chromium (`npm run styleguide:test`), in their
-  own CI job; tests guard that the app never imports or builds the styleguide (ADR 0083).
 
 ## In progress
 
@@ -36,7 +37,7 @@ _Last updated: 2026-11-19_
 
 ## Next 3 steps
 
-1. ROADMAP M3.0f-2: logo and tokens.
+1. ROADMAP M3.0f-2b: logo files in the colours of ADR 0088 and the logo in the styleguide.
 2. ROADMAP M3.1: app screens.
 3. ROADMAP M3.2: new game flow.
 
@@ -53,8 +54,8 @@ _Last updated: 2026-11-19_
   manual Linux check is planned. CI builds the AppImage but starts the unpacked app, so the
   M5 criterion "the AppImage runs on Linux" needs CI to start the AppImage itself (ROADMAP
   ideas) before v0.1.
-- The logo colours are provisional until M3.0f-2 aligns them with the design tokens (fibre
-  orange is unchanged).
+- The brand files still carry the old logo colours until M3.0f-2b regenerates them in the
+  colours of ADR 0088; how the raster icons are regenerated is decided there.
 - Electron does not start in the cloud container (the end-to-end tests hang there); cloud
   sessions take UI screenshots of the built renderer in Playwright's Chromium with a stub of the
   desktop API. CI still runs the real end-to-end tests. The styleguide tests run in the cloud

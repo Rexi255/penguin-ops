@@ -183,8 +183,12 @@ inventing it along the way.
 - [x] M3.0f-1 Logo take-over (done early, ADR 0040): the owner's brand package in
       `assets/brand/` (own penguin, not Tux, ADR 0021), clean SVGs with variants for dark and
       light backgrounds, logo in the README, test of the brand files.
-- [ ] M3.0f-2 Logo and tokens: align the logo colours with the tokens of M3.0b (regenerate all
-      brand files if a colour changes); show the logo in the styleguide.
+- [x] M3.0f-2a Logo colours: the logo compared in three colour variants on the surface tokens
+      and on light backgrounds; the owner chose the interface tokens `surface-terminal` and
+      `text`, orange stays `player` (ADR 0088).
+- [ ] M3.0f-2b Logo files: regenerate the colour SVGs, the web icons and the app icons in the
+      colours of ADR 0088 (brand README and brand test updated); show the logo in the
+      styleguide.
 - [ ] M3.1 App screens: start screen with the logo, save slot screen, game screen, pause menu.
 - [ ] M3.2 New game flow: name, derived Linux user name (validation, editing), Story or Sandbox
       mode (ADR 0017, ADR 0019).
