@@ -36,6 +36,8 @@ Commands (defined in `package.json`):
 | `npm run e2e` | Build the app and run the end-to-end tests (Playwright drives Electron) |
 | `npm run package` | Build the installer for the current platform (Windows: NSIS installer, Linux: AppImage) into `apps/desktop/release` |
 | `npm run e2e:packaged` | Run the end-to-end tests against the app from the last `npm run package` |
+| `npm run styleguide` | Open the styleguide page that shows every design token, with hot reload |
+| `npm run styleguide:test` | Run the styleguide's browser tests with an accessibility check (run `npx playwright install chromium` once first) |
 | `npm run check:docs-duty` | Check that your commits update `docs/STATUS.md` if they change code or content; CI runs it too |
 | `npm run adr:new -- "Title"` | Create the next decision record in `docs/decisions/` from the template; `--supersedes <number>` and `--partly "<number>:<scope>"` mark replaced records |
 

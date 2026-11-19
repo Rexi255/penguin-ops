@@ -40,6 +40,7 @@ penguin-ops/
   apps/
     ui/          React renderer
     desktop/     Electron main process, preload, packaging config
+    styleguide/  development server and browser tests of the styleguide page (ADR 0083)
   content/       data only
     schemas/     generated JSON Schemas for editors (level.schema.json, world.schema.json)
     chapters.yaml
@@ -68,7 +69,8 @@ penguin-ops/
 ```
 
 Allowed dependencies: `engine` ← `content` ← `gameplay` ← `ui` ← `desktop`. The engine
-depends on nothing project-internal (ADR 0006).
+depends on nothing project-internal (ADR 0006). `apps/styleguide` imports no workspace; it serves
+the styleguide page of `apps/ui` by path (ADR 0083).
 
 ## TypeScript setup
 
@@ -442,7 +444,16 @@ radius, line widths, the floating shadow, motion; durations drop to 0 ms with re
 lists the colour pairs that must meet WCAG AA, using the contrast maths of
 `src/color-contrast.ts`; `src/design-tokens.test.ts` checks the real stylesheets with
 `src/css-rules.ts`, a small reader for the project's own CSS, which it imports with Vite's
-`?raw`. `src/desktop-api.ts` defines
+`?raw`.
+
+Styleguide (ADR 0083): `styleguide.html` loads `src/styleguide/main.tsx`, a page for developers
+(English, not translated) that reads `tokens.css` with `?raw`, sorts every token into a section
+by name prefix (`src/styleguide/token-catalog.ts`) and draws a sample of each with the real
+stylesheets, plus the contrast pairs with their ratios. Its layout is
+`src/styleguide/styleguide.css`, which follows the token rules. The app never imports from
+`src/styleguide/` and its build reads only `index.html`; both are tested.
+
+`src/desktop-api.ts` defines
 the preload contract (`DesktopApi`); `src/index.ts` exports only its types, for
 `apps/desktop`.
 
@@ -481,6 +492,22 @@ apps/desktop/
   `tsconfig.tooling.json`); they skip checking third-party declaration files because Electron's
   and electron-vite's declarations are not self-contained.
 
+## Styleguide (`apps/styleguide`)
+
+Development-only workspace, never packaged (ADR 0083):
+
+```
+apps/styleguide/
+  vite.config.ts        Vite server with root apps/ui on port 5190 (`npm run styleguide`)
+  playwright.config.ts  starts that server and runs the tests in Playwright's Chromium
+  e2e/styleguide.spec.ts  every token shown with its value and colour, keyboard focus, motion,
+                        no console errors, axe-core with no violations at 1280 and 360 px
+```
+
+axe-core is injected from `axe-core/axe.min.js`; `@axe-core/playwright` is not used (license
+exception only for axe-core). `STYLEGUIDE_CHROMIUM_PATH` points the tests at an installed
+Chromium where Playwright's own cannot be downloaded.
+
 ## Testing and CI
 
 Test layers, quality gate and CI jobs: ADR 0015. Tests live next to the code (`*.test.ts`);
@@ -497,12 +524,15 @@ end-to-end tests in `apps/desktop/e2e/` (`*.spec.ts`).
 - Playwright (ADR 0033, ADR 0034): `npm run e2e` builds the app and starts it through Electron
   for each test (project `built`); no browser download is needed. `npm run e2e:packaged` runs
   the same tests against the unpacked app from the last `npm run package` (project
-  `packaged`). Neither is part of `npm run check`.
+  `packaged`). Neither is part of `npm run check`. `npm run styleguide:test` runs the
+  styleguide's browser tests in Playwright's own Chromium (ADR 0083); it is not part of
+  `npm run check` either.
 - CI (ADR 0036): `.github/workflows/ci.yml` runs on every push to `main` and every pull
   request. The Linux job runs `npm run check`, the end-to-end tests (under `xvfb-run`), builds
   the AppImage and tests the packaged app. The Windows job runs `npm test`, the end-to-end
   tests, builds the installer and tests the packaged app. The documentation duty job runs
   `npm run check:docs-duty` (`scripts/check-docs-duty.ts`, rule in `scripts/docs-duty/`).
+  The styleguide job installs Playwright's Chromium and runs `npm run styleguide:test`.
   Dependabot (`.github/dependabot.yml`) proposes grouped weekly updates.
 - Packaging (ADR 0034): `npm run package` builds the app and runs electron-builder for the
   current platform: NSIS installer wizard on Windows, AppImage on Linux, both in

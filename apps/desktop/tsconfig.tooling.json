@@ -15,6 +15,7 @@
   },
   "include": [
     "${configDir}/electron.vite.config.ts",
+    "${configDir}/electron.vite.config.test.ts",
     "${configDir}/playwright.config.ts",
     "${configDir}/electron-builder.config.ts",
     "${configDir}/electron-builder.config.test.ts",

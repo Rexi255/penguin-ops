@@ -4,6 +4,11 @@ _Last updated: 2026-11-19_
 
 ## Recently completed
 
+- M3.0c Styleguide page: `apps/ui/styleguide.html` shows every token of `tokens.css` with a
+  sample drawn by the real stylesheets, its value and note, plus the contrast pairs; new
+  development-only workspace `apps/styleguide` serves it (`npm run styleguide`) and runs
+  Playwright tests with axe-core in Playwright's Chromium (`npm run styleguide:test`), in their
+  own CI job; tests guard that the app never imports or builds the styleguide (ADR 0083).
 - M3.0b-2 Design tokens: `apps/ui/src/tokens.css` with semantic colour tokens, the terminal's
   character cell, spacing, radius, line widths, shadow and motion; ticket blue, mail violet and
   incident red lightened so that every text pair meets WCAG AA; contrast and stylesheet test
@@ -20,10 +25,6 @@ _Last updated: 2026-11-19_
 - M2.8 `/new-level` skill (`.claude/skills/new-level/`): clarify chapter, kind, commands and
   ID, design the data and texts from the closest existing level, register the level, prove it
   with the content tests and get the owner's OK of the texts. M2 is complete.
-- M2.7 Developer mode API (`developer-mode.ts`): `levelSetup` (also used by the content
-  test), `startAtStep`, `autoPlay` of a reference solution and `inspectRules` with the state of
-  every rule, step, tip and extra goal; unknown levels, steps and solutions throw a
-  `DeveloperModeError` (ADR 0079). The UI follows in M3.16.
 
 ## In progress
 
@@ -31,9 +32,9 @@ _Last updated: 2026-11-19_
 
 ## Next 3 steps
 
-1. ROADMAP M3.0c: styleguide page.
-2. ROADMAP M3.0d: typography.
-3. ROADMAP M3.0e: icon style.
+1. ROADMAP M3.0d: typography.
+2. ROADMAP M3.0e: icon style.
+3. ROADMAP M3.0f-2: logo and tokens.
 
 ## Blockers and open questions
 
@@ -49,7 +50,8 @@ _Last updated: 2026-11-19_
   orange is unchanged).
 - Electron does not start in the cloud container (the end-to-end tests hang there); cloud
   sessions take UI screenshots of the built renderer in Playwright's Chromium with a stub of the
-  desktop API. CI still runs the real end-to-end tests.
+  desktop API. CI still runs the real end-to-end tests. The styleguide tests run in the cloud
+  with `STYLEGUIDE_CHROMIUM_PATH` set to the preinstalled Chromium.
 - Steam release is assumed to be "maybe later" (ADR 0002); confirm with the owner when it
   becomes relevant.
 - Some details of `ls`, `clear`, `history`, `cat`, `head`, `tail`, `touch`, `rm`, `cp`, `mv` and

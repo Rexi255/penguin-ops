@@ -24,6 +24,9 @@ const BOUNDARIES = [
   { folder: "packages/gameplay", allowed: ["engine", "content"], typeOnly: [], node: false },
   { folder: "apps/ui", allowed: ["engine", "content", "gameplay"], typeOnly: [], node: false },
   { folder: "apps/desktop", allowed: [], typeOnly: ["ui"], node: true },
+  // Development server and browser tests of the styleguide page; the page itself is in apps/ui
+  // (ADR 0083).
+  { folder: "apps/styleguide", allowed: [], typeOnly: [], node: true },
   // The content tests read content/ from disk and play it (ADR 0078).
   { folder: "tests/content", allowed: ["engine", "content", "gameplay"], typeOnly: [], node: true },
 ];

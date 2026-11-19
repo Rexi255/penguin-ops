@@ -1,0 +1,17 @@
+// The styleguide's development server and browser tests (ADR 0083). They run in Node.js (Vite and
+// Playwright load them); the tests contain functions that run in the page, so they see the DOM.
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "${configDir}",
+    "outDir": "${configDir}/dist",
+    "tsBuildInfoFile": "${configDir}/dist/tsconfig.tsbuildinfo",
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "types": ["node"]
+  },
+  "include": [
+    "${configDir}/vite.config.ts",
+    "${configDir}/playwright.config.ts",
+    "${configDir}/e2e"
+  ]
+}

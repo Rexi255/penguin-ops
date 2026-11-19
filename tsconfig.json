@@ -8,6 +8,7 @@
     { "path": "packages/gameplay" },
     { "path": "apps/ui" },
     { "path": "apps/desktop" },
+    { "path": "apps/styleguide" },
     { "path": "tests/content" },
     { "path": "tsconfig.tooling.json" }
   ]

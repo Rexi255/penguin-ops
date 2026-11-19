@@ -166,7 +166,7 @@ inventing it along the way.
       that the colour schemes of M3.9 only swap values), spacing, radii, shadows and motion in
       `apps/ui`, following `DESIGN.md`; a test that text and background token pairs meet WCAG
       AA contrast; `DESIGN.md` regenerated from the tokens with `/impeccable document`.
-- [ ] M3.0c Styleguide page: a page outside the packaged app that renders all tokens with the
+- [x] M3.0c Styleguide page: a page outside the packaged app that renders all tokens with the
       real styles, opened by an npm script; Playwright test with axe check.
 - [ ] M3.0d Typography: check JetBrains Mono and Inter (ADR 0020) against alternatives and
       their licenses, bundle the chosen fonts for offline use, type scale tokens; shown in the

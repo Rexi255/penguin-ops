@@ -10,7 +10,8 @@
     "packages/content",
     "packages/gameplay",
     "apps/ui",
-    "apps/desktop"
+    "apps/desktop",
+    "apps/styleguide"
   ],
   "scripts": {
     "dev": "npm run dev -w @penguin-ops/desktop",
@@ -18,6 +19,8 @@
     "e2e": "npm run e2e -w @penguin-ops/desktop",
     "package": "npm run package -w @penguin-ops/desktop",
     "e2e:packaged": "npm run e2e:packaged -w @penguin-ops/desktop",
+    "styleguide": "npm run dev -w @penguin-ops/styleguide",
+    "styleguide:test": "npm run test -w @penguin-ops/styleguide",
     "typecheck": "tsc --build",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

@@ -7,6 +7,7 @@ import {
   rootCustomProperties,
   usedCustomProperties,
 } from "./css-rules";
+import styleguideCss from "./styleguide/styleguide.css?raw";
 import stylesCss from "./styles.css?raw";
 import {
   checkContrast,
@@ -50,6 +51,7 @@ describe("the stylesheets", () => {
   test.each([
     ["tokens.css", tokensCss],
     ["styles.css", stylesCss],
+    ["styleguide/styleguide.css", styleguideCss],
   ])("%s reads only defined tokens", (_name, css) => {
     expect(usedCustomProperties(css).filter((name) => !tokens.has(name))).toEqual([]);
   });
@@ -57,12 +59,16 @@ describe("the stylesheets", () => {
   test.each([
     ["tokens.css", tokenRules],
     ["styles.css", readCssRules(stylesCss)],
+    ["styleguide/styleguide.css", readCssRules(styleguideCss)],
   ])("%s writes no colour outside the token definitions", (_name, rules) => {
     expect(findLiteralColors(rules)).toEqual([]);
   });
 
-  test("styles.css defines no tokens of its own", () => {
-    const ownProperties = readCssRules(stylesCss).flatMap((rule) =>
+  test.each([
+    ["styles.css", stylesCss],
+    ["styleguide/styleguide.css", styleguideCss],
+  ])("%s defines no tokens of its own", (_name, css) => {
+    const ownProperties = readCssRules(css).flatMap((rule) =>
       [...rule.declarations.keys()].filter((property) => property.startsWith("--")),
     );
     expect(ownProperties).toEqual([]);
