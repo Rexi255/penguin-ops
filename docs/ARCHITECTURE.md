@@ -1,7 +1,8 @@
 # Architecture
 
 > **Status: skeleton.** The workspaces exist with strict TypeScript configs (ROADMAP M0.2);
-> the Electron app opens on the start screen with the bundled content (M3.1a), and the engine has the core types of the
+> the Electron app has its start, save slot and game screens with the pause menu and the bundled
+> content (M3.1), and the engine has the core types of the
 > world model (M1.1), path lookup and permission checks (M1.2), its random generator, game
 > clock and world builder (M1.3), the shell lexer, parser, word expansion and execution
 > (M1.4–M1.6b) and the write side of the file system (M1.6c-1).
@@ -452,9 +453,14 @@ hands the texts to every component (`TextsProvider`, `useTexts`), and
 
 Screens: `src/screens/start-screen.tsx` shows the logo (`assets/brand/svg/`) as the level 1
 heading, the main menu (Play and Quit) with the keyboard focus on Play, and the version as code
-in the footer. `src/screens/save-slot-screen.tsx` shows the title, the three save slots (empty
-and not controls until M3.2 and M3.7) and Back, which has the focus; Esc also goes back. The
-styles of all screens are in `src/styles.css`. The visual world is "Label Tape & Patch Cable" (ADR 0081, `DESIGN.md`); the
+in the footer. `src/screens/save-slot-screen.tsx` shows the title, the three save slots and
+Back; until M3.7 every slot is empty and is a button that starts the game, and the first slot
+has the focus; Esc also goes back (ADR 0092). `src/screens/game-screen.tsx` is the frame of the
+workplace layout as a CSS grid: top bar, side panel, terminal area and the key-hint footer,
+whose "Esc Menu" hint is a button with the focus. Esc opens `src/screens/pause-menu.tsx`, a
+modal dialog (Continue, Main menu) over the game, whose frame is `inert` while it is open; the
+pause state lives in the game screen (ADR 0092). The styles of all screens are in
+`src/styles.css`. The visual world is "Label Tape & Patch Cable" (ADR 0081, `DESIGN.md`); the
 workplace screen's direction contract is the impeccable surface brief
 `.impeccable/surfaces/src-app-tsx.md`, and `.impeccable/design.json` is impeccable's sidecar to
 `DESIGN.md`.

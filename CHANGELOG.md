@@ -12,7 +12,11 @@ project uses [Semantic Versioning](https://semver.org/).
   menu has Play and Quit; Play has the keyboard focus, so Enter works at once. The game is in
   German when the system's language is German and in English otherwise.
 - Play opens the save slot screen with three save slots. They are all empty until saving
-  exists; a new game in a slot comes next. Back or Esc returns to the start screen.
+  exists; choosing one starts a new game. Back or Esc returns to the start screen.
+- The game screen shows the workplace: a top bar, the side panel, the terminal area and a
+  footer with key hints. The areas are still empty; the terminal, tickets and mail come next.
+- Esc in the game, or a click on the "Esc Menu" hint, opens the pause menu: Continue (or Esc
+  again) returns to the game, Main menu returns to the start screen.
 - The game ships its own fonts and works the same on Windows and Linux: Inter for the
   interface, JetBrains Mono for the terminal and Barlow Condensed for label tape. The start
   screen uses them; their licenses are in the installed app's `resources/licenses/fonts` folder.

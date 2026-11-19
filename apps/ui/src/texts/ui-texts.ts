@@ -17,6 +17,8 @@ import {
 export const UI_TEXT_PLACEHOLDERS = {
   /** The product name, as the logo's text alternative. */
   "app.name": [],
+  /** The label of the Esc key in key hints. */
+  "keys.escape": [],
   /** The accessible name of the start screen's menu. */
   "start.menu": [],
   /** The menu entry that opens the save slot screen. */
@@ -29,10 +31,24 @@ export const UI_TEXT_PLACEHOLDERS = {
   "slots.title": [],
   /** The name of a save slot; `number` counts from 1. */
   "slots.slot": ["number"],
-  /** The state of a slot without a saved game. */
-  "slots.empty": [],
+  /** The state of a slot without a saved game, which starts a new game. */
+  "slots.new-game": [],
   /** The button that returns from the save slot screen to the start screen. */
   "slots.back": [],
+  /** The game screen's level 1 heading, hidden from sight. */
+  "game.title": [],
+  /** The accessible name of the side panel. */
+  "game.side-panel": [],
+  /** The accessible name of the terminal area. */
+  "game.terminal": [],
+  /** The key hint that opens the pause menu, after the key's label. */
+  "game.menu": [],
+  /** The title of the pause menu. */
+  "pause.title": [],
+  /** The pause menu entry that closes the menu and returns to the game. */
+  "pause.continue": [],
+  /** The pause menu entry that leaves the game for the start screen. */
+  "pause.main-menu": [],
 } as const satisfies Readonly<Record<string, readonly string[]>>;
 
 /** A key of a UI text. */

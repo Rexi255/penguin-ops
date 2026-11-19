@@ -1,6 +1,8 @@
 # 0091. Screen navigation as state in the app root with focus and Esc per screen
 
-- Status: Accepted
+- Status: Accepted; partly superseded by
+  [0092](0092-empty-slots-start-the-game-and-esc-opens-a-modal-pause-menu.md) (the empty slots and
+  the focus on the save slot screen)
 - Date: 2026-11-19
 - Supersedes: –
 

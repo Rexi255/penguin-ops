@@ -1,5 +1,7 @@
 app:
   name: PenguinOps
+keys:
+  escape: Esc
 start:
   menu: Hauptmenü
   play: Spielen
@@ -8,5 +10,14 @@ start:
 slots:
   title: Spielstand wählen
   slot: Spielstand {number}
-  empty: Leer
+  new-game: Neues Spiel
   back: Zurück
+game:
+  title: Arbeitsplatz
+  side-panel: Seitenleiste
+  terminal: Terminal
+  menu: Menü
+pause:
+  title: Pause
+  continue: Weiterspielen
+  main-menu: Hauptmenü

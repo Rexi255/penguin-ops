@@ -1,6 +1,7 @@
 // End-to-end tests of the save slot screen and the way there and back (ROADMAP M3.1b, ADR 0091):
-// Play opens it with the keyboard alone, it shows three empty slots in the system's language,
-// Back and Esc return to the start screen, and axe-core finds no accessibility violations.
+// Play opens it with the keyboard alone, it shows three empty slots in the system's language with
+// the focus on the first one, Back and Esc return to the start screen, and axe-core finds no
+// accessibility violations.
 import { expect, test } from "./app";
 import { axeViolations } from "./axe";
 
@@ -9,19 +10,19 @@ const LANGUAGES = [
     locale: "en-US",
     play: "Play",
     title: "Choose a save slot",
-    slots: ["Slot 1Empty", "Slot 2Empty", "Slot 3Empty"],
-    back: "Back",
+    slots: ["Slot 1 New game", "Slot 2 New game", "Slot 3 New game"],
+    firstSlot: "Slot 1 New game",
   },
   {
     locale: "de-DE",
     play: "Spielen",
     title: "Spielstand wählen",
-    slots: ["Spielstand 1Leer", "Spielstand 2Leer", "Spielstand 3Leer"],
-    back: "Zurück",
+    slots: ["Spielstand 1 Neues Spiel", "Spielstand 2 Neues Spiel", "Spielstand 3 Neues Spiel"],
+    firstSlot: "Spielstand 1 Neues Spiel",
   },
 ] as const;
 
-for (const { locale, play, title, slots, back } of LANGUAGES) {
+for (const { locale, play, title, slots, firstSlot } of LANGUAGES) {
   test.describe(`with the locale ${locale}`, () => {
     test.use({ appLocale: locale });
 
@@ -30,7 +31,7 @@ for (const { locale, play, title, slots, back } of LANGUAGES) {
       await page.keyboard.press("Enter");
       await expect(page.getByRole("heading", { level: 1, name: title })).toBeVisible();
       await expect(page.getByRole("listitem")).toHaveText([...slots]);
-      await expect(page.getByRole("button", { name: back })).toBeFocused();
+      await expect(page.getByRole("button", { name: firstSlot, exact: true })).toBeFocused();
     });
 
     test("has no accessibility violations that axe-core finds", async ({ page }) => {

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-// Tests of the save slot screen in both languages: three empty slots that are not controls, and
-// Back, which has the focus and also answers to Esc.
+// Tests of the save slot screen in both languages: three empty slots that start a new game, the
+// first of which has the focus, and Back, which also answers to Esc.
 import { MANDATORY_LANGUAGES, type MandatoryLanguage } from "@penguin-ops/content";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
@@ -14,30 +14,42 @@ import { SAVE_SLOT_COUNT, SaveSlotScreen } from "./save-slot-screen";
 const { uiCatalogs } = loadBundledContent();
 
 const EXPECTED: Readonly<
-  Record<MandatoryLanguage, { title: string; slots: string[]; empty: string; back: string }>
+  Record<
+    MandatoryLanguage,
+    {
+      title: string;
+      slots: string[];
+      state: string;
+      names: readonly [string, string, string];
+      back: string;
+    }
+  >
 > = {
   en: {
     title: "Choose a save slot",
     slots: ["Slot 1", "Slot 2", "Slot 3"],
-    empty: "Empty",
+    state: "New game",
+    names: ["Slot 1 New game", "Slot 2 New game", "Slot 3 New game"],
     back: "Back",
   },
   de: {
     title: "Spielstand wählen",
     slots: ["Spielstand 1", "Spielstand 2", "Spielstand 3"],
-    empty: "Leer",
+    state: "Neues Spiel",
+    names: ["Spielstand 1 Neues Spiel", "Spielstand 2 Neues Spiel", "Spielstand 3 Neues Spiel"],
     back: "Zurück",
   },
 };
 
 function renderSaveSlotScreen(language: MandatoryLanguage) {
+  const onNewGame = vi.fn<() => void>();
   const onBack = vi.fn<() => void>();
   const view = render(
     <TextsProvider texts={createTexts(uiCatalogs, language)}>
-      <SaveSlotScreen onBack={onBack} />
+      <SaveSlotScreen onNewGame={onNewGame} onBack={onBack} />
     </TextsProvider>,
   );
-  return { onBack, view };
+  return { onNewGame, onBack, view };
 }
 
 afterEach(() => {
@@ -56,28 +68,50 @@ describe("SaveSlotScreen", () => {
 
   test.each(MANDATORY_LANGUAGES)("lists three empty slots in %s", (language) => {
     renderSaveSlotScreen(language);
-    const { slots, empty } = EXPECTED[language];
+    const { slots, state } = EXPECTED[language];
     const items = within(screen.getByRole("list")).getAllByRole("listitem");
-    expect(items.map((item) => item.textContent)).toEqual(slots.map((slot) => slot + empty));
+    expect(items.map((item) => item.textContent)).toEqual(slots.map((slot) => `${slot} ${state}`));
   });
 
-  test("keeps empty slots out of the controls and the tab order", async () => {
-    renderSaveSlotScreen("en");
-    const list = screen.getByRole("list");
-    expect(within(list).queryAllByRole("button")).toEqual([]);
-    expect(list.querySelectorAll("[tabindex], a, button, input")).toHaveLength(0);
-    // From the start of the page, the first stop of Tab is Back.
-    const back = screen.getByRole("button", { name: "Back" });
-    back.blur();
-    await userEvent.tab();
-    expect(back).toBe(document.activeElement);
-  });
+  test.each(MANDATORY_LANGUAGES)(
+    "names every empty slot by its visible texts in %s",
+    (language) => {
+      renderSaveSlotScreen(language);
+      for (const name of EXPECTED[language].names) {
+        expect(within(screen.getByRole("list")).getByRole("button", { name })).toBeDefined();
+      }
+      expect(within(screen.getByRole("list")).getAllByRole("button")).toHaveLength(SAVE_SLOT_COUNT);
+    },
+  );
 
-  test.each(MANDATORY_LANGUAGES)("gives Back the keyboard focus in %s", (language) => {
+  test.each(MANDATORY_LANGUAGES)("gives the first slot the keyboard focus in %s", (language) => {
     renderSaveSlotScreen(language);
-    expect(screen.getByRole("button", { name: EXPECTED[language].back })).toBe(
+    expect(screen.getByRole("button", { name: EXPECTED[language].names[0] })).toBe(
       document.activeElement,
     );
+  });
+
+  test("puts the slots before Back in the tab order", async () => {
+    renderSaveSlotScreen("en");
+    await userEvent.tab();
+    expect(screen.getByRole("button", { name: "Slot 2 New game" })).toBe(document.activeElement);
+    await userEvent.tab();
+    expect(screen.getByRole("button", { name: "Slot 3 New game" })).toBe(document.activeElement);
+    await userEvent.tab();
+    expect(screen.getByRole("button", { name: "Back" })).toBe(document.activeElement);
+  });
+
+  test.each([1, 2, 3])("starts a new game when the player clicks slot %i", async (number) => {
+    const { onNewGame, onBack } = renderSaveSlotScreen("en");
+    await userEvent.click(screen.getByRole("button", { name: `Slot ${String(number)} New game` }));
+    expect(onNewGame).toHaveBeenCalledExactlyOnceWith();
+    expect(onBack).not.toHaveBeenCalled();
+  });
+
+  test("starts a new game when the player presses Enter on the focused first slot", async () => {
+    const { onNewGame } = renderSaveSlotScreen("de");
+    await userEvent.keyboard("{Enter}");
+    expect(onNewGame).toHaveBeenCalledTimes(1);
   });
 
   test("goes back when the player clicks Back", async () => {
@@ -86,16 +120,18 @@ describe("SaveSlotScreen", () => {
     expect(onBack).toHaveBeenCalledExactlyOnceWith();
   });
 
-  test("goes back when the player presses Enter on the focused Back", async () => {
-    const { onBack } = renderSaveSlotScreen("de");
+  test("goes back when the player presses Enter on Back", async () => {
+    const { onBack, onNewGame } = renderSaveSlotScreen("de");
+    screen.getByRole("button", { name: EXPECTED.de.back }).focus();
     await userEvent.keyboard("{Enter}");
     expect(onBack).toHaveBeenCalledTimes(1);
+    expect(onNewGame).not.toHaveBeenCalled();
   });
 
   test("goes back when the player presses Esc", async () => {
     const { onBack } = renderSaveSlotScreen("en");
-    // Esc works wherever the focus is, also when it has left Back.
-    screen.getByRole("button", { name: "Back" }).blur();
+    // Esc works wherever the focus is, also when it is on no control.
+    screen.getByRole("button", { name: "Slot 1 New game" }).blur();
     await userEvent.keyboard("{Escape}");
     expect(onBack).toHaveBeenCalledExactlyOnceWith();
   });
@@ -107,10 +143,11 @@ describe("SaveSlotScreen", () => {
   });
 
   test("ignores other keys", async () => {
-    const { onBack } = renderSaveSlotScreen("en");
-    screen.getByRole("button", { name: "Back" }).blur();
+    const { onBack, onNewGame } = renderSaveSlotScreen("en");
+    screen.getByRole("button", { name: "Slot 1 New game" }).blur();
     await userEvent.keyboard("{F1}q{ArrowDown}");
     expect(onBack).not.toHaveBeenCalled();
+    expect(onNewGame).not.toHaveBeenCalled();
   });
 
   test("stops listening for Esc when the screen is gone", async () => {

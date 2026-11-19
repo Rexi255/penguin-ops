@@ -4,13 +4,14 @@
 import { type ReactNode, useState } from "react";
 
 import type { AppInfo } from "./desktop-api";
+import { GameScreen } from "./screens/game-screen";
 import { SaveSlotScreen } from "./screens/save-slot-screen";
 import { StartScreen } from "./screens/start-screen";
 import { TextsProvider } from "./texts/texts-context";
 import type { Texts } from "./texts/ui-texts";
 
 /** The screens the app can show. */
-export type Screen = "start" | "save-slots";
+export type Screen = "start" | "save-slots" | "game";
 
 export interface AppProps {
   readonly info: AppInfo;
@@ -37,7 +38,19 @@ export function App({ info, texts, onQuit }: AppProps) {
     case "save-slots":
       content = (
         <SaveSlotScreen
+          onNewGame={() => {
+            setScreen("game");
+          }}
           onBack={() => {
+            setScreen("start");
+          }}
+        />
+      );
+      break;
+    case "game":
+      content = (
+        <GameScreen
+          onMainMenu={() => {
             setScreen("start");
           }}
         />

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
-// Tests of the navigation between the screens (ADR 0091): the app opens on the start screen,
-// Play opens the save slot screen, Back and Esc return, and the keyboard focus follows.
+// Tests of the navigation between the screens (ADR 0091, ADR 0092): the app opens on the start
+// screen, Play opens the save slot screen, Back and Esc return, an empty slot starts the game,
+// the pause menu leads back to the start screen, and the keyboard focus follows.
 import { cleanup, render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, test, vi } from "vitest";
@@ -31,6 +32,10 @@ function saveSlotTitle() {
   return screen.queryByRole("heading", { level: 1, name: "Choose a save slot" });
 }
 
+function gameTitle() {
+  return screen.queryByRole("heading", { level: 1, name: "Workplace" });
+}
+
 afterEach(() => {
   cleanup();
 });
@@ -42,12 +47,12 @@ describe("App", () => {
     expect(saveSlotTitle()).toBeNull();
   });
 
-  test("opens the save slot screen with Play and gives Back the focus", async () => {
+  test("opens the save slot screen with Play and gives the first slot the focus", async () => {
     renderApp();
     await userEvent.click(screen.getByRole("button", { name: "Play" }));
     expect(saveSlotTitle()).not.toBeNull();
     expect(startScreenTitle()).toBeNull();
-    expect(screen.getByRole("button", { name: "Back" })).toBe(document.activeElement);
+    expect(screen.getByRole("button", { name: "Slot 1 New game" })).toBe(document.activeElement);
   });
 
   test("goes there and back with the keyboard alone", async () => {
@@ -68,6 +73,41 @@ describe("App", () => {
     await userEvent.click(screen.getByRole("button", { name: "Back" }));
     expect(startScreenTitle()).not.toBeNull();
     expect(screen.getByRole("button", { name: "Play" })).toBe(document.activeElement);
+  });
+
+  test("starts the game in an empty slot", async () => {
+    renderApp();
+    await userEvent.click(screen.getByRole("button", { name: "Play" }));
+    await userEvent.click(screen.getByRole("button", { name: "Slot 2 New game" }));
+    expect(gameTitle()).not.toBeNull();
+    expect(saveSlotTitle()).toBeNull();
+    expect(screen.getByRole("button", { name: "Esc Menu" })).toBe(document.activeElement);
+  });
+
+  test("goes into the game and back to the start screen with the keyboard alone", async () => {
+    renderApp();
+    await userEvent.keyboard("{Enter}");
+    await userEvent.keyboard("{Enter}");
+    expect(gameTitle()).not.toBeNull();
+    await userEvent.keyboard("{Escape}");
+    expect(screen.getByRole("dialog", { name: "Paused" })).toBeDefined();
+    // Continue has the focus; one Tab reaches Main menu.
+    await userEvent.tab();
+    expect(screen.getByRole("button", { name: "Main menu" })).toBe(document.activeElement);
+    await userEvent.keyboard("{Enter}");
+    expect(startScreenTitle()).not.toBeNull();
+    expect(gameTitle()).toBeNull();
+    expect(screen.getByRole("button", { name: "Play" })).toBe(document.activeElement);
+  });
+
+  test("stays in the game when Esc closes the pause menu", async () => {
+    renderApp();
+    await userEvent.keyboard("{Enter}");
+    await userEvent.keyboard("{Enter}");
+    await userEvent.keyboard("{Escape}");
+    await userEvent.keyboard("{Escape}");
+    expect(gameTitle()).not.toBeNull();
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   test("ignores Esc on the start screen", async () => {
