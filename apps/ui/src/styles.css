@@ -44,31 +44,79 @@ pre {
   outline-offset: var(--focus-offset);
 }
 
-.placeholder {
+/* The start screen: the logo and the main menu in the middle of the rack-black ground, the
+   version in the footer. */
+.start-screen {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  height: 100%;
+}
+
+.start-screen__main {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  height: 100%;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-4);
+}
+
+.start-screen__title {
+  margin: 0;
+}
+
+/* The logo is four cells high, so its height stays on the grid. */
+.start-screen__logo {
+  display: block;
+  block-size: calc(var(--cell-block) * 4);
+  inline-size: auto;
+  max-inline-size: 100%;
+}
+
+.start-screen__footer {
   padding: var(--space-4);
 }
 
-.placeholder__title {
-  margin: 0;
-  color: var(--color-text);
-  font-family: var(--font-ui);
-  font-size: var(--text-display-size);
-  font-weight: var(--font-weight-heading);
-  line-height: var(--text-display-leading);
-}
-
-/* The version is data, so it may use the monospace face (the Real-Code Rule). */
-.placeholder__version {
+/* The version is data, so the number is set in the monospace face (the Real-Code Rule). */
+.start-screen__version {
   margin: 0;
   color: var(--color-text-muted);
-  font-family: var(--font-mono);
-  font-variant-ligatures: none;
+  font-size: var(--text-hint-size);
+  font-weight: var(--font-weight-control);
+  line-height: var(--text-hint-leading);
+}
+
+/* A menu: a column of standard buttons, 30 columns wide. */
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.menu__entry {
+  inline-size: calc(var(--cell-inline) * 30);
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  border-radius: var(--radius-corner);
+  background: var(--color-surface-panel);
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-size: var(--text-body-size);
+  font-weight: var(--font-weight-control);
+  line-height: var(--text-body-leading);
+  cursor: pointer;
+  transition: background-color var(--motion-duration-state) var(--motion-easing-state);
+}
+
+.menu__entry:hover {
+  background: var(--color-surface-raised);
+}
+
+.menu__entry:active {
+  background: var(--color-surface-selection);
 }
 
 /* An icon is one cell in size, never a fraction of a cell, so that its 2 px strokes stay on

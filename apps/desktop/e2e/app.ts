@@ -20,6 +20,15 @@ export interface AppOptions {
   readonly packaged: boolean;
 }
 
+/** Options of a single test. */
+export interface TestOptions {
+  /**
+   * The app's locale, passed to Chromium as `--lang`, which also sets `navigator.language`. The
+   * tests fix it, so that they do not depend on the language of the system they run on.
+   */
+  readonly appLocale: string;
+}
+
 interface AppFixtures {
   readonly electronApp: ElectronApplication;
   readonly page: Page;
@@ -40,9 +49,10 @@ function packagedExecutable(): string {
 }
 
 // `page` replaces Playwright's browser page with the app window, so no browser is started.
-export const test = base.extend<AppFixtures, AppOptions>({
+export const test = base.extend<AppFixtures & TestOptions, AppOptions>({
   packaged: [false, { option: true, scope: "worker" }],
-  electronApp: async ({ packaged }, use) => {
+  appLocale: ["en-US", { option: true }],
+  electronApp: async ({ packaged, appLocale }, use) => {
     // ELECTRON_RUN_AS_NODE (set for example by VS Code extension hosts) would start Electron as
     // plain Node.js without a window.
     const env = Object.fromEntries(
@@ -57,10 +67,11 @@ export const test = base.extend<AppFixtures, AppOptions>({
       if (!existsSync(executablePath)) {
         throw new Error(`${executablePath} does not exist. Run "npm run package" first.`);
       }
-      app = await electron.launch({ executablePath, env });
+      app = await electron.launch({ executablePath, args: [`--lang=${appLocale}`], env });
     } else {
       // Electron starts the "main" file of the app folder's package.json (the built main process).
-      app = await electron.launch({ args: [appFolder], env });
+      // Chromium switches come before the app folder.
+      app = await electron.launch({ args: [`--lang=${appLocale}`, appFolder], env });
     }
     await use(app);
     await app.close();

@@ -8,6 +8,9 @@ import { IPC_CHANNELS } from "../shared/ipc-channels";
 
 const api: DesktopApi = {
   getAppInfo: () => ipcRenderer.invoke(IPC_CHANNELS.getAppInfo) as Promise<AppInfo>,
+  quit: () => {
+    ipcRenderer.send(IPC_CHANNELS.quit);
+  },
 };
 
 const globalName: DesktopApiGlobalName = "penguinOps";

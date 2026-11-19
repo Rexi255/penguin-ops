@@ -1,7 +1,7 @@
 # Architecture
 
 > **Status: skeleton.** The workspaces exist with strict TypeScript configs (ROADMAP M0.2);
-> the Electron app opens a placeholder window (M0.7), and the engine has the core types of the
+> the Electron app opens on the start screen with the bundled content (M3.1a), and the engine has the core types of the
 > world model (M1.1), path lookup and permission checks (M1.2), its random generator, game
 > clock and world builder (M1.3), the shell lexer, parser, word expansion and execution
 > (M1.4–M1.6b) and the write side of the file system (M1.6c-1).
@@ -338,7 +338,9 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   `{ file, text }` pairs, then checks the files against each other: the folder name is the
   level ID, every listed level exists, every level is in exactly one chapter. It returns the
   chapters and the levels by ID in chapter order, or all problems of all files. The caller
-  finds and reads the files.
+  finds and reads the files; `sortContentFiles` (`src/content-files.ts`, ADR 0090) sorts files
+  by their path (`content/...`) into the inputs of `loadContent` and reports files that are not
+  content, for the content tests and the app alike.
 - Base worlds (`src/world-schema.ts`, `src/file-entries-schema.ts`, ADR 0076):
   `baseWorldSchema` checks `content/worlds/<world-id>.yaml` (hosts with groups, users and
   literal files; the first host is the default host) and returns a `BaseWorld`; the checks
@@ -406,7 +408,7 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   levels that cannot start, events before the first input, solutions with incomplete or
   unsimulated command lines or tips, unsolved tickets and checkpoints that cannot resume. The
   content test (`tests/content/`, its own TypeScript project with Node types) reads
-  `content/` with `readContentFiles`, loads it and runs this check. It builds each level with
+  `content/` with `readContentFiles` (from disk, sorted by `sortContentFiles`), loads it and runs this check. It builds each level with
   `levelSetup` of the developer mode API.
 - Developer mode API (`src/developer-mode.ts`, ADR 0079): `levelSetup` builds a level of the
   loaded content for a language and a player, `startAtStep` starts it at any step (by resuming
@@ -432,8 +434,22 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
 - All texts come from the catalogs; no hard-coded strings.
 
 Current state (ADR 0033): `index.html` (with the strict Content Security Policy) loads
-`src/main.tsx`, which asks the desktop API for the app info and renders the placeholder screen
-(`src/app.tsx`). The visual world is "Label Tape & Patch Cable" (ADR 0081, `DESIGN.md`); the
+`src/main.tsx`, which loads the bundled content, picks the language, asks the desktop API for
+the app info and renders `src/app.tsx`, which shows the start screen.
+
+Content and texts (ADR 0090): `src/content/bundled-content.ts` imports every `.yaml` file of
+`content/` as text with `import.meta.glob` at build time and loads it with `sortContentFiles`
+and `loadContent` (zod set to `jitless` for the Content Security Policy); a problem throws a
+`ContentLoadError`. `src/texts/language.ts` turns `navigator.language` into German or English
+(ADR 0012) and `main.tsx` sets the document's `lang`. `src/texts/ui-texts.ts` lists every UI
+text key with its placeholders (`UI_TEXT_PLACEHOLDERS`, checked against both catalogs by a
+test) and `createTexts` gives each text as rich or plain text; `src/texts/texts-context.tsx`
+hands the texts to every component (`TextsProvider`, `useTexts`), and
+`src/texts/inline-text.tsx` draws a one-paragraph text with its markup.
+
+Screens: `src/screens/start-screen.tsx` shows the logo (`assets/brand/svg/`) as the level 1
+heading, the main menu (only Quit until M3.1b) with the keyboard focus on its first entry, and
+the version as code in the footer; its styles are in `src/styles.css`. The visual world is "Label Tape & Patch Cable" (ADR 0081, `DESIGN.md`); the
 workplace screen's direction contract is the impeccable surface brief
 `.impeccable/surfaces/src-app-tsx.md`, and `.impeccable/design.json` is impeccable's sidecar to
 `DESIGN.md`.
@@ -473,8 +489,8 @@ ratios. Its layout is
 `src/styleguide/` and its build reads only `index.html`; both are tested.
 
 `src/desktop-api.ts` defines
-the preload contract (`DesktopApi`); `src/index.ts` exports only its types, for
-`apps/desktop`.
+the preload contract (`DesktopApi`: `getAppInfo`, `quit`); `src/index.ts` exports only its
+types, for `apps/desktop`.
 
 ## Desktop (`apps/desktop`)
 
@@ -495,12 +511,14 @@ apps/desktop/
   build/                    app icons that electron-builder reads while packaging (ADR 0040)
   playwright.config.ts      end-to-end tests against the built and the packaged app
   src/main/index.ts         app start, hardening of all web contents and the session, IPC handlers
+                            (app info; quit), each answering only the app's own page
   src/main/window.ts        the main window
   src/main/web-preferences.ts  secure web preferences of every window
   src/main/security.ts      pure checks: allowed request URLs, trusted IPC senders
   src/preload/index.ts      exposes DesktopApi as window.penguinOps (built as CommonJS)
   src/shared/ipc-channels.ts  IPC channel names used by main and preload
-  e2e/                      Playwright tests (*.spec.ts)
+  e2e/                      Playwright tests (*.spec.ts); the app is started with a fixed locale
+                            (`--lang`, default en-US); start-screen.spec.ts runs axe-core
 ```
 
 - `apps/desktop` may import only types from `@penguin-ops/ui` (the preload contract); ESLint
@@ -542,7 +560,8 @@ end-to-end tests in `apps/desktop/e2e/` (`*.spec.ts`).
 - Vitest (ADR 0030): one root `vitest.config.ts` with one project per workspace that has tests
   (`engine`, `content`, `gameplay`, `ui`, `desktop`, `content-tests`, `tooling` for
   `scripts/`). The `ui` project processes CSS so that tests can read stylesheets with `?raw`
-  (ADR 0082). `npm test` runs them;
+  (ADR 0082). Component tests use Testing Library in jsdom, chosen per file with
+  `// @vitest-environment jsdom` (ADR 0090). `npm test` runs them;
   `npm run test:coverage` also enforces at least 90 % coverage for `packages/engine/src`.
 - Playwright (ADR 0033, ADR 0034): `npm run e2e` builds the app and starts it through Electron
   for each test (project `built`); no browser download is needed. `npm run e2e:packaged` runs

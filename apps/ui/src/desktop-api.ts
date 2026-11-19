@@ -15,6 +15,8 @@ export interface AppInfo {
 export interface DesktopApi {
   /** Returns the product name and version of the running app. */
   readonly getAppInfo: () => Promise<AppInfo>;
+  /** Closes the game. */
+  readonly quit: () => void;
 }
 
 /** The name of the global under which the preload script exposes the `DesktopApi`. */

@@ -190,6 +190,11 @@ inventing it along the way.
       colours of ADR 0088 (brand README and brand test updated); show the logo in the
       styleguide; the raster files are drawn from the SVGs by `npm run brand:rasters` (ADR 0089).
 - [ ] M3.1 App screens: start screen with the logo, save slot screen, game screen, pause menu.
+  - [x] M3.1a Start screen: the logo, the main menu with Quit and the version; the content
+        bundled into the renderer and the UI texts in the system's language (ADR 0090).
+  - [ ] M3.1b Save slot screen with three empty slots until M3.7, Play in the main menu and the
+        navigation between screens.
+  - [ ] M3.1c Game screen frame and pause menu (Esc).
 - [ ] M3.2 New game flow: name, derived Linux user name (validation, editing), Story or Sandbox
       mode (ADR 0017, ADR 0019).
 - [ ] M3.3 Terminal component: input, coloured output, history, tab completion, Ctrl+C/L/A/E,
@@ -278,7 +283,9 @@ AppImage runs on Linux, and chapters 0–2 are playable in both languages.
   link the running window to the AppImage's desktop entry (electron-builder warns about it,
   ADR 0040).
 - ESLint rules for React hooks (`eslint-plugin-react-hooks`) once components use hooks
-  (ADR 0033).
+  (ADR 0033); the start screen and the texts context use them since M3.1a.
+- The main window's background colour (`apps/desktop/src/main/window.ts`, shown before the
+  page loads) is still the old `#0d1117` instead of the token `surface-ground`.
 - Load the renderer through a custom `app://` protocol instead of `file://` (Electron security
   checklist, ADR 0033).
 - Electron fuses for the packaged app, for example disabling `ELECTRON_RUN_AS_NODE` and Node.js

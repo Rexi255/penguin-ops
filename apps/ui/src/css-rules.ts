@@ -7,7 +7,7 @@
 /** A style rule, or an @font-face rule, with the at-rules it is nested in. */
 export interface CssRule {
   /**
-   * The selector, with its whitespace collapsed, for example `:root` or `.placeholder`; for an
+   * The selector, with its whitespace collapsed, for example `:root` or `.menu`; for an
    * @font-face rule, `@font-face`.
    */
   readonly selector: string;

@@ -3,7 +3,14 @@
 import { join } from "node:path";
 
 import type { AppInfo } from "@penguin-ops/ui";
-import { app, BrowserWindow, ipcMain, session } from "electron";
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  type IpcMainEvent,
+  type IpcMainInvokeEvent,
+  session,
+} from "electron";
 
 import { IPC_CHANNELS } from "../shared/ipc-channels";
 import { isAllowedRequest, isTrustedSender, type AppLocation } from "./security";
@@ -46,13 +53,26 @@ function hardenSession(): void {
   });
 }
 
+/** Whether an IPC message comes from the app's own page (ADR 0014). */
+function isFromApp(event: IpcMainEvent | IpcMainInvokeEvent): boolean {
+  const frameUrl = event.senderFrame?.url;
+  return frameUrl !== undefined && isTrustedSender(frameUrl, location);
+}
+
 function registerIpcHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.getAppInfo, (event): AppInfo => {
-    const frameUrl = event.senderFrame?.url;
-    if (frameUrl === undefined || !isTrustedSender(frameUrl, location)) {
+    if (!isFromApp(event)) {
       throw new Error(`Rejected ${IPC_CHANNELS.getAppInfo} from an untrusted sender.`);
     }
     return { name: app.getName(), version: app.getVersion() };
+  });
+  // A one-way message: the renderer does not wait for an answer while the app closes.
+  ipcMain.on(IPC_CHANNELS.quit, (event) => {
+    if (!isFromApp(event)) {
+      console.error(`Rejected ${IPC_CHANNELS.quit} from an untrusted sender.`);
+      return;
+    }
+    app.quit();
   });
 }
 

@@ -65,12 +65,15 @@ describe("readContentFiles", () => {
       "content/worlds/office.json": "",
     });
     const folder = readContentFiles(root);
+    const notContent =
+      "not a content file: content/ holds chapters.yaml, levels/<level-id>/*.yaml, ui/*.yaml, " +
+      "worlds/*.yaml and the generated schemas/*.schema.json";
     expect(folder.problems).toEqual([
-      "content/README.md: not a content file: content/ holds chapters.yaml, levels/<level-id>/*.yaml, ui/*.yaml, worlds/*.yaml and the generated schemas/*.schema.json",
-      "content/levels/a/level.yml: not a content file: content/ holds chapters.yaml, levels/<level-id>/*.yaml, ui/*.yaml, worlds/*.yaml and the generated schemas/*.schema.json",
-      "content/levels/a/old/level.yaml: not a content file: content/ holds chapters.yaml, levels/<level-id>/*.yaml, ui/*.yaml, worlds/*.yaml and the generated schemas/*.schema.json",
-      "content/worlds/office.json: not a content file: content/ holds chapters.yaml, levels/<level-id>/*.yaml, ui/*.yaml, worlds/*.yaml and the generated schemas/*.schema.json",
-      "content/chapters.yaml: the chapters file is missing",
+      `content/README.md:1:1: ${notContent}`,
+      "content/chapters.yaml:1:1: the chapters file is missing",
+      `content/levels/a/level.yml:1:1: ${notContent}`,
+      `content/levels/a/old/level.yaml:1:1: ${notContent}`,
+      `content/worlds/office.json:1:1: ${notContent}`,
     ]);
     expect(folder.files.chapters).toEqual({ file: "content/chapters.yaml", text: "" });
     expect(folder.files.levels).toEqual([]);

@@ -426,6 +426,12 @@ menu:
 Keys are kebab-case and start with a letter; a group is never empty; every text is a string
 and not empty. English and German are mandatory.
 
+The UI decides which keys exist: `UI_TEXT_PLACEHOLDERS` in `apps/ui/src/texts/ui-texts.ts`
+lists every key with the values the UI passes, and a test fails if the English or German
+catalog lacks a key, has a key the UI does not use, or uses other placeholders (ADR 0090). A
+new UI text therefore needs its key there and in both catalogs. Labels, menu entries and texts
+in attributes must be one paragraph.
+
 ## Example
 
 ```yaml

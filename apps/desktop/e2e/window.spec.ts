@@ -1,15 +1,14 @@
-// Desktop smoke tests: the app starts, shows the placeholder screen with the bundled fonts and
-// keeps the security baseline of ADR 0014.
+// Desktop smoke tests: the app starts, shows the start screen with the bundled fonts and keeps
+// the security baseline of ADR 0014. The start screen itself: start-screen.spec.ts.
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 import { FONT_LICENSES_RESOURCE } from "../electron-builder.config";
 import { expect, test } from "./app";
 
-test("opens the window with the placeholder screen", async ({ page }) => {
+test("opens the window with the start screen", async ({ page }) => {
   await expect(page).toHaveTitle("PenguinOps");
   await expect(page.getByRole("heading", { level: 1, name: "PenguinOps" })).toBeVisible();
-  await expect(page.getByTestId("app-version")).toHaveText(/^\d+\.\d+\.\d+$/);
 });
 
 test("runs as the packaged app exactly in the packaged project", async ({
@@ -23,7 +22,7 @@ test("runs as the packaged app exactly in the packaged project", async ({
 
 test("shows the version of the desktop package", async ({ electronApp, page }) => {
   const version = await electronApp.evaluate(({ app }) => app.getVersion());
-  await expect(page.getByTestId("app-version")).toHaveText(version);
+  await expect(page.getByRole("contentinfo").locator("code")).toHaveText(version);
 });
 
 test("loads every bundled font face from the app's own files", async ({ page }) => {
@@ -69,7 +68,7 @@ test("runs the renderer without Node.js and exposes only the desktop API", async
   expect(globals).toEqual({
     require: "undefined",
     process: "undefined",
-    desktopApi: ["getAppInfo"],
+    desktopApi: ["getAppInfo", "quit"],
   });
 });
 

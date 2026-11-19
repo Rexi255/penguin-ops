@@ -4,12 +4,15 @@ _Last updated: 2026-11-19_
 
 ## Recently completed
 
+- M3.1a Start screen: the logo as the heading, a main menu with Quit (keyboard focus on it,
+  Enter quits) and the version; the renderer bundles `content/` at build time and loads it with
+  every check, the UI texts follow the system's language (German for `de*`, else English) and a
+  test checks that both catalogs hold exactly the keys and placeholders the UI uses; the desktop
+  API has `quit()`; component tests with Testing Library in jsdom; end-to-end tests in both
+  languages with axe-core (ADR 0090).
 - M3.0f-2b Logo files: the five colour SVGs and the favicon SVG recoloured to ADR 0088; all 14
-  raster files (app icons, ICOs, Apple touch icon, social preview) drawn from the SVGs by the new
-  `npm run brand:rasters` in Playwright's Chromium, following `scripts/brand/raster-plan.ts`;
-  the brand test decodes every PNG and ICO image and checks size, background and pixel colours
-  (ADR 0089, partly superseding ADR 0040). The styleguide has a Logo section (logo on the
-  surfaces and the white tape, signet at 16 to 64 px).
+  raster files drawn from the SVGs by `npm run brand:rasters` (ADR 0089, partly superseding
+  ADR 0040). The styleguide has a Logo section.
 - M3.0f-2a Logo colours: the logo compared in three colour variants (unchanged, interface
   tokens, label tape tokens) on the four surface tokens and two light backgrounds at 2x and 1x;
   the owner chose the interface tokens: black `#0f1114` (`surface-terminal`), white `#e8e6e1`
@@ -21,12 +24,6 @@ _Last updated: 2026-11-19_
   coordinates, the margin with caps and miter tips, butt caps only on dots, and the component's
   markup; styleguide section with side panel tabs, cable colours and 3x views on the grid. Four
   drafts were corrected within the rules (ticket, incident, server, mail; ADR 0087).
-- M3.0d-2 Typography (built; the owner's Windows check is open): Inter 4.1 (variable),
-  JetBrains Mono 2.304 (400, 700) and Barlow Condensed 1.422 (700) bundled as unchanged WOFF2
-  files from the upstream releases in `apps/ui/src/fonts/` with their OFL texts, which
-  electron-builder ships in `resources/licenses/fonts/`; font, weight and type scale tokens
-  with line heights on quarter cells; styleguide sections; tests for faces, files, licenses,
-  the scale and loading in the app (ADR 0085). CI green.
 
 ## In progress
 
@@ -34,11 +31,14 @@ _Last updated: 2026-11-19_
 
 ## Next 3 steps
 
-1. ROADMAP M3.1: app screens (start screen with the logo).
-2. ROADMAP M3.2: new game flow.
-3. ROADMAP M3.3: terminal component.
+1. ROADMAP M3.1b: save slot screen, Play in the main menu and the navigation between screens.
+2. ROADMAP M3.1c: game screen frame and pause menu.
+3. ROADMAP M3.2: new game flow.
 
 ## Blockers and open questions
+
+- The start screen has no screenshot tests yet; the screenshot test setup for all screens,
+  languages and colour schemes is ROADMAP M3.15.
 
 - The owner still has to check the bundled fonts on Windows (`npm run styleguide` and
   `npm run dev`), because Windows renders fonts slightly heavier than the Linux screenshots.
