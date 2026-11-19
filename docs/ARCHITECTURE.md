@@ -444,7 +444,15 @@ radius, line widths, the floating shadow, motion; durations drop to 0 ms with re
 lists the colour pairs that must meet WCAG AA, using the contrast maths of
 `src/color-contrast.ts`; `src/design-tokens.test.ts` checks the real stylesheets with
 `src/css-rules.ts`, a small reader for the project's own CSS, which it imports with Vite's
-`?raw`.
+`?raw`. The tokens also hold the font families, weights and the type scale, whose line heights
+are whole quarter cells.
+
+Fonts (ADR 0084, ADR 0085): `src/fonts/` holds the bundled WOFF2 files of Inter, JetBrains Mono
+and Barlow Condensed, one folder per family with its license text `ofl.txt`, and
+`src/fonts/fonts.css` with one `@font-face` per file. `main.tsx` imports `fonts.css` before
+`tokens.css`; Vite bundles the files as assets of the renderer, so they load under
+`font-src 'self'`. `src/fonts/fonts.test.ts` checks faces, files, licenses and the font tokens.
+electron-builder copies the license texts to `resources/licenses/fonts/` of the installed app.
 
 Styleguide (ADR 0083): `styleguide.html` loads `src/styleguide/main.tsx`, a page for developers
 (English, not translated) that reads `tokens.css` with `?raw`, sorts every token into a section
@@ -471,7 +479,8 @@ Current state (ADR 0033):
 ```
 apps/desktop/
   electron.vite.config.ts   builds main, preload and the renderer (root: apps/ui) into out/
-  electron-builder.config.ts  packages out/ into the installer or AppImage in release/ (ADR 0034)
+  electron-builder.config.ts  packages out/ into the installer or AppImage in release/ (ADR 0034),
+                            with the font licenses in resources/licenses/fonts/ (ADR 0085)
   build/                    app icons that electron-builder reads while packaging (ADR 0040)
   playwright.config.ts      end-to-end tests against the built and the packaged app
   src/main/index.ts         app start, hardening of all web contents and the session, IPC handlers
@@ -500,8 +509,9 @@ Development-only workspace, never packaged (ADR 0083):
 apps/styleguide/
   vite.config.ts        Vite server with root apps/ui on port 5190 (`npm run styleguide`)
   playwright.config.ts  starts that server and runs the tests in Playwright's Chromium
-  e2e/styleguide.spec.ts  every token shown with its value and colour, keyboard focus, motion,
-                        no console errors, axe-core with no violations at 1280 and 360 px
+  e2e/styleguide.spec.ts  every token shown with its value and colour, every font face loaded,
+                        the type scale on quarter cells, keyboard focus, motion, no console
+                        errors, axe-core with no violations at 1280 and 360 px
 ```
 
 axe-core is injected from `axe-core/axe.min.js`; `@axe-core/playwright` is not used (license

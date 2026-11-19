@@ -45,7 +45,7 @@
 
   /* The character cell of the terminal: every size and gap snaps to it (the Crouwel grid of
      DESIGN.md). The values follow the terminal text at its default size, 1rem with a line height
-     of 1.5 and the advance width of a monospace face (0.6 em, as in JetBrains Mono); M3.0d-2 adds the type scale. */
+     of 1.5 and the advance width of JetBrains Mono (0.6 em); the type scale below snaps to it. */
   --cell-block: 1.5rem; /* one terminal line: 24 px */
   --cell-inline: 0.6rem; /* one terminal column: 9.6 px */
 
@@ -78,10 +78,36 @@
   --motion-duration-state: 120ms;
   --motion-easing-state: cubic-bezier(0.16, 1, 0.3, 1);
 
-  /* Fonts: ADR 0084 chose Inter for the interface, JetBrains Mono for the terminal and Barlow
-     Condensed for tape; until M3.0d-2 bundles them, the system faces stand in. */
-  --font-ui: system-ui, "Segoe UI", "Noto Sans", sans-serif;
-  --font-mono: ui-monospace, "Cascadia Mono", Consolas, "DejaVu Sans Mono", monospace;
+  /* Fonts (ADR 0084, ADR 0085): each family names its bundled face from fonts/fonts.css first;
+     the system faces behind it only stand in if a file cannot be read. The monospace face is
+     always set with `font-variant-ligatures: none`, so the player sees every character. */
+  --font-ui: "Inter", system-ui, "Segoe UI", "Noto Sans", sans-serif; /* the interface */
+  --font-mono: "JetBrains Mono", ui-monospace, Consolas, monospace; /* the terminal and real code */
+  --font-tape: "Barlow Condensed", "Arial Narrow", sans-serif; /* label tape, in caps */
+
+  /* Font weights. Inter is variable and has them all; JetBrains Mono ships 400 and 700, Barlow
+     Condensed only 700. */
+  --font-weight-body: 400; /* running text and terminal output */
+  --font-weight-control: 500; /* tabs, buttons and key hints */
+  --font-weight-heading: 600; /* headings and titles */
+  --font-weight-strong: 700; /* the print on tape and bold terminal output */
+
+  /* The type scale: one size and line height per role. Every line height is a whole number of
+     quarter cells (6 px), so text lines up with the terminal's lines and the spacing scale. */
+  --text-hint-size: 0.8125rem; /* 13 px: key hints, the footer, meta data */
+  --text-hint-leading: 1.125rem; /* 18 px, three quarter cells */
+  --text-tape-size: 0.9375rem; /* 15 px: the caps on tape strips */
+  --text-tape-leading: 1.125rem; /* 18 px, three quarter cells */
+  --text-body-size: 1rem; /* 16 px: running text in the side panel and dialogs */
+  --text-body-leading: 1.5rem; /* 24 px, one cell */
+  --text-terminal-size: 1rem; /* 16 px: terminal text, the size the character cell is built on */
+  --text-terminal-leading: var(--cell-block); /* one terminal line */
+  --text-heading-size: 1.25rem; /* 20 px: headings in the side panel, ticket titles */
+  --text-heading-leading: 1.5rem; /* 24 px, one cell */
+  --text-title-size: 1.75rem; /* 28 px: screen titles */
+  --text-title-leading: 2.25rem; /* 36 px, one and a half cells */
+  --text-display-size: 2.5rem; /* 40 px: the start screen, rank-ups */
+  --text-display-leading: 3rem; /* 48 px, two cells */
 
   color-scheme: dark;
 }

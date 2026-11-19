@@ -19,14 +19,22 @@
   align-items: center;
   gap: var(--space-2);
   margin: 0;
-  font-size: 2rem;
+  font-size: var(--text-title-size);
+  font-weight: var(--font-weight-heading);
+  line-height: var(--text-title-leading);
+}
+
+/* The product name in the title is a tape strip at the title's size. */
+.sg-header__title .sg-tape {
+  font-size: inherit;
+  line-height: inherit;
 }
 
 .sg-header__lead {
   max-inline-size: 60ch;
   margin-block: var(--space-2) var(--space-4);
   color: var(--color-text-muted);
-  line-height: 1.5;
+  line-height: var(--text-body-leading);
 }
 
 .sg-nav {
@@ -54,14 +62,16 @@
 
 .sg-section__title {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: var(--text-heading-size);
+  font-weight: var(--font-weight-heading);
+  line-height: var(--text-heading-leading);
 }
 
 .sg-section__intro {
   max-inline-size: 60ch;
   margin-block: var(--space-1) var(--space-4);
   color: var(--color-text-muted);
-  line-height: 1.5;
+  line-height: var(--text-body-leading);
 }
 
 .sg-tokens {
@@ -99,11 +109,13 @@
 .sg-token__name {
   color: var(--color-text);
   font-family: var(--font-mono);
+  font-variant-ligatures: none;
 }
 
 .sg-token__value {
   color: var(--color-text-muted);
   font-family: var(--font-mono);
+  font-variant-ligatures: none;
   overflow-wrap: anywhere;
 }
 
@@ -111,7 +123,7 @@
   flex-basis: 100%;
   margin: 0;
   color: var(--color-text-muted);
-  line-height: 1.5;
+  line-height: var(--text-body-leading);
 }
 
 /* Samples. Their varying part (colour, size, radius, shadow) is set inline from the token. */
@@ -145,6 +157,7 @@
 .sg-measure__pixels {
   color: var(--color-text-muted);
   font-family: var(--font-mono);
+  font-variant-ligatures: none;
 }
 
 .sg-shape {
@@ -170,6 +183,39 @@
   color: var(--color-text);
 }
 
+.sg-font--mono {
+  margin: 0;
+  font-size: var(--text-terminal-size);
+  font-variant-ligatures: none;
+  line-height: var(--text-terminal-leading);
+  white-space: pre;
+}
+
+.sg-font__strong {
+  font-weight: var(--font-weight-strong);
+}
+
+.sg-weight,
+.sg-type {
+  color: var(--color-text);
+  font-family: var(--font-ui);
+}
+
+.sg-type--heading {
+  font-weight: var(--font-weight-heading);
+}
+
+.sg-type--terminal {
+  font-family: var(--font-mono);
+  font-variant-ligatures: none;
+}
+
+.sg-tape-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
 /* The character cell: one terminal line per row, one column per cell. */
 .sg-cell-grid {
   inline-size: calc(var(--cell-inline) * 32);
@@ -189,8 +235,9 @@
     );
   color: var(--color-text);
   font-family: var(--font-mono);
-  font-size: 1rem;
-  line-height: var(--cell-block);
+  font-size: var(--text-terminal-size);
+  font-variant-ligatures: none;
+  line-height: var(--text-terminal-leading);
   white-space: pre;
   overflow-x: auto;
 }
@@ -199,15 +246,17 @@
   color: var(--color-player);
 }
 
-/* Label tape: yellow strip, black caps. M3.0d-2 adds the condensed tape face (ADR 0084). */
+/* Label tape: yellow strip, black caps in the condensed tape face (ADR 0084). */
 .sg-tape {
   display: inline-block;
   padding: 0 var(--space-1);
   border-radius: var(--radius-corner);
   background: var(--color-tape-primary);
   color: var(--color-tape-ink);
-  font-family: var(--font-ui);
-  font-weight: 700;
+  font-family: var(--font-tape);
+  font-size: var(--text-tape-size);
+  font-weight: var(--font-weight-strong);
+  line-height: var(--text-tape-leading);
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -233,7 +282,8 @@
   align-items: center;
   gap: var(--space-4);
   margin-block-end: var(--space-4);
-  font-size: 1.25rem;
+  font-size: var(--text-heading-size);
+  line-height: var(--text-heading-leading);
 }
 
 .sg-button {
@@ -243,7 +293,7 @@
   background: var(--color-surface-raised);
   color: var(--color-text);
   font: inherit;
-  font-size: 1rem;
+  font-weight: var(--font-weight-control);
   cursor: pointer;
   transition: background-color var(--motion-duration-state) var(--motion-easing-state);
 }
@@ -271,11 +321,12 @@
 
 .sg-table th {
   color: var(--color-text-muted);
-  font-weight: 400;
+  font-weight: var(--font-weight-body);
 }
 
 .sg-number {
   font-family: var(--font-mono);
+  font-variant-ligatures: none;
   font-variant-numeric: tabular-nums;
   text-align: end;
 }

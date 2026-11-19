@@ -1,12 +1,12 @@
 // Guards the packaging decisions of ADR 0002 and ADR 0034. That the installer and the AppImage
 // really build and start is shown by `npm run package` and `npm run e2e:packaged` (CI, M0.9).
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import config from "./electron-builder.config";
+import config, { FONT_LICENSES_RESOURCE, FONTS_DIRECTORY } from "./electron-builder.config";
 
 describe("electron-builder configuration", () => {
   it("keeps the app id that identifies existing installations", () => {
@@ -17,6 +17,20 @@ describe("electron-builder configuration", () => {
   it("ships only the build output, without source maps, inside app.asar", () => {
     expect(config.files).toEqual(["out/**/*", "!**/*.map"]);
     expect(config.asar).toBe(true);
+  });
+
+  it("ships the license text of every bundled font as a plain file", () => {
+    expect(config.extraResources).toEqual([
+      { from: FONTS_DIRECTORY, to: FONT_LICENSES_RESOURCE, filter: ["*/ofl.txt"] },
+    ]);
+    const fontsDirectory = join(import.meta.dirname, FONTS_DIRECTORY);
+    const fontFolders = readdirSync(fontsDirectory, { withFileTypes: true }).filter((entry) =>
+      entry.isDirectory(),
+    );
+    expect(fontFolders.length).toBeGreaterThan(0);
+    for (const folder of fontFolders) {
+      expect(existsSync(join(fontsDirectory, folder.name, "ofl.txt")), folder.name).toBe(true);
+    }
   });
 
   it("uses the exact Electron version installed from the lockfile", () => {

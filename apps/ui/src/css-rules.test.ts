@@ -54,6 +54,25 @@ describe("readCssRules", () => {
     ]);
   });
 
+  test("reads the descriptors of an @font-face rule like declarations", () => {
+    const rules = readCssRules(`
+      @font-face {
+        font-family: "Inter";
+        src: url("./inter/inter-variable.woff2") format("woff2");
+      }
+    `);
+    expect(rules).toEqual([
+      {
+        selector: "@font-face",
+        conditions: [],
+        declarations: new Map([
+          ["font-family", '"Inter"'],
+          ["src", 'url("./inter/inter-variable.woff2") format("woff2")'],
+        ]),
+      },
+    ]);
+  });
+
   test("keeps braces and semicolons inside quoted strings out of the structure", () => {
     const rules = readCssRules(`.a { font-family: "A {font}", 'B;'; content: "x;}"; }`);
     expect(rules).toEqual([
@@ -75,6 +94,7 @@ describe("readCssRules", () => {
     [".a { color: red; color: blue; }", "declares color twice"],
     [".a { content: 'open; }", "is not closed"],
     [".a { color: red; } .b", "is not followed by a block"],
+    ["@font-face { src url(a.woff2); }", "is not a declaration"],
   ])("rejects %s", (css, message) => {
     expect(() => readCssRules(css)).toThrow(CssReadError);
     expect(() => readCssRules(css)).toThrow(message);

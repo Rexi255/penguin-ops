@@ -1,0 +1,42 @@
+/* The bundled typefaces (ADR 0084, ADR 0085). The game runs offline, so every face ships with the
+   app as a WOFF2 file next to this stylesheet, with its SIL OFL 1.1 license text (ofl.txt) in
+   the same folder. The font tokens in tokens.css name these families first. `fonts.test.ts`
+   checks that every face points to a bundled file and that every file has a face.
+
+   `font-display: block` hides text for the moment a local file takes to load instead of
+   flashing a fallback face, so the first frame and every screenshot use the real fonts. */
+
+/* Inter 4.1 for the interface: one variable file for every weight from 100 to 900. */
+@font-face {
+  font-family: "Inter";
+  src: url("./inter/inter-variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: block;
+}
+
+/* JetBrains Mono 2.304 for the terminal and real code: regular and bold (bold terminal output). */
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("./jetbrains-mono/jetbrains-mono-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("./jetbrains-mono/jetbrains-mono-bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+
+/* Barlow Condensed 1.422 for label tape: bold only. */
+@font-face {
+  font-family: "Barlow Condensed";
+  src: url("./barlow-condensed/barlow-condensed-bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}

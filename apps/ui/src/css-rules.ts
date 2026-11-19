@@ -1,16 +1,22 @@
 // A small reader for the project's own stylesheets (ADR 0082). It finds the rules with their
 // declarations, the custom properties they use and colours written as literal values, so that
 // tests can check the stylesheets against the design tokens. It is not a general CSS parser:
-// it knows rules, nested at-rules such as @media, comments and quoted strings, which is all the
-// project's stylesheets use.
+// it knows rules, nested at-rules such as @media, @font-face, comments and quoted strings, which
+// is all the project's stylesheets use.
 
-/** A style rule with the at-rules it is nested in. */
+/** A style rule, or an @font-face rule, with the at-rules it is nested in. */
 export interface CssRule {
-  /** The selector, with its whitespace collapsed, for example `:root` or `.placeholder`. */
+  /**
+   * The selector, with its whitespace collapsed, for example `:root` or `.placeholder`; for an
+   * @font-face rule, `@font-face`.
+   */
   readonly selector: string;
   /** The preludes of the enclosing at-rules, outermost first, for example `@media (…)`. */
   readonly conditions: readonly string[];
-  /** The declarations in source order: property name and value, both trimmed. */
+  /**
+   * The declarations in source order: property name and value, both trimmed. For an @font-face
+   * rule these are its descriptors (font-family, src and others).
+   */
   readonly declarations: ReadonlyMap<string, string>;
 }
 
@@ -27,6 +33,9 @@ export class CssReadError extends Error {
 }
 
 const COMMENT = /\/\*[\s\S]*?\*\//g;
+
+// An at-rule whose block holds descriptors like a style rule, instead of nested rules.
+const FONT_FACE = /^@font-face$/i;
 
 function collapse(text: string): string {
   return text.trim().replace(/\s+/g, " ");
@@ -131,7 +140,7 @@ function readBlockContent(css: string, conditions: readonly string[], rules: Css
       const prelude = collapse(css.slice(preludeStart, index));
       const end = findBlockEnd(css, index);
       const body = css.slice(index + 1, end);
-      if (prelude.startsWith("@")) {
+      if (prelude.startsWith("@") && !FONT_FACE.test(prelude)) {
         readBlockContent(body, [...conditions, prelude], rules);
       } else {
         rules.push({
@@ -151,7 +160,10 @@ function readBlockContent(css: string, conditions: readonly string[], rules: Css
   }
 }
 
-/** Reads every style rule of a stylesheet, including the rules inside at-rules. */
+/**
+ * Reads every style rule and @font-face rule of a stylesheet, including the rules inside
+ * at-rules.
+ */
 export function readCssRules(css: string): CssRule[] {
   const rules: CssRule[] = [];
   readBlockContent(css.replace(COMMENT, ""), [], rules);

@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 
 import { App } from "./app";
 import { getDesktopApi } from "./desktop-bridge";
+import "./fonts/fonts.css";
 import "./tokens.css";
 import "./styles.css";
 

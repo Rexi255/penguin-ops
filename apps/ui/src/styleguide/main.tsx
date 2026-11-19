@@ -4,6 +4,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { readCssRules, rootCustomProperties } from "../css-rules";
+import "../fonts/fonts.css";
 import "../tokens.css";
 import tokensCss from "../tokens.css?raw";
 import "../styles.css";

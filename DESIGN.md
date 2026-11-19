@@ -19,6 +19,43 @@ colors:
   cable-mail: "#a17aec"
   cable-handbook: "#3fa35a"
   cable-incident: "#f35e51"
+typography:
+  display:
+    fontFamily: "Inter, system-ui, sans-serif"
+    fontSize: "2.5rem"
+    fontWeight: 600
+    lineHeight: "3rem"
+  title:
+    fontFamily: "Inter, system-ui, sans-serif"
+    fontSize: "1.75rem"
+    fontWeight: 600
+    lineHeight: "2.25rem"
+  heading:
+    fontFamily: "Inter, system-ui, sans-serif"
+    fontSize: "1.25rem"
+    fontWeight: 600
+    lineHeight: "1.5rem"
+  body:
+    fontFamily: "Inter, system-ui, sans-serif"
+    fontSize: "1rem"
+    fontWeight: 400
+    lineHeight: "1.5rem"
+  hint:
+    fontFamily: "Inter, system-ui, sans-serif"
+    fontSize: "0.8125rem"
+    fontWeight: 500
+    lineHeight: "1.125rem"
+  terminal:
+    fontFamily: "JetBrains Mono, ui-monospace, monospace"
+    fontSize: "1rem"
+    fontWeight: 400
+    lineHeight: "1.5rem"
+  tape:
+    fontFamily: "Barlow Condensed, Arial Narrow, sans-serif"
+    fontSize: "0.9375rem"
+    fontWeight: 700
+    lineHeight: "1.125rem"
+    letterSpacing: "0.04em"
 rounded:
   corner: "2px"
 spacing:
@@ -34,8 +71,9 @@ spacing:
 
 The tokens live in `apps/ui/src/tokens.css` as CSS custom properties (ADR 0082); the frontmatter
 above mirrors their default values. Product truth lives in `PRODUCT.md`; the workplace screen's
-direction contract lives in `apps/ui/.impeccable/surfaces/src-app-tsx.md`. The typefaces are
-chosen (ADR 0084); their bundling and the type scale follow in ROADMAP M3.0d-2, icons in M3.0e.
+direction contract lives in `apps/ui/.impeccable/surfaces/src-app-tsx.md`. The typefaces
+(ADR 0084) are bundled with the app and the type scale is in the tokens (ADR 0085); icons follow
+in ROADMAP M3.0e.
 
 ## Overview
 
@@ -136,8 +174,24 @@ key hints.
 **Mono Font:** JetBrains Mono for the terminal, commands, paths, file names and data, always with
 ligatures turned off, so that the player sees every character they type.
 
-All three are under the SIL OFL 1.1 and are bundled with the app (ADR 0084). Until ROADMAP
-M3.0d-2 bundles them and adds the type scale, the system UI and monospace faces stand in.
+All three are under the SIL OFL 1.1 and are bundled with the app as WOFF2 files in
+`apps/ui/src/fonts/` (ADR 0084, ADR 0085). Weights: Inter 400 for running text, 500 for controls
+and key hints, 600 for headings; JetBrains Mono 400 and 700 for bold terminal output; Barlow
+Condensed 700 only.
+
+**Scale:** one size and line height per role, in the tokens `--text-<role>-size` and
+`--text-<role>-leading`. Every line height is a whole number of quarter cells (6 px), so text
+lines up with the terminal's lines:
+
+| Role | Size | Line height | Face and weight |
+|---|---|---|---|
+| Display: the start screen, rank-ups | 40 px | 48 px | Inter 600 |
+| Title: screen titles | 28 px | 36 px | Inter 600 |
+| Heading: side panel headings, ticket titles | 20 px | 24 px | Inter 600 |
+| Body: running text | 16 px | 24 px | Inter 400 |
+| Terminal | 16 px | 24 px, one cell | JetBrains Mono 400 |
+| Tape | 15 px | 18 px | Barlow Condensed 700, caps |
+| Hint: key hints, the footer, meta data | 13 px | 18 px | Inter 500 |
 
 **Character:** The tape face is loud but small, like a real label; the UI face stays quiet and
 readable; the mono face is reserved for real code, terminal output and data such as version

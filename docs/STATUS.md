@@ -4,6 +4,11 @@ _Last updated: 2026-11-19_
 
 ## Recently completed
 
+- M3.0d-2 Typography (built; the owner's Windows check is open): Inter 4.1 (variable), JetBrains Mono 2.304 (400, 700) and Barlow Condensed
+  1.422 (700) bundled as unchanged WOFF2 files from the upstream releases in `apps/ui/src/fonts/`
+  with their OFL texts, which electron-builder ships in `resources/licenses/fonts/`; font,
+  weight and type scale tokens with line heights on quarter cells; styleguide sections; tests
+  for faces, files, licenses, the scale and loading in the app (ADR 0085).
 - M3.0d-1 Typeface choice: three candidates per role compared in a specimen page and a workplace
   mock-up with the real tokens; all nine are SIL OFL 1.1. The owner chose Barlow Condensed for
   tape, Inter for the interface and JetBrains Mono for the terminal (ADR 0084); `DESIGN.md` and
@@ -22,23 +27,21 @@ _Last updated: 2026-11-19_
   repository root; the owner chose the visual world "Label Tape & Patch Cable" on impeccable's
   decision page (ADR 0081); direction contract in `apps/ui/.impeccable/surfaces/`. impeccable
   finds the root files from `apps/ui`.
-- M3.0a impeccable design skill: byte-for-byte copy of release `cli-v4.9.1` in
-  `.claude/skills/impeccable/` without hook and subagents, telemetry off in
-  `.impeccable/config.json`, `.gitignore` block, guarded by `scripts/impeccable-setup.test.ts`;
-  verified on Windows (ADR 0080). Newer releases 4.9.2 and 4.10.0 ship without engine checksums.
 
 ## In progress
 
-- Nothing.
+- M3.0d-2: the owner checks the bundled fonts on Windows; then the ROADMAP item is ticked.
 
 ## Next 3 steps
 
-1. ROADMAP M3.0d-2: bundle the fonts, type scale tokens, styleguide section.
-2. ROADMAP M3.0e: icon style.
-3. ROADMAP M3.0f-2: logo and tokens.
+1. ROADMAP M3.0e: icon style.
+2. ROADMAP M3.0f-2: logo and tokens.
+3. ROADMAP M3.1: app screens.
 
 ## Blockers and open questions
 
+- The owner still has to check the bundled fonts on Windows (`npm run styleguide` and
+  `npm run dev`), because Windows renders fonts slightly heavier than the Linux screenshots.
 - The texts of the five prototype levels and the office world's host name `itdesk` were
   written as test content without the owner's review (the prototype's source is not in the
   repository, so levels 2 to 5 follow the titles in `docs/CURRICULUM.md`); the story workshop

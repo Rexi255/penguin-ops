@@ -1,5 +1,9 @@
-// Desktop smoke tests: the app starts, shows the placeholder screen and keeps the security
-// baseline of ADR 0014.
+// Desktop smoke tests: the app starts, shows the placeholder screen with the bundled fonts and
+// keeps the security baseline of ADR 0014.
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+
+import { FONT_LICENSES_RESOURCE } from "../electron-builder.config";
 import { expect, test } from "./app";
 
 test("opens the window with the placeholder screen", async ({ page }) => {
@@ -20,6 +24,35 @@ test("runs as the packaged app exactly in the packaged project", async ({
 test("shows the version of the desktop package", async ({ electronApp, page }) => {
   const version = await electronApp.evaluate(({ app }) => app.getVersion());
   await expect(page.getByTestId("app-version")).toHaveText(version);
+});
+
+test("loads every bundled font face from the app's own files", async ({ page }) => {
+  // Under the strict Content Security Policy (font-src 'self') and from app.asar (ADR 0085).
+  const faces = await page.evaluate(async () => {
+    const requests = [
+      '400 16px "Inter"',
+      '400 16px "JetBrains Mono"',
+      '700 16px "JetBrains Mono"',
+      '700 16px "Barlow Condensed"',
+    ];
+    const loaded = await Promise.all(requests.map((font) => document.fonts.load(font)));
+    return loaded.flat().map((face) => `${face.family} ${face.weight} ${face.status}`);
+  });
+  expect(faces).toEqual([
+    "Inter 100 900 loaded",
+    "JetBrains Mono 400 loaded",
+    "JetBrains Mono 700 loaded",
+    "Barlow Condensed 700 loaded",
+  ]);
+});
+
+test("ships the font licenses next to the packaged app", async ({ electronApp, packaged }) => {
+  const resources = await electronApp.evaluate(() => process.resourcesPath);
+  // The built app runs from the development Electron, whose resources have no licenses.
+  for (const family of ["inter", "jetbrains-mono", "barlow-condensed"]) {
+    const license = join(resources, FONT_LICENSES_RESOURCE, family, "ofl.txt");
+    expect(existsSync(license), license).toBe(packaged);
+  }
 });
 
 test("runs the renderer without Node.js and exposes only the desktop API", async ({ page }) => {

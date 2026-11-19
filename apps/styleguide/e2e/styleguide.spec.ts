@@ -104,6 +104,53 @@ test("measures the spacing tokens in steps of a quarter cell", async ({ page }) 
   );
 });
 
+test("loads every bundled font face", async ({ page }) => {
+  await openStyleguide(page);
+  const faces = await page.evaluate(async () => {
+    await document.fonts.ready;
+    return [...document.fonts].map((face) => `${face.family} ${face.weight} ${face.status}`);
+  });
+  // The page uses every face, so each one has been loaded from its file (ADR 0085).
+  expect(faces.toSorted()).toEqual([
+    "Barlow Condensed 700 loaded",
+    "Inter 100 900 loaded",
+    "JetBrains Mono 400 loaded",
+    "JetBrains Mono 700 loaded",
+  ]);
+});
+
+test("sets every font sample in its bundled face, the monospace one without ligatures", async ({
+  page,
+}) => {
+  await openStyleguide(page);
+  await expect(page.locator('[data-token="--font-ui"] .sg-font')).toHaveCSS(
+    "font-family",
+    /^Inter,/,
+  );
+  const mono = page.locator('[data-token="--font-mono"] .sg-font');
+  await expect(mono).toHaveCSS("font-family", /^"JetBrains Mono",/);
+  await expect(mono).toHaveCSS("font-variant-ligatures", "none");
+  await expect(page.locator('[data-token="--font-tape"] .sg-tape').first()).toHaveCSS(
+    "font-family",
+    /^"Barlow Condensed",/,
+  );
+});
+
+test("measures every line height of the type scale in quarter cells", async ({ page }) => {
+  await openStyleguide(page);
+  const leadings = [...definedTokens().keys()].filter((name) => /^--text-.+-leading$/.test(name));
+  expect(leadings.length).toBeGreaterThan(0);
+  for (const name of leadings) {
+    const pixels = page.locator(`[data-token="${name}"] .sg-measure__pixels`);
+    await expect(pixels).toHaveText(/^\d+ px$/);
+    // One cell is 24 px at the test browser's 16 px root size, so a quarter cell is 6 px.
+    expect(Number.parseInt(await pixels.innerText(), 10) % 6, name).toBe(0);
+  }
+  await expect(page.locator('[data-token="--text-body-leading"] .sg-measure__pixels')).toHaveText(
+    "24 px",
+  );
+});
+
 test("shows the focus ring when a control is reached with the keyboard", async ({ page }) => {
   await openStyleguide(page);
   const button = page.getByRole("button", { name: "Focus me with Tab" });

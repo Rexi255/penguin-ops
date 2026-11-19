@@ -30,6 +30,12 @@ export const OUTPUT_DIRECTORY = "release";
 
 export const BUILD_RESOURCES_DIRECTORY = "build";
 
+/** The bundled fonts of the UI, each in a folder of its own with its license text (ADR 0085). */
+export const FONTS_DIRECTORY = "../ui/src/fonts";
+
+/** Where the installed app keeps the font licenses, inside its resources folder. */
+export const FONT_LICENSES_RESOURCE = "licenses/fonts";
+
 const config: Configuration = {
   // Identifies the installation on Windows (uninstall entry, upgrades). Never change it after a
   // release, or a new version installs next to the old one instead of updating it (ADR 0021).
@@ -44,6 +50,10 @@ const config: Configuration = {
   // dependencies, because electron-vite bundles everything into out/.
   files: ["out/**/*", "!**/*.map"],
   asar: true,
+  // The SIL OFL 1.1 asks for its text next to every copy of a font. The fonts themselves are
+  // inside app.asar (bundled by Vite); their licenses are copied as plain files into
+  // resources/licenses/fonts/<family>/ofl.txt, where players can read them.
+  extraResources: [{ from: FONTS_DIRECTORY, to: FONT_LICENSES_RESOURCE, filter: ["*/ofl.txt"] }],
   // Releases are published by the release pipeline (ROADMAP M5.3), never by a local build.
   publish: null,
 

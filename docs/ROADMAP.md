@@ -173,7 +173,7 @@ inventing it along the way.
       JetBrains Mono (ADR 0084).
 - [ ] M3.0d-2 Typography: bundle the chosen fonts for offline use (weights, format, source,
       licenses), type scale tokens, the font tokens switched to the bundled faces; shown in the
-      styleguide; checked by the owner on Windows.
+      styleguide; checked by the owner on Windows (ADR 0085).
 - [ ] M3.0e Icon style: rules (grid, stroke, corners), choice between an icon set with an
       allowed license and own SVG icons, first icons for the side panel tabs; shown in the
       styleguide.

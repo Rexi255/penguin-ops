@@ -18,7 +18,20 @@ body {
   background: var(--color-surface-ground);
   color: var(--color-text);
   font-family: var(--font-ui);
+  font-size: var(--text-body-size);
+  font-weight: var(--font-weight-body);
+  line-height: var(--text-body-leading);
   caret-color: var(--color-player);
+}
+
+/* Real code is set in the monospace face, always without ligatures, so that the player sees
+   every character (the Real-Code Rule of DESIGN.md, ADR 0084). */
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--font-mono);
+  font-variant-ligatures: none;
 }
 
 ::selection {
@@ -45,8 +58,9 @@ body {
   margin: 0;
   color: var(--color-text);
   font-family: var(--font-ui);
-  font-size: 3rem;
-  font-weight: 700;
+  font-size: var(--text-display-size);
+  font-weight: var(--font-weight-heading);
+  line-height: var(--text-display-leading);
 }
 
 /* The version is data, so it may use the monospace face (the Real-Code Rule). */
@@ -54,4 +68,5 @@ body {
   margin: 0;
   color: var(--color-text-muted);
   font-family: var(--font-mono);
+  font-variant-ligatures: none;
 }

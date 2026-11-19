@@ -66,6 +66,94 @@ function TapeDemo() {
   );
 }
 
+/** A sample of a font family token in the role it is made for. */
+function FontSample({ token }: { readonly token: Token }) {
+  const style: CSSProperties = { fontFamily: tokenVar(token.name) };
+  switch (token.name) {
+    case "--font-tape":
+      // German words with umlauts, because the tape face has to keep them short (ADR 0084).
+      return (
+        <span className="sg-tape-row">
+          <span className="sg-tape">Posteingang</span>
+          <span className="sg-tape">Beförderung!</span>
+          <span className="sg-tape">Übergabe</span>
+        </span>
+      );
+    case "--font-mono":
+      // Bold output (a directory in ls), box drawing for tree, confusable characters, and pairs
+      // that would be ligatures.
+      return (
+        <pre className="sg-font sg-font--mono" style={style}>
+          {"~$ ls\n"}
+          <b className="sg-font__strong">docs</b>
+          {"  notes.txt\n~$ tree /etc\n├── hosts\n└── passwd\n0O o 1lI| -> != <="}
+        </pre>
+      );
+    default:
+      return (
+        <span className="sg-font" style={style}>
+          {"Ticket solved. Größe, Übergabe, 1\u00a0234\u00a0XP"}
+        </span>
+      );
+  }
+}
+
+const TYPE_PREFIX = "--text-";
+const SIZE_SUFFIX = "-size";
+const LEADING_SUFFIX = "-leading";
+
+/** The texts that show each role of the type scale. */
+const TYPE_SAMPLES: Readonly<Record<string, string>> = {
+  hint: "Tab completes · F1 Help",
+  tape: "Ticket 1042",
+  body: "The printer on the second floor is out of toner again.",
+  terminal: "~$ ls /var/log",
+  heading: "Printer offline",
+  title: "Inbox",
+  display: "PenguinOps",
+};
+
+/**
+ * A sample of a size token of the type scale, set with its role's line height, face and weight:
+ * tape in the tape face, the terminal in the monospace face, everything else in the UI face.
+ */
+function TypeSample({ token }: { readonly token: Token }) {
+  const role = token.name.slice(TYPE_PREFIX.length, -SIZE_SUFFIX.length);
+  const style: CSSProperties = {
+    fontSize: tokenVar(token.name),
+    lineHeight: tokenVar(`${TYPE_PREFIX}${role}${LEADING_SUFFIX}`),
+  };
+  const text = TYPE_SAMPLES[role] ?? role;
+  switch (role) {
+    case "tape":
+      return (
+        <span className="sg-tape" style={style}>
+          {text}
+        </span>
+      );
+    case "terminal":
+      return (
+        <code className="sg-type sg-type--terminal" style={style}>
+          {text}
+        </code>
+      );
+    case "heading":
+    case "title":
+    case "display":
+      return (
+        <span className="sg-type sg-type--heading" style={style}>
+          {text}
+        </span>
+      );
+    default:
+      return (
+        <span className="sg-type" style={style}>
+          {text}
+        </span>
+      );
+  }
+}
+
 /** The sample that shows one token of a section. */
 function TokenSample({ kind, token }: { readonly kind: TokenKind; readonly token: Token }) {
   const value = tokenVar(token.name);
@@ -90,10 +178,18 @@ function TokenSample({ kind, token }: { readonly kind: TokenKind; readonly token
     case "motion":
       return null;
     case "font":
+      return <FontSample token={token} />;
+    case "weight":
       return (
-        <span className="sg-font" style={{ fontFamily: value }}>
-          player@itdesk:~$ ls -la /var/log — Ticket solved.
+        <span className="sg-weight" style={{ fontWeight: value }}>
+          Ticket solved
         </span>
+      );
+    case "type":
+      return token.name.endsWith(LEADING_SUFFIX) ? (
+        <MeasuredLength name={token.name} axis="block" />
+      ) : (
+        <TypeSample token={token} />
       );
   }
 }
@@ -128,7 +224,14 @@ const SECTION_INTROS: Readonly<Record<TokenKind, string>> = {
   motion:
     "The tape strip printing out is the only thing that moves on its own. State changes answer " +
     "quickly. With reduce motion on, both durations are 0 ms.",
-  font: "The UI face and the monospace face. ROADMAP M3.0d-2 bundles the chosen fonts (ADR 0084) and adds the type scale.",
+  font:
+    "The three bundled faces, each for one role: Inter for the interface, JetBrains Mono for " +
+    "the terminal and real code, always without ligatures, Barlow Condensed for tape, in caps.",
+  weight:
+    "Inter has every weight; JetBrains Mono ships regular and bold, Barlow Condensed only bold.",
+  type:
+    "One size and line height per role. Every line height is a whole number of quarter cells, " +
+    "so text lines up with the terminal lines.",
 };
 
 function CellGrid() {

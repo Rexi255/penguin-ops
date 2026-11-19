@@ -7,6 +7,7 @@ import {
   rootCustomProperties,
   usedCustomProperties,
 } from "./css-rules";
+import fontsCss from "./fonts/fonts.css?raw";
 import styleguideCss from "./styleguide/styleguide.css?raw";
 import stylesCss from "./styles.css?raw";
 import {
@@ -50,6 +51,7 @@ describe("the colour tokens", () => {
 describe("the stylesheets", () => {
   test.each([
     ["tokens.css", tokensCss],
+    ["fonts/fonts.css", fontsCss],
     ["styles.css", stylesCss],
     ["styleguide/styleguide.css", styleguideCss],
   ])("%s reads only defined tokens", (_name, css) => {
@@ -58,6 +60,7 @@ describe("the stylesheets", () => {
 
   test.each([
     ["tokens.css", tokenRules],
+    ["fonts/fonts.css", readCssRules(fontsCss)],
     ["styles.css", readCssRules(stylesCss)],
     ["styleguide/styleguide.css", readCssRules(styleguideCss)],
   ])("%s writes no colour outside the token definitions", (_name, rules) => {
@@ -65,6 +68,7 @@ describe("the stylesheets", () => {
   });
 
   test.each([
+    ["fonts/fonts.css", fontsCss],
     ["styles.css", stylesCss],
     ["styleguide/styleguide.css", styleguideCss],
   ])("%s defines no tokens of its own", (_name, css) => {
@@ -72,6 +76,85 @@ describe("the stylesheets", () => {
       [...rule.declarations.keys()].filter((property) => property.startsWith("--")),
     );
     expect(ownProperties).toEqual([]);
+  });
+});
+
+describe("the typography", () => {
+  const TYPE_PROPERTIES = ["font-family", "font-size", "font-weight", "line-height"];
+  const TOKEN_VALUE = /^var\(--[\w-]+\)$/;
+
+  test.each([
+    ["styles.css", readCssRules(stylesCss)],
+    ["styleguide/styleguide.css", readCssRules(styleguideCss)],
+  ])("%s sets faces, sizes, weights and line heights only with tokens", (_name, rules) => {
+    const literal = rules.flatMap((rule) =>
+      [...rule.declarations]
+        .filter(
+          ([property, value]) =>
+            (TYPE_PROPERTIES.includes(property) &&
+              !TOKEN_VALUE.test(value) &&
+              value !== "inherit") ||
+            (property === "font" && value !== "inherit"),
+        )
+        .map(([property, value]) => `${rule.selector} { ${property}: ${value} }`),
+    );
+    expect(literal).toEqual([]);
+  });
+
+  test.each([
+    ["styles.css", readCssRules(stylesCss)],
+    ["styleguide/styleguide.css", readCssRules(styleguideCss)],
+  ])("%s turns ligatures off wherever it sets the monospace face", (_name, rules) => {
+    const withLigatures = rules
+      .filter((rule) => rule.declarations.get("font-family") === "var(--font-mono)")
+      .filter((rule) => rule.declarations.get("font-variant-ligatures") !== "none")
+      .map((rule) => rule.selector);
+    expect(withLigatures).toEqual([]);
+  });
+});
+
+describe("the type scale", () => {
+  const SIZE = /^--text-([a-z]+)-size$/;
+  const LEADING = /^--text-([a-z]+)-leading$/;
+  const textTokens = [...tokens.keys()].filter((name) => name.startsWith("--text-"));
+  const roles = textTokens.flatMap((name) => SIZE.exec(name)?.[1] ?? []);
+
+  /** A token's value in rem, following one var() to the token it reads. */
+  function remOf(name: string): number {
+    const raw = tokens.get(name) ?? "";
+    const value = /^var\((--[\w-]+)\)$/.exec(raw)?.[1] ?? name;
+    const match = /^(\d+(?:\.\d+)?)rem$/.exec(tokens.get(value) ?? "");
+    if (match?.[1] === undefined) {
+      throw new Error(`${name} is not a length in rem: ${raw}`);
+    }
+    return Number(match[1]);
+  }
+
+  test("has a size and a line height for every role and nothing else", () => {
+    expect(roles.length).toBeGreaterThan(0);
+    const expected = roles.flatMap((role) => [`--text-${role}-size`, `--text-${role}-leading`]);
+    expect(textTokens.toSorted()).toEqual(expected.toSorted());
+  });
+
+  test("snaps every line height to a quarter of the cell height", () => {
+    const quarterCell = remOf("--cell-block") / 4;
+    const offGrid = textTokens
+      .filter((name) => LEADING.test(name))
+      .filter((name) => !Number.isInteger(remOf(name) / quarterCell));
+    expect(offGrid).toEqual([]);
+  });
+
+  test("gives every role a line height above its size", () => {
+    const cramped = roles.filter(
+      (role) => remOf(`--text-${role}-leading`) <= remOf(`--text-${role}-size`),
+    );
+    expect(cramped).toEqual([]);
+  });
+
+  test("sets terminal text on the character cell", () => {
+    expect(tokens.get("--text-terminal-leading")).toBe("var(--cell-block)");
+    // The cell's width is 0.6 em of the terminal text, the advance width of JetBrains Mono.
+    expect(remOf("--cell-inline")).toBeCloseTo(remOf("--text-terminal-size") * 0.6, 10);
   });
 });
 
