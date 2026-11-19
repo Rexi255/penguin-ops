@@ -4,6 +4,11 @@ _Last updated: 2026-11-19_
 
 ## Recently completed
 
+- M3.2a User name logic: `deriveUserName` turns the player's whole name into a Linux user name
+  ("Jörg Müller" → `joerg-mueller`; umlauts transliterated, accents and apostrophes dropped,
+  empty without a Latin letter), `checkUserName` returns the first problem as a code, and
+  `reservedUserNames` holds Debian's system accounts and every account of the base worlds
+  (ADR 0093). `isValidPlayerName` uses the same check.
 - M3.1c Game screen and pause menu (M3.1 complete): an empty slot is now a button ("Slot 1 New
   game", first slot focused) that opens the game screen, the workplace frame as a CSS grid (top
   bar, side panel, terminal area, footer with an "Esc Menu" key hint button). Esc opens a modal
@@ -25,9 +30,6 @@ _Last updated: 2026-11-19_
   API has `quit()`; component tests with Testing Library in jsdom; end-to-end tests in both
   languages with axe-core (ADR 0090). The Enter test no longer fails when the app quits before
   Playwright gets the answer to the key press.
-- M3.0f-2b Logo files: the five colour SVGs and the favicon SVG recoloured to ADR 0088; all 14
-  raster files drawn from the SVGs by `npm run brand:rasters` (ADR 0089, partly superseding
-  ADR 0040). The styleguide has a Logo section.
 
 ## In progress
 
@@ -35,7 +37,7 @@ _Last updated: 2026-11-19_
 
 ## Next 3 steps
 
-1. ROADMAP M3.2: new game flow.
+1. ROADMAP M3.2b: new game screen.
 2. ROADMAP M3.3: terminal component.
 3. ROADMAP M3.4: workplace layout (top bar, side panel tabs, footer key hints).
 
@@ -57,6 +59,9 @@ _Last updated: 2026-11-19_
   with `STYLEGUIDE_CHROMIUM_PATH` set to the preinstalled Chromium.
 - Steam release is assumed to be "maybe later" (ADR 0002); confirm with the owner when it
   becomes relevant.
+- A later world that adds an account with a name an existing save already uses would collide
+  with that save (ADR 0093); M3.7 or M4 decides how to handle it. The reserved Debian accounts
+  are verified in M6.
 - Some details of `ls`, `clear`, `history`, `cat`, `head`, `tail`, `touch`, `rm`, `cp`, `mv` and
   `grep` could not be checked against a real Debian 13 (tests marked `@differential`, ADR 0054
   to ADR 0064); grep 3.11's own source could not be fetched, so grep follows an earlier 3.x

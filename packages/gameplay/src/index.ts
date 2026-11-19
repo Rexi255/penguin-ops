@@ -38,3 +38,10 @@ export {
   REFERENCE_START_TIME,
   type SolutionProblem,
 } from "./reference-solutions";
+export {
+  checkUserName,
+  deriveUserName,
+  reservedUserNames,
+  USER_NAME_MAX_LENGTH,
+  type UserNameProblem,
+} from "./user-name";

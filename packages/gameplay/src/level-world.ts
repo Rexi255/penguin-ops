@@ -12,14 +12,13 @@ import {
 } from "@penguin-ops/content";
 import type { HostSpec, NodeSpec, WorldSpec } from "@penguin-ops/engine";
 
+import { checkUserName } from "./user-name";
+
 /**
  * The mode of the player's home directory: Debian's `adduser` creates homes with `DIR_MODE`
  * 0700 since Debian 12 (to be verified on Debian 13 in M6).
  */
 export const PLAYER_HOME_MODE = 0o700;
-
-/** The Linux user name rules of ADR 0019: a lowercase letter, then letters, digits, hyphens. */
-const PLAYER_NAME_PATTERN = /^[a-z][a-z0-9-]{0,31}$/u;
 
 /** Thrown when a level cannot start: an invalid player name, an unknown host or start file. */
 export class LevelSetupError extends Error {
@@ -31,7 +30,7 @@ export class LevelSetupError extends Error {
  * followed by up to 31 lowercase letters, digits and hyphens.
  */
 export function isValidPlayerName(name: string): boolean {
-  return PLAYER_NAME_PATTERN.test(name);
+  return checkUserName(name) === undefined;
 }
 
 /** The player's home directory. */

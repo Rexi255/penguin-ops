@@ -198,6 +198,10 @@ inventing it along the way.
         (ADR 0092).
 - [ ] M3.2 New game flow: name, derived Linux user name (validation, editing), Story or Sandbox
       mode (ADR 0017, ADR 0019).
+  - [x] M3.2a User name logic: derivation from the player's name, checks with problem codes and
+        reserved names (ADR 0093).
+  - [ ] M3.2b New game screen: name, editable user name with the problem texts, Story or
+        Sandbox, Start and Back; the slot keeps the game in memory until M3.7.
 - [ ] M3.3 Terminal component: input, coloured output, history, tab completion, Ctrl+C/L/A/E,
       scrollback.
 - [ ] M3.4 Workplace layout: top bar, side panel tabs, footer key hints (ADR 0020), built

@@ -394,8 +394,12 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
 - Level world (`src/level-world.ts`, ADR 0076): `levelWorldSpec` turns a base world and a level
   into the engine's `WorldSpec` for one player: the player's account (UID and GID 1000, home
   `/home/<name>` with mode 0700) on every host, the start files after the world's files on the
-  start host, `~/` as the home and prose files from the catalogs. `isValidPlayerName` holds the
-  user name rules of ADR 0019.
+  start host, `~/` as the home and prose files from the catalogs. `isValidPlayerName` checks the
+  player's name with the user name rules.
+- User name (`src/user-name.ts`, ADR 0019, ADR 0093): `deriveUserName` turns the name the
+  player types into a Linux user name, `checkUserName` returns the first problem of a user name
+  as a code (or none), and `reservedUserNames` collects Debian's system accounts and every user
+  and group of the base worlds, which a player cannot take.
 - Level session (`src/level-session.ts`, ADR 0077): `startLevel` builds the world, logs the
   player in on the start host in `start.cwd` and can resume at a checkpoint by replaying the
   first reference solution. `runInput` returns `incomplete` for an input that needs another
