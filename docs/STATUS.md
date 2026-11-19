@@ -4,11 +4,12 @@ _Last updated: 2026-11-19_
 
 ## Recently completed
 
-- M3.0d-2 Typography (built; the owner's Windows check is open): Inter 4.1 (variable), JetBrains Mono 2.304 (400, 700) and Barlow Condensed
-  1.422 (700) bundled as unchanged WOFF2 files from the upstream releases in `apps/ui/src/fonts/`
-  with their OFL texts, which electron-builder ships in `resources/licenses/fonts/`; font,
-  weight and type scale tokens with line heights on quarter cells; styleguide sections; tests
-  for faces, files, licenses, the scale and loading in the app (ADR 0085).
+- M3.0d-2 Typography (built; the owner's Windows check is open): Inter 4.1 (variable),
+  JetBrains Mono 2.304 (400, 700) and Barlow Condensed 1.422 (700) bundled as unchanged WOFF2
+  files from the upstream releases in `apps/ui/src/fonts/` with their OFL texts, which
+  electron-builder ships in `resources/licenses/fonts/`; font, weight and type scale tokens
+  with line heights on quarter cells; styleguide sections; tests for faces, files, licenses,
+  the scale and loading in the app (ADR 0085). CI green.
 - M3.0d-1 Typeface choice: three candidates per role compared in a specimen page and a workplace
   mock-up with the real tokens; all nine are SIL OFL 1.1. The owner chose Barlow Condensed for
   tape, Inter for the interface and JetBrains Mono for the terminal (ADR 0084); `DESIGN.md` and
