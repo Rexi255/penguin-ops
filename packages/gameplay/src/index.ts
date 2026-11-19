@@ -32,6 +32,15 @@ export {
   startHost,
 } from "./level-world";
 export {
+  checkPlayerName,
+  GAME_MODES,
+  type GameMode,
+  type NewGame,
+  normalizePlayerName,
+  PLAYER_NAME_MAX_LENGTH,
+  type PlayerNameProblem,
+} from "./new-game";
+export {
   checkReferenceSolutions,
   formatSolutionProblem,
   REFERENCE_PLAYERS,

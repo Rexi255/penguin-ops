@@ -8,6 +8,7 @@ colors:
   surface-terminal: "#0f1114"
   surface-selection: "#353d47"
   rule: "#2e343b"
+  control-border: "#6b737c"
   text: "#e8e6e1"
   text-muted: "#a3a8ae"
   player: "#e0701a"
@@ -116,7 +117,8 @@ ring), and a test proves it for every pair (ADR 0082).
 ### Primary
 
 - **Fibre Orange** (`player`): the player's own colour, the logo's prompt orange. Only the shell
-  prompt, the cursor, the outline of the active ticket and the current step.
+  prompt, the cursor, the outline of the active ticket, the current step and the frame of the
+  player's choice on a choice card (ADR 0094).
 
 ### Secondary
 
@@ -146,6 +148,8 @@ on every surface.
 - **Selection Metal** (`surface-selection`): selected text.
 - **Rule** (`rule`): hairline dividers between areas that their surfaces already tell apart. It
   is decorative and the only colour without a contrast minimum.
+- **Control Boundary** (`control-border`): the boundary of text fields and choice cards and the
+  ring of a choice marker, with 3:1 against every surface, because it identifies the control.
 - **Paper Text** (`text`) and **Muted Text** (`text-muted`): body and secondary text.
 - **Focus** (`focus`): the keyboard focus ring, neutral so that it never competes with fibre
   orange.
@@ -267,7 +271,8 @@ where it marks a kind of work or a state, such as a ticket row's kind or a solve
 
 - **Do** print ticket IDs, the product name, the rank and toast titles on tape.
 - **Do** give each kind of work its cable colour, consistently, on tabs, toasts and states.
-- **Do** keep fibre orange for the player's prompt, cursor and active ticket only.
+- **Do** keep fibre orange for the player's prompt, cursor, active ticket and current choice
+  only.
 - **Do** build every screen from the tokens in `apps/ui/src/tokens.css`; a missing value becomes
   a new token, not a literal.
 - **Do** let the one motion be the tape printing out, and show it at once when "reduce motion"

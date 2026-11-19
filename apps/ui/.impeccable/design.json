@@ -347,7 +347,7 @@
     "dos": [
       "**Do** print ticket IDs, the product name, the rank and toast titles on tape.",
       "**Do** give each kind of work its cable colour, consistently, on tabs, toasts and states.",
-      "**Do** keep fibre orange for the player's prompt, cursor and active ticket only.",
+      "**Do** keep fibre orange for the player's prompt, cursor, active ticket and current choice only.",
       "**Do** build every screen from the tokens in `apps/ui/src/tokens.css`; a missing value becomes a new token, not a literal.",
       "**Do** let the one motion be the tape printing out, and show it at once when \"reduce motion\" is on.",
       "**Do** keep every control a standard, recognisable one: tabs, buttons, lists, inputs."

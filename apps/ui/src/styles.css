@@ -187,8 +187,205 @@ pre {
   font-weight: var(--font-weight-heading);
 }
 
+/* The state: "New game", or the player's name and the mode. A long name wraps instead of pushing
+   the row wider than the slot. */
 .save-slot__state {
+  min-inline-size: 0;
   color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+  text-align: end;
+}
+
+/* The new game screen: one form column of 61 cells in the middle of the ground, wide enough for
+   the two mode cards of 30 cells side by side. */
+.new-game-screen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-block-size: 100%;
+  padding: var(--space-8) var(--space-4);
+}
+
+.new-game {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  inline-size: calc(var(--cell-inline) * 61);
+  max-inline-size: 100%;
+}
+
+.new-game__heading {
+  margin-block-end: var(--space-2);
+}
+
+.new-game__title {
+  margin: 0;
+  font-size: var(--text-title-size);
+  font-weight: var(--font-weight-heading);
+  line-height: var(--text-title-leading);
+}
+
+.new-game__slot {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.new-game__actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-block-start: var(--space-2);
+}
+
+/* A form field: the label, the text field, an optional help line and the problem line. */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.field__label {
+  padding: 0;
+  font-weight: var(--font-weight-heading);
+}
+
+/* A text field: a well of terminal ground with a visible boundary, where the player types. */
+.field__input {
+  padding: var(--space-1) var(--space-2);
+  border: var(--border-width-control) solid var(--color-control-border);
+  border-radius: var(--radius-corner);
+  background: var(--color-surface-terminal);
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-size: var(--text-body-size);
+  font-weight: var(--font-weight-body);
+  line-height: var(--text-body-leading);
+}
+
+/* A field for real code, such as the Linux user name (the Real-Code Rule). */
+.field__input--code {
+  font-family: var(--font-mono);
+  font-variant-ligatures: none;
+}
+
+.field__input[aria-invalid="true"] {
+  border-color: var(--color-cable-incident);
+}
+
+.field__help {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-hint-size);
+  font-weight: var(--font-weight-control);
+  line-height: var(--text-hint-leading);
+}
+
+/* The problem line keeps its height while it is empty, so the form does not jump. The red is the
+   colour of real errors; the text itself says what is wrong. */
+.field__problem {
+  min-block-size: var(--text-hint-leading);
+  margin: 0;
+  color: var(--color-cable-incident);
+  font-size: var(--text-hint-size);
+  font-weight: var(--font-weight-control);
+  line-height: var(--text-hint-leading);
+}
+
+/* Code in a problem, such as a reserved user name, keeps the line at its height: the monospace
+   face's own line box would push the form down by a pixel. */
+.field__problem code {
+  line-height: var(--text-hint-leading);
+  vertical-align: top;
+}
+
+/* The game mode choice: two cards side by side, one single choice (radio buttons). */
+.mode-choice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.mode-choice__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(calc(var(--cell-inline) * 25), 1fr));
+  gap: var(--space-2);
+}
+
+/* A choice card. Not chosen, it sits on the panel metal with muted text and a visible boundary,
+   so it still reads as a control; it lightens when the pointer is over it. Chosen, it is raised,
+   its text is full strength, and its frame and its marker's dot are fibre orange: the player's
+   own choice (the Fibre Rule). The filled marker shows the choice without colour too. */
+.mode-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width-choice) solid var(--color-control-border);
+  border-radius: var(--radius-corner);
+  background: var(--color-surface-panel);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    background-color var(--motion-duration-state) var(--motion-easing-state),
+    border-color var(--motion-duration-state) var(--motion-easing-state),
+    color var(--motion-duration-state) var(--motion-easing-state);
+}
+
+.mode-card:hover {
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+.mode-card:has(.mode-card__input:checked) {
+  border-color: var(--color-player);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+.mode-card:has(.mode-card__input:focus-visible) {
+  outline: var(--border-width-focus) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
+}
+
+.mode-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mode-card__title {
+  font-size: var(--text-heading-size);
+  font-weight: var(--font-weight-heading);
+  line-height: var(--text-heading-leading);
+}
+
+/* The marker of a single choice: a ring, with a dot when the card is chosen. */
+.mode-card__marker {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: var(--space-3);
+  block-size: var(--space-3);
+  border: var(--border-width-choice) solid var(--color-control-border);
+  border-radius: var(--radius-round);
+}
+
+.mode-card__marker::after {
+  inline-size: var(--space-1);
+  block-size: var(--space-1);
+  border-radius: var(--radius-round);
+  content: "";
+}
+
+.mode-card:has(.mode-card__input:checked) .mode-card__marker {
+  border-color: var(--color-player);
+}
+
+.mode-card:has(.mode-card__input:checked) .mode-card__marker::after {
+  background: var(--color-player);
 }
 
 /* The game screen: the workplace layout of ADR 0020 and DESIGN.md. The top bar and the footer

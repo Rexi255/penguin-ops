@@ -1,8 +1,8 @@
 # Architecture
 
 > **Status: skeleton.** The workspaces exist with strict TypeScript configs (ROADMAP M0.2);
-> the Electron app has its start, save slot and game screens with the pause menu and the bundled
-> content (M3.1), and the engine has the core types of the
+> the Electron app has its start, save slot, new game and game screens with the pause menu and
+> the bundled content (M3.1, M3.2), and the engine has the core types of the
 > world model (M1.1), path lookup and permission checks (M1.2), its random generator, game
 > clock and world builder (M1.3), the shell lexer, parser, word expansion and execution
 > (M1.4–M1.6b) and the write side of the file system (M1.6c-1).
@@ -400,6 +400,9 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   player types into a Linux user name, `checkUserName` returns the first problem of a user name
   as a code (or none), and `reservedUserNames` collects Debian's system accounts and every user
   and group of the base worlds, which a player cannot take.
+- New game (`src/new-game.ts`, ADR 0017, ADR 0094): the game modes `story` and `sandbox`,
+  `normalizePlayerName` and `checkPlayerName` (`empty`, `too-long`) for the player's name, and
+  `NewGame`, what a save slot holds once the player has started a game.
 - Level session (`src/level-session.ts`, ADR 0077): `startLevel` builds the world, logs the
   player in on the start host in `start.cwd` and can resume at a checkpoint by replaying the
   first reference solution. `runInput` returns `incomplete` for an input that needs another
@@ -440,10 +443,12 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
 
 Current state (ADR 0033): `index.html` (with the strict Content Security Policy) loads
 `src/main.tsx`, which loads the bundled content, picks the language, asks the desktop API for
-the app info and renders `src/app.tsx`, which shows the current screen (ADR 0091): it holds the
-screen as React state of the union type `Screen` and picks the screen component with an
-exhaustive `switch`; screens get callbacks such as `onPlay` and `onBack` and do not know each
-other.
+the app info and computes the reserved user names of the loaded worlds, and renders
+`src/app.tsx`, which shows the current screen (ADR 0091, ADR 0094): it holds the screen as
+React state of the union type `Screen`, whose members carry their slot where they need one, and
+picks the screen component with an exhaustive `switch`; screens get callbacks such as `onPlay`
+and `onBack` and do not know each other. Until the save system (M3.7), the app root also holds
+the game of each of the three slots (`NewGame` of `packages/gameplay`) as React state.
 
 Content and texts (ADR 0090): `src/content/bundled-content.ts` imports every `.yaml` file of
 `content/` as text with `import.meta.glob` at build time and loads it with `sortContentFiles`
@@ -458,8 +463,14 @@ hands the texts to every component (`TextsProvider`, `useTexts`), and
 Screens: `src/screens/start-screen.tsx` shows the logo (`assets/brand/svg/`) as the level 1
 heading, the main menu (Play and Quit) with the keyboard focus on Play, and the version as code
 in the footer. `src/screens/save-slot-screen.tsx` shows the title, the three save slots and
-Back; until M3.7 every slot is empty and is a button that starts the game, and the first slot
-has the focus; Esc also goes back (ADR 0092). `src/screens/game-screen.tsx` is the frame of the
+Back; every slot is a button: an empty one opens the new game screen for it, one with a game
+shows the player's name and the mode and returns to the game; the first slot, or the one the
+player comes back from, has the focus; Esc also goes back (ADR 0092, ADR 0094).
+`src/screens/new-game-screen.tsx` is a form with the player's name, the Linux user name (derived
+with `deriveUserName` until the player edits it, checked with `checkUserName` against the
+reserved names) and the mode as two radio buttons drawn as cards; each problem code has a
+catalog text in a live region that describes its field, and Start creates the game only without
+problems (ADR 0093, ADR 0094). `src/screens/game-screen.tsx` is the frame of the
 workplace layout as a CSS grid: top bar, side panel, terminal area and the key-hint footer,
 whose "Esc Menu" hint is a button with the focus. Esc opens `src/screens/pause-menu.tsx`, a
 modal dialog (Continue, Main menu) over the game, whose frame is `inert` while it is open; the

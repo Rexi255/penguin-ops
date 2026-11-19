@@ -1,5 +1,5 @@
-// End-to-end tests of the game screen and the pause menu (ROADMAP M3.1c, ADR 0092): an empty slot
-// starts the game with the keyboard alone, Esc opens and closes the pause menu, Main menu leads
+// End-to-end tests of the game screen and the pause menu (ROADMAP M3.1c, ADR 0092): a new game
+// starts with the keyboard alone, Esc opens and closes the pause menu, Main menu leads
 // back to the start screen, and axe-core finds no accessibility violations, with the pause menu
 // closed and open.
 import type { Page } from "@playwright/test";
@@ -31,13 +31,17 @@ const LANGUAGES = [
 ] as const;
 
 /**
- * Goes from the start screen into the game with Enter on Play and Enter on the first slot. It
- * waits for each focus, so that no key press arrives before the screen that should answer it.
+ * Goes from the start screen into the game with Enter on Play, Enter on the first slot, a name
+ * and Enter on the new game screen. It waits for each focus, so that no key press arrives before
+ * the screen that should answer it.
  */
 async function startGame(page: Page): Promise<void> {
   await expect(page.locator("button:focus")).toHaveCount(1);
   await page.keyboard.press("Enter");
   await expect(page.locator(".save-slot:focus")).toHaveCount(1);
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".field__input:focus")).toHaveCount(1);
+  await page.keyboard.type("Max");
   await page.keyboard.press("Enter");
   await expect(page.locator(".key-hint:focus")).toHaveCount(1);
 }
@@ -46,7 +50,7 @@ for (const language of LANGUAGES) {
   test.describe(`with the locale ${language.locale}`, () => {
     test.use({ appLocale: language.locale });
 
-    test("starts the game in the first slot with the keyboard alone", async ({ page }) => {
+    test("starts a new game in the first slot with the keyboard alone", async ({ page }) => {
       await startGame(page);
       await expect(page.getByRole("heading", { level: 1, name: language.title })).toBeAttached();
       await expect(page.getByRole("complementary", { name: language.sidePanel })).toBeVisible();
@@ -100,6 +104,8 @@ test("returns to the start screen from the pause menu", async ({ page }) => {
 test("opens the pause menu when the player clicks the key hint", async ({ page }) => {
   await page.getByRole("button", { name: "Play" }).click();
   await page.getByRole("button", { name: "Slot 3 New game" }).click();
+  await page.getByRole("textbox", { name: "Your name" }).fill("Max");
+  await page.getByRole("button", { name: "Start game" }).click();
   await page.getByRole("button", { name: "Esc Menu" }).click();
   await expect(page.getByRole("dialog", { name: "Paused" })).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();

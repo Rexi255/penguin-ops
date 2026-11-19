@@ -73,6 +73,24 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     "print on label tape and on the tape of typed toasts",
   ),
   ...allOn(["--color-focus"], SURFACES, "non-text", "the keyboard focus ring on every surface"),
+  ...allOn(
+    ["--color-control-border"],
+    SURFACES,
+    "non-text",
+    "the boundary of text fields and choice cards, and the ring of a choice marker",
+  ),
+  ...allOn(
+    ["--color-player"],
+    ["--color-surface-ground"],
+    "non-text",
+    "the frame of the chosen choice card and its marker's dot on the page ground",
+  ),
+  ...allOn(
+    ["--color-cable-incident"],
+    ["--color-surface-terminal"],
+    "non-text",
+    "the boundary of a text field with a problem",
+  ),
 ];
 
 /** Colour tokens without a contrast minimum, with the reason. */

@@ -15,6 +15,11 @@ project uses [Semantic Versioning](https://semver.org/).
   exists; choosing one starts a new game. Back or Esc returns to the start screen.
 - The game screen shows the workplace: a top bar, the side panel, the terminal area and a
   footer with key hints. The areas are still empty; the terminal, tickets and mail come next.
+- A new game starts on the "New game" screen: type your name, and your Linux user name is
+  filled in from it ("Jörg Müller" becomes `joerg-mueller`); you can change it. If a name
+  cannot be used, the screen says why. Choose the mode on one of two cards, Career or Sandbox;
+  the chosen card is framed in orange. The save slot then shows your name and the mode until
+  you quit the game (saving comes later).
 - Esc in the game, or a click on the "Esc Menu" hint, opens the pause menu: Continue (or Esc
   again) returns to the game, Main menu returns to the start screen.
 - The game ships its own fonts and works the same on Windows and Linux: Inter for the

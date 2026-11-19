@@ -11,6 +11,29 @@ slots:
   title: Spielstand wählen
   slot: Spielstand {number}
   new-game: Neues Spiel
+  game: "{player} · {mode}"
+  back: Zurück
+modes:
+  story: Karriere
+  story-description: Fang als Azubi in der IT-Abteilung an und arbeite dich Kapitel für Kapitel hoch.
+  sandbox: Sandbox
+  sandbox-description: Alle Kapitel und Tickets sind von Anfang an offen, ohne Story-Szenen.
+new-game:
+  title: Neues Spiel
+  player-name: Dein Name
+  player-name-empty: Gib deinen Namen ein.
+  player-name-too-long: "Dein Name darf höchstens {max} Zeichen haben."
+  user-name: Linux-Benutzername
+  user-name-help: Dein Konto in den Systemen der Firma. Kleinbuchstaben, Ziffern und Bindestriche.
+  user-name-empty: Gib einen Benutzernamen ein.
+  user-name-too-long: "Ein Benutzername darf höchstens {max} Zeichen haben."
+  user-name-uppercase: Linux-Benutzernamen werden kleingeschrieben.
+  user-name-invalid-character: Erlaubt sind nur Kleinbuchstaben a–z, Ziffern und Bindestriche.
+  user-name-invalid-start: Der Benutzername muss mit einem Buchstaben anfangen.
+  user-name-reserved: "Den Namen {name} gibt es im System schon."
+  mode: Spielmodus
+  mode-fixed: Der Modus gehört zu diesem Spielstand und lässt sich später nicht ändern.
+  start: Spiel starten
   back: Zurück
 game:
   title: Arbeitsplatz

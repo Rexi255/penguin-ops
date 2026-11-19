@@ -11,6 +11,29 @@ slots:
   title: Choose a save slot
   slot: Slot {number}
   new-game: New game
+  game: "{player} · {mode}"
+  back: Back
+modes:
+  story: Career
+  story-description: Start as a trainee in the IT department and work your way up, chapter by chapter.
+  sandbox: Sandbox
+  sandbox-description: Every chapter and ticket is open from the start, without story scenes.
+new-game:
+  title: New game
+  player-name: Your name
+  player-name-empty: Enter your name.
+  player-name-too-long: "Your name can have at most {max} characters."
+  user-name: Linux user name
+  user-name-help: Your account on the company's systems. Lowercase letters, digits and hyphens.
+  user-name-empty: Enter a user name.
+  user-name-too-long: "A user name can have at most {max} characters."
+  user-name-uppercase: Linux user names are written in lowercase.
+  user-name-invalid-character: Only lowercase letters a–z, digits and hyphens are allowed.
+  user-name-invalid-start: The user name has to start with a letter.
+  user-name-reserved: "The name {name} is already taken on the system."
+  mode: Game mode
+  mode-fixed: The mode belongs to this save slot and cannot be changed later.
+  start: Start game
   back: Back
 game:
   title: Workplace

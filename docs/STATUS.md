@@ -4,6 +4,14 @@ _Last updated: 2026-11-19_
 
 ## Recently completed
 
+- M3.2b New game screen (M3.2 complete): an empty slot opens "New game" with the player's name,
+  the Linux user name (derived while typing until the player edits it), a catalog text for
+  every problem code in a live region, and the mode as two cards, Career (Story, the default)
+  and Sandbox; the chosen card is framed in fibre orange, the other stays muted but clickable.
+  Start fills the slot in memory (until M3.7) and opens the game; the slot then shows "name ·
+  mode" and returns to the game; Back and Esc return to the slot. New token `control-border`
+  (ADR 0094, partly superseding ADR 0081 on the uses of fibre orange). Component and
+  end-to-end tests in both languages with axe-core.
 - M3.2a User name logic: `deriveUserName` turns the player's whole name into a Linux user name
   ("Jörg Müller" → `joerg-mueller`; umlauts transliterated, accents and apostrophes dropped,
   empty without a Latin letter), `checkUserName` returns the first problem as a code, and
@@ -13,23 +21,12 @@ _Last updated: 2026-11-19_
   game", first slot focused) that opens the game screen, the workplace frame as a CSS grid (top
   bar, side panel, terminal area, footer with an "Esc Menu" key hint button). Esc opens a modal
   pause menu (Continue, Main menu) over the inert game; Esc or Continue closes it and returns the
-  focus (ADR 0092, partly superseding ADR 0091). Component tests, end-to-end tests in both
-  languages with axe-core with the menu closed and open. The Quit click test, like the Enter
-  test, no longer fails when the app quits before Playwright gets the answer to the click.
-- M3.1b Save slot screen: Play in the main menu opens a screen with three empty save slots
-  (not controls until M3.2) and Back; Back and Esc return to the start screen. The app root
-  switches screens with React state and every screen sets the keyboard focus on its first
-  control (ADR 0091). Component tests of both screens and the navigation; end-to-end tests in
-  both languages with axe-core, which now lives in a shared helper.
+  focus (ADR 0092, partly superseding ADR 0091).
+- M3.1b Save slot screen: Play in the main menu opens a screen with three save slots and Back;
+  Back and Esc return to the start screen. The app root switches screens with React state and
+  every screen sets the keyboard focus on its first control (ADR 0091).
 - M3.0d-2 Typography: the owner checked the bundled fonts, the icons and the logo on Windows
   at 100 % scaling (styleguide and start screen) and found no problems; M3.0 is complete.
-- M3.1a Start screen: the logo as the heading, a main menu with Quit (keyboard focus on it,
-  Enter quits) and the version; the renderer bundles `content/` at build time and loads it with
-  every check, the UI texts follow the system's language (German for `de*`, else English) and a
-  test checks that both catalogs hold exactly the keys and placeholders the UI uses; the desktop
-  API has `quit()`; component tests with Testing Library in jsdom; end-to-end tests in both
-  languages with axe-core (ADR 0090). The Enter test no longer fails when the app quits before
-  Playwright gets the answer to the key press.
 
 ## In progress
 
@@ -37,14 +34,14 @@ _Last updated: 2026-11-19_
 
 ## Next 3 steps
 
-1. ROADMAP M3.2b: new game screen.
-2. ROADMAP M3.3: terminal component.
-3. ROADMAP M3.4: workplace layout (top bar, side panel tabs, footer key hints).
+1. ROADMAP M3.3: terminal component.
+2. ROADMAP M3.4: workplace layout (top bar, side panel tabs, footer key hints).
+3. ROADMAP M3.5: ticket panel.
 
 ## Blockers and open questions
 
-- The start, save slot and game screens and the pause menu have no screenshot tests yet; the screenshot test setup for all screens,
-  languages and colour schemes is ROADMAP M3.15.
+- The start, save slot, new game and game screens and the pause menu have no screenshot tests
+  yet; the screenshot test setup for all screens, languages and colour schemes is ROADMAP M3.15.
 - The texts of the five prototype levels and the office world's host name `itdesk` were
   written as test content without the owner's review (the prototype's source is not in the
   repository, so levels 2 to 5 follow the titles in `docs/CURRICULUM.md`); the story workshop

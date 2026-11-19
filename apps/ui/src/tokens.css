@@ -18,12 +18,17 @@
      decorative, so they have no contrast minimum; a control boundary needs its own token. */
   --color-rule: #2e343b;
 
+  /* The boundary of a control that is not a plain button: text fields and choice cards. Unlike
+     the rule it identifies the control, so it needs 3:1 against every surface (WCAG 1.4.11). */
+  --color-control-border: #6b737c;
+
   /* Text. */
   --color-text: #e8e6e1; /* body text */
   --color-text-muted: #a3a8ae; /* secondary text, key hints */
 
   /* Fibre orange, the player's colour: only the prompt, the cursor, the outline of the active
-     ticket and the current step (the Fibre Rule). It is the logo's prompt orange. */
+     ticket, the current step and the frame of the player's choice on a choice card (the Fibre
+     Rule). It is the logo's prompt orange. */
   --color-player: #e0701a;
 
   /* The keyboard focus ring: neutral, so that it never competes with the player's colour. */
@@ -57,11 +62,15 @@
   --space-6: calc(var(--cell-block) * 3 / 2); /* 36 px */
   --space-8: calc(var(--cell-block) * 2); /* 48 px: between areas */
 
-  /* Shapes: nearly square corners on panels, rows, buttons and keys. */
+  /* Shapes: nearly square corners on panels, rows, buttons and keys; round only where the
+     standard control is round, such as the marker of a single choice. */
   --radius-corner: 2px;
+  --radius-round: 50%;
 
   /* Line widths. */
   --border-width-rule: 1px; /* hairline dividers */
+  --border-width-control: 1px; /* the boundary of a text field */
+  --border-width-choice: 2px; /* the frame of a choice card and the ring of its marker */
   --border-width-cable: 3px; /* the cable run on tabs */
   --border-width-focus: 2px; /* the focus ring */
   --focus-offset: 2px; /* the gap between a control and its focus ring */

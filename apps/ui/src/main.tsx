@@ -1,5 +1,6 @@
 // Entry point of the renderer, loaded by index.html. It loads the bundled content, picks the
 // language from the operating system's locale (ADR 0012) and renders the app.
+import { reservedUserNames } from "@penguin-ops/gameplay";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -23,11 +24,13 @@ const language = languageForLocale(navigator.language);
 document.documentElement.lang = language;
 const texts = createTexts(content.uiCatalogs, language);
 
+const reserved = reservedUserNames([...content.worlds.values()]);
+
 const desktop = getDesktopApi();
 const info = await desktop.getAppInfo();
 
 createRoot(container).render(
   <StrictMode>
-    <App info={info} texts={texts} onQuit={desktop.quit} />
+    <App info={info} texts={texts} reservedUserNames={reserved} onQuit={desktop.quit} />
   </StrictMode>,
 );

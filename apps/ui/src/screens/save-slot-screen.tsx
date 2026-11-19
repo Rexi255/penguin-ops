@@ -1,35 +1,46 @@
-// The save slot screen (ROADMAP M3.1b, M3.1c): the three save slots and the way back to the start
-// screen. Until the save system exists (M3.7) every slot is empty, and an empty slot is a button
-// that starts a new game in it (ADR 0092); the new game flow (M3.2) will ask for the name and the
-// mode first.
+// The save slot screen (ROADMAP M3.1b, M3.1c, M3.2b): the three save slots and the way back to
+// the start screen. An empty slot is a button that opens the new game screen for it; a slot with
+// a game shows the player's name and the mode and returns to the game (ADR 0092, ADR 0094). Until
+// the save system exists (M3.7), the games live only in the app's memory.
 
+import type { NewGame } from "@penguin-ops/gameplay";
 import { useEffect, useId, useRef } from "react";
 
 import { InlineText } from "../texts/inline-text";
 import { useTexts } from "../texts/texts-context";
+import { modeTitleKey } from "./new-game-screen";
 
 /** The number of save slots (ADR 0013). */
 export const SAVE_SLOT_COUNT = 3;
 
-/** The slot numbers the player sees, starting at 1. */
-const SLOT_NUMBERS = Array.from({ length: SAVE_SLOT_COUNT }, (_, index) => index + 1);
-
 export interface SaveSlotScreenProps {
-  /** Starts a new game in an empty slot. */
-  readonly onNewGame: () => void;
+  /** The game in each slot, or undefined for an empty slot; `SAVE_SLOT_COUNT` entries. */
+  readonly slots: readonly (NewGame | undefined)[];
+  /** The index of the slot that has the focus when the screen appears, counting from 0. */
+  readonly focusedSlot: number;
+  /** Opens the new game screen for the empty slot `index`, counting from 0. */
+  readonly onNewGame: (index: number) => void;
+  /** Returns to the game in the slot `index`, counting from 0. */
+  readonly onContinue: (index: number) => void;
   /** Returns to the start screen. */
   readonly onBack: () => void;
 }
 
-export function SaveSlotScreen({ onNewGame, onBack }: SaveSlotScreenProps) {
+export function SaveSlotScreen({
+  slots,
+  focusedSlot,
+  onNewGame,
+  onContinue,
+  onBack,
+}: SaveSlotScreenProps) {
   const texts = useTexts();
-  const firstSlot = useRef<HTMLButtonElement>(null);
+  const focusTarget = useRef<HTMLButtonElement>(null);
   const idPrefix = useId();
 
-  // The keyboard is the main input (PRODUCT.md): the first slot has the focus from the start, so
-  // Enter starts a game in it.
+  // The keyboard is the main input (PRODUCT.md): a slot has the focus from the start, the first
+  // one or the one the player comes back from, so Enter works at once.
   useEffect(() => {
-    firstSlot.current?.focus();
+    focusTarget.current?.focus();
   }, []);
 
   // Esc goes back, like in the menus of other games; game functions use Esc (ADR 0020).
@@ -52,29 +63,45 @@ export function SaveSlotScreen({ onNewGame, onBack }: SaveSlotScreenProps) {
         <InlineText text={texts.rich("slots.title")} textKey="slots.title" />
       </h1>
       <ol className="save-slot-screen__slots">
-        {SLOT_NUMBERS.map((number) => {
+        {slots.map((game, index) => {
+          const number = index + 1;
           const nameId = `${idPrefix}-slot-${String(number)}-name`;
           const stateId = `${idPrefix}-slot-${String(number)}-state`;
           return (
             <li key={number}>
               <button
-                ref={number === 1 ? firstSlot : undefined}
+                ref={index === focusedSlot ? focusTarget : undefined}
                 type="button"
                 className="save-slot"
-                // The name and the state are two blocks of the row with a space between them,
-                // which the flex layout does not draw. Named by both, the button reads
-                // "Slot 1 New game" instead of running the two texts together, and its name stays
-                // exactly the visible text.
+                // The name and the state are blocks of the row with a space between them, which
+                // the flex layout does not draw. Named by its visible texts, the button reads
+                // "Slot 1 New game" instead of running them together, and its name stays exactly
+                // the visible text.
                 aria-labelledby={`${nameId} ${stateId}`}
                 onClick={() => {
-                  onNewGame();
+                  if (game === undefined) {
+                    onNewGame(index);
+                  } else {
+                    onContinue(index);
+                  }
                 }}
               >
                 <span id={nameId} className="save-slot__name">
                   <InlineText text={texts.rich("slots.slot", { number })} textKey="slots.slot" />
                 </span>{" "}
                 <span id={stateId} className="save-slot__state">
-                  <InlineText text={texts.rich("slots.new-game")} textKey="slots.new-game" />
+                  {game === undefined ? (
+                    <InlineText text={texts.rich("slots.new-game")} textKey="slots.new-game" />
+                  ) : (
+                    // The player's name is a value: shown as typed, never read as markup.
+                    <InlineText
+                      text={texts.rich("slots.game", {
+                        player: game.playerName,
+                        mode: texts.plain(modeTitleKey(game.mode)),
+                      })}
+                      textKey="slots.game"
+                    />
+                  )}
                 </span>
               </button>
             </li>

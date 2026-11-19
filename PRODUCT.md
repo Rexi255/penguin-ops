@@ -58,7 +58,8 @@ and enjoyed getting there.
   and never interrupt typing.
 - Chapter 0 is the tutorial: a trainer introduces the interface step by step. There is no
   separate tutorial screen.
-- Modes: Story mode, and Sandbox mode (free play and a playground) (ADR 0017).
+- Modes: Story mode, shown as "Career", and Sandbox mode (free play and a playground)
+  (ADR 0017, ADR 0094).
 
 ## Capabilities and Constraints
 

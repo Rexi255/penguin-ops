@@ -196,12 +196,12 @@ inventing it along the way.
         navigation between screens (ADR 0091).
   - [x] M3.1c Game screen frame and pause menu (Esc); empty slots start the game until M3.2
         (ADR 0092).
-- [ ] M3.2 New game flow: name, derived Linux user name (validation, editing), Story or Sandbox
+- [x] M3.2 New game flow: name, derived Linux user name (validation, editing), Story or Sandbox
       mode (ADR 0017, ADR 0019).
   - [x] M3.2a User name logic: derivation from the player's name, checks with problem codes and
         reserved names (ADR 0093).
-  - [ ] M3.2b New game screen: name, editable user name with the problem texts, Story or
-        Sandbox, Start and Back; the slot keeps the game in memory until M3.7.
+  - [x] M3.2b New game screen: name, editable user name with the problem texts, Story or
+        Sandbox, Start and Back; the slot keeps the game in memory until M3.7 (ADR 0094).
 - [ ] M3.3 Terminal component: input, coloured output, history, tab completion, Ctrl+C/L/A/E,
       scrollback.
 - [ ] M3.4 Workplace layout: top bar, side panel tabs, footer key hints (ADR 0020), built
@@ -275,6 +275,8 @@ AppImage runs on Linux, and chapters 0–2 are playable in both languages.
 
 ## Ideas (not planned)
 
+- Pictures or symbols on the mode cards of the new game screen, such as a trainee badge on
+  Career and a sandbox on Sandbox (ADR 0094).
 - A small simulated internet beyond the company network (ADR 0009).
 - Web version on the owner's own server (ADR 0002).
 - Steam release (ADR 0002).

@@ -33,8 +33,50 @@ export const UI_TEXT_PLACEHOLDERS = {
   "slots.slot": ["number"],
   /** The state of a slot without a saved game, which starts a new game. */
   "slots.new-game": [],
+  /** The state of a slot with a game; `player` is the player's name, `mode` the mode's name. */
+  "slots.game": ["player", "mode"],
   /** The button that returns from the save slot screen to the start screen. */
   "slots.back": [],
+  /** The name of the Story mode (ADR 0017), shown as "Career": its card title and on a slot. */
+  "modes.story": [],
+  /** What the Story mode is, on its card. */
+  "modes.story-description": [],
+  /** The name of the Sandbox mode (ADR 0017): its card title and on a slot. */
+  "modes.sandbox": [],
+  /** What the Sandbox mode is, on its card. */
+  "modes.sandbox-description": [],
+  /** The title of the new game screen. */
+  "new-game.title": [],
+  /** The label of the player's name. */
+  "new-game.player-name": [],
+  /** The problem of an empty player name. */
+  "new-game.player-name-empty": [],
+  /** The problem of a too long player name; `max` is the number of characters allowed. */
+  "new-game.player-name-too-long": ["max"],
+  /** The label of the Linux user name. */
+  "new-game.user-name": [],
+  /** What the user name is for and which characters it takes. */
+  "new-game.user-name-help": [],
+  /** The user name problem `empty` (ADR 0093). */
+  "new-game.user-name-empty": [],
+  /** The user name problem `too-long`; `max` is the number of characters allowed. */
+  "new-game.user-name-too-long": ["max"],
+  /** The user name problem `uppercase`. */
+  "new-game.user-name-uppercase": [],
+  /** The user name problem `invalid-character`. */
+  "new-game.user-name-invalid-character": [],
+  /** The user name problem `invalid-start`. */
+  "new-game.user-name-invalid-start": [],
+  /** The user name problem `reserved`; `name` is the user name as a code value. */
+  "new-game.user-name-reserved": ["name"],
+  /** The legend of the game mode choice. */
+  "new-game.mode": [],
+  /** That the mode cannot be changed later. */
+  "new-game.mode-fixed": [],
+  /** The button that creates the game and opens the game screen. */
+  "new-game.start": [],
+  /** The button that returns to the save slot screen. */
+  "new-game.back": [],
   /** The game screen's level 1 heading, hidden from sight. */
   "game.title": [],
   /** The accessible name of the side panel. */

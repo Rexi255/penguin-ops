@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
-// Tests of the save slot screen in both languages: three empty slots that start a new game, the
-// first of which has the focus, and Back, which also answers to Esc.
+// Tests of the save slot screen in both languages: three slots, empty ones that open the new game
+// screen and ones with a game that return to it, the slot that has the focus, and Back, which
+// also answers to Esc.
 import { MANDATORY_LANGUAGES, type MandatoryLanguage } from "@penguin-ops/content";
+import type { NewGame } from "@penguin-ops/gameplay";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, test, vi } from "vitest";
@@ -41,15 +43,31 @@ const EXPECTED: Readonly<
   },
 };
 
-function renderSaveSlotScreen(language: MandatoryLanguage) {
-  const onNewGame = vi.fn<() => void>();
+const EMPTY = [undefined, undefined, undefined] as const;
+
+const JOERG: NewGame = { playerName: "Jörg Müller", userName: "joerg-mueller", mode: "story" };
+const ZOE: NewGame = { playerName: "Zoë **Bold**", userName: "zoe", mode: "sandbox" };
+
+function renderSaveSlotScreen(
+  language: MandatoryLanguage,
+  slots: readonly (NewGame | undefined)[] = EMPTY,
+  focusedSlot = 0,
+) {
+  const onNewGame = vi.fn<(index: number) => void>();
+  const onContinue = vi.fn<(index: number) => void>();
   const onBack = vi.fn<() => void>();
   const view = render(
     <TextsProvider texts={createTexts(uiCatalogs, language)}>
-      <SaveSlotScreen onNewGame={onNewGame} onBack={onBack} />
+      <SaveSlotScreen
+        slots={slots}
+        focusedSlot={focusedSlot}
+        onNewGame={onNewGame}
+        onContinue={onContinue}
+        onBack={onBack}
+      />
     </TextsProvider>,
   );
-  return { onNewGame, onBack, view };
+  return { onNewGame, onContinue, onBack, view };
 }
 
 afterEach(() => {
@@ -102,16 +120,53 @@ describe("SaveSlotScreen", () => {
   });
 
   test.each([1, 2, 3])("starts a new game when the player clicks slot %i", async (number) => {
-    const { onNewGame, onBack } = renderSaveSlotScreen("en");
+    const { onNewGame, onContinue, onBack } = renderSaveSlotScreen("en");
     await userEvent.click(screen.getByRole("button", { name: `Slot ${String(number)} New game` }));
-    expect(onNewGame).toHaveBeenCalledExactlyOnceWith();
+    expect(onNewGame).toHaveBeenCalledExactlyOnceWith(number - 1);
+    expect(onContinue).not.toHaveBeenCalled();
     expect(onBack).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    ["en", ["Slot 1 Jörg Müller · Career", "Slot 2 New game", "Slot 3 Zoë **Bold** · Sandbox"]],
+    [
+      "de",
+      [
+        "Spielstand 1 Jörg Müller · Karriere",
+        "Spielstand 2 Neues Spiel",
+        "Spielstand 3 Zoë **Bold** · Sandbox",
+      ],
+    ],
+  ] as const)(
+    "shows the player's name as typed and the mode of a slot with a game in %s",
+    (language, names) => {
+      renderSaveSlotScreen(language, [JOERG, undefined, ZOE]);
+      const items = within(screen.getByRole("list")).getAllByRole("listitem");
+      expect(items.map((item) => item.textContent)).toEqual([...names]);
+      for (const name of names) {
+        expect(within(screen.getByRole("list")).getByRole("button", { name })).toBeDefined();
+      }
+    },
+  );
+
+  test("returns to the game when the player clicks a slot with a game", async () => {
+    const { onNewGame, onContinue } = renderSaveSlotScreen("en", [undefined, undefined, ZOE]);
+    await userEvent.click(screen.getByRole("button", { name: "Slot 3 Zoë **Bold** · Sandbox" }));
+    expect(onContinue).toHaveBeenCalledExactlyOnceWith(2);
+    expect(onNewGame).not.toHaveBeenCalled();
+  });
+
+  test.each([0, 1, 2])("gives the slot with the index %i the focus when asked", (index) => {
+    renderSaveSlotScreen("en", EMPTY, index);
+    expect(screen.getByRole("button", { name: `Slot ${String(index + 1)} New game` })).toBe(
+      document.activeElement,
+    );
   });
 
   test("starts a new game when the player presses Enter on the focused first slot", async () => {
     const { onNewGame } = renderSaveSlotScreen("de");
     await userEvent.keyboard("{Enter}");
-    expect(onNewGame).toHaveBeenCalledTimes(1);
+    expect(onNewGame).toHaveBeenCalledExactlyOnceWith(0);
   });
 
   test("goes back when the player clicks Back", async () => {

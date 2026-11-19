@@ -1,6 +1,8 @@
 # 0081. Label tape and patch cables as the visual world
 
-- Status: Accepted
+- Status: Accepted; partly superseded by
+  [0094](0094-new-game-screen-with-choice-cards-and-games-kept-in-memory-until-the-save-system.md)
+  (the uses of fibre orange)
 - Date: 2026-11-18
 - Supersedes: –
 
