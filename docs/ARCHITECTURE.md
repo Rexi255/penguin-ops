@@ -454,10 +454,19 @@ and Barlow Condensed, one folder per family with its license text `ofl.txt`, and
 `font-src 'self'`. `src/fonts/fonts.test.ts` checks faces, files, licenses and the font tokens.
 electron-builder copies the license texts to `resources/licenses/fonts/` of the installed app.
 
+Icons (ADR 0086, ADR 0087): `src/icons/<name>.svg` holds one icon per file in a fixed SVG form
+(one `<svg>` with the icon attributes, only empty `<path>` and `<circle>` elements).
+`src/icons/icon.tsx` bundles the files as text with `import.meta.glob` and `?raw`, reads them
+once at module load with the strict reader `src/icons/icon-svg.ts` and draws them as React
+elements in the `Icon` component (`aria-hidden`, one cell in size through the `.icon` rule of
+`styles.css`, colour from `currentColor`). `ICON_NAMES` lists every icon. `src/icons/path-data.ts`
+reads path data and works out stroke bounds with caps and miter joins, so that
+`src/icons/icon-rules.test.ts` can check whole-pixel coordinates and the margin of every file.
+
 Styleguide (ADR 0083): `styleguide.html` loads `src/styleguide/main.tsx`, a page for developers
 (English, not translated) that reads `tokens.css` with `?raw`, sorts every token into a section
 by name prefix (`src/styleguide/token-catalog.ts`) and draws a sample of each with the real
-stylesheets, plus the contrast pairs with their ratios. Its layout is
+stylesheets, plus the icons and the contrast pairs with their ratios. Its layout is
 `src/styleguide/styleguide.css`, which follows the token rules. The app never imports from
 `src/styleguide/` and its build reads only `index.html`; both are tested.
 
@@ -510,8 +519,9 @@ apps/styleguide/
   vite.config.ts        Vite server with root apps/ui on port 5190 (`npm run styleguide`)
   playwright.config.ts  starts that server and runs the tests in Playwright's Chromium
   e2e/styleguide.spec.ts  every token shown with its value and colour, every font face loaded,
-                        the type scale on quarter cells, keyboard focus, motion, no console
-                        errors, axe-core with no violations at 1280 and 360 px
+                        the type scale on quarter cells, every icon at one cell in its text or
+                        cable colour and hidden from screen readers, keyboard focus, motion,
+                        no console errors, axe-core with no violations at 1280 and 360 px
 ```
 
 axe-core is injected from `axe-core/axe.min.js`; `@axe-core/playwright` is not used (license

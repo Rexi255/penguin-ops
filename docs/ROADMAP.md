@@ -177,8 +177,9 @@ inventing it along the way.
 - [x] M3.0e-1 Icon style: rules (grid, stroke, corners) and the choice between three icon sets
       with allowed licenses (Lucide, Phosphor, Carbon) and own SVG icons, compared in a specimen
       page and a side panel mock-up; the owner chose own icons (ADR 0086).
-- [ ] M3.0e-2 Icons: the own icons as SVG files with tests of the rules (view box, stroke, caps,
-      joins, `currentColor`), the first icons for the side panel tabs; shown in the styleguide.
+- [x] M3.0e-2 Icons: the own icons as SVG files with tests of the rules (view box, stroke, caps,
+      joins, `currentColor`), the first icons for the side panel tabs; shown in the styleguide
+      (ADR 0087).
 - [x] M3.0f-1 Logo take-over (done early, ADR 0040): the owner's brand package in
       `assets/brand/` (own penguin, not Tux, ADR 0021), clean SVGs with variants for dark and
       light backgrounds, logo in the README, test of the brand files.

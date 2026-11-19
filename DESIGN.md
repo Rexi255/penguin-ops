@@ -249,6 +249,9 @@ the handbook is a ring binder with a spine label, the terminal shows a prompt.
 - **Stroke:** outlines only, 2 units, `currentColor`, no fill. Dots are 2 × 2 butt-capped
   strokes.
 - **Corners:** square caps and miter joins; arcs only where the object is round.
+- **Files:** one file per icon in `apps/ui/src/icons/`, in a fixed SVG form that the `Icon`
+  component draws; tests check every rule above for every file (ADR 0087). The styleguide shows
+  each icon at one cell and three times enlarged on its grid.
 
 ### Named Rules
 

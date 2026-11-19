@@ -1,6 +1,6 @@
 // Browser tests of the styleguide page (ROADMAP M3.0c, ADR 0083): it shows every design token with
 // the real styles, works with the keyboard and has no accessibility violations that axe-core finds.
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 
@@ -8,6 +8,7 @@ import type { AxeResults } from "axe-core";
 import { expect, test, type Page } from "@playwright/test";
 
 const TOKENS_CSS = readFileSync(join(import.meta.dirname, "../../ui/src/tokens.css"), "utf8");
+const ICONS_DIR = join(import.meta.dirname, "../../ui/src/icons");
 
 /**
  * The custom properties that tokens.css defines with their default values: the declarations of
@@ -178,6 +179,49 @@ test("prints the tape at the print speed, and at once with reduce motion", async
 
   await page.getByRole("button", { name: "Print again" }).click();
   await expect(page.locator(".sg-tape--printing")).toHaveCount(1);
+});
+
+test("shows every icon file at one cell, in the colour of its text, hidden from screen readers", async ({
+  page,
+}) => {
+  await openStyleguide(page);
+  const files = readdirSync(ICONS_DIR)
+    .filter((file) => file.endsWith(".svg"))
+    .map((file) => file.slice(0, -".svg".length));
+  expect(files.length).toBeGreaterThan(0);
+  const shown = await page
+    .locator("[data-icon]")
+    .evaluateAll((items) => items.map((item) => item.getAttribute("data-icon")));
+  expect(shown.toSorted()).toEqual(files.toSorted());
+
+  const text = hexToRgb(definedTokens().get("--color-text") ?? "");
+  for (const name of files) {
+    const icon = page.locator(`[data-icon="${name}"] .sg-icon__actual svg`);
+    // One cell is 24 px at the test browser's 16 px root size.
+    expect(await icon.boundingBox(), name).toMatchObject({ width: 24, height: 24 });
+    await expect(icon, name).toHaveCSS("stroke", text);
+    await expect(icon, name).toHaveAttribute("aria-hidden", "true");
+  }
+  // Every icon on the page is hidden from screen readers; its label names it.
+  await expect(page.locator('svg:not([aria-hidden="true"])')).toHaveCount(0);
+});
+
+test("labels the side panel tabs and draws the cable icons in their cable colours", async ({
+  page,
+}) => {
+  await openStyleguide(page);
+  await expect(
+    page.getByRole("list", { name: "Side panel tabs" }).getByRole("listitem"),
+  ).toHaveText(["Tickets", "Mail", "Handbook"]);
+  const items = page.locator("[data-cable]");
+  expect(await items.count()).toBeGreaterThan(0);
+  for (const item of await items.all()) {
+    const cable = (await item.getAttribute("data-cable")) ?? "";
+    const colour = definedTokens().get(`--color-cable-${cable}`) ?? "";
+    expect(colour, cable).toMatch(/^#[0-9a-f]{6}$/);
+    await expect(item.locator("svg")).toHaveCSS("stroke", hexToRgb(colour));
+    await expect(item).not.toHaveText("");
+  }
 });
 
 test("has no accessibility violations", async ({ page }) => {

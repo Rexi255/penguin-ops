@@ -1,8 +1,10 @@
 // The styleguide page (ROADMAP M3.0c, ADR 0083): every design token of tokens.css, rendered with
-// the real stylesheets. It is a page for the people who build the game, so its texts are English
-// and not translated. It is never part of the packaged app; `npm run styleguide` serves it.
+// the real stylesheets, and the game's icons (ADR 0087). It is a page for the people who build
+// the game, so its texts are English and not translated. It is never part of the packaged app;
+// `npm run styleguide` serves it.
 import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 
+import { Icon, ICON_NAMES, type IconName } from "../icons/icon";
 import { checkContrast, CONTRAST_PAIRS, type ContrastResult } from "../token-contrast";
 import type { CatalogSection, Token, TokenCatalog, TokenKind } from "./token-catalog";
 
@@ -281,6 +283,70 @@ function TokenSectionView({ entry }: { readonly entry: CatalogSection }) {
   );
 }
 
+/** The tabs of the side panel (ADR 0020), as the first screen will label them. */
+const PANEL_TABS: readonly { readonly icon: IconName; readonly label: string }[] = [
+  { icon: "ticket", label: "Tickets" },
+  { icon: "mail", label: "Mail" },
+  { icon: "handbook", label: "Handbook" },
+];
+
+/** Icons in a cable colour, where they mark a kind of work or a state (the Icon Colour Rule). */
+const CABLE_ICONS: readonly {
+  readonly icon: IconName;
+  readonly label: string;
+  readonly cable: string;
+}[] = [
+  { icon: "ticket", label: "Ticket", cable: "ticket" },
+  { icon: "mail", label: "Mail", cable: "mail" },
+  { icon: "solved", label: "Solved", cable: "handbook" },
+  { icon: "incident", label: "Incident", cable: "incident" },
+];
+
+function IconSection() {
+  return (
+    <section className="sg-section" aria-labelledby="sg-heading-icons" data-section="icons">
+      <h2 id="sg-heading-icons" className="sg-section__title">
+        Icons
+      </h2>
+      <p className="sg-section__intro">
+        The game’s own outline icons from apps/ui/src/icons (ADR 0086): one cell in size, a 2 px
+        stroke in the colour of the text, square caps and miter joins on whole pixels. An icon never
+        stands alone; it sits next to its label.
+      </p>
+      <ul className="sg-icon-tabs" aria-label="Side panel tabs">
+        {PANEL_TABS.map(({ icon, label }) => (
+          <li key={icon} className="sg-icon-tabs__tab">
+            <Icon name={icon} />
+            {label}
+          </li>
+        ))}
+      </ul>
+      <ul className="sg-icon-cables" aria-label="Icons in cable colours">
+        {CABLE_ICONS.map(({ icon, label, cable }) => (
+          <li key={icon} className="sg-icon-cables__item" data-cable={cable}>
+            <Icon name={icon} className={`sg-icon--cable-${cable}`} />
+            {label}
+          </li>
+        ))}
+      </ul>
+      <ul className="sg-icons">
+        {ICON_NAMES.map((name) => (
+          <li key={name} className="sg-icon" data-icon={name}>
+            <span className="sg-icon__actual">
+              <Icon name={name} />
+            </span>
+            {/* Three times larger on a grid of the icon's 24 units, to check the drawing. */}
+            <span className="sg-icon__enlarged">
+              <Icon name={name} />
+            </span>
+            <code className="sg-icon__name">{name}</code>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function ContrastRow({ result }: { readonly result: ContrastResult }) {
   const { pair, ratio, minimum, passes } = result;
   const sampleStyle: CSSProperties = { backgroundColor: tokenVar(pair.background) };
@@ -369,6 +435,9 @@ export function Styleguide({ catalog, tokens }: StyleguideProps) {
               </li>
             ))}
             <li>
+              <a href="#sg-heading-icons">Icons</a>
+            </li>
+            <li>
               <a href="#sg-heading-contrast">Contrast pairs</a>
             </li>
           </ul>
@@ -378,6 +447,7 @@ export function Styleguide({ catalog, tokens }: StyleguideProps) {
         {catalog.sections.map((entry) => (
           <TokenSectionView key={entry.section.id} entry={entry} />
         ))}
+        <IconSection />
         <ContrastSection tokens={tokens} />
         {catalog.unsorted.length === 0 ? null : (
           <section className="sg-section" aria-labelledby="sg-heading-unsorted">

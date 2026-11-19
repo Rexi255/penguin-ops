@@ -4,6 +4,11 @@ _Last updated: 2026-11-19_
 
 ## Recently completed
 
+- M3.0e-2 Icons: the 14 own icons as SVG files in `apps/ui/src/icons/` in a fixed form, drawn
+  by the `Icon` component through a strict reader; tests check every file for whole-pixel
+  coordinates, the margin with caps and miter tips, butt caps only on dots, and the component's
+  markup; styleguide section with side panel tabs, cable colours and 3x views on the grid. Four
+  drafts were corrected within the rules (ticket, incident, server, mail; ADR 0087).
 - M3.0e-1 Icon style: three icon sets with allowed licenses (Lucide, Phosphor, Carbon) and own
   drafts compared in a specimen page, a side panel mock-up and an enlarged 1x capture; the owner
   chose own icons. Rules for grid, size (one cell), stroke, corners, colour and labels in
@@ -24,11 +29,6 @@ _Last updated: 2026-11-19_
   development-only workspace `apps/styleguide` serves it (`npm run styleguide`) and runs
   Playwright tests with axe-core in Playwright's Chromium (`npm run styleguide:test`), in their
   own CI job; tests guard that the app never imports or builds the styleguide (ADR 0083).
-- M3.0b-2 Design tokens: `apps/ui/src/tokens.css` with semantic colour tokens, the terminal's
-  character cell, spacing, radius, line widths, shadow and motion; ticket blue, mail violet and
-  incident red lightened so that every text pair meets WCAG AA; contrast and stylesheet test
-  (`design-tokens.test.ts`); `DESIGN.md` and its sidecar regenerated with `/impeccable document`
-  (ADR 0082). impeccable works in cloud sessions.
 
 ## In progress
 
@@ -36,14 +36,15 @@ _Last updated: 2026-11-19_
 
 ## Next 3 steps
 
-1. ROADMAP M3.0e-2: icon files, tests of the icon rules, styleguide section.
-2. ROADMAP M3.0f-2: logo and tokens.
-3. ROADMAP M3.1: app screens.
+1. ROADMAP M3.0f-2: logo and tokens.
+2. ROADMAP M3.1: app screens.
+3. ROADMAP M3.2: new game flow.
 
 ## Blockers and open questions
 
 - The owner still has to check the bundled fonts on Windows (`npm run styleguide` and
   `npm run dev`), because Windows renders fonts slightly heavier than the Linux screenshots.
+  The same check covers the icons in the styleguide's Icons section at 100 % scaling.
 - The texts of the five prototype levels and the office world's host name `itdesk` were
   written as test content without the owner's review (the prototype's source is not in the
   repository, so levels 2 to 5 follow the titles in `docs/CURRICULUM.md`); the story workshop

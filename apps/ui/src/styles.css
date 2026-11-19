@@ -70,3 +70,13 @@ pre {
   font-family: var(--font-mono);
   font-variant-ligatures: none;
 }
+
+/* An icon is one cell in size, never a fraction of a cell, so that its 2 px strokes stay on
+   whole pixels (ADR 0086). It takes the colour of its text through currentColor. */
+.icon {
+  display: inline-block;
+  flex: none;
+  inline-size: var(--cell-block);
+  block-size: var(--cell-block);
+  vertical-align: top;
+}
