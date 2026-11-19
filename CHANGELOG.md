@@ -13,8 +13,15 @@ project uses [Semantic Versioning](https://semver.org/).
   German when the system's language is German and in English otherwise.
 - Play opens the save slot screen with three save slots. They are all empty until saving
   exists; choosing one starts a new game. Back or Esc returns to the start screen.
-- The game screen shows the workplace: a top bar, the side panel, the terminal area and a
-  footer with key hints. The areas are still empty; the terminal, tickets and mail come next.
+- The game screen shows the workplace: a top bar, the side panel, the terminal and a footer
+  with key hints. The side panel and the top bar are still empty; tickets and mail come next.
+- The terminal works like bash on Debian: type commands after the prompt `you@itdesk:~$` and
+  see their output. The first ticket's files are there. Up and Down bring back earlier
+  commands, Tab completes commands and file names (twice lists the choices), Ctrl+C cancels
+  the line, Ctrl+L clears the screen, Ctrl+A and Ctrl+E jump to the start and the end, and
+  Shift+PageUp and Shift+PageDown scroll back. An open quote continues on the next line. When
+  you use something the game does not simulate yet, a note in the terminal says so. Ctrl+V
+  pastes, and Ctrl+C copies selected text.
 - A new game starts on the "New game" screen: type your name, and your Linux user name is
   filled in from it ("Jörg Müller" becomes `joerg-mueller`); you can change it. If a name
   cannot be used, the screen says why. Choose the mode on one of two cards, Career or Sandbox;

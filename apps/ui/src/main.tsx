@@ -31,6 +31,12 @@ const info = await desktop.getAppInfo();
 
 createRoot(container).render(
   <StrictMode>
-    <App info={info} texts={texts} reservedUserNames={reserved} onQuit={desktop.quit} />
+    <App
+      info={info}
+      content={content}
+      texts={texts}
+      reservedUserNames={reserved}
+      onQuit={desktop.quit}
+    />
   </StrictMode>,
 );

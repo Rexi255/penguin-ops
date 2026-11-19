@@ -6,6 +6,7 @@ import {
   levelSchema,
 } from "@penguin-ops/content";
 import {
+  COMMANDS,
   createGameClock,
   findHost,
   type GameClock,
@@ -17,9 +18,13 @@ import {
 import { describe, expect, test } from "vitest";
 
 import {
+  COMMAND_NAMES,
+  completeInput,
   type GameEvent,
   type InputResult,
+  interruptLevelInput,
   lastCompletedStep,
+  levelPrompt,
   type LevelSession,
   runInput,
   startLevel,
@@ -384,5 +389,62 @@ describe("runInput: extra goals", () => {
       { kind: "solved" },
       { kind: "extra-goal", id: "logs", xp: 5 },
     ]);
+  });
+});
+
+describe("levelPrompt", () => {
+  test("is the prompt of the player's shell", () => {
+    const game = start({ ...CD_GOAL, start: { cwd: "~/projects" } });
+    expect(levelPrompt(game.session)).toEqual({
+      userAtHost: "alice@desk",
+      directory: "~/projects",
+      sign: "$",
+    });
+    play(game, "cd /var/log");
+    expect(levelPrompt(game.session).directory).toBe("/var/log");
+  });
+});
+
+describe("completeInput", () => {
+  test("completes the simulated commands in command position", () => {
+    const game = start(CD_GOAL);
+    expect(completeInput(game.session, "who", 3)).toMatchObject({
+      line: "whoami ",
+      cursor: 7,
+      bell: false,
+    });
+    expect(COMMAND_NAMES).toEqual(COMMANDS.map((command) => command.name));
+    expect(COMMAND_NAMES).toContain("ls");
+  });
+
+  test("completes file names in the player's world and working directory", () => {
+    const game = start(CD_GOAL);
+    expect(completeInput(game.session, "cd pro", 6)).toMatchObject({
+      line: "cd projects/",
+      cursor: 12,
+    });
+    expect(completeInput(game.session, "cat /var/log/sys", 16).line).toBe("cat /var/log/syslog ");
+  });
+
+  test("rings the bell and lists the matches when several match", () => {
+    const game = start(CD_GOAL);
+    const completion = completeInput(game.session, "c", 1);
+    expect(completion.bell).toBe(true);
+    expect(completion.matches.map((match) => match.name)).toEqual(["cat", "cd", "clear", "cp"]);
+  });
+
+  test("throws for a cursor outside the line", () => {
+    expect(() => completeInput(start(CD_GOAL).session, "ls", 3)).toThrow(RangeError);
+  });
+});
+
+describe("interruptLevelInput", () => {
+  test("sets the exit status to 130 and changes nothing else", () => {
+    const game = start(CD_GOAL);
+    play(game, "cd /var/log");
+    const interrupted = interruptLevelInput(game.session);
+    expect(interrupted.shell).toEqual({ ...game.session.shell, exitStatus: 130 });
+    expect(interrupted).toEqual({ ...game.session, shell: interrupted.shell });
+    expect(game.clock.now()).toBe(START_TIME + TIME_PER_INPUT);
   });
 });

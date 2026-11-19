@@ -1,8 +1,8 @@
 # Architecture
 
 > **Status: skeleton.** The workspaces exist with strict TypeScript configs (ROADMAP M0.2);
-> the Electron app has its start, save slot, new game and game screens with the pause menu and
-> the bundled content (M3.1, M3.2), and the engine has the core types of the
+> the Electron app has its start, save slot, new game and game screens with the pause menu,
+> the terminal and the bundled content (M3.1–M3.3), and the engine has the core types of the
 > world model (M1.1), path lookup and permission checks (M1.2), its random generator, game
 > clock and world builder (M1.3), the shell lexer, parser, word expansion and execution
 > (M1.4–M1.6b) and the write side of the file system (M1.6c-1).
@@ -316,6 +316,11 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   and lists the matches on a second Tab that follows a Tab without a change; it keeps a
   `HistoryNavigation` between Up and Down, and calls `acceptHistoryLine` on Enter; the level
   session then records the input with `recordHistory` (ADR 0077).
+- **Prompt** (`src/prompt.ts`, ADR 0095): `primaryPrompt` gives the parts of Debian 13's colour
+  prompt `\u@\h:\w\$ ` (`\w` from `PWD`, shortened with `~` like bash's
+  `polite_directory_format`; `#` for root), `promptText` joins them, `CONTINUATION_PROMPT` is
+  `PS2` (`> `), and `interruptInput` is Ctrl+C at the prompt (exit status 130). The UI draws the
+  prompt in its own colours.
 
 ## Content (`packages/content` and `content/`)
 
@@ -402,7 +407,9 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   and group of the base worlds, which a player cannot take.
 - New game (`src/new-game.ts`, ADR 0017, ADR 0094): the game modes `story` and `sandbox`,
   `normalizePlayerName` and `checkPlayerName` (`empty`, `too-long`) for the player's name, and
-  `NewGame`, what a save slot holds once the player has started a game.
+  `NewGame`, what a save slot holds once the player has started a game. `GAME_START_TIME` is the
+  game time a new game starts at (Monday, 2026-01-05, 08:00 UTC), and `startingLevelId` the
+  first level of the first chapter, which a new game plays (ADR 0095).
 - Level session (`src/level-session.ts`, ADR 0077): `startLevel` builds the world, logs the
   player in on the start host in `start.cwd` and can resume at a checkpoint by replaying the
   first reference solution. `runInput` returns `incomplete` for an input that needs another
@@ -410,7 +417,9 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   syntax) and `evaluate`s the rules: the goal or the next steps in order, extra goals, then
   tips while unsolved. It returns the new immutable `LevelSession`, the `TerminalEvent`s and
   the `GameEvent`s (`step-completed`, `solved`, `extra-goal`, `tip`).
-  `lastCompletedStep` is the checkpoint that save games keep.
+  `lastCompletedStep` is the checkpoint that save games keep. For the terminal (ADR 0095),
+  `levelPrompt` gives the prompt of the player's shell, `completeInput` completes an input line
+  with the simulated commands (`COMMAND_NAMES`), and `interruptLevelInput` is Ctrl+C.
 - Reference solutions (`src/reference-solutions.ts`, ADR 0078): `checkReferenceSolutions`
   plays every level of the content in every language and with two player names and reports
   levels that cannot start, events before the first input, solutions with incomplete or
@@ -448,7 +457,8 @@ the app info and computes the reserved user names of the loaded worlds, and rend
 React state of the union type `Screen`, whose members carry their slot where they need one, and
 picks the screen component with an exhaustive `switch`; screens get callbacks such as `onPlay`
 and `onBack` and do not know each other. Until the save system (M3.7), the app root also holds
-the game of each of the three slots (`NewGame` of `packages/gameplay`) as React state.
+the game of each of the three slots (`NewGame` of `packages/gameplay`) as React state, and gives
+the game screen the first level of the content for the slot's player (`levelSetup`, ADR 0095).
 
 Content and texts (ADR 0090): `src/content/bundled-content.ts` imports every `.yaml` file of
 `content/` as text with `import.meta.glob` at build time and loads it with `sortContentFiles`
@@ -472,13 +482,26 @@ reserved names) and the mode as two radio buttons drawn as cards; each problem c
 catalog text in a live region that describes its field, and Start creates the game only without
 problems (ADR 0093, ADR 0094). `src/screens/game-screen.tsx` is the frame of the
 workplace layout as a CSS grid: top bar, side panel, terminal area and the key-hint footer,
-whose "Esc Menu" hint is a button with the focus. Esc opens `src/screens/pause-menu.tsx`, a
+whose "Esc Menu" hint is a button. It starts the level at `GAME_START_TIME` and shows it in the
+terminal, whose input line has the focus. Esc opens `src/screens/pause-menu.tsx`, a
 modal dialog (Continue, Main menu) over the game, whose frame is `inert` while it is open; the
 pause state lives in the game screen (ADR 0092). The styles of all screens are in
 `src/styles.css`. The visual world is "Label Tape & Patch Cable" (ADR 0081, `DESIGN.md`); the
 workplace screen's direction contract is the impeccable surface brief
 `.impeccable/surfaces/src-app-tsx.md`, and `.impeccable/design.json` is impeccable's sidecar to
 `DESIGN.md`.
+
+Terminal (ADR 0095): `src/terminal/terminal-model.ts` holds the whole state of a terminal as an
+immutable value (the level session, the game time, the screen with its finished lines, page start
+and partial line, the input line and cursor, an incomplete input, the history navigation, the
+Tab state and readline's question) and has one pure function per key: editing, history, Tab
+with its list and question, Enter (which runs the input with `runInput` and shows its events),
+Ctrl+C and Ctrl+L. `src/terminal/terminal-keys.ts` maps key presses to these actions (typed
+characters come from the input field, never from key codes) and counts the columns that fit.
+`src/terminal/terminal.tsx` draws the state as a scrolling log with the page after the last
+clear at least as high as the terminal, Debian's colour prompt, a fibre orange block cursor
+over a transparent text field the player types into, and game notices in the UI face with the
+hint icon; it measures the cell width of the monospace face for the terminal's width.
 
 Design tokens (ADR 0082): `src/tokens.css` defines every token as a CSS custom property on
 `:root`, named by purpose (colours, the terminal's character cell, spacing in quarter cells,

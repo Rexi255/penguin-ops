@@ -3,6 +3,7 @@
 // the start screen, Play opens the save slot screen, Back and Esc return, an empty slot opens the
 // new game screen, Start puts the game into the slot and opens the game, a slot with a game
 // returns to it, the pause menu leads back to the start screen, and the keyboard focus follows.
+// The game screen plays the first level as the player's Linux user (ADR 0095).
 import { cleanup, render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, test, vi } from "vitest";
@@ -11,13 +12,15 @@ import { App } from "./app";
 import { loadBundledContent } from "./content/bundled-content";
 import { createTexts } from "./texts/ui-texts";
 
-const { uiCatalogs } = loadBundledContent();
+const content = loadBundledContent();
+const { uiCatalogs } = content;
 
 function renderApp() {
   const onQuit = vi.fn<() => void>();
   render(
     <App
       info={{ name: "PenguinOps", version: "1.2.3" }}
+      content={content}
       texts={createTexts(uiCatalogs, "en")}
       reservedUserNames={new Set(["root"])}
       onQuit={onQuit}
@@ -108,7 +111,7 @@ describe("App", () => {
     await userEvent.click(screen.getByRole("radio", { name: "Sandbox" }));
     await userEvent.click(screen.getByRole("button", { name: "Start game" }));
     expect(gameTitle()).not.toBeNull();
-    expect(screen.getByRole("button", { name: "Esc Menu" })).toBe(document.activeElement);
+    expect(screen.getByRole("textbox", { name: "Command line" })).toBe(document.activeElement);
 
     await userEvent.keyboard("{Escape}");
     await userEvent.click(screen.getByRole("button", { name: "Main menu" }));
@@ -119,6 +122,18 @@ describe("App", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Slot 2 Jörg Müller · Sandbox" }));
     expect(gameTitle()).not.toBeNull();
+  });
+
+  test("plays the first level as the player's Linux user", async () => {
+    renderApp();
+    await userEvent.keyboard("{Enter}");
+    await userEvent.keyboard("{Enter}");
+    await userEvent.keyboard("Jörg Müller{Enter}");
+    const terminal = screen.getByRole("log", { name: "Terminal output" });
+    expect(terminal.textContent).toContain("joerg-mueller@itdesk:~$");
+    await userEvent.keyboard("ls{Enter}");
+    expect(terminal.textContent).toContain("tickets");
+    expect(terminal.textContent).toContain("welcome");
   });
 
   test("does not start the game with a reserved user name", async () => {

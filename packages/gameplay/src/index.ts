@@ -12,11 +12,15 @@ export {
   type StepStatus,
 } from "./developer-mode";
 export {
+  COMMAND_NAMES,
+  completeInput,
   evaluate,
   type GameEvent,
   type InputOptions,
   type InputResult,
+  interruptLevelInput,
   lastCompletedStep,
+  levelPrompt,
   type LevelSession,
   type LevelSetup,
   runInput,
@@ -34,11 +38,13 @@ export {
 export {
   checkPlayerName,
   GAME_MODES,
+  GAME_START_TIME,
   type GameMode,
   type NewGame,
   normalizePlayerName,
   PLAYER_NAME_MAX_LENGTH,
   type PlayerNameProblem,
+  startingLevelId,
 } from "./new-game";
 export {
   checkReferenceSolutions,

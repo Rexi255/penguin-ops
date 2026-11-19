@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
 // Tests of the game screen in both languages: the areas of the workplace layout as landmarks, the
-// key hint that has the focus, and the pause menu that Esc or the key hint opens and closes.
+// terminal that has the focus and plays the level, and the pause menu that Esc or the key hint
+// opens and closes.
 import { MANDATORY_LANGUAGES, type MandatoryLanguage } from "@penguin-ops/content";
+import { levelSetup } from "@penguin-ops/gameplay";
 import { cleanup, render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, test, vi } from "vitest";
@@ -11,18 +13,27 @@ import { TextsProvider } from "../texts/texts-context";
 import { createTexts } from "../texts/ui-texts";
 import { GameScreen } from "./game-screen";
 
-const { uiCatalogs } = loadBundledContent();
+const content = loadBundledContent();
+const { uiCatalogs } = content;
 
 const EXPECTED: Readonly<
   Record<
     MandatoryLanguage,
-    { title: string; sidePanel: string; terminal: string; menuHint: string; pause: string }
+    {
+      title: string;
+      sidePanel: string;
+      terminal: string;
+      input: string;
+      menuHint: string;
+      pause: string;
+    }
   >
 > = {
   en: {
     title: "Workplace",
     sidePanel: "Side panel",
     terminal: "Terminal",
+    input: "Command line",
     menuHint: "Esc Menu",
     pause: "Paused",
   },
@@ -30,6 +41,7 @@ const EXPECTED: Readonly<
     title: "Arbeitsplatz",
     sidePanel: "Seitenleiste",
     terminal: "Terminal",
+    input: "Befehlszeile",
     menuHint: "Esc Menü",
     pause: "Pause",
   },
@@ -39,7 +51,10 @@ function renderGameScreen(language: MandatoryLanguage = "en") {
   const onMainMenu = vi.fn<() => void>();
   const view = render(
     <TextsProvider texts={createTexts(uiCatalogs, language)}>
-      <GameScreen onMainMenu={onMainMenu} />
+      <GameScreen
+        level={levelSetup(content, "first-steps", language, "max")}
+        onMainMenu={onMainMenu}
+      />
     </TextsProvider>,
   );
   return { onMainMenu, view };
@@ -51,6 +66,10 @@ function pauseMenu() {
 
 function menuHint() {
   return screen.getByRole("button", { name: "Esc Menu" });
+}
+
+function commandLine() {
+  return screen.getByRole("textbox", { name: "Command line" });
 }
 
 /** The element that holds the four areas and turns inert while the pause menu is open. */
@@ -79,12 +98,32 @@ describe("GameScreen", () => {
     expect(heading.className).toBe("visually-hidden");
   });
 
-  test.each(MANDATORY_LANGUAGES)("gives the menu key hint the focus in %s", (language) => {
+  test.each(MANDATORY_LANGUAGES)("gives the terminal's input line the focus in %s", (language) => {
     renderGameScreen(language);
+    const input = screen.getByRole("textbox", { name: EXPECTED[language].input });
+    expect(input).toBe(document.activeElement);
     const hint = screen.getByRole("button", { name: EXPECTED[language].menuHint });
-    expect(hint).toBe(document.activeElement);
     expect(hint.getAttribute("aria-keyshortcuts")).toBe("Escape");
     expect(hint.querySelector("kbd")?.textContent).toBe("Esc");
+  });
+
+  test("plays the level in the terminal as the player", async () => {
+    renderGameScreen();
+    const terminal = screen.getByRole("log", { name: "Terminal output" });
+    expect(terminal.textContent).toContain("max@itdesk:~$");
+    await userEvent.keyboard("cd welcome{Enter}");
+    expect(terminal.textContent).toContain("max@itdesk:~/welcome$");
+  });
+
+  test("opens the pause menu with Esc from the terminal and keeps the input line", async () => {
+    renderGameScreen();
+    await userEvent.keyboard("ls");
+    await userEvent.keyboard("{Escape}");
+    expect(pauseMenu()).not.toBeNull();
+    await userEvent.keyboard("{Escape}");
+    expect(commandLine()).toBe(document.activeElement);
+    await userEvent.keyboard(" -a{Enter}");
+    expect(screen.getByRole("log").textContent).toContain("max@itdesk:~$ ls -a");
   });
 
   test("starts without the pause menu", () => {
@@ -114,13 +153,14 @@ describe("GameScreen", () => {
 
   test("opens the pause menu with Enter on the focused key hint", async () => {
     renderGameScreen();
+    menuHint().focus();
     await userEvent.keyboard("{Enter}");
     expect(pauseMenu()).not.toBeNull();
   });
 
   test("opens the pause menu with Esc wherever the focus is", async () => {
     renderGameScreen();
-    menuHint().blur();
+    commandLine().blur();
     await userEvent.keyboard("{Escape}");
     expect(pauseMenu()).not.toBeNull();
   });
@@ -137,7 +177,7 @@ describe("GameScreen", () => {
     await userEvent.keyboard("{Escape}");
     expect(pauseMenu()).toBeNull();
     expect(frame().hasAttribute("inert")).toBe(false);
-    expect(menuHint()).toBe(document.activeElement);
+    expect(commandLine()).toBe(document.activeElement);
   });
 
   test("closes the pause menu with Continue and gives the focus back", async () => {
@@ -148,12 +188,12 @@ describe("GameScreen", () => {
     expect(menuHint()).toBe(document.activeElement);
   });
 
-  test("gives the focus to the key hint when it was on no control before the pause", async () => {
+  test("gives the focus to the terminal when it was on no control before the pause", async () => {
     renderGameScreen();
-    menuHint().blur();
+    commandLine().blur();
     await userEvent.keyboard("{Escape}");
     await userEvent.keyboard("{Escape}");
-    expect(menuHint()).toBe(document.activeElement);
+    expect(commandLine()).toBe(document.activeElement);
   });
 
   test("opens and closes the pause menu again and again", async () => {
@@ -182,7 +222,7 @@ describe("GameScreen", () => {
 
   test("ignores other keys", async () => {
     renderGameScreen();
-    menuHint().blur();
+    commandLine().blur();
     await userEvent.keyboard("{F1}q{ArrowDown}");
     expect(pauseMenu()).toBeNull();
   });

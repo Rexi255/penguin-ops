@@ -400,8 +400,9 @@ pre {
     "top-bar top-bar"
     "side-panel terminal"
     "footer footer";
-  grid-template-rows: auto 1fr auto;
-  grid-template-columns: calc(var(--cell-inline) * 45) 1fr;
+  /* The middle row may shrink below its content, so the terminal scrolls instead of growing. */
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-columns: calc(var(--cell-inline) * 45) minmax(0, 1fr);
   height: 100%;
 }
 
@@ -419,7 +420,107 @@ pre {
 .game-screen__terminal {
   grid-area: terminal;
   min-inline-size: 0;
+  min-block-size: 0;
   background: var(--color-surface-terminal);
+}
+
+/* The terminal (ADR 0095): terminal text on the terminal ground, scrolling inside its area. The
+   page after the last screen clear is at least as high as the terminal, so a clear moves the
+   prompt to the top and leaves the lines before it in the scrollback above. */
+.terminal {
+  position: relative;
+  block-size: 100%;
+  overflow-y: auto;
+  padding-inline: var(--space-4);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: var(--text-terminal-size);
+  font-weight: var(--font-weight-body);
+  line-height: var(--text-terminal-leading);
+  font-variant-ligatures: none;
+  tab-size: 8;
+  cursor: text;
+}
+
+.terminal__page {
+  min-block-size: 100%;
+  padding-block: var(--space-2);
+}
+
+/* A line breaks at the last cell that fits, like a terminal, not between words. An empty line
+   keeps its height. */
+.terminal__line {
+  min-block-size: var(--text-terminal-leading);
+  white-space: break-spaces;
+  line-break: anywhere;
+  overflow-wrap: anywhere;
+}
+
+/* Debian's colour prompt: user@host in bold green and the directory in bold blue, as GNOME
+   Terminal shows them (ADR 0095). The colours are tokens, so the colour schemes can change them. */
+.terminal__prompt-user {
+  color: var(--color-prompt-user);
+  font-weight: var(--font-weight-strong);
+}
+
+.terminal__prompt-directory {
+  color: var(--color-prompt-directory);
+  font-weight: var(--font-weight-strong);
+}
+
+/* The cursor is a fibre orange block that does not blink (the One Motion Rule). While the input
+   line has the focus, it is filled and shows the character under it in the terminal ground's
+   colour; without the focus, only its frame is left, as in most terminals. */
+.terminal__cursor {
+  position: relative;
+  outline: var(--border-width-rule) solid var(--color-player);
+  outline-offset: calc(-1 * var(--border-width-rule));
+}
+
+.terminal__cursor:focus-within {
+  outline: none;
+  background: var(--color-player);
+  color: var(--color-surface-terminal);
+}
+
+/* The text field the player types into lies invisibly on the cursor, so that an input method
+   opens its window there. */
+.terminal__input {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  font: inherit;
+  opacity: 0;
+  resize: none;
+}
+
+/* A game notice: the game speaks in the UI face with the hint icon, so it never looks like
+   shell output, also without colour. */
+.terminal__notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--color-text-muted);
+  font-family: var(--font-ui);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-leading);
+  white-space: normal;
+}
+
+/* Ten zeros in the terminal face, measured to find the width of one cell. */
+.terminal__measure {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  visibility: hidden;
+  white-space: pre;
+  pointer-events: none;
 }
 
 .game-screen__footer {

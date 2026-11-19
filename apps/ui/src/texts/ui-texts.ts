@@ -85,6 +85,15 @@ export const UI_TEXT_PLACEHOLDERS = {
   "game.terminal": [],
   /** The key hint that opens the pause menu, after the key's label. */
   "game.menu": [],
+  /** The accessible name of the terminal's screen, a log of its lines. */
+  "terminal.output": [],
+  /** The accessible name of the terminal's input line. */
+  "terminal.input": [],
+  /**
+   * A game notice in the terminal: the input used something the game does not simulate yet, and
+   * the input stopped there. ROADMAP M3.6 gives each kind of notice its own text.
+   */
+  "terminal.notice": [],
   /** The title of the pause menu. */
   "pause.title": [],
   /** The pause menu entry that closes the menu and returns to the game. */

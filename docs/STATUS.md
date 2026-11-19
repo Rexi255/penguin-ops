@@ -4,14 +4,19 @@ _Last updated: 2026-11-19_
 
 ## Recently completed
 
+- M3.3 Terminal component: the game screen plays the first level in a terminal that behaves
+  like bash 5.2 on Debian 13: Debian's green and blue colour prompt (engine `prompt.ts`),
+  output with partial lines, continuation lines behind `> `, game notices with one general text
+  until M3.6, Up/Down history, Tab completion with the list on a second Tab and readline's
+  question from 100 matches, Ctrl+C (`^C`, exit status 130), Ctrl+L, Ctrl+A/E, Home/End,
+  Shift+PageUp/Down and 10,000 lines of scrollback. A pure terminal model with one function per
+  key; typed text comes from a transparent text field, so AltGr and dead keys work; unsimulated
+  readline Ctrl keys are swallowed (ADR 0095). Model, component and end-to-end tests in both
+  languages with axe-core.
 - M3.2b New game screen (M3.2 complete): an empty slot opens "New game" with the player's name,
   the Linux user name (derived while typing until the player edits it), a catalog text for
   every problem code in a live region, and the mode as two cards, Career (Story, the default)
-  and Sandbox; the chosen card is framed in fibre orange, the other stays muted but clickable.
-  Start fills the slot in memory (until M3.7) and opens the game; the slot then shows "name ·
-  mode" and returns to the game; Back and Esc return to the slot. New token `control-border`
-  (ADR 0094, partly superseding ADR 0081 on the uses of fibre orange). Component and
-  end-to-end tests in both languages with axe-core.
+  and Sandbox; Start fills the slot in memory (until M3.7) and opens the game (ADR 0094).
 - M3.2a User name logic: `deriveUserName` turns the player's whole name into a Linux user name
   ("Jörg Müller" → `joerg-mueller`; umlauts transliterated, accents and apostrophes dropped,
   empty without a Latin letter), `checkUserName` returns the first problem as a code, and
@@ -22,9 +27,6 @@ _Last updated: 2026-11-19_
   bar, side panel, terminal area, footer with an "Esc Menu" key hint button). Esc opens a modal
   pause menu (Continue, Main menu) over the inert game; Esc or Continue closes it and returns the
   focus (ADR 0092, partly superseding ADR 0091).
-- M3.1b Save slot screen: Play in the main menu opens a screen with three save slots and Back;
-  Back and Esc return to the start screen. The app root switches screens with React state and
-  every screen sets the keyboard focus on its first control (ADR 0091).
 - M3.0d-2 Typography: the owner checked the bundled fonts, the icons and the logo on Windows
   at 100 % scaling (styleguide and start screen) and found no problems; M3.0 is complete.
 
@@ -34,14 +36,15 @@ _Last updated: 2026-11-19_
 
 ## Next 3 steps
 
-1. ROADMAP M3.3: terminal component.
-2. ROADMAP M3.4: workplace layout (top bar, side panel tabs, footer key hints).
-3. ROADMAP M3.5: ticket panel.
+1. ROADMAP M3.4: workplace layout (top bar, side panel tabs, footer key hints).
+2. ROADMAP M3.5: ticket panel.
+3. ROADMAP M3.6: game commands `help` and `hint`; engine notices in the player's language.
 
 ## Blockers and open questions
 
-- The start, save slot, new game and game screens and the pause menu have no screenshot tests
-  yet; the screenshot test setup for all screens, languages and colour schemes is ROADMAP M3.15.
+- The start, save slot, new game and game screens, the pause menu and the terminal have no
+  screenshot tests yet; the screenshot test setup for all screens, languages and colour schemes
+  is ROADMAP M3.15.
 - The texts of the five prototype levels and the office world's host name `itdesk` were
   written as test content without the owner's review (the prototype's source is not in the
   repository, so levels 2 to 5 follow the titles in `docs/CURRICULUM.md`); the story workshop

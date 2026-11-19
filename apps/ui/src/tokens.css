@@ -26,10 +26,16 @@
   --color-text: #e8e6e1; /* body text */
   --color-text-muted: #a3a8ae; /* secondary text, key hints */
 
-  /* Fibre orange, the player's colour: only the prompt, the cursor, the outline of the active
+  /* Fibre orange, the player's colour: only the terminal's cursor, the outline of the active
      ticket, the current step and the frame of the player's choice on a choice card (the Fibre
      Rule). It is the logo's prompt orange. */
   --color-player: #e0701a;
+
+  /* Debian's colour prompt (ADR 0095): `user@host` in bold green and the working directory in
+     bold blue (`01;32` and `01;34` of `/etc/skel/.bashrc`), in the bright Tango colours that
+     GNOME Terminal shows for bold text. They appear only in the terminal's prompt. */
+  --color-prompt-user: #8ae234;
+  --color-prompt-directory: #729fcf;
 
   /* The keyboard focus ring: neutral, so that it never competes with the player's colour. */
   --color-focus: #e8e6e1;

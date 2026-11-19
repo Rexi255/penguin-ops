@@ -1,22 +1,42 @@
 // The game screen (ROADMAP M3.1c): the frame of the workplace layout of ADR 0020 with a top bar,
-// the side panel, the terminal area and the key-hint footer, and the pause menu that Esc opens
-// (ADR 0092). The areas stay empty until their work packages fill them: the terminal (M3.3), the
-// panels (M3.11) and the top bar's chapter and progress (M3.12).
+// the side panel, the terminal and the key-hint footer, and the pause menu that Esc opens
+// (ADR 0092). The terminal (M3.3, ADR 0095) plays the level it gets and has the focus. The other
+// areas stay empty until their work packages fill them: the panels (M3.5, M3.11) and the top
+// bar's chapter and progress (M3.12).
 
+import { createGameClock } from "@penguin-ops/engine";
+import { GAME_START_TIME, type LevelSetup, startLevel } from "@penguin-ops/gameplay";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { Terminal } from "../terminal/terminal";
+import { createTerminal, type TerminalState } from "../terminal/terminal-model";
 import { InlineText } from "../texts/inline-text";
 import { useTexts } from "../texts/texts-context";
 import { PauseMenu } from "./pause-menu";
 
 export interface GameScreenProps {
+  /**
+   * The level the terminal plays, from its start at the game's start time. Until the save system
+   * (ROADMAP M3.7), the level starts again whenever the game screen appears.
+   */
+  readonly level: LevelSetup;
   /** Leaves the game for the start screen. */
   readonly onMainMenu: () => void;
 }
 
-export function GameScreen({ onMainMenu }: GameScreenProps) {
+/** A terminal for `level`, started at the game's start time. */
+function startTerminal(level: LevelSetup): TerminalState {
+  const clock = createGameClock(GAME_START_TIME);
+  const session = startLevel(level, clock);
+  return createTerminal(session, clock.now());
+}
+
+export function GameScreen({ level, onMainMenu }: GameScreenProps) {
   const texts = useTexts();
   const [paused, setPaused] = useState(false);
+  // The level starts once, when the screen appears.
+  const [terminal] = useState(() => startTerminal(level));
+  const terminalInput = useRef<HTMLTextAreaElement>(null);
   const menuHint = useRef<HTMLButtonElement>(null);
   // The element that had the focus when the pause menu opened; it gets the focus back.
   const focusBeforePause = useRef<HTMLElement | null>(null);
@@ -31,9 +51,9 @@ export function GameScreen({ onMainMenu }: GameScreenProps) {
     setPaused(false);
   }, []);
 
-  // The keyboard is the main input (PRODUCT.md): when the screen appears and whenever the pause
-  // menu closes, the focus goes back into the game. The frame is inert while the menu is open,
-  // so this waits until it is not.
+  // The keyboard is the main input (PRODUCT.md): when the screen appears, the terminal's input
+  // line has the focus, and whenever the pause menu closes, the focus goes back to where it was.
+  // The frame is inert while the menu is open, so this waits until it is not.
   useEffect(() => {
     if (paused) {
       return;
@@ -43,7 +63,7 @@ export function GameScreen({ onMainMenu }: GameScreenProps) {
     if (target !== null && target !== document.body && target.isConnected) {
       target.focus();
     } else {
-      menuHint.current?.focus();
+      terminalInput.current?.focus();
     }
   }, [paused]);
 
@@ -74,7 +94,9 @@ export function GameScreen({ onMainMenu }: GameScreenProps) {
           </h1>
         </header>
         <aside className="game-screen__side-panel" aria-label={texts.plain("game.side-panel")} />
-        <main className="game-screen__terminal" aria-label={texts.plain("game.terminal")} />
+        <main className="game-screen__terminal" aria-label={texts.plain("game.terminal")}>
+          <Terminal ref={terminalInput} initialState={terminal} />
+        </main>
         <footer className="game-screen__footer">
           <button
             ref={menuHint}

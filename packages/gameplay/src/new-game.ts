@@ -1,6 +1,9 @@
 // What the player chooses on "New game" (ADR 0017, ADR 0019, ADR 0094): their name, the Linux
 // user name derived from it (`user-name.ts`) and the game mode of the save slot. The checks
-// return problem codes, never texts: the UI translates them.
+// return problem codes, never texts: the UI translates them. A new game starts with the first
+// level at the game's start time (ADR 0095).
+
+import type { Content } from "@penguin-ops/content";
 
 /**
  * The game modes, fixed per save slot when it is created (ADR 0017): `story` unlocks the
@@ -22,6 +25,24 @@ export const PLAYER_NAME_MAX_LENGTH = 40;
  * - `too-long`: longer than `PLAYER_NAME_MAX_LENGTH` characters.
  */
 export type PlayerNameProblem = "empty" | "too-long";
+
+/**
+ * The game time when a new game starts: Monday, 2026-01-05, 08:00 UTC, the player's first
+ * morning in the office. The simulated hosts run on UTC (ADR 0055).
+ */
+export const GAME_START_TIME = 1_767_600_000_000;
+
+/**
+ * The ID of the level a new game starts with: the first level of the first chapter. The content
+ * loader makes sure that there is one.
+ */
+export function startingLevelId(content: Pick<Content, "chapters">): string {
+  const id = content.chapters[0]?.levels[0];
+  if (id === undefined) {
+    throw new Error("the content has no chapter with a level");
+  }
+  return id;
+}
 
 /** A new game, ready for a save slot. */
 export interface NewGame {

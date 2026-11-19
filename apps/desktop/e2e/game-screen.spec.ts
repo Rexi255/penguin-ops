@@ -1,7 +1,7 @@
-// End-to-end tests of the game screen and the pause menu (ROADMAP M3.1c, ADR 0092): a new game
-// starts with the keyboard alone, Esc opens and closes the pause menu, Main menu leads
-// back to the start screen, and axe-core finds no accessibility violations, with the pause menu
-// closed and open.
+// End-to-end tests of the game screen and the pause menu (ROADMAP M3.1c, ADR 0092, ADR 0095): a
+// new game starts with the keyboard alone and the terminal has the focus, Esc opens and closes the
+// pause menu, Main menu leads back to the start screen, and axe-core finds no accessibility
+// violations, with the pause menu closed and open.
 import type { Page } from "@playwright/test";
 
 import { expect, test } from "./app";
@@ -13,6 +13,7 @@ const LANGUAGES = [
     title: "Workplace",
     sidePanel: "Side panel",
     terminal: "Terminal",
+    input: "Command line",
     menuHint: "Esc Menu",
     pause: "Paused",
     continue: "Continue",
@@ -23,6 +24,7 @@ const LANGUAGES = [
     title: "Arbeitsplatz",
     sidePanel: "Seitenleiste",
     terminal: "Terminal",
+    input: "Befehlszeile",
     menuHint: "Esc Menü",
     pause: "Pause",
     continue: "Weiterspielen",
@@ -43,7 +45,7 @@ async function startGame(page: Page): Promise<void> {
   await expect(page.locator(".field__input:focus")).toHaveCount(1);
   await page.keyboard.type("Max");
   await page.keyboard.press("Enter");
-  await expect(page.locator(".key-hint:focus")).toHaveCount(1);
+  await expect(page.locator(".terminal__input:focus")).toHaveCount(1);
 }
 
 for (const language of LANGUAGES) {
@@ -55,23 +57,22 @@ for (const language of LANGUAGES) {
       await expect(page.getByRole("heading", { level: 1, name: language.title })).toBeAttached();
       await expect(page.getByRole("complementary", { name: language.sidePanel })).toBeVisible();
       await expect(page.getByRole("main", { name: language.terminal })).toBeVisible();
-      await expect(page.getByRole("button", { name: language.menuHint })).toBeFocused();
+      await expect(page.getByRole("textbox", { name: language.input })).toBeFocused();
+      await expect(page.getByRole("button", { name: language.menuHint })).toBeVisible();
     });
 
     test("opens and closes the pause menu with Esc", async ({ page }) => {
       await startGame(page);
-      await expect(page.getByRole("button", { name: language.menuHint })).toBeFocused();
       await page.keyboard.press("Escape");
       await expect(page.getByRole("dialog", { name: language.pause })).toBeVisible();
       await expect(page.getByRole("button", { name: language.continue })).toBeFocused();
       await page.keyboard.press("Escape");
       await expect(page.getByRole("dialog")).toHaveCount(0);
-      await expect(page.getByRole("button", { name: language.menuHint })).toBeFocused();
+      await expect(page.getByRole("textbox", { name: language.input })).toBeFocused();
     });
 
     test("has no accessibility violations that axe-core finds", async ({ page }) => {
       await startGame(page);
-      await expect(page.getByRole("button", { name: language.menuHint })).toBeFocused();
       expect(await axeViolations(page)).toEqual([]);
       await page.keyboard.press("Escape");
       await expect(page.getByRole("dialog", { name: language.pause })).toBeVisible();
@@ -82,7 +83,6 @@ for (const language of LANGUAGES) {
 
 test("keeps the focus inside the pause menu", async ({ page }) => {
   await startGame(page);
-  await expect(page.getByRole("button", { name: "Esc Menu" })).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "Continue" })).toBeFocused();
   await page.keyboard.press("Tab");
@@ -94,7 +94,6 @@ test("keeps the focus inside the pause menu", async ({ page }) => {
 
 test("returns to the start screen from the pause menu", async ({ page }) => {
   await startGame(page);
-  await expect(page.getByRole("button", { name: "Esc Menu" })).toBeFocused();
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Main menu" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "PenguinOps" })).toBeVisible();

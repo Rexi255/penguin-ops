@@ -202,7 +202,7 @@ inventing it along the way.
         reserved names (ADR 0093).
   - [x] M3.2b New game screen: name, editable user name with the problem texts, Story or
         Sandbox, Start and Back; the slot keeps the game in memory until M3.7 (ADR 0094).
-- [ ] M3.3 Terminal component: input, coloured output, history, tab completion, Ctrl+C/L/A/E,
+- [x] M3.3 Terminal component: input, coloured output, history, tab completion, Ctrl+C/L/A/E,
       scrollback.
 - [ ] M3.4 Workplace layout: top bar, side panel tabs, footer key hints (ADR 0020), built
       only from the design tokens and icons of M3.0b–e.
@@ -326,6 +326,13 @@ AppImage runs on Linux, and chapters 0–2 are playable in both languages.
 - Options of M1.9c that give a notice (ADR 0060): `mkdir -m` (with the mode parser of
   `chmod`), `touch -d` (gnulib's `parse_datetime`), `touch -t` and `--time`, and access times
   (`touch -a` that can be seen, `ls -lu`).
+- Terminal details not simulated yet (ADR 0095): readline's other keys (Ctrl+U, Ctrl+K,
+  Ctrl+W, Ctrl+Y, Ctrl+D, Ctrl+B/F, Ctrl+P/N, word movement with Alt or Ctrl and the arrows,
+  Ctrl+G in the completion question), the pager `--More--` for completion lists longer than the
+  screen, carriage returns and escape sequences in the output (`clear > f; cat f` should clear
+  the screen), and a screen reader reading of the input line.
+- Remove Electron's default menu, whose Ctrl+W closes and Ctrl+R reloads the window outside the
+  terminal (ADR 0095).
 - Completion details not simulated yet (ADR 0065): programmable completion like the
   `bash-completion` package (options, only directories after `cd`), variables in the directory
   part (`$HOME/Do`), hostname completion after `@`, and readline's other completion keys.

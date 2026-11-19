@@ -17,12 +17,13 @@ import {
   startLevel,
   type TerminalEvent,
 } from "./level-session";
+import { GAME_START_TIME } from "./new-game";
 
 /** Two player names that differ in length and letters, so that no rule can depend on one. */
 export const REFERENCE_PLAYERS = ["alice", "max-2"] as const;
 
-/** The game time at which the reference solutions start: 2026-01-05 08:00 UTC. */
-export const REFERENCE_START_TIME = 1_767_600_000_000;
+/** The game time at which the reference solutions start: the start of a new game. */
+export const REFERENCE_START_TIME = GAME_START_TIME;
 
 /** The terminal width of the reference runs. */
 const REFERENCE_COLUMNS = 80;

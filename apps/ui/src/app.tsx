@@ -1,8 +1,10 @@
 // The root of the game's interface: it hands the UI texts to every screen and switches between
 // the screens (ADR 0091, ADR 0094). The current screen and the games in the save slots are plain
 // React state; each screen sets the keyboard focus when it appears. Until the save system exists
-// (M3.7), the games live only here and are gone when the app closes.
-import type { NewGame } from "@penguin-ops/gameplay";
+// (M3.7), the games live only here and are gone when the app closes, and the game screen plays the
+// first level of the content (ADR 0095).
+import type { Content } from "@penguin-ops/content";
+import { levelSetup, type NewGame, startingLevelId } from "@penguin-ops/gameplay";
 import { type ReactNode, useState } from "react";
 
 import type { AppInfo } from "./desktop-api";
@@ -28,6 +30,8 @@ const EMPTY_SLOTS: Slots = Array.from({ length: SAVE_SLOT_COUNT }, () => undefin
 
 export interface AppProps {
   readonly info: AppInfo;
+  /** The loaded content: the levels a game plays. */
+  readonly content: Content;
   readonly texts: Texts;
   /** The user names a player cannot take (`reservedUserNames` of the loaded worlds). */
   readonly reservedUserNames: ReadonlySet<string>;
@@ -35,13 +39,13 @@ export interface AppProps {
   readonly onQuit: () => void;
 }
 
-export function App({ info, texts, reservedUserNames, onQuit }: AppProps) {
+export function App({ info, content, texts, reservedUserNames, onQuit }: AppProps) {
   const [screen, setScreen] = useState<Screen>({ name: "start" });
   const [slots, setSlots] = useState<Slots>(EMPTY_SLOTS);
-  let content: ReactNode;
+  let shown: ReactNode;
   switch (screen.name) {
     case "start":
-      content = (
+      shown = (
         <StartScreen
           version={info.version}
           onPlay={() => {
@@ -52,7 +56,7 @@ export function App({ info, texts, reservedUserNames, onQuit }: AppProps) {
       );
       break;
     case "save-slots":
-      content = (
+      shown = (
         <SaveSlotScreen
           slots={slots}
           focusedSlot={screen.focusedSlot}
@@ -70,7 +74,7 @@ export function App({ info, texts, reservedUserNames, onQuit }: AppProps) {
       break;
     case "new-game": {
       const { slot } = screen;
-      content = (
+      shown = (
         <NewGameScreen
           slotNumber={slot + 1}
           reservedUserNames={reservedUserNames}
@@ -85,15 +89,23 @@ export function App({ info, texts, reservedUserNames, onQuit }: AppProps) {
       );
       break;
     }
-    case "game":
-      content = (
+    case "game": {
+      const game = slots[screen.slot];
+      if (game === undefined) {
+        throw new Error(`The save slot ${String(screen.slot + 1)} has no game to play.`);
+      }
+      // Until the campaign (M3.5) and the save system (M3.7), a game plays its first level.
+      const level = levelSetup(content, startingLevelId(content), texts.language, game.userName);
+      shown = (
         <GameScreen
+          level={level}
           onMainMenu={() => {
             setScreen({ name: "start" });
           }}
         />
       );
       break;
+    }
   }
-  return <TextsProvider texts={texts}>{content}</TextsProvider>;
+  return <TextsProvider texts={texts}>{shown}</TextsProvider>;
 }

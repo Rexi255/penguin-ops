@@ -28,9 +28,10 @@ rounded cards with one blue accent, and the hacker cliché of green on black.
 
 OWN-WORLD: Matte rack-metal neutrals for the ground and panels. Yellow and white label tape with
 black condensed caps for ticket IDs, panel names and the rank. Cable colours as the only other
-colour: tickets blue, mail violet, handbook green, incidents red. Fibre orange (the logo's
-prompt orange) only on the player's own prompt, cursor and active ticket. Square-ish corners
-(2 px), hairline rules, no glow, no gradients.
+colour outside the terminal: tickets blue, mail violet, handbook green, incidents red. Fibre
+orange (the logo's prompt orange) only on the player's cursor and active ticket; the terminal's
+prompt keeps Debian's green and blue (ADR 0095). Square-ish corners (2 px), hairline rules, no
+glow, no gradients.
 
 STORY: The player understands at a glance which ticket is active, what kind each item is, and
 where they are (chapter, ticket, step). They feel like a member of a real IT department, not a

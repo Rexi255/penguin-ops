@@ -56,9 +56,15 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
   ),
   ...allOn(
     ["--color-player"],
-    ["--color-surface-terminal", "--color-surface-panel", "--color-surface-raised"],
+    ["--color-surface-panel", "--color-surface-raised"],
     "text",
-    "the prompt in the terminal and the current step in the side panel",
+    "the current step in the side panel",
+  ),
+  ...allOn(
+    ["--color-prompt-user", "--color-prompt-directory"],
+    ["--color-surface-terminal"],
+    "text",
+    "the user, host and directory of the prompt in the terminal",
   ),
   ...allOn(
     CABLES,
@@ -78,6 +84,18 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     SURFACES,
     "non-text",
     "the boundary of text fields and choice cards, and the ring of a choice marker",
+  ),
+  ...allOn(
+    ["--color-surface-terminal"],
+    ["--color-player"],
+    "text",
+    "the character under the terminal's cursor",
+  ),
+  ...allOn(
+    ["--color-player"],
+    ["--color-surface-terminal"],
+    "non-text",
+    "the terminal's cursor, filled or as a frame without the focus",
   ),
   ...allOn(
     ["--color-player"],

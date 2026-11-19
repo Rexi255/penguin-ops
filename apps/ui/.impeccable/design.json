@@ -289,7 +289,8 @@
       "Dark, matte rack-metal ground with hairline rules; no glow, no gradients, no glass.",
       "Label tape (yellow and white, black condensed caps) for ticket IDs, panel names, the rank and toasts.",
       "Cable colours carry the kind of work: tickets, mail, handbook, incidents.",
-      "Fibre orange belongs to the player: their prompt, cursor and active ticket.",
+      "Fibre orange belongs to the player: their cursor and active ticket.",
+      "The terminal's prompt keeps Debian's colours, so it looks like the real system.",
       "One grid: every size is a multiple of the terminal's character cell."
     ],
     "rules": [
@@ -347,7 +348,8 @@
     "dos": [
       "**Do** print ticket IDs, the product name, the rank and toast titles on tape.",
       "**Do** give each kind of work its cable colour, consistently, on tabs, toasts and states.",
-      "**Do** keep fibre orange for the player's prompt, cursor, active ticket and current choice only.",
+      "**Do** keep fibre orange for the player's cursor, active ticket and current choice only.",
+      "**Do** keep Debian's prompt colours in the terminal, and only there.",
       "**Do** build every screen from the tokens in `apps/ui/src/tokens.css`; a missing value becomes a new token, not a literal.",
       "**Do** let the one motion be the tape printing out, and show it at once when \"reduce motion\" is on.",
       "**Do** keep every control a standard, recognisable one: tabs, buttons, lists, inputs."

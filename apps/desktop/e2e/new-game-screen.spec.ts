@@ -76,7 +76,7 @@ for (const language of LANGUAGES) {
       await page.getByText(language.sandbox, { exact: true }).click();
       await expect(page.getByRole("radio", { name: language.sandbox })).toBeChecked();
       await page.getByRole("textbox", { name: language.playerName }).press("Enter");
-      await expect(page.locator(".key-hint:focus")).toHaveCount(1);
+      await expect(page.locator(".terminal__input:focus")).toHaveCount(1);
       await page.keyboard.press("Escape");
       await page.locator(".pause-menu button").last().click();
       await page.locator(".menu button").first().click();

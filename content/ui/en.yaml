@@ -40,6 +40,10 @@ game:
   side-panel: Side panel
   terminal: Terminal
   menu: Menu
+terminal:
+  output: Terminal output
+  input: Command line
+  notice: PenguinOps does not simulate this yet, so the input stopped here.
 pause:
   title: Paused
   continue: Continue

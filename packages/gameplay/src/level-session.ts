@@ -12,6 +12,8 @@ import type { BaseWorld, Level } from "@penguin-ops/content";
 import {
   COMMANDS,
   type CommandLookup,
+  complete,
+  type Completion,
   createCommandLookup,
   createSession,
   evaluateRule,
@@ -38,6 +40,9 @@ import {
   clearHistory,
   findHost,
   findUserByUid,
+  interruptInput,
+  primaryPrompt,
+  type PromptParts,
 } from "@penguin-ops/engine";
 
 import { LevelSetupError, levelWorldSpec, startHost } from "./level-world";
@@ -132,6 +137,12 @@ const ROOT = { uid: toUid(0), gid: toGid(0), groups: [toGid(0)] };
 const COMMAND_LOOKUP: CommandLookup = createCommandLookup(COMMANDS);
 
 /**
+ * The names of the simulated commands, sorted: the commands the player's `PATH` holds, which
+ * Tab completes in command position (ADR 0065).
+ */
+export const COMMAND_NAMES: readonly string[] = COMMANDS.map((command) => command.name);
+
+/**
  * Starts a level: builds its world with the player's account (`levelWorldSpec`) at the clock's
  * time, and logs the player in on the start host in the start directory (`start.cwd`, which
  * must be a directory; `~` is the player's home). Nothing is evaluated yet: a level is never
@@ -199,6 +210,35 @@ export function runInput(session: LevelSession, input: string, options: InputOpt
     terminalOutput(shellEvents),
   );
   return { kind: "ran", session: evaluated, terminal: ran.events, game };
+}
+
+/** The primary prompt of the player's shell (Debian 13's `PS1`, see `primaryPrompt`). */
+export function levelPrompt(session: LevelSession): PromptParts {
+  return primaryPrompt(session.world, session.shell);
+}
+
+/**
+ * Tab completion of the input line `line` with the cursor at `cursor` in the player's shell,
+ * with the simulated commands as the command names (`complete`, ADR 0065). Throws a RangeError
+ * if the cursor is not inside the line.
+ */
+export function completeInput(session: LevelSession, line: string, cursor: number): Completion {
+  return complete({
+    world: session.world,
+    session: session.shell,
+    commandNames: COMMAND_NAMES,
+    line,
+    cursor,
+  });
+}
+
+/**
+ * Ctrl+C at the prompt (ADR 0095): the input is dropped and the shell's exit status becomes 130
+ * (`interruptInput`). Nothing runs, the clock stands still and no rule is evaluated, because
+ * nothing in the world or the output changed.
+ */
+export function interruptLevelInput(session: LevelSession): LevelSession {
+  return { ...session, shell: interruptInput(session.shell) };
 }
 
 /**

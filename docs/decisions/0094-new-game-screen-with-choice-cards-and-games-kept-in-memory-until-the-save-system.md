@@ -1,6 +1,8 @@
 # 0094. New game screen with choice cards and games kept in memory until the save system
 
-- Status: Accepted
+- Status: Accepted; partly superseded by
+  [0095](0095-terminal-component-on-a-pure-terminal-model-with-debians-prompt-and-readlines-keys.md)
+  (the uses of fibre orange)
 - Date: 2026-11-19
 - Supersedes: [0081](0081-label-tape-and-patch-cables-as-the-visual-world.md) (only the uses of
   fibre orange)

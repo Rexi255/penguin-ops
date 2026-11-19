@@ -171,6 +171,14 @@ export {
 } from "./parser";
 export { joinAbsolute, type PathParts, splitPath } from "./path";
 export { type Access, hasPermission } from "./permissions";
+export {
+  CONTINUATION_PROMPT,
+  INTERRUPT_EXIT_STATUS,
+  interruptInput,
+  primaryPrompt,
+  type PromptParts,
+  promptText,
+} from "./prompt";
 export { localeQuote, shellQuote, shellQuoteAlways } from "./quote";
 export { createRandom, type RandomGenerator } from "./random";
 export {

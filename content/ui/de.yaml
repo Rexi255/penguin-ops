@@ -40,6 +40,10 @@ game:
   side-panel: Seitenleiste
   terminal: Terminal
   menu: Menü
+terminal:
+  output: Terminalausgabe
+  input: Befehlszeile
+  notice: Das simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
 pause:
   title: Pause
   continue: Weiterspielen

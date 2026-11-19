@@ -12,6 +12,8 @@ colors:
   text: "#e8e6e1"
   text-muted: "#a3a8ae"
   player: "#e0701a"
+  prompt-user: "#8ae234"
+  prompt-directory: "#729fcf"
   focus: "#e8e6e1"
   tape-primary: "#f2c230"
   tape-secondary: "#f1ede4"
@@ -105,7 +107,8 @@ ease-out. Nothing else moves, and "reduce motion" sets both to zero.
 - Label tape (yellow and white, black condensed caps) for ticket IDs, panel names, the rank and
   toasts.
 - Cable colours carry the kind of work: tickets, mail, handbook, incidents.
-- Fibre orange belongs to the player: their prompt, cursor and active ticket.
+- Fibre orange belongs to the player: their cursor and active ticket.
+- The terminal's prompt keeps Debian's colours, so it looks like the real system.
 - One grid: every size is a multiple of the terminal's character cell.
 
 ## Colors
@@ -116,9 +119,9 @@ ring), and a test proves it for every pair (ADR 0082).
 
 ### Primary
 
-- **Fibre Orange** (`player`): the player's own colour, the logo's prompt orange. Only the shell
-  prompt, the cursor, the outline of the active ticket, the current step and the frame of the
-  player's choice on a choice card (ADR 0094).
+- **Fibre Orange** (`player`): the player's own colour, the logo's prompt orange. Only the
+  terminal's cursor, the outline of the active ticket, the current step and the frame of the
+  player's choice on a choice card (ADR 0094, ADR 0095).
 
 ### Secondary
 
@@ -139,6 +142,17 @@ on every surface.
 - **Handbook Cable Green** (`cable-handbook`): the handbook and success.
 - **Incident Cable Red** (`cable-incident`): incidents and real errors.
 
+### Terminal
+
+The prompt keeps the colours of Debian's `/etc/skel/.bashrc`, because the terminal shows the real
+system (ADR 0095). They appear nowhere else.
+
+- **Prompt Green** (`prompt-user`): `user@host` in the prompt, bold.
+- **Prompt Blue** (`prompt-directory`): the working directory in the prompt, bold.
+
+Both are the bright Tango colours that GNOME Terminal shows for bold text; Tango's plain blue
+would not meet 4.5:1 on the terminal ground.
+
 ### Neutral
 
 - **Rack Black** (`surface-ground`): the page ground, the top bar and the footer.
@@ -156,8 +170,8 @@ on every surface.
 
 ### Named Rules
 
-**The Quarantine Rule.** Colour lives only on tape and cable runs. Grounds, panels and text stay
-neutral. If a colour appears somewhere else, it needs a meaning.
+**The Quarantine Rule.** Colour lives only on tape and cable runs, and in the terminal's prompt.
+Grounds, panels and text stay neutral. If a colour appears somewhere else, it needs a meaning.
 
 **The Fibre Rule.** Fibre orange marks only what the player is doing right now. It never
 decorates.
@@ -271,8 +285,8 @@ where it marks a kind of work or a state, such as a ticket row's kind or a solve
 
 - **Do** print ticket IDs, the product name, the rank and toast titles on tape.
 - **Do** give each kind of work its cable colour, consistently, on tabs, toasts and states.
-- **Do** keep fibre orange for the player's prompt, cursor, active ticket and current choice
-  only.
+- **Do** keep fibre orange for the player's cursor, active ticket and current choice only.
+- **Do** keep Debian's prompt colours in the terminal, and only there.
 - **Do** build every screen from the tokens in `apps/ui/src/tokens.css`; a missing value becomes
   a new token, not a literal.
 - **Do** let the one motion be the tape printing out, and show it at once when "reduce motion"
@@ -282,7 +296,8 @@ where it marks a kind of work or a state, such as a ticket row's kind or a solve
 ### Don't:
 
 - **Don't** use the hacker cliché: green on black, matrix rain, neon glow, scanlines as the
-  default look (scanlines stay an optional effect, ADR 0020).
+  default look (scanlines stay an optional effect, ADR 0020). The green of Debian's prompt is the
+  real system's, not a costume, and stays on `user@host`.
 - **Don't** fall back to the category standard of charcoal rounded cards with one blue accent.
 - **Don't** put tape on running text, buttons or every row; tape is for names and IDs.
 - **Don't** use gradients, glass, glow or hard offset shadows.
