@@ -54,8 +54,15 @@ test("gives the menu the keyboard focus and quits with Enter", async ({ electron
   await expect(quit).toBeFocused();
   const closed = electronApp.waitForEvent("close");
   // A button acts on Enter as soon as the key goes down; the app is gone before it comes up.
-  await page.keyboard.down("Enter");
-  await closed;
+  // The app can even quit before Playwright gets the answer to the key press, which then fails
+  // with "Target page, context or browser has been closed". That is the expected outcome, so only
+  // that error is ignored; the close event proves that the app quit.
+  const pressed = page.keyboard.down("Enter").catch((error: unknown) => {
+    if (!(error instanceof Error && error.message.includes("has been closed"))) {
+      throw error;
+    }
+  });
+  await Promise.all([closed, pressed]);
 });
 
 test("quits when the player clicks Quit", async ({ electronApp, page }) => {

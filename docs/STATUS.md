@@ -11,7 +11,8 @@ _Last updated: 2026-11-19_
   every check, the UI texts follow the system's language (German for `de*`, else English) and a
   test checks that both catalogs hold exactly the keys and placeholders the UI uses; the desktop
   API has `quit()`; component tests with Testing Library in jsdom; end-to-end tests in both
-  languages with axe-core (ADR 0090).
+  languages with axe-core (ADR 0090). The Enter test no longer fails when the app quits before
+  Playwright gets the answer to the key press.
 - M3.0f-2b Logo files: the five colour SVGs and the favicon SVG recoloured to ADR 0088; all 14
   raster files drawn from the SVGs by `npm run brand:rasters` (ADR 0089, partly superseding
   ADR 0040). The styleguide has a Logo section.
