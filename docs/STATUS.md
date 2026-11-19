@@ -4,6 +4,8 @@ _Last updated: 2026-11-19_
 
 ## Recently completed
 
+- M3.0d-2 Typography: the owner checked the bundled fonts, the icons and the logo on Windows
+  at 100 % scaling (styleguide and start screen) and found no problems; M3.0 is complete.
 - M3.1a Start screen: the logo as the heading, a main menu with Quit (keyboard focus on it,
   Enter quits) and the version; the renderer bundles `content/` at build time and loads it with
   every check, the UI texts follow the system's language (German for `de*`, else English) and a
@@ -27,7 +29,7 @@ _Last updated: 2026-11-19_
 
 ## In progress
 
-- M3.0d-2: the owner checks the bundled fonts on Windows; then the ROADMAP item is ticked.
+- Nothing.
 
 ## Next 3 steps
 
@@ -39,11 +41,6 @@ _Last updated: 2026-11-19_
 
 - The start screen has no screenshot tests yet; the screenshot test setup for all screens,
   languages and colour schemes is ROADMAP M3.15.
-
-- The owner still has to check the bundled fonts on Windows (`npm run styleguide` and
-  `npm run dev`), because Windows renders fonts slightly heavier than the Linux screenshots.
-  The same check covers the icons and the logo in the styleguide at 100 % scaling. M3.0 is
-  complete once M3.0d-2 is ticked.
 - The texts of the five prototype levels and the office world's host name `itdesk` were
   written as test content without the owner's review (the prototype's source is not in the
   repository, so levels 2 to 5 follow the titles in `docs/CURRICULUM.md`); the story workshop
