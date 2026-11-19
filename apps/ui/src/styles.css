@@ -98,6 +98,10 @@ pre {
 
 .menu__entry {
   inline-size: calc(var(--cell-inline) * 30);
+}
+
+/* The standard button: a panel-coloured block that lightens on hover. */
+.button {
   padding: var(--space-2) var(--space-4);
   border: none;
   border-radius: var(--radius-corner);
@@ -111,12 +115,62 @@ pre {
   transition: background-color var(--motion-duration-state) var(--motion-easing-state);
 }
 
-.menu__entry:hover {
+.button:hover {
   background: var(--color-surface-raised);
 }
 
-.menu__entry:active {
+.button:active {
   background: var(--color-surface-selection);
+}
+
+/* The save slot screen: the title, the three slots and Back in one column in the middle of the
+   ground. The slots are 45 columns wide, like the side panel. */
+.save-slot-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  min-block-size: 100%;
+  padding: var(--space-8) var(--space-4);
+}
+
+.save-slot-screen__title {
+  margin: 0;
+  font-size: var(--text-title-size);
+  font-weight: var(--font-weight-heading);
+  line-height: var(--text-title-leading);
+}
+
+.save-slot-screen__slots {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A slot sits flush like a unit in a rack (the Flat Rack Rule): a panel row with its name on the
+   left and its state on the right. */
+.save-slot {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-4);
+  inline-size: calc(var(--cell-inline) * 45);
+  max-inline-size: 100%;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-corner);
+  background: var(--color-surface-panel);
+}
+
+.save-slot__name {
+  font-weight: var(--font-weight-heading);
+}
+
+.save-slot__state {
+  color: var(--color-text-muted);
 }
 
 /* An icon is one cell in size, never a fraction of a cell, so that its 2 px strokes stay on

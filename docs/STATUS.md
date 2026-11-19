@@ -4,6 +4,11 @@ _Last updated: 2026-11-19_
 
 ## Recently completed
 
+- M3.1b Save slot screen: Play in the main menu opens a screen with three empty save slots
+  (not controls until M3.2) and Back; Back and Esc return to the start screen. The app root
+  switches screens with React state and every screen sets the keyboard focus on its first
+  control (ADR 0091). Component tests of both screens and the navigation; end-to-end tests in
+  both languages with axe-core, which now lives in a shared helper.
 - M3.0d-2 Typography: the owner checked the bundled fonts, the icons and the logo on Windows
   at 100 % scaling (styleguide and start screen) and found no problems; M3.0 is complete.
 - M3.1a Start screen: the logo as the heading, a main menu with Quit (keyboard focus on it,
@@ -22,11 +27,6 @@ _Last updated: 2026-11-19_
   (`text`), orange `#e0701a` (`player`) unchanged; mono variants stay pure black and white
   (ADR 0088, partly superseding ADR 0040). M3.0f-2 is split into the choice (f-2a) and the
   regenerated files (f-2b).
-- M3.0e-2 Icons: the 14 own icons as SVG files in `apps/ui/src/icons/` in a fixed form, drawn
-  by the `Icon` component through a strict reader; tests check every file for whole-pixel
-  coordinates, the margin with caps and miter tips, butt caps only on dots, and the component's
-  markup; styleguide section with side panel tabs, cable colours and 3x views on the grid. Four
-  drafts were corrected within the rules (ticket, incident, server, mail; ADR 0087).
 
 ## In progress
 
@@ -34,13 +34,13 @@ _Last updated: 2026-11-19_
 
 ## Next 3 steps
 
-1. ROADMAP M3.1b: save slot screen, Play in the main menu and the navigation between screens.
-2. ROADMAP M3.1c: game screen frame and pause menu.
-3. ROADMAP M3.2: new game flow.
+1. ROADMAP M3.1c: game screen frame and pause menu.
+2. ROADMAP M3.2: new game flow.
+3. ROADMAP M3.3: terminal component.
 
 ## Blockers and open questions
 
-- The start screen has no screenshot tests yet; the screenshot test setup for all screens,
+- The start and save slot screens have no screenshot tests yet; the screenshot test setup for all screens,
   languages and colour schemes is ROADMAP M3.15.
 - The texts of the five prototype levels and the office world's host name `itdesk` were
   written as test content without the owner's review (the prototype's source is not in the

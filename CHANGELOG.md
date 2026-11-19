@@ -9,9 +9,10 @@ project uses [Semantic Versioning](https://semver.org/).
 ### Added
 
 - The game opens on a start screen with the PenguinOps logo, a main menu and the version. The
-  menu has one entry for now, Quit, which closes the game; it has the keyboard focus, so Enter
-  works at once. The start screen is in German when the system's language is German and in
-  English otherwise.
+  menu has Play and Quit; Play has the keyboard focus, so Enter works at once. The game is in
+  German when the system's language is German and in English otherwise.
+- Play opens the save slot screen with three save slots. They are all empty until saving
+  exists; a new game in a slot comes next. Back or Esc returns to the start screen.
 - The game ships its own fonts and works the same on Windows and Linux: Inter for the
   interface, JetBrains Mono for the terminal and Barlow Condensed for label tape. The start
   screen uses them; their licenses are in the installed app's `resources/licenses/fonts` folder.

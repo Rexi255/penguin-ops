@@ -2,5 +2,11 @@ app:
   name: PenguinOps
 start:
   menu: Hauptmenü
+  play: Spielen
   quit: Beenden
   version: Version {version}
+slots:
+  title: Spielstand wählen
+  slot: Spielstand {number}
+  empty: Leer
+  back: Zurück

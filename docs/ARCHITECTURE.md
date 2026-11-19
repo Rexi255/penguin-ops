@@ -435,7 +435,10 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
 
 Current state (ADR 0033): `index.html` (with the strict Content Security Policy) loads
 `src/main.tsx`, which loads the bundled content, picks the language, asks the desktop API for
-the app info and renders `src/app.tsx`, which shows the start screen.
+the app info and renders `src/app.tsx`, which shows the current screen (ADR 0091): it holds the
+screen as React state of the union type `Screen` and picks the screen component with an
+exhaustive `switch`; screens get callbacks such as `onPlay` and `onBack` and do not know each
+other.
 
 Content and texts (ADR 0090): `src/content/bundled-content.ts` imports every `.yaml` file of
 `content/` as text with `import.meta.glob` at build time and loads it with `sortContentFiles`
@@ -448,8 +451,10 @@ hands the texts to every component (`TextsProvider`, `useTexts`), and
 `src/texts/inline-text.tsx` draws a one-paragraph text with its markup.
 
 Screens: `src/screens/start-screen.tsx` shows the logo (`assets/brand/svg/`) as the level 1
-heading, the main menu (only Quit until M3.1b) with the keyboard focus on its first entry, and
-the version as code in the footer; its styles are in `src/styles.css`. The visual world is "Label Tape & Patch Cable" (ADR 0081, `DESIGN.md`); the
+heading, the main menu (Play and Quit) with the keyboard focus on Play, and the version as code
+in the footer. `src/screens/save-slot-screen.tsx` shows the title, the three save slots (empty
+and not controls until M3.2 and M3.7) and Back, which has the focus; Esc also goes back. The
+styles of all screens are in `src/styles.css`. The visual world is "Label Tape & Patch Cable" (ADR 0081, `DESIGN.md`); the
 workplace screen's direction contract is the impeccable surface brief
 `.impeccable/surfaces/src-app-tsx.md`, and `.impeccable/design.json` is impeccable's sidecar to
 `DESIGN.md`.

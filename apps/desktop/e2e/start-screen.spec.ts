@@ -1,27 +1,15 @@
-// End-to-end tests of the start screen (ROADMAP M3.1a): its language follows the system's locale
+// End-to-end tests of the start screen (ROADMAP M3.1a, M3.1b): its language follows the system's locale
 // (ADR 0012), it works with the keyboard, Quit closes the app, the bundled content loads under
 // the strict Content Security Policy and axe-core finds no accessibility violations.
-import { readFileSync } from "node:fs";
-import { createRequire } from "node:module";
-
-import type { AxeResults } from "axe-core";
-
 import { expect, test } from "./app";
-
-// The axe-core rule sets that the game must meet: WCAG 2.2 A and AA, and axe's best practices.
-const AXE_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"];
-
-const AXE_SOURCE = readFileSync(
-  createRequire(import.meta.url).resolve("axe-core/axe.min.js"),
-  "utf8",
-);
+import { axeViolations } from "./axe";
 
 const LANGUAGES = [
-  { locale: "en-US", language: "en", menu: "Main menu", quit: "Quit" },
-  { locale: "de-DE", language: "de", menu: "Hauptmenü", quit: "Beenden" },
+  { locale: "en-US", language: "en", menu: "Main menu", play: "Play", quit: "Quit" },
+  { locale: "de-DE", language: "de", menu: "Hauptmenü", play: "Spielen", quit: "Beenden" },
 ] as const;
 
-for (const { locale, language, menu, quit } of LANGUAGES) {
+for (const { locale, language, menu, play, quit } of LANGUAGES) {
   test.describe(`with the locale ${locale}`, () => {
     test.use({ appLocale: locale });
 
@@ -29,29 +17,24 @@ for (const { locale, language, menu, quit } of LANGUAGES) {
       await expect(page.locator("html")).toHaveAttribute("lang", language);
       await expect(page.getByRole("heading", { level: 1, name: "PenguinOps" })).toBeVisible();
       const nav = page.getByRole("navigation", { name: menu });
-      await expect(nav.getByRole("button")).toHaveText([quit]);
+      await expect(nav.getByRole("button")).toHaveText([play, quit]);
       await expect(page.getByRole("contentinfo")).toHaveText(/^Version \d+\.\d+\.\d+/u);
     });
 
     test("has no accessibility violations that axe-core finds", async ({ page }) => {
       await expect(page.getByRole("navigation", { name: menu })).toBeVisible();
-      // Evaluated through the DevTools protocol, which the page's Content Security Policy does
-      // not restrict; a script tag would be blocked by it.
-      await page.evaluate(AXE_SOURCE);
-      const results = await page.evaluate(async (tags): Promise<AxeResults> => {
-        const { axe } = globalThis as unknown as { axe: typeof import("axe-core") };
-        return axe.run(document, { runOnly: { type: "tag", values: tags } });
-      }, AXE_TAGS);
-      expect(results.violations.map(({ id, nodes }) => `${id}: ${String(nodes.length)}`)).toEqual(
-        [],
-      );
+      expect(await axeViolations(page)).toEqual([]);
     });
   });
 }
 
-test("gives the menu the keyboard focus and quits with Enter", async ({ electronApp, page }) => {
-  const quit = page.getByRole("button", { name: "Quit" });
-  await expect(quit).toBeFocused();
+test("gives Play the keyboard focus and quits with Tab and Enter", async ({
+  electronApp,
+  page,
+}) => {
+  await expect(page.getByRole("button", { name: "Play" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Quit" })).toBeFocused();
   const closed = electronApp.waitForEvent("close");
   // A button acts on Enter as soon as the key goes down; the app is gone before it comes up.
   // The app can even quit before Playwright gets the answer to the key press, which then fails

@@ -2,5 +2,11 @@ app:
   name: PenguinOps
 start:
   menu: Main menu
+  play: Play
   quit: Quit
   version: Version {version}
+slots:
+  title: Choose a save slot
+  slot: Slot {number}
+  empty: Empty
+  back: Back

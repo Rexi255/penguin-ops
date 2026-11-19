@@ -19,10 +19,20 @@ export const UI_TEXT_PLACEHOLDERS = {
   "app.name": [],
   /** The accessible name of the start screen's menu. */
   "start.menu": [],
+  /** The menu entry that opens the save slot screen. */
+  "start.play": [],
   /** The menu entry that closes the game. */
   "start.quit": [],
   /** The version line of the start screen; `version` is a code value. */
   "start.version": ["version"],
+  /** The title of the save slot screen. */
+  "slots.title": [],
+  /** The name of a save slot; `number` counts from 1. */
+  "slots.slot": ["number"],
+  /** The state of a slot without a saved game. */
+  "slots.empty": [],
+  /** The button that returns from the save slot screen to the start screen. */
+  "slots.back": [],
 } as const satisfies Readonly<Record<string, readonly string[]>>;
 
 /** A key of a UI text. */

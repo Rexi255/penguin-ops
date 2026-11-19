@@ -192,8 +192,8 @@ inventing it along the way.
 - [ ] M3.1 App screens: start screen with the logo, save slot screen, game screen, pause menu.
   - [x] M3.1a Start screen: the logo, the main menu with Quit and the version; the content
         bundled into the renderer and the UI texts in the system's language (ADR 0090).
-  - [ ] M3.1b Save slot screen with three empty slots until M3.7, Play in the main menu and the
-        navigation between screens.
+  - [x] M3.1b Save slot screen with three empty slots until M3.7, Play in the main menu and the
+        navigation between screens (ADR 0091).
   - [ ] M3.1c Game screen frame and pause menu (Esc).
 - [ ] M3.2 New game flow: name, derived Linux user name (validation, editing), Story or Sandbox
       mode (ADR 0017, ADR 0019).
