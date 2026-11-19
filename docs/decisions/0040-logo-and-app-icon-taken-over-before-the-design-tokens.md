@@ -1,7 +1,9 @@
 # 0040. Logo and app icon taken over before the design tokens
 
 - Status: Accepted; partly superseded by
-  [0088](0088-logo-colours-aligned-with-the-interface-tokens.md) (the logo colours)
+  [0088](0088-logo-colours-aligned-with-the-interface-tokens.md) (the logo colours) and
+  [0089](0089-raster-brand-files-drawn-from-the-logo-svgs-in-chromium.md) (how the raster icons are
+  made)
 - Date: 2026-11-17
 - Supersedes: [0039](0039-design-language-before-the-game-frame-ui.md) (only the order of the logo
   package)

@@ -224,6 +224,39 @@ test("labels the side panel tabs and draws the cable icons in their cable colour
   }
 });
 
+test("shows the logo files on the surfaces and the signet at its small sizes", async ({ page }) => {
+  await openStyleguide(page);
+  const section = page.locator("[data-section=logo]");
+  const logos = section.getByRole("img", { name: "PenguinOps" });
+  await expect(logos).toHaveCount(10);
+  // Every image is loaded from a brand file (not a data URL) and is not broken.
+  for (const logo of await logos.all()) {
+    await expect(logo).toHaveAttribute("src", /assets\/brand\/svg\/logo-[\w-]+\.svg(?:\?|$)/);
+    expect(await logo.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
+  }
+
+  for (const surface of await section.locator("[data-surface]").all()) {
+    const token = (await surface.getAttribute("data-surface")) ?? "";
+    const colour = definedTokens().get(token) ?? "";
+    expect(colour, token).toMatch(/^#[0-9a-f]{6}$/);
+    await expect(surface.locator(".sg-logo__stage")).toHaveCSS(
+      "background-color",
+      hexToRgb(colour),
+    );
+    // Two cells high: 48 px at the test browser's 16 px root size.
+    expect((await surface.locator("img").boundingBox())?.height, token).toBe(48);
+  }
+  await expect(section.locator('[data-surface="--color-tape-secondary"] img')).toHaveAttribute(
+    "src",
+    /logo-horizontal-light\.svg(?:\?|$)/,
+  );
+
+  for (const size of [16, 24, 32, 48, 64]) {
+    const signet = section.locator(`[data-size="${String(size)}"] img`);
+    expect(await signet.boundingBox()).toMatchObject({ width: size, height: size });
+  }
+});
+
 test("has no accessibility violations", async ({ page }) => {
   await openStyleguide(page);
   const results = await runAxe(page);

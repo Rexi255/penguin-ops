@@ -13,6 +13,9 @@
     "checkJs": true,
     "erasableSyntaxOnly": true,
     "allowImportingTsExtensions": true,
+    // `npm run brand:rasters` drives Playwright's Chromium and passes a function that runs in the
+    // page, so the scripts see the DOM like the other Playwright projects (ADR 0089).
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
     "types": ["node"]
   },
   "include": [

@@ -31,6 +31,7 @@
     "check:licenses": "node scripts/check-licenses.ts",
     "check:docs-duty": "node scripts/check-docs-duty.ts",
     "adr:new": "node scripts/new-adr.ts",
+    "brand:rasters": "node scripts/generate-brand-rasters.ts",
     "check": "npm run format:check && npm run typecheck && npm run lint && npm run test:coverage && npm run check:licenses"
   },
   "engines": {
@@ -39,6 +40,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.65.1",
     "@types/node": "^26.6.6",
     "@vitest/coverage-v8": "^5.1.0",
     "@vitest/eslint-plugin": "^1.6.28",

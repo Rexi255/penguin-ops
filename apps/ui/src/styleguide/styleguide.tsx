@@ -4,6 +4,11 @@
 // `npm run styleguide` serves it.
 import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 
+// The logo files of the brand package (ADR 0088). `no-inline` keeps Vite from turning the small
+// signet into a data URL, so every image is the file itself.
+import logoHorizontalDark from "../../../../assets/brand/svg/logo-horizontal-dark.svg?no-inline";
+import logoHorizontalLight from "../../../../assets/brand/svg/logo-horizontal-light.svg?no-inline";
+import logoSignet from "../../../../assets/brand/svg/logo-signet.svg?no-inline";
 import { Icon, ICON_NAMES, type IconName } from "../icons/icon";
 import { checkContrast, CONTRAST_PAIRS, type ContrastResult } from "../token-contrast";
 import type { CatalogSection, Token, TokenCatalog, TokenKind } from "./token-catalog";
@@ -347,6 +352,53 @@ function IconSection() {
   );
 }
 
+/** The surfaces the logo is shown on: the four dark surfaces and the white tape as a light one. */
+const LOGO_SURFACES: readonly { readonly token: string; readonly logo: string }[] = [
+  { token: "--color-surface-terminal", logo: logoHorizontalDark },
+  { token: "--color-surface-ground", logo: logoHorizontalDark },
+  { token: "--color-surface-panel", logo: logoHorizontalDark },
+  { token: "--color-surface-raised", logo: logoHorizontalDark },
+  { token: "--color-tape-secondary", logo: logoHorizontalLight },
+];
+
+/** Signet sizes in pixels: the small app icon sizes and the size of a large side panel icon. */
+const SIGNET_SIZES = [16, 24, 32, 48, 64] as const;
+
+function LogoSection() {
+  return (
+    <section className="sg-section" aria-labelledby="sg-heading-logo" data-section="logo">
+      <h2 id="sg-heading-logo" className="sg-section__title">
+        Logo
+      </h2>
+      <p className="sg-section__intro">
+        The logo from assets/brand (ADR 0040) in the colours of ADR 0088: black is surface-terminal,
+        white is text and the prompt is player. The values are copied into the files, so the logo
+        does not follow the colour schemes.
+      </p>
+      <ul className="sg-logos">
+        {LOGO_SURFACES.map(({ token, logo }) => (
+          <li key={token} className="sg-logo" data-surface={token}>
+            {/* Only the stage has the surface colour; the label stays on the page ground, so that
+                it keeps its contrast on the light tape. */}
+            <span className="sg-logo__stage" style={{ backgroundColor: tokenVar(token) }}>
+              <img className="sg-logo__horizontal" src={logo} alt="PenguinOps" />
+            </span>
+            <code className="sg-logo__surface">{token}</code>
+          </li>
+        ))}
+      </ul>
+      <ul className="sg-signets" aria-label="Signet sizes">
+        {SIGNET_SIZES.map((size) => (
+          <li key={size} className="sg-signet" data-size={size}>
+            <img src={logoSignet} alt="PenguinOps" width={size} height={size} />
+            <code className="sg-signet__size">{`${String(size)} px`}</code>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function ContrastRow({ result }: { readonly result: ContrastResult }) {
   const { pair, ratio, minimum, passes } = result;
   const sampleStyle: CSSProperties = { backgroundColor: tokenVar(pair.background) };
@@ -438,6 +490,9 @@ export function Styleguide({ catalog, tokens }: StyleguideProps) {
               <a href="#sg-heading-icons">Icons</a>
             </li>
             <li>
+              <a href="#sg-heading-logo">Logo</a>
+            </li>
+            <li>
               <a href="#sg-heading-contrast">Contrast pairs</a>
             </li>
           </ul>
@@ -448,6 +503,7 @@ export function Styleguide({ catalog, tokens }: StyleguideProps) {
           <TokenSectionView key={entry.section.id} entry={entry} />
         ))}
         <IconSection />
+        <LogoSection />
         <ContrastSection tokens={tokens} />
         {catalog.unsorted.length === 0 ? null : (
           <section className="sg-section" aria-labelledby="sg-heading-unsorted">

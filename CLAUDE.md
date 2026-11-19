@@ -147,6 +147,8 @@ Commands are defined only as npm scripts in `package.json`. Existing:
   change code or content (CI runs it for every push and pull request).
 - `npm run adr:new -- "Title"`: create the next decision record from the template; options
   `--supersedes <number>` and `--partly "<number>:<scope>"` (used by `/adr`).
+- `npm run brand:rasters`: draw every raster brand file (app icons, favicon, Apple touch icon,
+  social preview) from the logo SVGs in Playwright's Chromium after a logo change (ADR 0089).
 - `npm run schemas:update`: regenerate `content/schemas/level.schema.json` and
   `content/schemas/world.schema.json` from the zod schemas after a schema change (a test fails
   while one is stale).

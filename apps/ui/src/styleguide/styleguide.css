@@ -440,6 +440,56 @@
   block-size: calc(var(--cell-block) * 3);
 }
 
+/* Logo (ADR 0088). The horizontal logo is two cells high, the size of a start screen heading. */
+.sg-logos,
+.sg-signets {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  list-style: none;
+}
+
+.sg-logos {
+  gap: var(--space-4);
+}
+
+.sg-logo,
+.sg-signet {
+  display: grid;
+  gap: var(--space-1);
+  justify-items: start;
+}
+
+.sg-logo__stage {
+  display: block;
+  padding: var(--space-4);
+  border: var(--border-width-rule) solid var(--color-rule);
+  border-radius: var(--radius-corner);
+}
+
+.sg-logo__horizontal {
+  display: block;
+  block-size: calc(var(--cell-block) * 2);
+}
+
+.sg-logo__surface,
+.sg-signet__size {
+  color: var(--color-text-muted);
+}
+
+.sg-signets {
+  gap: var(--space-4);
+  align-items: end;
+  padding: var(--space-4);
+  border-radius: var(--radius-corner);
+  background: var(--color-surface-panel);
+}
+
+.sg-signet img {
+  display: block;
+}
+
 @media (width < 40rem) {
   .sg-header,
   .sg-main {

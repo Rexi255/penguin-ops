@@ -186,9 +186,9 @@ inventing it along the way.
 - [x] M3.0f-2a Logo colours: the logo compared in three colour variants on the surface tokens
       and on light backgrounds; the owner chose the interface tokens `surface-terminal` and
       `text`, orange stays `player` (ADR 0088).
-- [ ] M3.0f-2b Logo files: regenerate the colour SVGs, the web icons and the app icons in the
+- [x] M3.0f-2b Logo files: regenerate the colour SVGs, the web icons and the app icons in the
       colours of ADR 0088 (brand README and brand test updated); show the logo in the
-      styleguide.
+      styleguide; the raster files are drawn from the SVGs by `npm run brand:rasters` (ADR 0089).
 - [ ] M3.1 App screens: start screen with the logo, save slot screen, game screen, pause menu.
 - [ ] M3.2 New game flow: name, derived Linux user name (validation, editing), Story or Sandbox
       mode (ADR 0017, ADR 0019).

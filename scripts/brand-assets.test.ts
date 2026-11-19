@@ -1,46 +1,49 @@
-// Guards the logo and app icon files (assets/brand/README.md, ADR 0040): every file exists, the
-// SVGs are self-contained and use only the brand colours, and the raster icons have the sizes
-// that electron-builder and GitHub expect.
+// Guards the logo and app icon files (assets/brand/README.md, ADR 0040, ADR 0088, ADR 0089): every
+// file exists, the SVGs are self-contained and use only the brand colours, and the raster files
+// have the sizes that electron-builder and GitHub expect and pixels in the brand colours.
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import { decodeIco } from "./brand/ico.ts";
+import { decodePng, type DecodedPng } from "./brand/png.ts";
+import {
+  BRAND_BLACK,
+  BRAND_ORANGE,
+  BRAND_WHITE,
+  LINUX_ICON_SIZES,
+  linuxIconName,
+  RASTER_FILES,
+  type RasterImage,
+} from "./brand/raster-plan.ts";
+
 const ROOT = join(import.meta.dirname, "..");
 const BRAND = join(ROOT, "assets", "brand");
 const BUILD = join(ROOT, "apps", "desktop", "build");
 
-const BLACK = "#0d1117";
-const WHITE = "#ffffff";
-const ORANGE = "#e0701a";
+/** Mono variants keep pure white and black (ADR 0088). */
+const MONO_WHITE = "#ffffff";
 const MONO_BLACK = "#000000";
 
 /** Colours each SVG may use. Mono variants use exactly one colour. */
 const SVG_COLOURS: Readonly<Record<string, readonly string[]>> = {
-  "svg/logo-signet.svg": [BLACK, WHITE, ORANGE],
-  "svg/logo-signet-mono-dark.svg": [WHITE],
+  "svg/logo-signet.svg": [BRAND_BLACK, BRAND_WHITE, BRAND_ORANGE],
+  "svg/logo-signet-mono-dark.svg": [MONO_WHITE],
   "svg/logo-signet-mono-light.svg": [MONO_BLACK],
-  "svg/logo-wordmark-dark.svg": [WHITE, ORANGE],
-  "svg/logo-wordmark-light.svg": [BLACK, ORANGE],
-  "svg/logo-wordmark-mono-dark.svg": [WHITE],
+  "svg/logo-wordmark-dark.svg": [BRAND_WHITE, BRAND_ORANGE],
+  "svg/logo-wordmark-light.svg": [BRAND_BLACK, BRAND_ORANGE],
+  "svg/logo-wordmark-mono-dark.svg": [MONO_WHITE],
   "svg/logo-wordmark-mono-light.svg": [MONO_BLACK],
-  "svg/logo-horizontal-dark.svg": [BLACK, WHITE, ORANGE],
-  "svg/logo-horizontal-light.svg": [BLACK, WHITE, ORANGE],
-  "svg/logo-horizontal-mono-dark.svg": [WHITE],
+  "svg/logo-horizontal-dark.svg": [BRAND_BLACK, BRAND_WHITE, BRAND_ORANGE],
+  "svg/logo-horizontal-light.svg": [BRAND_BLACK, BRAND_WHITE, BRAND_ORANGE],
+  "svg/logo-horizontal-mono-dark.svg": [MONO_WHITE],
   "svg/logo-horizontal-mono-light.svg": [MONO_BLACK],
-  "web/favicon.svg": [BLACK, WHITE, ORANGE],
+  "web/favicon.svg": [BRAND_BLACK, BRAND_WHITE, BRAND_ORANGE],
 };
 
 /** Elements a logo SVG may contain: shapes only, no text, images, scripts or styles. */
 const ALLOWED_ELEMENTS = new Set(["svg", "title", "path"]);
-
-const LINUX_ICON_SIZES = [16, 24, 32, 48, 64, 128, 256, 512, 1024];
-
-/** File name of a Linux icon in electron-builder's naming scheme, e.g. `16x16.png`. */
-function linuxIconName(size: number): string {
-  const side = String(size);
-  return `${side}x${side}.png`;
-}
 
 function readSvg(relativePath: string): string {
   return readFileSync(join(BRAND, relativePath), "utf8");
@@ -52,34 +55,92 @@ function disallowedElements(svg: string): string[] {
   return [...names].filter((name) => !ALLOWED_ELEMENTS.has(name));
 }
 
-/** Width and height from the IHDR chunk of a PNG file. */
-function pngSize(path: string): { width: number; height: number } {
-  const bytes = readFileSync(path);
-  const signature = bytes.subarray(0, 8).toString("hex");
-  if (signature !== "89504e470d0a1a0a" || bytes.subarray(12, 16).toString("ascii") !== "IHDR") {
-    throw new Error(`${path} is not a PNG file.`);
-  }
-  return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
+function hexToRgb(hex: string): number[] {
+  return [1, 3, 5].map((start) => parseInt(hex.slice(start, start + 2), 16));
 }
 
-/** Image sizes in the directory of an ICO file; a stored 0 means 256 pixels. */
-function icoSizes(path: string): number[] {
-  const bytes = readFileSync(path);
-  if (bytes.readUInt16LE(0) !== 0 || bytes.readUInt16LE(2) !== 1) {
-    throw new Error(`${path} is not an ICO file.`);
+const BRAND_RGB = [BRAND_BLACK, BRAND_WHITE, BRAND_ORANGE].map(hexToRgb);
+
+/** Chromium's anti-aliasing rounds a mixed channel at most one step past the mixed colours. */
+const ROUNDING = 1;
+
+/**
+ * The lowest and highest value of each channel over the brand colours, widened by ROUNDING.
+ * Anti-aliasing mixes neighbouring colours, so every opaque pixel of a correct image lies in this
+ * range; the old logo colours `#0d1117` (red 13) and `#ffffff` lie outside it.
+ */
+const CHANNEL_RANGE = [0, 1, 2].map((channel) => {
+  const values = BRAND_RGB.map((rgb) => rgb[channel] ?? 0);
+  return { min: Math.min(...values) - ROUNDING, max: Math.max(...values) + ROUNDING };
+});
+
+interface PixelReport {
+  readonly corners: readonly string[];
+  /** Opaque pixels with a channel outside CHANNEL_RANGE, as `#rrggbb`. */
+  readonly foreign: readonly string[];
+  /** Brand colours that appear as exact opaque pixels. */
+  readonly brandColours: readonly string[];
+}
+
+function hex(pixels: Uint8Array, offset: number): string {
+  return `#${[0, 1, 2].map((channel) => (pixels[offset + channel] ?? 0).toString(16).padStart(2, "0")).join("")}`;
+}
+
+/** Reads a pixel as `#rrggbb` when opaque, `transparent` when fully transparent. */
+function pixelAt(image: DecodedPng, x: number, y: number): string {
+  const offset = (y * image.width + x) * 4;
+  const alpha = image.pixels[offset + 3] ?? 0;
+  if (alpha === 0) {
+    return "transparent";
   }
-  const count = bytes.readUInt16LE(4);
-  const sizes: number[] = [];
-  for (let index = 0; index < count; index += 1) {
-    const entry = 6 + index * 16;
-    const width = bytes.readUInt8(entry);
-    const height = bytes.readUInt8(entry + 1);
-    if (width !== height) {
-      throw new Error(`${path} contains a non-square image.`);
+  return alpha === 255
+    ? hex(image.pixels, offset)
+    : `${hex(image.pixels, offset)}/${String(alpha)}`;
+}
+
+function inspectPixels(image: DecodedPng): PixelReport {
+  const foreign = new Set<string>();
+  const exact = new Set<string>();
+  const brand = new Set([BRAND_BLACK, BRAND_WHITE, BRAND_ORANGE]);
+  for (let offset = 0; offset < image.pixels.length; offset += 4) {
+    if (image.pixels[offset + 3] !== 255) {
+      continue;
     }
-    sizes.push(width === 0 ? 256 : width);
+    const colour = hex(image.pixels, offset);
+    const inRange = CHANNEL_RANGE.every(({ min, max }, channel) => {
+      const value = image.pixels[offset + channel] ?? 0;
+      return value >= min && value <= max;
+    });
+    if (!inRange) {
+      foreign.add(colour);
+    }
+    if (brand.has(colour)) {
+      exact.add(colour);
+    }
   }
-  return sizes;
+  const last = { x: image.width - 1, y: image.height - 1 };
+  return {
+    corners: [
+      pixelAt(image, 0, 0),
+      pixelAt(image, last.x, 0),
+      pixelAt(image, 0, last.y),
+      pixelAt(image, last.x, last.y),
+    ],
+    foreign: [...foreign].sort(),
+    brandColours: [...exact].sort(),
+  };
+}
+
+/** Checks a decoded image against its entry in the raster plan. */
+function expectRaster(png: DecodedPng, image: RasterImage): void {
+  expect({ width: png.width, height: png.height }).toEqual({
+    width: image.width,
+    height: image.height,
+  });
+  const report = inspectPixels(png);
+  expect(report.corners).toEqual(Array<string>(4).fill(image.background ?? "transparent"));
+  expect(report.foreign).toEqual([]);
+  expect(report.brandColours).toEqual([BRAND_BLACK, BRAND_WHITE, BRAND_ORANGE].sort());
 }
 
 describe("logo SVG files", () => {
@@ -123,42 +184,61 @@ describe("logo SVG files", () => {
   });
 });
 
-describe("app icon files", () => {
-  it("has a 1024 px base icon", () => {
-    expect(pngSize(join(BUILD, "icon.png"))).toEqual({ width: 1024, height: 1024 });
+describe("raster brand files", () => {
+  it("lists exactly the raster files that exist", () => {
+    const existing = [
+      ...readdirSync(BUILD)
+        .filter((name) => /\.(?:png|ico)$/.test(name))
+        .map((name) => `apps/desktop/build/${name}`),
+      ...readdirSync(join(BUILD, "icons")).map((name) => `apps/desktop/build/icons/${name}`),
+      ...readdirSync(join(BRAND, "web"))
+        .filter((name) => /\.(?:png|ico)$/.test(name))
+        .map((name) => `assets/brand/web/${name}`),
+    ].sort();
+    expect(existing).toEqual(RASTER_FILES.map((file) => file.path).sort());
   });
 
-  it("has one Linux icon per size, named as electron-builder expects", () => {
-    const names = readdirSync(join(BUILD, "icons")).sort();
-    expect(names).toEqual(LINUX_ICON_SIZES.map(linuxIconName).sort());
-    for (const size of LINUX_ICON_SIZES) {
-      expect(pngSize(join(BUILD, "icons", linuxIconName(size)))).toEqual({
-        width: size,
-        height: size,
+  it.each(RASTER_FILES.map((file) => [file.path, file] as const))(
+    "%s has the planned sizes and only brand colours",
+    (path, file) => {
+      const bytes = readFileSync(join(ROOT, path));
+      if (file.kind === "png") {
+        expectRaster(decodePng(bytes), file.image);
+        return;
+      }
+      const images = decodeIco(bytes);
+      expect(images.map((image) => image.size)).toEqual(file.images.map((image) => image.width));
+      images.forEach((image, index) => {
+        const planned = file.images[index];
+        expect(planned).toBeDefined();
+        if (planned !== undefined) {
+          expectRaster(decodePng(image.png), planned);
+        }
       });
+    },
+  );
+
+  it("puts the same images into the Windows icon as into the Linux icons", () => {
+    const shared = decodeIco(readFileSync(join(BUILD, "icon.ico"))).filter((image) =>
+      LINUX_ICON_SIZES.some((size) => size === image.size),
+    );
+    expect(shared.length).toBeGreaterThan(0);
+    for (const image of shared) {
+      const linux = readFileSync(join(BUILD, "icons", linuxIconName(image.size)));
+      expect(Buffer.from(image.png).equals(linux), `${String(image.size)} px`).toBe(true);
     }
   });
 
-  it("has a Windows icon with the sizes Windows needs, up to 256 px", () => {
-    const sizes = icoSizes(join(BUILD, "icon.ico"));
-    expect(sizes).toEqual(expect.arrayContaining([16, 24, 32, 48, 64, 128, 256]));
-  });
-
-  it("has the web icons for the repository page", () => {
-    expect(pngSize(join(BRAND, "web", "apple-touch-icon.png"))).toEqual({
-      width: 180,
-      height: 180,
-    });
-    expect(pngSize(join(BRAND, "web", "social-preview.png"))).toEqual({
-      width: 1280,
-      height: 640,
-    });
-    expect(icoSizes(join(BRAND, "web", "favicon.ico"))).toEqual(expect.arrayContaining([16, 32]));
-  });
-
-  it("rejects files that are not PNG or ICO", () => {
-    const svgPath = join(BRAND, "svg", "logo-signet.svg");
-    expect(() => pngSize(svgPath)).toThrow("is not a PNG file.");
-    expect(() => icoSizes(join(BUILD, "icon.png"))).toThrow("is not an ICO file.");
+  it("finds the old logo colours and wrong corners in the pixel check", () => {
+    // Two opaque pixels: the old black and the old white of ADR 0040.
+    const old: DecodedPng = {
+      width: 2,
+      height: 1,
+      pixels: Uint8Array.from([13, 17, 23, 255, 255, 255, 255, 255]),
+    };
+    const report = inspectPixels(old);
+    expect(report.foreign).toEqual(["#0d1117", "#ffffff"]);
+    expect(report.corners).toEqual(["#0d1117", "#ffffff", "#0d1117", "#ffffff"]);
+    expect(report.brandColours).toEqual([]);
   });
 });

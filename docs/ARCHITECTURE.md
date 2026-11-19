@@ -47,7 +47,7 @@ penguin-ops/
     levels/<level-id>/level.yaml, de.yaml, en.yaml
     ui/de.yaml, ui/en.yaml
     worlds/      shared base worlds (e.g. the company network, the playground)
-  assets/brand/  logo SVGs and web icons, with usage rules (ADR 0040)
+  assets/brand/  logo SVGs and web icons, with usage rules (ADR 0040, ADR 0088, ADR 0089)
   docs/          documentation (see CLAUDE.md, "Where to find what")
   types/         shared type declarations (zod-url.d.ts: a type-only URL for the pure packages)
   .claude/       Claude Code skills, rules and hooks
@@ -58,7 +58,8 @@ penguin-ops/
   tests/content/ the content test: reads content/ and plays every reference solution (ADR 0078)
   scripts/       repository tooling in TypeScript, run directly by Node.js
                  (license-check/: the dependency license checker; docs-duty/: the
-                 documentation duty check; adr/: new decision records)
+                 documentation duty check; adr/: new decision records; brand/: the plan,
+                 PNG reader and ICO writer of the raster brand files)
   package.json         npm workspaces, root scripts, pinned Node.js version (engines)
   tsconfig.base.json   shared strict compiler options
   tsconfig.json        solution file: references all workspaces, the content tests and the tooling for `tsc --build`
@@ -466,7 +467,8 @@ reads path data and works out stroke bounds with caps and miter joins, so that
 Styleguide (ADR 0083): `styleguide.html` loads `src/styleguide/main.tsx`, a page for developers
 (English, not translated) that reads `tokens.css` with `?raw`, sorts every token into a section
 by name prefix (`src/styleguide/token-catalog.ts`) and draws a sample of each with the real
-stylesheets, plus the icons and the contrast pairs with their ratios. Its layout is
+stylesheets, plus the icons, the logo from `assets/brand/svg/` and the contrast pairs with their
+ratios. Its layout is
 `src/styleguide/styleguide.css`, which follows the token rules. The app never imports from
 `src/styleguide/` and its build reads only `index.html`; both are tested.
 
@@ -520,7 +522,8 @@ apps/styleguide/
   playwright.config.ts  starts that server and runs the tests in Playwright's Chromium
   e2e/styleguide.spec.ts  every token shown with its value and colour, every font face loaded,
                         the type scale on quarter cells, every icon at one cell in its text or
-                        cable colour and hidden from screen readers, keyboard focus, motion,
+                        cable colour and hidden from screen readers, the logo files on the
+                        surfaces and the signet sizes, keyboard focus, motion,
                         no console errors, axe-core with no violations at 1280 and 360 px
 ```
 
@@ -561,7 +564,10 @@ end-to-end tests in `apps/desktop/e2e/` (`*.spec.ts`).
   installer), `apps/desktop/build/icons/NxN.png` for the AppImage. On Linux the main window
   also sets the 256 px PNG as its icon; electron-vite copies it into `out/` through an
   `?asset` import. The source files and usage rules are in `assets/brand/README.md`;
-  `scripts/brand-assets.test.ts` guards them.
+  `scripts/brand-assets.test.ts` guards them. Every raster brand file (app icons, favicon, Apple
+  touch icon, social preview) is drawn from the colour SVGs by `npm run brand:rasters`
+  (`scripts/generate-brand-rasters.ts`) in Playwright's Chromium, following
+  `scripts/brand/raster-plan.ts`; the script runs by hand after a logo change (ADR 0089).
 
 ## Claude Code setup
 
