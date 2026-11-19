@@ -174,9 +174,11 @@ inventing it along the way.
 - [ ] M3.0d-2 Typography: bundle the chosen fonts for offline use (weights, format, source,
       licenses), type scale tokens, the font tokens switched to the bundled faces; shown in the
       styleguide; checked by the owner on Windows (ADR 0085).
-- [ ] M3.0e Icon style: rules (grid, stroke, corners), choice between an icon set with an
-      allowed license and own SVG icons, first icons for the side panel tabs; shown in the
-      styleguide.
+- [x] M3.0e-1 Icon style: rules (grid, stroke, corners) and the choice between three icon sets
+      with allowed licenses (Lucide, Phosphor, Carbon) and own SVG icons, compared in a specimen
+      page and a side panel mock-up; the owner chose own icons (ADR 0086).
+- [ ] M3.0e-2 Icons: the own icons as SVG files with tests of the rules (view box, stroke, caps,
+      joins, `currentColor`), the first icons for the side panel tabs; shown in the styleguide.
 - [x] M3.0f-1 Logo take-over (done early, ADR 0040): the owner's brand package in
       `assets/brand/` (own penguin, not Tux, ADR 0021), clean SVGs with variants for dark and
       light backgrounds, logo in the README, test of the brand files.

@@ -4,6 +4,11 @@ _Last updated: 2026-11-19_
 
 ## Recently completed
 
+- M3.0e-1 Icon style: three icon sets with allowed licenses (Lucide, Phosphor, Carbon) and own
+  drafts compared in a specimen page, a side panel mock-up and an enlarged 1x capture; the owner
+  chose own icons. Rules for grid, size (one cell), stroke, corners, colour and labels in
+  `DESIGN.md`; the 14 drafts are recorded in ADR 0086. M3.0e is split into the choice (e-1) and
+  the icon files (e-2).
 - M3.0d-2 Typography (built; the owner's Windows check is open): Inter 4.1 (variable),
   JetBrains Mono 2.304 (400, 700) and Barlow Condensed 1.422 (700) bundled as unchanged WOFF2
   files from the upstream releases in `apps/ui/src/fonts/` with their OFL texts, which
@@ -24,10 +29,6 @@ _Last updated: 2026-11-19_
   incident red lightened so that every text pair meets WCAG AA; contrast and stylesheet test
   (`design-tokens.test.ts`); `DESIGN.md` and its sidecar regenerated with `/impeccable document`
   (ADR 0082). impeccable works in cloud sessions.
-- M3.0b-1 Visual tone: `PRODUCT.md` from the owner's interview and a seed `DESIGN.md` in the
-  repository root; the owner chose the visual world "Label Tape & Patch Cable" on impeccable's
-  decision page (ADR 0081); direction contract in `apps/ui/.impeccable/surfaces/`. impeccable
-  finds the root files from `apps/ui`.
 
 ## In progress
 
@@ -35,7 +36,7 @@ _Last updated: 2026-11-19_
 
 ## Next 3 steps
 
-1. ROADMAP M3.0e: icon style.
+1. ROADMAP M3.0e-2: icon files, tests of the icon rules, styleguide section.
 2. ROADMAP M3.0f-2: logo and tokens.
 3. ROADMAP M3.1: app screens.
 

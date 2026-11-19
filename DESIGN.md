@@ -72,8 +72,8 @@ spacing:
 The tokens live in `apps/ui/src/tokens.css` as CSS custom properties (ADR 0082); the frontmatter
 above mirrors their default values. Product truth lives in `PRODUCT.md`; the workplace screen's
 direction contract lives in `apps/ui/.impeccable/surfaces/src-app-tsx.md`. The typefaces
-(ADR 0084) are bundled with the app and the type scale is in the tokens (ADR 0085); icons follow
-in ROADMAP M3.0e.
+(ADR 0084) are bundled with the app and the type scale is in the tokens (ADR 0085). The icons are
+the game's own, drawn under the icon rules below (ADR 0086).
 
 ## Overview
 
@@ -235,6 +235,28 @@ Nearly square corners (2 px) on panels, rows, buttons and keys. Lines come in th
 Tape strips have slightly slanted cut ends, like a real strip from a label maker. Progress (XP,
 ticket steps) is drawn as tape segments whose number and length are the exact count, never as
 rings or smooth bars.
+
+## Icons
+
+Own outline icons, drawn for this office (ADR 0086); no third-party icon set. Where the office
+has its own object, the icon draws it: a ticket is a strip of label tape with slanted cut ends,
+the handbook is a ring binder with a spine label, the terminal shows a prompt.
+
+- **Grid:** one SVG per icon, `viewBox="0 0 24 24"`, drawn on whole-pixel coordinates; strokes
+  and miter tips stay at least 1 unit inside the edge.
+- **Size:** one cell (`--cell-block`, 24 px at the default size), never a fraction of a cell,
+  because smaller icons blur at 100 % display scaling.
+- **Stroke:** outlines only, 2 units, `currentColor`, no fill. Dots are 2 × 2 butt-capped
+  strokes.
+- **Corners:** square caps and miter joins; arcs only where the object is round.
+
+### Named Rules
+
+**The Labelled Icon Rule.** An icon never stands alone: it sits next to a visible text label, or
+its control has an accessible name. The icon itself is hidden from screen readers.
+
+**The Icon Colour Rule.** An icon has the colour of its text. It takes its cable colour only
+where it marks a kind of work or a state, such as a ticket row's kind or a solved ticket.
 
 ## Do's and Don'ts
 

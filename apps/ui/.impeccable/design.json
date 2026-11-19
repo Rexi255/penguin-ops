@@ -332,6 +332,16 @@
         "name": "The Flat Rack Rule",
         "body": "Panels sit flush like units in a rack. No card shadows, no glow, no nested cards.",
         "section": "elevation"
+      },
+      {
+        "name": "The Labelled Icon Rule",
+        "body": "An icon never stands alone: it sits next to a visible text label, or its control has an accessible name. The icon itself is hidden from screen readers.",
+        "section": "icons"
+      },
+      {
+        "name": "The Icon Colour Rule",
+        "body": "An icon has the colour of its text. It takes its cable colour only where it marks a kind of work or a state, such as a ticket row's kind or a solved ticket.",
+        "section": "icons"
       }
     ],
     "dos": [

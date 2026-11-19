@@ -57,6 +57,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 ## Unresolved decisions
 
-- Icons: ROADMAP M3.0e. Logo colour alignment: ROADMAP M3.0f-2.
+- Logo colour alignment: ROADMAP M3.0f-2. (Icons: own icons under the rules of `DESIGN.md`,
+  ADR 0086; the files follow in ROADMAP M3.0e-2.)
 - How the cable colours map onto the colour schemes of ROADMAP M3.9 (retro CRT, Solarized, high
   contrast).
