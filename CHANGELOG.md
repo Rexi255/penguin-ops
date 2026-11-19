@@ -14,7 +14,9 @@ project uses [Semantic Versioning](https://semver.org/).
 - Play opens the save slot screen with three save slots. They are all empty until saving
   exists; choosing one starts a new game. Back or Esc returns to the start screen.
 - The game screen shows the workplace: a top bar, the side panel, the terminal and a footer
-  with key hints. The side panel and the top bar are still empty; tickets and mail come next.
+  with key hints. The side panel has the tabs Tickets, Mail and Handbook: click one, or press
+  Shift+Tab in the terminal and switch with the arrow keys. Mail and the handbook are still
+  empty, the tickets come next. The footer shows "Tab Complete" and "Esc Menu".
 - The terminal works like bash on Debian: type commands after the prompt `you@itdesk:~$` and
   see their output. The first ticket's files are there. Up and Down bring back earlier
   commands, Tab completes commands and file names (twice lists the choices), Ctrl+C cancels

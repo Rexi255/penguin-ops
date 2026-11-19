@@ -73,7 +73,7 @@ const PASTE_LETTER = "v";
 
 /**
  * The action of a key press, or `undefined` if the browser should handle it: typed characters,
- * the paste keys, Shift+Tab (which leaves the terminal for the footer), Esc and the F-keys (the
+ * the paste keys, Shift+Tab (which leaves the terminal for the side panel), Esc and the F-keys (the
  * game's functions, ADR 0020) and every combination with Alt or Meta. On Windows, AltGr arrives
  * as Ctrl+Alt, so a character typed with AltGr (`|`, `~`, `@` on a German keyboard) is never
  * taken for a Ctrl key.

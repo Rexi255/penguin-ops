@@ -2,6 +2,7 @@ app:
   name: PenguinOps
 keys:
   escape: Esc
+  tab: Tab
 start:
   menu: Hauptmenü
   play: Spielen
@@ -39,6 +40,13 @@ game:
   title: Arbeitsplatz
   side-panel: Seitenleiste
   terminal: Terminal
+  panels: Bereiche
+  tickets: Tickets
+  mail: Mails
+  handbook: Handbuch
+  mail-empty: Noch keine Mails.
+  handbook-empty: Hier erscheinen die Befehle, die du lernst.
+  complete: Vervollständigen
   menu: Menü
 terminal:
   output: Terminalausgabe

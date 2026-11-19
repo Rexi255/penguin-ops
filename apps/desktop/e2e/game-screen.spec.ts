@@ -1,7 +1,8 @@
-// End-to-end tests of the game screen and the pause menu (ROADMAP M3.1c, ADR 0092, ADR 0095): a
-// new game starts with the keyboard alone and the terminal has the focus, Esc opens and closes the
-// pause menu, Main menu leads back to the start screen, and axe-core finds no accessibility
-// violations, with the pause menu closed and open.
+// End-to-end tests of the game screen and the pause menu (ROADMAP M3.1c, M3.4, ADR 0092, ADR 0095,
+// ADR 0096): a new game starts with the keyboard alone and the terminal has the focus, the side
+// panel's tabs switch with the keyboard and the mouse, Esc opens and closes the pause menu, Main
+// menu leads back to the start screen, and axe-core finds no accessibility violations, with the
+// pause menu closed and open and with another tab chosen.
 import type { Page } from "@playwright/test";
 
 import { expect, test } from "./app";
@@ -15,6 +16,10 @@ const LANGUAGES = [
     terminal: "Terminal",
     input: "Command line",
     menuHint: "Esc Menu",
+    completeHint: "Tab Complete",
+    tickets: "Tickets",
+    mail: "Mail",
+    mailEmpty: "No mail yet.",
     pause: "Paused",
     continue: "Continue",
     mainMenu: "Main menu",
@@ -26,6 +31,10 @@ const LANGUAGES = [
     terminal: "Terminal",
     input: "Befehlszeile",
     menuHint: "Esc Menü",
+    completeHint: "Tab Vervollständigen",
+    tickets: "Tickets",
+    mail: "Mails",
+    mailEmpty: "Noch keine Mails.",
     pause: "Pause",
     continue: "Weiterspielen",
     mainMenu: "Hauptmenü",
@@ -59,6 +68,26 @@ for (const language of LANGUAGES) {
       await expect(page.getByRole("main", { name: language.terminal })).toBeVisible();
       await expect(page.getByRole("textbox", { name: language.input })).toBeFocused();
       await expect(page.getByRole("button", { name: language.menuHint })).toBeVisible();
+      await expect(page.getByRole("contentinfo")).toContainText(language.completeHint);
+      await expect(page.getByRole("tab", { name: language.tickets })).toHaveAttribute(
+        "aria-selected",
+        "true",
+      );
+    });
+
+    test("switches the side panel's tabs with the keyboard and goes back", async ({ page }) => {
+      await startGame(page);
+      await page.keyboard.press("Shift+Tab");
+      await expect(page.getByRole("tab", { name: language.tickets })).toBeFocused();
+      await page.keyboard.press("ArrowRight");
+      const mail = page.getByRole("tab", { name: language.mail });
+      await expect(mail).toBeFocused();
+      await expect(mail).toHaveAttribute("aria-selected", "true");
+      await expect(page.getByRole("tabpanel")).toHaveText(language.mailEmpty);
+      expect(await axeViolations(page)).toEqual([]);
+      await page.keyboard.press("Tab");
+      await page.keyboard.press("Tab");
+      await expect(page.getByRole("textbox", { name: language.input })).toBeFocused();
     });
 
     test("opens and closes the pause menu with Esc", async ({ page }) => {
@@ -98,6 +127,17 @@ test("returns to the start screen from the pause menu", async ({ page }) => {
   await page.getByRole("button", { name: "Main menu" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "PenguinOps" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Play" })).toBeFocused();
+});
+
+test("switches the side panel's tabs with the mouse", async ({ page }) => {
+  await startGame(page);
+  await page.getByRole("tab", { name: "Handbook" }).click();
+  await expect(page.getByRole("tab", { name: "Handbook" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await expect(page.getByRole("tabpanel")).toHaveText("The commands you learn will appear here.");
+  expect(await axeViolations(page)).toEqual([]);
 });
 
 test("opens the pause menu when the player clicks the key hint", async ({ page }) => {

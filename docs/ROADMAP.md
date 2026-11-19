@@ -204,8 +204,9 @@ inventing it along the way.
         Sandbox, Start and Back; the slot keeps the game in memory until M3.7 (ADR 0094).
 - [x] M3.3 Terminal component: input, coloured output, history, tab completion, Ctrl+C/L/A/E,
       scrollback.
-- [ ] M3.4 Workplace layout: top bar, side panel tabs, footer key hints (ADR 0020), built
-      only from the design tokens and icons of M3.0b–e.
+- [x] M3.4 Workplace layout: top bar, side panel tabs, footer key hints (ADR 0020), built
+      only from the design tokens and icons of M3.0b–e. (ADR 0096: the top bar's content comes
+      with M3.5 and M3.12.)
 - [ ] M3.5 Ticket panel: chapter inbox, ticket text, hints (F1), explanation after solving,
       extra goals.
 - [ ] M3.6 Game commands `help` and `hint`; engine notices rendered in the player's language.

@@ -482,7 +482,10 @@ reserved names) and the mode as two radio buttons drawn as cards; each problem c
 catalog text in a live region that describes its field, and Start creates the game only without
 problems (ADR 0093, ADR 0094). `src/screens/game-screen.tsx` is the frame of the
 workplace layout as a CSS grid: top bar, side panel, terminal area and the key-hint footer,
-whose "Esc Menu" hint is a button. It starts the level at `GAME_START_TIME` and shows it in the
+whose "Esc Menu" hint is a button and whose "Tab Complete" hint is text, because the terminal
+answers Tab itself. The side panel is `src/screens/side-panel.tsx`: the tabs Tickets, Mail and
+Handbook after the WAI-ARIA tabs pattern, each with its panel and the cable colour of its kind
+of work (ADR 0096). It starts the level at `GAME_START_TIME` and shows it in the
 terminal, whose input line has the focus. Esc opens `src/screens/pause-menu.tsx`, a
 modal dialog (Continue, Main menu) over the game, whose frame is `inert` while it is open; the
 pause state lives in the game screen (ADR 0092). The styles of all screens are in

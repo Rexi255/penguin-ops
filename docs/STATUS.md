@@ -4,6 +4,12 @@ _Last updated: 2026-11-20_
 
 ## Recently completed
 
+- M3.4 Workplace layout: the side panel has the tabs Tickets, Mail and Handbook after the
+  WAI-ARIA tabs pattern (arrow keys, Home and End, automatic activation, only the chosen tab in
+  the tab order), each with its icon and the cable colour of its kind of work on the chosen tab;
+  mail and handbook show their empty states, the tickets panel waits for M3.5. The footer shows
+  "Tab Complete" as text and "Esc Menu" as a button; the top bar stays empty until M3.5 and
+  M3.12 (ADR 0096). Shift+Tab leaves the terminal for the tabs.
 - M3.3 Terminal component: the game screen plays the first level in a terminal that behaves
   like bash 5.2 on Debian 13: Debian's green and blue colour prompt (engine `prompt.ts`),
   output with partial lines, continuation lines behind `> `, game notices with one general text
@@ -27,8 +33,6 @@ _Last updated: 2026-11-20_
   bar, side panel, terminal area, footer with an "Esc Menu" key hint button). Esc opens a modal
   pause menu (Continue, Main menu) over the inert game; Esc or Continue closes it and returns the
   focus (ADR 0092, partly superseding ADR 0091).
-- M3.0d-2 Typography: the owner checked the bundled fonts, the icons and the logo on Windows
-  at 100 % scaling (styleguide and start screen) and found no problems; M3.0 is complete.
 
 ## In progress
 
@@ -36,9 +40,10 @@ _Last updated: 2026-11-20_
 
 ## Next 3 steps
 
-1. ROADMAP M3.4: workplace layout (top bar, side panel tabs, footer key hints).
-2. ROADMAP M3.5: ticket panel.
-3. ROADMAP M3.6: game commands `help` and `hint`; engine notices in the player's language.
+1. ROADMAP M3.5: ticket panel (chapter inbox, ticket text, hints with F1, explanation, extra
+   goals), with the top bar's ticket and step.
+2. ROADMAP M3.6: game commands `help` and `hint`; engine notices in the player's language.
+3. ROADMAP M3.7: save system.
 
 ## Blockers and open questions
 

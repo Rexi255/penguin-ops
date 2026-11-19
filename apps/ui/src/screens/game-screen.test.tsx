@@ -25,6 +25,8 @@ const EXPECTED: Readonly<
       terminal: string;
       input: string;
       menuHint: string;
+      completeHint: string;
+      tickets: string;
       pause: string;
     }
   >
@@ -35,6 +37,8 @@ const EXPECTED: Readonly<
     terminal: "Terminal",
     input: "Command line",
     menuHint: "Esc Menu",
+    completeHint: "Tab Complete",
+    tickets: "Tickets",
     pause: "Paused",
   },
   de: {
@@ -43,6 +47,8 @@ const EXPECTED: Readonly<
     terminal: "Terminal",
     input: "Befehlszeile",
     menuHint: "Esc Menü",
+    completeHint: "Tab Vervollständigen",
+    tickets: "Tickets",
     pause: "Pause",
   },
 };
@@ -105,6 +111,58 @@ describe("GameScreen", () => {
     const hint = screen.getByRole("button", { name: EXPECTED[language].menuHint });
     expect(hint.getAttribute("aria-keyshortcuts")).toBe("Escape");
     expect(hint.querySelector("kbd")?.textContent).toBe("Esc");
+  });
+
+  test.each(MANDATORY_LANGUAGES)(
+    "shows the key hints of the keys that work in the footer in %s",
+    (language) => {
+      renderGameScreen(language);
+      const { completeHint, menuHint: menu } = EXPECTED[language];
+      const footer = screen.getByRole("contentinfo");
+      const hints = [...footer.querySelectorAll(".key-hint")];
+      expect(hints.map((hint) => hint.textContent)).toEqual([completeHint, menu]);
+      // The terminal answers Tab itself, so its hint is text, not a button.
+      expect(hints[0]?.tagName).toBe("SPAN");
+      expect(hints[0]?.querySelector("kbd")?.textContent).toBe("Tab");
+      expect(screen.queryByRole("button", { name: completeHint })).toBeNull();
+    },
+  );
+
+  test.each(MANDATORY_LANGUAGES)("shows the side panel's tabs in %s", (language) => {
+    renderGameScreen(language);
+    const { sidePanel, tickets } = EXPECTED[language];
+    const panel = screen.getByRole("complementary", { name: sidePanel });
+    const tab = screen.getByRole("tab", { name: tickets, selected: true });
+    expect(panel.contains(tab)).toBe(true);
+    expect(screen.getAllByRole("tab")).toHaveLength(3);
+  });
+
+  test("leaves the terminal for the side panel with Shift+Tab", async () => {
+    renderGameScreen();
+    await userEvent.tab({ shift: true });
+    expect(screen.getByRole("tab", { name: "Tickets" })).toBe(document.activeElement);
+  });
+
+  test("keeps the terminal's focus and input when the player switches tabs", async () => {
+    renderGameScreen();
+    await userEvent.keyboard("pw");
+    await userEvent.tab({ shift: true });
+    await userEvent.keyboard("{ArrowRight}");
+    expect(screen.getByRole("tab", { name: "Mail", selected: true })).toBe(document.activeElement);
+    await userEvent.tab();
+    await userEvent.tab();
+    expect(commandLine()).toBe(document.activeElement);
+    await userEvent.keyboard("d{Enter}");
+    expect(screen.getByRole("log").textContent).toContain("max@itdesk:~$ pwd");
+  });
+
+  test("opens the pause menu with Esc from a tab and gives the focus back to it", async () => {
+    renderGameScreen();
+    await userEvent.tab({ shift: true });
+    await userEvent.keyboard("{Escape}");
+    expect(pauseMenu()).not.toBeNull();
+    await userEvent.keyboard("{Escape}");
+    expect(screen.getByRole("tab", { name: "Tickets" })).toBe(document.activeElement);
   });
 
   test("plays the level in the terminal as the player", async () => {

@@ -1,8 +1,10 @@
 // The game screen (ROADMAP M3.1c): the frame of the workplace layout of ADR 0020 with a top bar,
 // the side panel, the terminal and the key-hint footer, and the pause menu that Esc opens
-// (ADR 0092). The terminal (M3.3, ADR 0095) plays the level it gets and has the focus. The other
-// areas stay empty until their work packages fill them: the panels (M3.5, M3.11) and the top
-// bar's chapter and progress (M3.12).
+// (ADR 0092). The terminal (M3.3, ADR 0095) plays the level it gets and has the focus. The side
+// panel holds the tabs of the tickets, the mail and the handbook (M3.4, ADR 0096), whose panels
+// M3.5 and M3.11 fill; the footer shows the key hints of the keys that work. The top bar stays
+// empty until it can name where the player is: the ticket and step (M3.5) and the rank and
+// progress (M3.12).
 
 import { createGameClock } from "@penguin-ops/engine";
 import { GAME_START_TIME, type LevelSetup, startLevel } from "@penguin-ops/gameplay";
@@ -13,6 +15,7 @@ import { createTerminal, type TerminalState } from "../terminal/terminal-model";
 import { InlineText } from "../texts/inline-text";
 import { useTexts } from "../texts/texts-context";
 import { PauseMenu } from "./pause-menu";
+import { SidePanel } from "./side-panel";
 
 export interface GameScreenProps {
   /**
@@ -93,11 +96,20 @@ export function GameScreen({ level, onMainMenu }: GameScreenProps) {
             <InlineText text={texts.rich("game.title")} textKey="game.title" />
           </h1>
         </header>
-        <aside className="game-screen__side-panel" aria-label={texts.plain("game.side-panel")} />
+        <aside className="game-screen__side-panel" aria-label={texts.plain("game.side-panel")}>
+          <SidePanel />
+        </aside>
         <main className="game-screen__terminal" aria-label={texts.plain("game.terminal")}>
           <Terminal ref={terminalInput} initialState={terminal} />
         </main>
         <footer className="game-screen__footer">
+          {/* The terminal answers Tab itself, so its hint is no button (ADR 0096). */}
+          <span className="key-hint key-hint--terminal">
+            <kbd className="key-hint__key">
+              <InlineText text={texts.rich("keys.tab")} textKey="keys.tab" />
+            </kbd>{" "}
+            <InlineText text={texts.rich("game.complete")} textKey="game.complete" />
+          </span>
           <button
             ref={menuHint}
             type="button"

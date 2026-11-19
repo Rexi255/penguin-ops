@@ -414,7 +414,90 @@ pre {
 
 .game-screen__side-panel {
   grid-area: side-panel;
+  min-block-size: 0;
   background: var(--color-surface-panel);
+}
+
+/* The side panel (ADR 0096): a row of tabs on a hairline rule, then the chosen tab's panel, which
+   scrolls on its own. */
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  block-size: 100%;
+}
+
+/* The tabs keep a gap to the panel's edge, so the focus ring of the first tab stays on screen. */
+.side-panel__tabs {
+  display: flex;
+  padding: 0 var(--space-2);
+  border-block-end: var(--border-width-rule) solid var(--color-rule);
+}
+
+/* A tab: icon and label in the colour of the text, on a cable run that stays transparent until
+   the tab is chosen. The tab is one and a half cells high, cable run included, and its cable run
+   covers the rule below the row. */
+.side-panel__tab {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-block-end: calc(-1 * var(--border-width-rule));
+  padding: var(--space-1) var(--space-2) calc(var(--space-1) - var(--border-width-cable));
+  border: none;
+  border-block-end: var(--border-width-cable) solid transparent;
+  border-start-start-radius: var(--radius-corner);
+  border-start-end-radius: var(--radius-corner);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: var(--font-ui);
+  font-size: var(--text-body-size);
+  font-weight: var(--font-weight-control);
+  line-height: var(--text-body-leading);
+  cursor: pointer;
+  transition:
+    color var(--motion-duration-state) var(--motion-easing-state),
+    background-color var(--motion-duration-state) var(--motion-easing-state);
+}
+
+.side-panel__tab:hover {
+  color: var(--color-text);
+}
+
+/* The chosen tab stands out three ways, so colour is never the only sign: the raised surface, the
+   full text colour and its kind of work's cable run. */
+.side-panel__tab[aria-selected="true"] {
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+.side-panel__tab--ticket[aria-selected="true"] {
+  border-block-end-color: var(--color-cable-ticket);
+}
+
+.side-panel__tab--mail[aria-selected="true"] {
+  border-block-end-color: var(--color-cable-mail);
+}
+
+.side-panel__tab--handbook[aria-selected="true"] {
+  border-block-end-color: var(--color-cable-handbook);
+}
+
+.side-panel__panel {
+  flex: 1;
+  min-block-size: 0;
+  padding: var(--space-4);
+  overflow-y: auto;
+}
+
+/* The panel fills the side panel up to the screen's edge, so its focus ring lies inside it. */
+.side-panel__panel:focus-visible {
+  outline-offset: calc(-1 * (var(--border-width-focus) + var(--focus-offset)));
+}
+
+.side-panel__empty {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-leading);
 }
 
 .game-screen__terminal {
@@ -551,6 +634,13 @@ pre {
 
 .key-hint:hover {
   color: var(--color-text);
+}
+
+/* The hint of a key the terminal answers itself, such as Tab: plain text, not a button. */
+.key-hint--terminal,
+.key-hint--terminal:hover {
+  color: var(--color-text-muted);
+  cursor: default;
 }
 
 .key-hint__key {

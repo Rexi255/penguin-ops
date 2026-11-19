@@ -19,6 +19,8 @@ export const UI_TEXT_PLACEHOLDERS = {
   "app.name": [],
   /** The label of the Esc key in key hints. */
   "keys.escape": [],
+  /** The label of the Tab key in key hints. */
+  "keys.tab": [],
   /** The accessible name of the start screen's menu. */
   "start.menu": [],
   /** The menu entry that opens the save slot screen. */
@@ -83,6 +85,20 @@ export const UI_TEXT_PLACEHOLDERS = {
   "game.side-panel": [],
   /** The accessible name of the terminal area. */
   "game.terminal": [],
+  /** The accessible name of the side panel's row of tabs. */
+  "game.panels": [],
+  /** The side panel tab of the tickets. */
+  "game.tickets": [],
+  /** The side panel tab of the mail. */
+  "game.mail": [],
+  /** The side panel tab of the handbook. */
+  "game.handbook": [],
+  /** The mail panel while no mail has arrived. */
+  "game.mail-empty": [],
+  /** The handbook panel while the player has learned no command. */
+  "game.handbook-empty": [],
+  /** The key hint of the terminal's Tab completion, after the key's label. */
+  "game.complete": [],
   /** The key hint that opens the pause menu, after the key's label. */
   "game.menu": [],
   /** The accessible name of the terminal's screen, a log of its lines. */
