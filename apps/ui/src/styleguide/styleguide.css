@@ -199,7 +199,7 @@
   color: var(--color-player);
 }
 
-/* Label tape: yellow strip, black caps. M3.0d adds the condensed tape face. */
+/* Label tape: yellow strip, black caps. M3.0d-2 adds the condensed tape face (ADR 0084). */
 .sg-tape {
   display: inline-block;
   padding: 0 var(--space-1);

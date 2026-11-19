@@ -168,9 +168,12 @@ inventing it along the way.
       AA contrast; `DESIGN.md` regenerated from the tokens with `/impeccable document`.
 - [x] M3.0c Styleguide page: a page outside the packaged app that renders all tokens with the
       real styles, opened by an npm script; Playwright test with axe check.
-- [ ] M3.0d Typography: check JetBrains Mono and Inter (ADR 0020) against alternatives and
-      their licenses, bundle the chosen fonts for offline use, type scale tokens; shown in the
-      styleguide.
+- [x] M3.0d-1 Typeface choice: JetBrains Mono and Inter (ADR 0020) and a tape face checked
+      against alternatives and their licenses; the owner chose Barlow Condensed, Inter and
+      JetBrains Mono (ADR 0084).
+- [ ] M3.0d-2 Typography: bundle the chosen fonts for offline use (weights, format, source,
+      licenses), type scale tokens, the font tokens switched to the bundled faces; shown in the
+      styleguide; checked by the owner on Windows.
 - [ ] M3.0e Icon style: rules (grid, stroke, corners), choice between an icon set with an
       allowed license and own SVG icons, first icons for the side panel tabs; shown in the
       styleguide.

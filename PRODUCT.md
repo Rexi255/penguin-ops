@@ -71,8 +71,8 @@ and enjoyed getting there.
 - Visual style commitments (ADR 0020): a modern dark base style; selectable terminal colour
   schemes (default, retro CRT, Solarized, high contrast) and optional effects (glow,
   scanlines). Colour schemes must only swap token values, never require changes to screens.
-- Fonts per ADR 0020: JetBrains Mono for the terminal and Inter for the interface, both SIL OFL
-  1.1. ROADMAP M3.0d checks this choice against alternatives.
+- Fonts per ADR 0084: Barlow Condensed for label tape, Inter for the interface and JetBrains
+  Mono for the terminal, all SIL OFL 1.1 and bundled.
 - Audio: UI sounds generated in code; calm background music later (ADR 0020).
 - Every dependency, font, image and sound must pass the license policy (ADR 0005).
 - Undecided: company name, internal domain, characters and other setting details are decided

@@ -128,7 +128,7 @@ const SECTION_INTROS: Readonly<Record<TokenKind, string>> = {
   motion:
     "The tape strip printing out is the only thing that moves on its own. State changes answer " +
     "quickly. With reduce motion on, both durations are 0 ms.",
-  font: "The UI face and the monospace face. ROADMAP M3.0d settles the fonts and the type scale.",
+  font: "The UI face and the monospace face. ROADMAP M3.0d-2 bundles the chosen fonts (ADR 0084) and adds the type scale.",
 };
 
 function CellGrid() {

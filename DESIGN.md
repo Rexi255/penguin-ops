@@ -34,8 +34,8 @@ spacing:
 
 The tokens live in `apps/ui/src/tokens.css` as CSS custom properties (ADR 0082); the frontmatter
 above mirrors their default values. Product truth lives in `PRODUCT.md`; the workplace screen's
-direction contract lives in `apps/ui/.impeccable/surfaces/src-app-tsx.md`. Typography follows in
-ROADMAP M3.0d and icons in M3.0e.
+direction contract lives in `apps/ui/.impeccable/surfaces/src-app-tsx.md`. The typefaces are
+chosen (ADR 0084); their bundling and the type scale follow in ROADMAP M3.0d-2, icons in M3.0e.
 
 ## Overview
 
@@ -129,12 +129,15 @@ it is decorative.
 
 ## Typography
 
-**Display/Tape Font:** a condensed grotesque in bold caps for tape strips [to be resolved in
-M3.0d; the sketch used Barlow Condensed].
-**Body Font:** a workhorse UI sans [to be resolved in M3.0d; ADR 0020 names Inter]. Until then
-the system UI face stands in.
-**Mono Font:** a code monospace for the terminal, file names and commands [to be resolved in
-M3.0d; ADR 0020 names JetBrains Mono]. Until then the system monospace face stands in.
+**Display/Tape Font:** Barlow Condensed Bold, a condensed grotesque, in caps with slight
+tracking, for tape strips only.
+**Body Font:** Inter, a workhorse UI sans, for running text, headings, tabs, buttons, menus and
+key hints.
+**Mono Font:** JetBrains Mono for the terminal, commands, paths, file names and data, always with
+ligatures turned off, so that the player sees every character they type.
+
+All three are under the SIL OFL 1.1 and are bundled with the app (ADR 0084). Until ROADMAP
+M3.0d-2 bundles them and adds the type scale, the system UI and monospace faces stand in.
 
 **Character:** The tape face is loud but small, like a real label; the UI face stays quiet and
 readable; the mono face is reserved for real code, terminal output and data such as version
@@ -143,7 +146,8 @@ numbers.
 ### Named Rules
 
 **The Real-Code Rule.** Monospace only for terminal output, commands, paths, file names and data,
-never as a "technical" costume for labels or headings.
+never as a "technical" costume for labels or headings. Conversely, commands, paths and user names
+are always monospace, also inside running text, because Inter draws `I` and `l` alike.
 
 **The Label Rule.** Tape type is set in caps and only on tape. Running text is never in caps.
 

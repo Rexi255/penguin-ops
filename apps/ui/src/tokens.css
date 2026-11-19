@@ -45,7 +45,7 @@
 
   /* The character cell of the terminal: every size and gap snaps to it (the Crouwel grid of
      DESIGN.md). The values follow the terminal text at its default size, 1rem with a line height
-     of 1.5 and the advance width of a monospace face (0.6 em); M3.0d settles the type scale. */
+     of 1.5 and the advance width of a monospace face (0.6 em, as in JetBrains Mono); M3.0d-2 adds the type scale. */
   --cell-block: 1.5rem; /* one terminal line: 24 px */
   --cell-inline: 0.6rem; /* one terminal column: 9.6 px */
 
@@ -78,7 +78,8 @@
   --motion-duration-state: 120ms;
   --motion-easing-state: cubic-bezier(0.16, 1, 0.3, 1);
 
-  /* Fonts: chosen in M3.0d (ADR 0020 names Inter and JetBrains Mono). */
+  /* Fonts: ADR 0084 chose Inter for the interface, JetBrains Mono for the terminal and Barlow
+     Condensed for tape; until M3.0d-2 bundles them, the system faces stand in. */
   --font-ui: system-ui, "Segoe UI", "Noto Sans", sans-serif;
   --font-mono: ui-monospace, "Cascadia Mono", Consolas, "DejaVu Sans Mono", monospace;
 

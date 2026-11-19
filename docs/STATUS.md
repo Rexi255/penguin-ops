@@ -4,6 +4,10 @@ _Last updated: 2026-11-19_
 
 ## Recently completed
 
+- M3.0d-1 Typeface choice: three candidates per role compared in a specimen page and a workplace
+  mock-up with the real tokens; all nine are SIL OFL 1.1. The owner chose Barlow Condensed for
+  tape, Inter for the interface and JetBrains Mono for the terminal (ADR 0084); `DESIGN.md` and
+  `PRODUCT.md` name them. M3.0d is split into the choice (d-1) and the bundling (d-2).
 - M3.0c Styleguide page: `apps/ui/styleguide.html` shows every token of `tokens.css` with a
   sample drawn by the real stylesheets, its value and note, plus the contrast pairs; new
   development-only workspace `apps/styleguide` serves it (`npm run styleguide`) and runs
@@ -22,9 +26,6 @@ _Last updated: 2026-11-19_
   `.claude/skills/impeccable/` without hook and subagents, telemetry off in
   `.impeccable/config.json`, `.gitignore` block, guarded by `scripts/impeccable-setup.test.ts`;
   verified on Windows (ADR 0080). Newer releases 4.9.2 and 4.10.0 ship without engine checksums.
-- M2.8 `/new-level` skill (`.claude/skills/new-level/`): clarify chapter, kind, commands and
-  ID, design the data and texts from the closest existing level, register the level, prove it
-  with the content tests and get the owner's OK of the texts. M2 is complete.
 
 ## In progress
 
@@ -32,7 +33,7 @@ _Last updated: 2026-11-19_
 
 ## Next 3 steps
 
-1. ROADMAP M3.0d: typography.
+1. ROADMAP M3.0d-2: bundle the fonts, type scale tokens, styleguide section.
 2. ROADMAP M3.0e: icon style.
 3. ROADMAP M3.0f-2: logo and tokens.
 

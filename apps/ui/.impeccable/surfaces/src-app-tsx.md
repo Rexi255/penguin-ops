@@ -57,8 +57,8 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 ## Unresolved decisions
 
-- The tape typeface (the sketch used Barlow Condensed) and the UI and terminal faces: ROADMAP
-  M3.0d (typography).
+- The type scale and the bundled font files: ROADMAP M3.0d-2 (the faces are chosen in ADR 0084:
+  Barlow Condensed for tape, Inter for the interface, JetBrains Mono for the terminal).
 - Icons: ROADMAP M3.0e. Logo colour alignment: ROADMAP M3.0f-2.
 - How the cable colours map onto the colour schemes of ROADMAP M3.9 (retro CRT, Solarized, high
   contrast).
