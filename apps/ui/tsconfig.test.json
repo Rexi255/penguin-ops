@@ -1,0 +1,15 @@
+// Tests of the UI. Vitest's type declarations need Node.js globals (for example AbortSignal), so
+// only this project gets Node types. ESLint still forbids Node.js imports in every UI file,
+// tests included (ADR 0030); tests read stylesheets with Vite's `?raw` imports instead.
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "${configDir}/dist/test",
+    "tsBuildInfoFile": "${configDir}/dist/test/tsconfig.tsbuildinfo",
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "types": ["node", "vite/client"]
+  },
+  "include": ["${configDir}/src/**/*.test.ts", "${configDir}/src/**/*.test.tsx"],
+  "references": [{ "path": "./tsconfig.lib.json" }]
+}

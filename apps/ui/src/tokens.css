@@ -1,0 +1,94 @@
+/* Design tokens of the visual world "Label Tape & Patch Cable" (DESIGN.md, ADR 0081, ADR 0082).
+
+   Every name says what a token is for, never what it looks like, so that the colour schemes of
+   ROADMAP M3.9 only redefine the values. Components and screens use only these variables and
+   never write a colour of their own. `design-tokens.test.ts` checks that, that every variable
+   they use is defined here, and that every text and background pair of `token-contrast.ts`
+   meets WCAG AA contrast. Colours are written as #rrggbb. */
+
+:root {
+  /* Surfaces: matte rack-metal neutrals. Depth comes from these tonal steps, not shadows. */
+  --color-surface-ground: #16191d; /* the page ground, the top bar and the footer */
+  --color-surface-panel: #1d2126; /* the side panel */
+  --color-surface-raised: #23282e; /* the active row and pressed controls */
+  --color-surface-terminal: #0f1114; /* the terminal, one step darker than the ground */
+  --color-surface-selection: #353d47; /* selected text */
+
+  /* Hairline dividers between areas that are also told apart by their surface colour. They are
+     decorative, so they have no contrast minimum; a control boundary needs its own token. */
+  --color-rule: #2e343b;
+
+  /* Text. */
+  --color-text: #e8e6e1; /* body text */
+  --color-text-muted: #a3a8ae; /* secondary text, key hints */
+
+  /* Fibre orange, the player's colour: only the prompt, the cursor, the outline of the active
+     ticket and the current step (the Fibre Rule). It is the logo's prompt orange. */
+  --color-player: #e0701a;
+
+  /* The keyboard focus ring: neutral, so that it never competes with the player's colour. */
+  --color-focus: #e8e6e1;
+
+  /* Label tape: printed strips with black caps for ticket IDs, the product name, the rank and
+     toast titles. */
+  --color-tape-primary: #f2c230; /* yellow tape: IDs, the product name, highlights */
+  --color-tape-secondary: #f1ede4; /* white tape: the rank, waiting tickets */
+  --color-tape-ink: #141414; /* the print on every tape */
+
+  /* Patch cables, one per kind of work: a 3 px cable run on tabs, the tape of typed toasts and
+     state text. All four have about the same lightness, so no kind of work looks louder than
+     another, and each is readable as text on every surface and under tape ink. */
+  --color-cable-ticket: #4392ea; /* tickets */
+  --color-cable-mail: #a17aec; /* mail */
+  --color-cable-handbook: #3fa35a; /* the handbook and success */
+  --color-cable-incident: #f35e51; /* incidents and real errors */
+
+  /* The character cell of the terminal: every size and gap snaps to it (the Crouwel grid of
+     DESIGN.md). The values follow the terminal text at its default size, 1rem with a line height
+     of 1.5 and the advance width of a monospace face (0.6 em); M3.0d settles the type scale. */
+  --cell-block: 1.5rem; /* one terminal line: 24 px */
+  --cell-inline: 0.6rem; /* one terminal column: 9.6 px */
+
+  /* Spacing: quarter steps of the cell's height, so gaps line up with the terminal's lines. */
+  --space-1: calc(var(--cell-block) / 4); /* 6 px: inside a group */
+  --space-2: calc(var(--cell-block) / 2); /* 12 px: between related items */
+  --space-3: calc(var(--cell-block) * 3 / 4); /* 18 px */
+  --space-4: var(--cell-block); /* 24 px: between groups */
+  --space-6: calc(var(--cell-block) * 3 / 2); /* 36 px */
+  --space-8: calc(var(--cell-block) * 2); /* 48 px: between areas */
+
+  /* Shapes: nearly square corners on panels, rows, buttons and keys. */
+  --radius-corner: 2px;
+
+  /* Line widths. */
+  --border-width-rule: 1px; /* hairline dividers */
+  --border-width-cable: 3px; /* the cable run on tabs */
+  --border-width-focus: 2px; /* the focus ring */
+  --focus-offset: 2px; /* the gap between a control and its focus ring */
+
+  /* Elevation: flat. Only floating elements that cover content (toasts, menus, dialogs) get this
+     soft, offset shadow. */
+  --shadow-floating: 0 0.375rem 1.125rem rgb(0 0 0 / 0.5);
+
+  /* Motion. The tape strip printing out is the only thing that moves on its own; a label maker
+     feeds its tape at a constant speed. State changes (hover, focus, pressed) answer the player
+     quickly with an exponential ease-out. */
+  --motion-duration-print: 480ms;
+  --motion-easing-print: linear;
+  --motion-duration-state: 120ms;
+  --motion-easing-state: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Fonts: chosen in M3.0d (ADR 0020 names Inter and JetBrains Mono). */
+  --font-ui: system-ui, "Segoe UI", "Noto Sans", sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", Consolas, "DejaVu Sans Mono", monospace;
+
+  color-scheme: dark;
+}
+
+/* "Reduce motion" shows every change at once. The game's own setting follows in M3.8. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-duration-print: 0ms;
+    --motion-duration-state: 0ms;
+  }
+}

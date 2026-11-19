@@ -28,6 +28,16 @@ export default defineConfig({
       },
       {
         test: {
+          name: "ui",
+          include: ["apps/ui/src/**/*.test.{ts,tsx}"],
+          environment: "node",
+          // The design token tests read the stylesheets with `?raw` imports (ADR 0082); without
+          // this, Vitest replaces every CSS import with an empty string.
+          css: { include: [/\.css(?:\?|$)/] },
+        },
+      },
+      {
+        test: {
           name: "desktop",
           include: ["apps/desktop/src/**/*.test.ts", "apps/desktop/*.test.ts"],
           environment: "node",

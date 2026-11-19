@@ -1,17 +1,5 @@
-/* Design tokens (ADR 0020). Colour schemes will redefine these variables; components only use
-   the variables, never colours directly. */
-:root {
-  --color-background: #0d1117;
-  --color-text: #e6edf3;
-  --color-text-muted: #9198a1;
-  --color-accent: #7ee787;
-  --font-ui: system-ui, "Segoe UI", "Noto Sans", sans-serif;
-  --font-mono: ui-monospace, "Cascadia Mono", Consolas, "DejaVu Sans Mono", monospace;
-  --space-2: 0.5rem;
-  --space-4: 1rem;
-
-  color-scheme: dark;
-}
+/* Base styles and screens. Every colour and spacing comes from the design tokens in tokens.css
+   (ADR 0082); this file never writes a colour of its own. */
 
 *,
 *::before,
@@ -27,9 +15,20 @@ body,
 }
 
 body {
-  background: var(--color-background);
+  background: var(--color-surface-ground);
   color: var(--color-text);
   font-family: var(--font-ui);
+  caret-color: var(--color-player);
+}
+
+::selection {
+  background: var(--color-surface-selection);
+  color: var(--color-text);
+}
+
+:focus-visible {
+  outline: var(--border-width-focus) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
 }
 
 .placeholder {
@@ -44,12 +43,13 @@ body {
 
 .placeholder__title {
   margin: 0;
-  color: var(--color-accent);
-  font-family: var(--font-mono);
+  color: var(--color-text);
+  font-family: var(--font-ui);
   font-size: 3rem;
   font-weight: 700;
 }
 
+/* The version is data, so it may use the monospace face (the Real-Code Rule). */
 .placeholder__version {
   margin: 0;
   color: var(--color-text-muted);

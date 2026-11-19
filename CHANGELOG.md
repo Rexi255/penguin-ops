@@ -8,7 +8,8 @@ project uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- The game opens a window with a placeholder screen that shows the name and version.
+- The game opens a window with a placeholder screen that shows the name and version, in the
+  colours of the "Label Tape & Patch Cable" design (rack-metal ground, paper-white title).
 - Windows installer wizard (choice of folder, desktop and Start menu shortcuts, uninstaller
   that keeps save games) and a Linux AppImage. No release has been published yet.
 - PenguinOps logo and app icon: the installer, the app, its shortcuts and the AppImage show

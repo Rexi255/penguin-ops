@@ -1,16 +1,6 @@
-// Renderer code: DOM APIs allowed, Node APIs not (ADR 0006, ADR 0014).
-// May use engine, content and gameplay.
+// Solution file of the UI workspace: the renderer code and its tests are separate projects, so
+// that only the tests see Node.js types (ADR 0030).
 {
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "lib": ["ES2024", "DOM", "DOM.Iterable"],
-    "jsx": "react-jsx",
-    // Vite's client types: imports of CSS and other assets.
-    "types": ["vite/client"]
-  },
-  "references": [
-    { "path": "../../packages/engine/tsconfig.lib.json" },
-    { "path": "../../packages/content/tsconfig.lib.json" },
-    { "path": "../../packages/gameplay/tsconfig.lib.json" }
-  ]
+  "files": [],
+  "references": [{ "path": "./tsconfig.lib.json" }, { "path": "./tsconfig.test.json" }]
 }

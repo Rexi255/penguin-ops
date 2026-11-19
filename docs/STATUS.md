@@ -1,9 +1,14 @@
 # Status
 
-_Last updated: 2026-11-18_
+_Last updated: 2026-11-19_
 
 ## Recently completed
 
+- M3.0b-2 Design tokens: `apps/ui/src/tokens.css` with semantic colour tokens, the terminal's
+  character cell, spacing, radius, line widths, shadow and motion; ticket blue, mail violet and
+  incident red lightened so that every text pair meets WCAG AA; contrast and stylesheet test
+  (`design-tokens.test.ts`); `DESIGN.md` and its sidecar regenerated with `/impeccable document`
+  (ADR 0082). impeccable works in cloud sessions.
 - M3.0b-1 Visual tone: `PRODUCT.md` from the owner's interview and a seed `DESIGN.md` in the
   repository root; the owner chose the visual world "Label Tape & Patch Cable" on impeccable's
   decision page (ADR 0081); direction contract in `apps/ui/.impeccable/surfaces/`. impeccable
@@ -26,15 +31,12 @@ _Last updated: 2026-11-18_
 
 ## Next 3 steps
 
-1. ROADMAP M3.0b-2: design tokens from `DESIGN.md`, WCAG AA contrast test, regenerate
-   `DESIGN.md` with `/impeccable document`.
-2. ROADMAP M3.0c: styleguide page.
-3. ROADMAP M3.0d: typography.
+1. ROADMAP M3.0c: styleguide page.
+2. ROADMAP M3.0d: typography.
+3. ROADMAP M3.0e: icon style.
 
 ## Blockers and open questions
 
-- impeccable is not yet verified in a cloud session (engine download from GitHub releases,
-  writable `~/.impeccable/`); check it in the next cloud session (ADR 0039, ADR 0080).
 - The texts of the five prototype levels and the office world's host name `itdesk` were
   written as test content without the owner's review (the prototype's source is not in the
   repository, so levels 2 to 5 follow the titles in `docs/CURRICULUM.md`); the story workshop
@@ -43,7 +45,11 @@ _Last updated: 2026-11-18_
   manual Linux check is planned. CI builds the AppImage but starts the unpacked app, so the
   M5 criterion "the AppImage runs on Linux" needs CI to start the AppImage itself (ROADMAP
   ideas) before v0.1.
-- The logo colours are provisional until M3.0f-2 aligns them with the design tokens.
+- The logo colours are provisional until M3.0f-2 aligns them with the design tokens (fibre
+  orange is unchanged).
+- Electron does not start in the cloud container (the end-to-end tests hang there); cloud
+  sessions take UI screenshots of the built renderer in Playwright's Chromium with a stub of the
+  desktop API. CI still runs the real end-to-end tests.
 - Steam release is assumed to be "maybe later" (ADR 0002); confirm with the owner when it
   becomes relevant.
 - Some details of `ls`, `clear`, `history`, `cat`, `head`, `tail`, `touch`, `rm`, `cp`, `mv` and

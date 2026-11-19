@@ -1,0 +1,354 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-19T00:00:00Z",
+  "title": "Design System: PenguinOps",
+  "extensions": {
+    "colorMeta": {
+      "surface-ground": {
+        "role": "neutral",
+        "displayName": "Rack Black",
+        "tonalRamp": [
+          "#090b0f",
+          "#222529",
+          "#3f4246",
+          "#5f6165",
+          "#808286",
+          "#a3a5a8",
+          "#c7c9cc",
+          "#edeff1"
+        ]
+      },
+      "surface-panel": {
+        "role": "neutral",
+        "displayName": "Panel Metal",
+        "tonalRamp": [
+          "#080b10",
+          "#21252a",
+          "#3e4247",
+          "#5e6266",
+          "#7f8387",
+          "#a2a5a9",
+          "#c6c9cd",
+          "#eceff2"
+        ]
+      },
+      "surface-raised": {
+        "role": "neutral",
+        "displayName": "Raised Metal",
+        "tonalRamp": [
+          "#080b10",
+          "#21262b",
+          "#3e4248",
+          "#5d6267",
+          "#7e8388",
+          "#a1a5aa",
+          "#c6c9ce",
+          "#eceff2"
+        ]
+      },
+      "surface-terminal": {
+        "role": "neutral",
+        "displayName": "Terminal Ground",
+        "tonalRamp": [
+          "#090b0e",
+          "#232528",
+          "#404245",
+          "#5f6164",
+          "#808285",
+          "#a3a5a8",
+          "#c8c9cb",
+          "#edeef0"
+        ]
+      },
+      "surface-selection": {
+        "role": "neutral",
+        "displayName": "Selection Metal",
+        "tonalRamp": [
+          "#070c12",
+          "#1f262e",
+          "#3b434d",
+          "#5a626b",
+          "#7c838c",
+          "#9fa6ae",
+          "#c4cad1",
+          "#eaeff5"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Rule",
+        "tonalRamp": [
+          "#080c10",
+          "#20262c",
+          "#3d434a",
+          "#5c6268",
+          "#7e8389",
+          "#a1a5ab",
+          "#c5cace",
+          "#ebeff3"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Paper Text",
+        "tonalRamp": [
+          "#0c0b09",
+          "#262523",
+          "#43423f",
+          "#62615e",
+          "#84827f",
+          "#a6a5a1",
+          "#cbc9c4",
+          "#f0eee9"
+        ]
+      },
+      "text-muted": {
+        "role": "neutral",
+        "displayName": "Muted Text",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#232528",
+          "#3f4246",
+          "#5e6266",
+          "#7e8388",
+          "#a1a6ab",
+          "#c5cacf",
+          "#ebeff4"
+        ]
+      },
+      "focus": {
+        "role": "neutral",
+        "displayName": "Focus",
+        "tonalRamp": [
+          "#0c0b09",
+          "#262523",
+          "#43423f",
+          "#62615e",
+          "#84827f",
+          "#a6a5a1",
+          "#cbc9c4",
+          "#f0eee9"
+        ]
+      },
+      "player": {
+        "role": "primary",
+        "displayName": "Fibre Orange",
+        "tonalRamp": [
+          "#240000",
+          "#490b00",
+          "#712700",
+          "#9c4300",
+          "#c96107",
+          "#f0843d",
+          "#ffad71",
+          "#ffd7a2"
+        ]
+      },
+      "tape-primary": {
+        "role": "secondary",
+        "displayName": "Label Tape Yellow",
+        "tonalRamp": [
+          "#180600",
+          "#372000",
+          "#593d00",
+          "#7c5c00",
+          "#a27d00",
+          "#ca9f0b",
+          "#f3c331",
+          "#ffe972"
+        ]
+      },
+      "tape-secondary": {
+        "role": "secondary",
+        "displayName": "Label Tape White",
+        "tonalRamp": [
+          "#0c0b08",
+          "#272521",
+          "#44423d",
+          "#63615b",
+          "#85827c",
+          "#a8a59d",
+          "#ccc9c1",
+          "#f2eee5"
+        ]
+      },
+      "tape-ink": {
+        "role": "secondary",
+        "displayName": "Tape Ink",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "cable-ticket": {
+        "role": "tertiary",
+        "displayName": "Ticket Cable Blue",
+        "tonalRamp": [
+          "#00072c",
+          "#002453",
+          "#04427c",
+          "#2062a9",
+          "#3984d7",
+          "#5fa8fc",
+          "#8ccdff",
+          "#b9f3ff"
+        ]
+      },
+      "cable-mail": {
+        "role": "tertiary",
+        "displayName": "Mail Cable Violet",
+        "tonalRamp": [
+          "#11002b",
+          "#2c1351",
+          "#4b2f7a",
+          "#6c4ba5",
+          "#8e6ad3",
+          "#b18dfb",
+          "#d4b5ff",
+          "#f8ddff"
+        ]
+      },
+      "cable-handbook": {
+        "role": "tertiary",
+        "displayName": "Handbook Cable Green",
+        "tonalRamp": [
+          "#001300",
+          "#003007",
+          "#00511f",
+          "#1d7438",
+          "#389952",
+          "#63bc77",
+          "#91dfa0",
+          "#bfffca"
+        ]
+      },
+      "cable-incident": {
+        "role": "tertiary",
+        "displayName": "Incident Cable Red",
+        "tonalRamp": [
+          "#280000",
+          "#500000",
+          "#7b1511",
+          "#a83129",
+          "#d74d42",
+          "#ff7163",
+          "#ff9e8e",
+          "#ffc9ba"
+        ]
+      }
+    },
+    "shadows": [
+      {
+        "name": "floating",
+        "value": "0 0.375rem 1.125rem rgb(0 0 0 / 0.5)",
+        "purpose": "Only floating elements that cover content: toasts, menus, dialogs."
+      }
+    ],
+    "motion": [
+      {
+        "name": "print",
+        "value": "480ms linear",
+        "purpose": "The tape strip printing out, the only thing that moves on its own."
+      },
+      {
+        "name": "state",
+        "value": "120ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Hover, focus and press responses."
+      }
+    ],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Tape Strip",
+      "kind": "custom",
+      "refersTo": "tape-primary",
+      "description": "Printed label tape for ticket IDs, the product name and the rank.",
+      "html": "<span class=\"ds-tape\">#1002</span>",
+      "css": ".ds-tape { display: inline-block; padding: var(--space-1) var(--space-2); background: var(--color-tape-primary); color: var(--color-tape-ink); font-family: var(--font-ui); font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%); }"
+    },
+    {
+      "name": "Cable Tab",
+      "kind": "nav",
+      "refersTo": "cable-ticket",
+      "description": "A side panel tab with the 3 px cable run of its kind of work.",
+      "html": "<button class=\"ds-tab\" type=\"button\">Tickets</button>",
+      "css": ".ds-tab { padding: var(--space-2) var(--space-3); background: var(--color-surface-panel); color: var(--color-text-muted); border: 0; border-top: var(--border-width-cable) solid var(--color-cable-ticket); border-radius: var(--radius-corner); font-family: var(--font-ui); transition: background var(--motion-duration-state) var(--motion-easing-state), color var(--motion-duration-state) var(--motion-easing-state); } .ds-tab:hover { background: var(--color-surface-raised); color: var(--color-text); } .ds-tab:focus-visible { outline: var(--border-width-focus) solid var(--color-focus); outline-offset: var(--focus-offset); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Label Tape & Patch Cable",
+    "overview": "PenguinOps looks like the IT department it is set in. Admins label everything: switch ports, cables, servers, shelves, with printed label-maker tape, and they sort cables by colour so that anyone can see what a line is for. The game takes exactly these two habits as its visual system. Names and IDs that matter are printed on tape; each kind of work has its own cable colour; everything else is matte rack metal that stays quiet so the terminal can be the main stage.\n\nThe world lends the interface four things only: palette, type, density and one signature move. Layout, navigation and controls stay the familiar ones of a modern desktop game (ADR 0020): a top bar, a side panel with tabs, a large terminal and a key-hint footer. Someone who has played any coding game knows where everything is before they notice the tape.\n\nThe signature move: new tickets, mails, ranks and achievements print out as a strip of tape. It is the only thing that moves on its own.",
+    "keyCharacteristics": [
+      "Dark, matte rack-metal ground with hairline rules; no glow, no gradients, no glass.",
+      "Label tape (yellow and white, black condensed caps) for ticket IDs, panel names, the rank and toasts.",
+      "Cable colours carry the kind of work: tickets, mail, handbook, incidents.",
+      "Fibre orange belongs to the player: their prompt, cursor and active ticket.",
+      "One grid: every size is a multiple of the terminal's character cell."
+    ],
+    "rules": [
+      {
+        "name": "The One Motion Rule",
+        "body": "The tape strip prints out at the steady speed of a label maker (480 ms, linear). State changes on hover, focus and press answer within 120 ms with an exponential ease-out. Nothing else moves, and \"reduce motion\" sets both to zero.",
+        "section": "overview"
+      },
+      {
+        "name": "The Quarantine Rule",
+        "body": "Colour lives only on tape and cable runs. Grounds, panels and text stay neutral. If a colour appears somewhere else, it needs a meaning.",
+        "section": "colors"
+      },
+      {
+        "name": "The Fibre Rule",
+        "body": "Fibre orange marks only what the player is doing right now. It never decorates.",
+        "section": "colors"
+      },
+      {
+        "name": "The Scheme Rule",
+        "body": "Every colour is a semantic token named by its purpose, so the colour schemes of ROADMAP M3.9 (retro CRT, Solarized, high contrast) only swap values, pass the same contrast pairs and never require a screen change.",
+        "section": "colors"
+      },
+      {
+        "name": "The Pair Rule",
+        "body": "A new colour token comes with the pairs it appears in, or with the reason why it is decorative.",
+        "section": "colors"
+      },
+      {
+        "name": "The Real-Code Rule",
+        "body": "Monospace only for terminal output, commands, paths, file names and data, never as a \"technical\" costume for labels or headings.",
+        "section": "typography"
+      },
+      {
+        "name": "The Label Rule",
+        "body": "Tape type is set in caps and only on tape. Running text is never in caps.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Rack Rule",
+        "body": "Panels sit flush like units in a rack. No card shadows, no glow, no nested cards.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** print ticket IDs, the product name, the rank and toast titles on tape.",
+      "**Do** give each kind of work its cable colour, consistently, on tabs, toasts and states.",
+      "**Do** keep fibre orange for the player's prompt, cursor and active ticket only.",
+      "**Do** build every screen from the tokens in `apps/ui/src/tokens.css`; a missing value becomes a new token, not a literal.",
+      "**Do** let the one motion be the tape printing out, and show it at once when \"reduce motion\" is on.",
+      "**Do** keep every control a standard, recognisable one: tabs, buttons, lists, inputs."
+    ],
+    "donts": [
+      "**Don't** use the hacker cliché: green on black, matrix rain, neon glow, scanlines as the default look (scanlines stay an optional effect, ADR 0020).",
+      "**Don't** fall back to the category standard of charcoal rounded cards with one blue accent.",
+      "**Don't** put tape on running text, buttons or every row; tape is for names and IDs.",
+      "**Don't** use gradients, glass, glow or hard offset shadows.",
+      "**Don't** write a colour, a gap or a duration directly in a component.",
+      "**Don't** convey a state by colour alone; every cable colour comes with a label or icon."
+    ]
+  }
+}

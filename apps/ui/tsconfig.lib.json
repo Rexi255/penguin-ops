@@ -1,0 +1,17 @@
+// Renderer code: DOM APIs allowed, Node APIs not (ADR 0006, ADR 0014).
+// May use engine, content and gameplay.
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    // Vite's client types: imports of CSS and other assets.
+    "types": ["vite/client"]
+  },
+  "exclude": ["${configDir}/src/**/*.test.ts", "${configDir}/src/**/*.test.tsx"],
+  "references": [
+    { "path": "../../packages/engine/tsconfig.lib.json" },
+    { "path": "../../packages/content/tsconfig.lib.json" },
+    { "path": "../../packages/gameplay/tsconfig.lib.json" }
+  ]
+}

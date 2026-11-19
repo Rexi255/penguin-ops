@@ -430,9 +430,19 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
 
 Current state (ADR 0033): `index.html` (with the strict Content Security Policy) loads
 `src/main.tsx`, which asks the desktop API for the app info and renders the placeholder screen
-(`src/app.tsx`). `src/styles.css` holds the first design tokens. The visual world is
-"Label Tape & Patch Cable" (ADR 0081, `DESIGN.md`); the workplace screen's direction contract is
-the impeccable surface brief `.impeccable/surfaces/src-app-tsx.md`. `src/desktop-api.ts` defines
+(`src/app.tsx`). The visual world is "Label Tape & Patch Cable" (ADR 0081, `DESIGN.md`); the
+workplace screen's direction contract is the impeccable surface brief
+`.impeccable/surfaces/src-app-tsx.md`, and `.impeccable/design.json` is impeccable's sidecar to
+`DESIGN.md`.
+
+Design tokens (ADR 0082): `src/tokens.css` defines every token as a CSS custom property on
+`:root`, named by purpose (colours, the terminal's character cell, spacing in quarter cells,
+radius, line widths, the floating shadow, motion; durations drop to 0 ms with reduced motion).
+`main.tsx` imports it before `src/styles.css`, which only reads tokens. `src/token-contrast.ts`
+lists the colour pairs that must meet WCAG AA, using the contrast maths of
+`src/color-contrast.ts`; `src/design-tokens.test.ts` checks the real stylesheets with
+`src/css-rules.ts`, a small reader for the project's own CSS, which it imports with Vite's
+`?raw`. `src/desktop-api.ts` defines
 the preload contract (`DesktopApi`); `src/index.ts` exports only its types, for
 `apps/desktop`.
 
@@ -480,7 +490,9 @@ end-to-end tests in `apps/desktop/e2e/` (`*.spec.ts`).
   `test:coverage` and `check:licenses`, in this order; it stops at the first failing step.
 
 - Vitest (ADR 0030): one root `vitest.config.ts` with one project per workspace that has tests
-  (`engine`, `desktop`, `tooling` for `scripts/`). `npm test` runs them;
+  (`engine`, `content`, `gameplay`, `ui`, `desktop`, `content-tests`, `tooling` for
+  `scripts/`). The `ui` project processes CSS so that tests can read stylesheets with `?raw`
+  (ADR 0082). `npm test` runs them;
   `npm run test:coverage` also enforces at least 90 % coverage for `packages/engine/src`.
 - Playwright (ADR 0033, ADR 0034): `npm run e2e` builds the app and starts it through Electron
   for each test (project `built`); no browser download is needed. `npm run e2e:packaged` runs

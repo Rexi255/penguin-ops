@@ -11,5 +11,5 @@
     "skipLibCheck": true
   },
   "exclude": ["${configDir}/src/**/*.test.ts"],
-  "references": [{ "path": "../ui" }]
+  "references": [{ "path": "../ui/tsconfig.lib.json" }]
 }

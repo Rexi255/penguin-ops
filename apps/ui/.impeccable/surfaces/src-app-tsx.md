@@ -57,7 +57,6 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 ## Unresolved decisions
 
-- Exact colour values and their contrast pairs: ROADMAP M3.0b part 2 (design tokens).
 - The tape typeface (the sketch used Barlow Condensed) and the UI and terminal faces: ROADMAP
   M3.0d (typography).
 - Icons: ROADMAP M3.0e. Logo colour alignment: ROADMAP M3.0f-2.

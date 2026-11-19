@@ -1,16 +1,41 @@
 ---
 name: PenguinOps
 description: The IT office labelled the way admins label it, with label-maker tape and patch cable colours.
+colors:
+  surface-ground: "#16191d"
+  surface-panel: "#1d2126"
+  surface-raised: "#23282e"
+  surface-terminal: "#0f1114"
+  surface-selection: "#353d47"
+  rule: "#2e343b"
+  text: "#e8e6e1"
+  text-muted: "#a3a8ae"
+  player: "#e0701a"
+  focus: "#e8e6e1"
+  tape-primary: "#f2c230"
+  tape-secondary: "#f1ede4"
+  tape-ink: "#141414"
+  cable-ticket: "#4392ea"
+  cable-mail: "#a17aec"
+  cable-handbook: "#3fa35a"
+  cable-incident: "#f35e51"
+rounded:
+  corner: "2px"
+spacing:
+  "1": "6px"
+  "2": "12px"
+  "3": "18px"
+  "4": "24px"
+  "6": "36px"
+  "8": "48px"
 ---
-
-<!-- SEED: established with the user before implementation; re-run /impeccable document once there's code to capture the actual tokens and components. -->
 
 # Design System: PenguinOps
 
-This is a seed. The owner chose the visual world on 2026-11-18 from four directions (ROADMAP
-M3.0b, ADR 0081). Exact tokens follow in M3.0b part 2 and replace the provisional values below;
-typography follows in M3.0d and icons in M3.0e. Product truth lives in `PRODUCT.md`; the
-workplace screen's direction contract lives in `apps/ui/.impeccable/surfaces/src-app-tsx.md`.
+The tokens live in `apps/ui/src/tokens.css` as CSS custom properties (ADR 0082); the frontmatter
+above mirrors their default values. Product truth lives in `PRODUCT.md`; the workplace screen's
+direction contract lives in `apps/ui/.impeccable/surfaces/src-app-tsx.md`. Typography follows in
+ROADMAP M3.0d and icons in M3.0e.
 
 ## Overview
 
@@ -31,6 +56,10 @@ any coding game knows where everything is before they notice the tape.
 The signature move: new tickets, mails, ranks and achievements print out as a strip of tape.
 It is the only thing that moves on its own.
 
+**The One Motion Rule.** The tape strip prints out at the steady speed of a label maker (480 ms,
+linear). State changes on hover, focus and press answer within 120 ms with an exponential
+ease-out. Nothing else moves, and "reduce motion" sets both to zero.
+
 **Key Characteristics:**
 
 - Dark, matte rack-metal ground with hairline rules; no glow, no gradients, no glass.
@@ -43,41 +72,45 @@ It is the only thing that moves on its own.
 ## Colors
 
 A restrained neutral ground with a full set of meaningful cable colours; colour always means
-something.
-
-The values below come from the chosen sketch and are provisional until the design tokens of
-M3.0b part 2 check them for WCAG AA contrast and name them as semantic tokens.
+something. Every text and background pair meets WCAG AA (4.5:1 for text, 3:1 for the focus
+ring), and a test proves it for every pair (ADR 0082).
 
 ### Primary
 
-- **Fibre Orange** (sketch: #e0701a, the logo's prompt orange): the player's own colour. Only the
-  shell prompt, the cursor, the outline of the active ticket and the current step.
+- **Fibre Orange** (`player`): the player's own colour, the logo's prompt orange. Only the shell
+  prompt, the cursor, the outline of the active ticket and the current step.
 
 ### Secondary
 
-- **Label Tape Yellow** (sketch: #f2c230) with **Tape Ink** (sketch: #141414): printed tape for
-  ticket IDs, the product name and highlights such as XP segments.
-- **Label Tape White** (sketch: #f1ede4) with Tape Ink: secondary tape, such as the rank and
+- **Label Tape Yellow** (`tape-primary`) with **Tape Ink** (`tape-ink`): printed tape for ticket
+  IDs, the product name and highlights such as XP segments.
+- **Label Tape White** (`tape-secondary`) with Tape Ink: secondary tape, such as the rank and
   waiting tickets.
 
 ### Tertiary
 
-The cable colours, one per kind of work. They appear as a 3 px cable run on tabs, as tape
-colour for typed toasts, and as state colour. Never as large fills.
+The cable colours, one per kind of work. They appear as a 3 px cable run on tabs, as the tape of
+typed toasts (with tape ink) and as state text. Never as large fills. All four share about the
+same lightness, so no kind of work looks louder than another, and each one is readable as text
+on every surface.
 
-- **Ticket Cable Blue** (sketch: #2f7fd6): tickets.
-- **Mail Cable Violet** (sketch: #8a63d2): mail.
-- **Handbook Cable Green** (sketch: #3fa35a): the handbook and success.
-- **Incident Cable Red** (sketch: #d8453b): incidents and real errors.
+- **Ticket Cable Blue** (`cable-ticket`): tickets.
+- **Mail Cable Violet** (`cable-mail`): mail.
+- **Handbook Cable Green** (`cable-handbook`): the handbook and success.
+- **Incident Cable Red** (`cable-incident`): incidents and real errors.
 
 ### Neutral
 
-- **Rack Black** (sketch: #16191d): the page ground.
-- **Panel Metal** (sketch: #1d2126) and **Raised Metal** (sketch: #23282e): panels and the
-  active row.
-- **Rule** (sketch: #2e343b): hairline dividers.
-- **Terminal Ground** (sketch: #0f1114): the terminal, one step darker than the ground.
-- **Paper Text** (sketch: #e8e6e1) and **Muted Text** (sketch: #a3a8ae): body and secondary text.
+- **Rack Black** (`surface-ground`): the page ground, the top bar and the footer.
+- **Panel Metal** (`surface-panel`) and **Raised Metal** (`surface-raised`): the side panel, and
+  the active row and pressed controls.
+- **Terminal Ground** (`surface-terminal`): the terminal, one step darker than the ground.
+- **Selection Metal** (`surface-selection`): selected text.
+- **Rule** (`rule`): hairline dividers between areas that their surfaces already tell apart. It
+  is decorative and the only colour without a contrast minimum.
+- **Paper Text** (`text`) and **Muted Text** (`text-muted`): body and secondary text.
+- **Focus** (`focus`): the keyboard focus ring, neutral so that it never competes with fibre
+  orange.
 
 ### Named Rules
 
@@ -87,23 +120,29 @@ neutral. If a colour appears somewhere else, it needs a meaning.
 **The Fibre Rule.** Fibre orange marks only what the player is doing right now. It never
 decorates.
 
-**The Scheme Rule.** Every colour is a semantic token, so the colour schemes of ROADMAP M3.9
-(retro CRT, Solarized, high contrast) only swap values and never require a screen change.
+**The Scheme Rule.** Every colour is a semantic token named by its purpose, so the colour schemes
+of ROADMAP M3.9 (retro CRT, Solarized, high contrast) only swap values, pass the same contrast
+pairs and never require a screen change.
+
+**The Pair Rule.** A new colour token comes with the pairs it appears in, or with the reason why
+it is decorative.
 
 ## Typography
 
 **Display/Tape Font:** a condensed grotesque in bold caps for tape strips [to be resolved in
 M3.0d; the sketch used Barlow Condensed].
-**Body Font:** a workhorse UI sans [to be resolved in M3.0d; ADR 0020 names Inter].
+**Body Font:** a workhorse UI sans [to be resolved in M3.0d; ADR 0020 names Inter]. Until then
+the system UI face stands in.
 **Mono Font:** a code monospace for the terminal, file names and commands [to be resolved in
-M3.0d; ADR 0020 names JetBrains Mono].
+M3.0d; ADR 0020 names JetBrains Mono]. Until then the system monospace face stands in.
 
 **Character:** The tape face is loud but small, like a real label; the UI face stays quiet and
-readable; the mono face is reserved for real code and terminal output.
+readable; the mono face is reserved for real code, terminal output and data such as version
+numbers.
 
 ### Named Rules
 
-**The Real-Code Rule.** Monospace only for terminal output, commands, paths and file names,
+**The Real-Code Rule.** Monospace only for terminal output, commands, paths, file names and data,
 never as a "technical" costume for labels or headings.
 
 **The Label Rule.** Tape type is set in caps and only on tape. Running text is never in caps.
@@ -114,15 +153,17 @@ The workplace layout of ADR 0020: a top bar, a side panel of about 430 px with t
 terminal filling the rest, and a footer with F-key hints. The top bar names where the player is
 (chapter, ticket, step), like the guide words at the head of a dictionary page.
 
-Every size and gap snaps to the terminal's character cell (width and line height of the mono
-face at the terminal size), so the panels and the terminal share one grid. Density is medium:
-rows of about 40 px, generous space between groups, tight space within them.
+Every size and gap snaps to the terminal's character cell: one line of terminal text (1.5rem,
+24 px at the default size) by one column (0.6rem, 9.6 px). The spacing scale is quarter steps of
+the line: 6, 12, 18, 24, 36 and 48 px, so gaps line up with the terminal's lines. The side panel
+is 45 columns wide (432 px). Density is medium: tight space within a group (6 to 12 px), generous
+space between groups (24 px) and between areas (48 px).
 
 ## Elevation & Depth
 
-Flat. Depth comes from tonal steps of the rack-metal neutrals (ground, panel, raised panel,
-terminal) and hairline rules, not from shadows. Only floating elements that cover other content
-(toasts, menus, dialogs) get a soft, offset shadow.
+Flat. Depth comes from tonal steps of the rack-metal neutrals (terminal, ground, panel, raised)
+and hairline rules, not from shadows. Only floating elements that cover other content (toasts,
+menus, dialogs) get one soft, offset shadow (`0 6px 18px` of black at half opacity).
 
 ### Named Rules
 
@@ -131,9 +172,11 @@ nested cards.
 
 ## Shapes
 
-Nearly square corners (2 px) on panels, rows, buttons and keys. Tape strips have slightly
-slanted cut ends, like a real strip from a label maker. Progress (XP, ticket steps) is drawn as
-tape segments whose number and length are the exact count, never as rings or smooth bars.
+Nearly square corners (2 px) on panels, rows, buttons and keys. Lines come in three widths: the
+1 px hairline rule, the 3 px cable run on tabs and the 2 px focus ring, set 2 px off the control.
+Tape strips have slightly slanted cut ends, like a real strip from a label maker. Progress (XP,
+ticket steps) is drawn as tape segments whose number and length are the exact count, never as
+rings or smooth bars.
 
 ## Do's and Don'ts
 
@@ -142,6 +185,8 @@ tape segments whose number and length are the exact count, never as rings or smo
 - **Do** print ticket IDs, the product name, the rank and toast titles on tape.
 - **Do** give each kind of work its cable colour, consistently, on tabs, toasts and states.
 - **Do** keep fibre orange for the player's prompt, cursor and active ticket only.
+- **Do** build every screen from the tokens in `apps/ui/src/tokens.css`; a missing value becomes
+  a new token, not a literal.
 - **Do** let the one motion be the tape printing out, and show it at once when "reduce motion"
   is on.
 - **Do** keep every control a standard, recognisable one: tabs, buttons, lists, inputs.
@@ -153,4 +198,5 @@ tape segments whose number and length are the exact count, never as rings or smo
 - **Don't** fall back to the category standard of charcoal rounded cards with one blue accent.
 - **Don't** put tape on running text, buttons or every row; tape is for names and IDs.
 - **Don't** use gradients, glass, glow or hard offset shadows.
+- **Don't** write a colour, a gap or a duration directly in a component.
 - **Don't** convey a state by colour alone; every cable colour comes with a label or icon.
