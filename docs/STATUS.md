@@ -9,7 +9,8 @@ _Last updated: 2026-11-19_
   bar, side panel, terminal area, footer with an "Esc Menu" key hint button). Esc opens a modal
   pause menu (Continue, Main menu) over the inert game; Esc or Continue closes it and returns the
   focus (ADR 0092, partly superseding ADR 0091). Component tests, end-to-end tests in both
-  languages with axe-core with the menu closed and open.
+  languages with axe-core with the menu closed and open. The Quit click test, like the Enter
+  test, no longer fails when the app quits before Playwright gets the answer to the click.
 - M3.1b Save slot screen: Play in the main menu opens a screen with three empty save slots
   (not controls until M3.2) and Back; Back and Esc return to the start screen. The app root
   switches screens with React state and every screen sets the keyboard focus on its first
