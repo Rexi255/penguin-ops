@@ -17,6 +17,8 @@ import {
 export const UI_TEXT_PLACEHOLDERS = {
   /** The product name, as the logo's text alternative. */
   "app.name": [],
+  /** The label of the F1 key in key hints. */
+  "keys.f1": [],
   /** The label of the Esc key in key hints. */
   "keys.escape": [],
   /** The label of the Tab key in key hints. */
@@ -97,6 +99,8 @@ export const UI_TEXT_PLACEHOLDERS = {
   "game.mail-empty": [],
   /** The handbook panel while the player has learned no command. */
   "game.handbook-empty": [],
+  /** The key hint that shows the next hint of the ticket, after the key's label. */
+  "game.hint": [],
   /** The key hint of the terminal's Tab completion, after the key's label. */
   "game.complete": [],
   /** The key hint that opens the pause menu, after the key's label. */
@@ -111,6 +115,16 @@ export const UI_TEXT_PLACEHOLDERS = {
   "ticket.step-done": [],
   /** What a tip for a typical mistake is, for screen readers before its text. */
   "ticket.tip": [],
+  /** The heading of the hints the player asked for. */
+  "ticket.hints": [],
+  /** The label of a hint; `number` counts from 1, `count` is the number of hints. */
+  "ticket.hint": ["number", "count"],
+  /** The heading of the explanation shown after the ticket is solved. */
+  "ticket.explanation": [],
+  /** The heading of the explanation's variants of the taught command and what they do. */
+  "ticket.options": [],
+  /** The label before the explanation's command to try. */
+  "ticket.example": [],
   /** The accessible name of the terminal's screen, a log of its lines. */
   "terminal.output": [],
   /** The accessible name of the terminal's input line. */

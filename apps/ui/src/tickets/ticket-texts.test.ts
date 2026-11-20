@@ -1,5 +1,6 @@
-// Tests of the ticket's texts (ADR 0097): the title, the text and the messages of a level in
-// both languages, the English fallback of a further language, and the errors.
+// Tests of the ticket's texts (ADR 0097, ADR 0098): the title, the text, the messages, the hints
+// and the explanation of a level in both languages, the English fallback of a further language,
+// and the errors.
 import { MANDATORY_LANGUAGES } from "@penguin-ops/content";
 import { describe, expect, test } from "vitest";
 
@@ -25,6 +26,65 @@ describe("ticketTexts", () => {
     const texts = ticketTexts(content, "switch-backup", "en");
     expect(texts.title).toEqual([{ type: "text", text: "Backup before the switch update" }]);
     expect(texts.ticket.map((block) => block.type)).toEqual(["paragraph", "list", "paragraph"]);
+  });
+
+  test.each(MANDATORY_LANGUAGES)(
+    "formats the three hints and the explanation of every level in %s",
+    (language) => {
+      for (const levelId of content.levels.keys()) {
+        const { hints, explanation } = ticketTexts(content, levelId, language);
+        expect(hints).toHaveLength(3);
+        for (const hint of hints) {
+          expect(hint.length).toBeGreaterThan(0);
+        }
+        expect(explanation.text.length).toBeGreaterThan(0);
+        for (const { option, description } of explanation.options) {
+          expect(option.length).toBeGreaterThan(0);
+          expect(description.length).toBeGreaterThan(0);
+        }
+      }
+    },
+  );
+
+  test("reads the hints with their code and the explanation with options and example", () => {
+    const texts = ticketTexts(content, "first-steps", "de");
+    expect(texts.hints[2]).toEqual([
+      {
+        type: "paragraph",
+        content: [
+          { type: "text", text: "Tippe " },
+          { type: "code", text: "cd welcome" },
+          { type: "text", text: "." },
+        ],
+      },
+    ]);
+    expect(texts.explanation.options.map(({ option }) => option)).toEqual(["cd ..", "cd ~"]);
+    expect(texts.explanation.options[0]?.description).toEqual([
+      {
+        type: "paragraph",
+        content: [{ type: "text", text: "Wechselt in das übergeordnete Verzeichnis." }],
+      },
+    ]);
+    expect(texts.explanation.example).toBe("cd ~/welcome");
+  });
+
+  test("leaves the example out for a level without one", () => {
+    const catalogs = content.levelCatalogs.get("first-steps");
+    if (catalogs === undefined) {
+      throw new Error("The content has no first-steps catalogs.");
+    }
+    const explanation = {
+      text: catalogs.en.explanation.text,
+      options: catalogs.en.explanation.options,
+    };
+    const without = {
+      ...content,
+      levelCatalogs: new Map([
+        ["first-steps", { ...catalogs, en: { ...catalogs.en, explanation } }],
+      ]),
+    };
+    const texts = ticketTexts(without, "first-steps", "en");
+    expect("example" in texts.explanation).toBe(false);
   });
 
   test("falls back to English for a language without a catalog", () => {

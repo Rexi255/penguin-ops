@@ -528,14 +528,20 @@ pre {
   line-height: var(--text-body-leading);
 }
 
-/* The ticket panel (ADR 0097): the title, the state row, the ticket's text and, after a hairline
-   rule, the messages about the ticket. */
+/* The ticket panel (ADR 0097, ADR 0098): the title, the state row, the ticket's text and, each
+   after a hairline rule, the hints, the messages about the ticket and the explanation. */
 .ticket {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   font-size: var(--text-body-size);
   line-height: var(--text-body-leading);
+}
+
+/* A live region stays in the page while it is empty, so that what it gets is announced; an empty
+   one takes back the gap after it, so that it adds no space. */
+.ticket__live:empty {
+  margin-block-end: calc(var(--space-2) * -1);
 }
 
 .ticket__title {
@@ -609,13 +615,13 @@ pre {
   padding-inline-start: var(--space-4);
 }
 
-.ticket__updates {
+.ticket__section {
   margin-block-start: var(--space-2);
   padding-block-start: var(--space-4);
   border-block-start: var(--border-width-rule) solid var(--color-rule);
 }
 
-.ticket__updates-title {
+.ticket__section-title {
   margin: 0 0 var(--space-2);
   color: var(--color-text-muted);
   font-size: var(--text-hint-size);
@@ -640,6 +646,55 @@ pre {
 
 .ticket__message--step .icon {
   color: var(--color-cable-handbook);
+}
+
+/* "Hint 1 of 3" above a hint's text, in the muted hint type like the section titles. */
+.ticket__message-text > .ticket__hint-label {
+  color: var(--color-text-muted);
+  font-size: var(--text-hint-size);
+  font-weight: var(--font-weight-control);
+  line-height: var(--text-hint-leading);
+}
+
+.ticket__message-text > .ticket__hint-label + * {
+  margin-block-start: 0;
+}
+
+/* The explanation after solving: its text, then the variants of the taught command and a
+   command to try. */
+.ticket__explanation {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ticket__explanation .ticket__section-title {
+  margin: 0;
+}
+
+.ticket__explanation .ticket__options-title {
+  margin-block-start: var(--space-2);
+}
+
+/* The variants as two columns: the command, then what it does. */
+.ticket__options {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--space-1) var(--space-4);
+  margin: 0;
+}
+
+.ticket__option {
+  display: contents;
+}
+
+.ticket__option dt,
+.ticket__option dd {
+  margin: 0;
+}
+
+.ticket__example {
+  margin: var(--space-2) 0 0;
 }
 
 .game-screen__terminal {

@@ -1,18 +1,25 @@
-// Tests of the ticket's progress (ADR 0097): what the game events of an input add up to, and the
-// step the player works on.
+// Tests of the ticket's progress (ADR 0097, ADR 0098): what the game events of an input add up to,
+// the step the player works on, and the hints the player asked for.
 import type { GameEvent } from "@penguin-ops/gameplay";
 import { describe, expect, test } from "vitest";
 
 import {
   applyGameEvents,
+  HINT_COUNT,
+  showNextHint,
   stepPosition,
   TICKET_START,
   type TicketProgress,
 } from "./ticket-progress";
 
 describe("applyGameEvents", () => {
-  test("starts with no step, unsolved and without messages", () => {
-    expect(TICKET_START).toEqual({ completedSteps: 0, solved: false, messages: [] });
+  test("starts with no step, unsolved, without messages and without hints", () => {
+    expect(TICKET_START).toEqual({
+      completedSteps: 0,
+      solved: false,
+      messages: [],
+      hintsShown: 0,
+    });
   });
 
   test("changes nothing without events", () => {
@@ -28,6 +35,7 @@ describe("applyGameEvents", () => {
       completedSteps: 2,
       solved: false,
       messages: [{ kind: "step", say: "step-backup" }],
+      hintsShown: 0,
     });
   });
 
@@ -56,6 +64,43 @@ describe("applyGameEvents", () => {
     const events: GameEvent[] = [{ kind: "extra-goal", id: "floor1", xp: 20 }];
     expect(applyGameEvents(TICKET_START, events)).toEqual(TICKET_START);
   });
+
+  test("keeps the hints shown", () => {
+    const hinted = showNextHint(TICKET_START);
+    expect(applyGameEvents(hinted, [{ kind: "solved" }]).hintsShown).toBe(1);
+  });
+});
+
+describe("showNextHint", () => {
+  test("shows one more hint each time, up to the three hints of every level", () => {
+    expect(HINT_COUNT).toBe(3);
+    const first = showNextHint(TICKET_START);
+    const second = showNextHint(first);
+    const third = showNextHint(second);
+    expect([first, second, third].map((progress) => progress.hintsShown)).toEqual([1, 2, 3]);
+    // The earlier progress is unchanged.
+    expect(TICKET_START.hintsShown).toBe(0);
+  });
+
+  test("keeps the progress the same once all hints are shown", () => {
+    const all: TicketProgress = { ...TICKET_START, hintsShown: HINT_COUNT };
+    expect(showNextHint(all)).toBe(all);
+  });
+
+  test("still shows hints after the ticket is solved", () => {
+    const solved = applyGameEvents(TICKET_START, [{ kind: "solved" }]);
+    expect(showNextHint(solved)).toEqual({ ...solved, hintsShown: 1 });
+  });
+
+  test("changes nothing but the hints", () => {
+    const progress: TicketProgress = {
+      completedSteps: 1,
+      solved: false,
+      messages: [{ kind: "tip", say: "tip-moved-config" }],
+      hintsShown: 1,
+    };
+    expect(showNextHint(progress)).toEqual({ ...progress, hintsShown: 2 });
+  });
 });
 
 describe("stepPosition", () => {
@@ -63,6 +108,7 @@ describe("stepPosition", () => {
     completedSteps,
     solved,
     messages: [],
+    hintsShown: 0,
   });
 
   test("has no step for a ticket with a single goal", () => {

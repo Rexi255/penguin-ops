@@ -3,15 +3,24 @@
 // that the ticket is solved), the ticket's text, and below it the messages the game said about
 // the ticket: completed steps and tips, oldest first, like comments in a real ticket. Changes of
 // the state and new messages are announced politely.
+//
+// Above the messages it shows the hints the player asked for with F1, one more each time, and
+// after the ticket is solved, below the messages, the explanation of what the player learned
+// (M3.5b, ADR 0098). A new hint is announced politely; the explanation comes into view.
 
-import { useEffect, useId, useRef } from "react";
+import { type Ref, useEffect, useId, useRef } from "react";
 
 import { Icon } from "../icons/icon";
 import { InlineText, Inlines } from "../texts/inline-text";
 import { RichTextBlocks } from "../texts/rich-text";
 import { useTexts } from "../texts/texts-context";
-import { stepPosition, type TicketMessage, type TicketProgress } from "./ticket-progress";
-import { messageText, type TicketTexts } from "./ticket-texts";
+import {
+  HINT_COUNT,
+  stepPosition,
+  type TicketMessage,
+  type TicketProgress,
+} from "./ticket-progress";
+import { type ExplanationTexts, messageText, type TicketTexts } from "./ticket-texts";
 
 export interface TicketPanelProps {
   readonly texts: TicketTexts;
@@ -24,9 +33,21 @@ export function TicketPanel({ texts, stepCount, progress }: TicketPanelProps) {
   const ui = useTexts();
   const idPrefix = useId();
   const titleId = `${idPrefix}-title`;
+  const hintsId = `${idPrefix}-hints`;
   const messagesId = `${idPrefix}-messages`;
+  const lastHint = useRef<HTMLLIElement>(null);
   const lastMessage = useRef<HTMLLIElement>(null);
+  const explanation = useRef<HTMLElement>(null);
   const messageCount = progress.messages.length;
+  const { hintsShown, solved } = progress;
+  const hints = texts.hints.slice(0, hintsShown);
+
+  // A new hint comes into view, so the player sees it below a long ticket text.
+  useEffect(() => {
+    if (hintsShown > 0) {
+      lastHint.current?.scrollIntoView({ block: "nearest" });
+    }
+  }, [hintsShown]);
 
   // A new message comes into view, so the player sees it below a long ticket text.
   useEffect(() => {
@@ -34,6 +55,14 @@ export function TicketPanel({ texts, stepCount, progress }: TicketPanelProps) {
       lastMessage.current?.scrollIntoView({ block: "nearest" });
     }
   }, [messageCount]);
+
+  // The explanation comes into view from its heading when the ticket is solved. This runs after
+  // the message effect, so a step message of the same input does not scroll it away.
+  useEffect(() => {
+    if (solved) {
+      explanation.current?.scrollIntoView({ block: "start" });
+    }
+  }, [solved]);
 
   return (
     <article className="ticket" aria-labelledby={titleId}>
@@ -47,11 +76,42 @@ export function TicketPanel({ texts, stepCount, progress }: TicketPanelProps) {
       <div className="ticket__text">
         <RichTextBlocks text={texts.ticket} />
       </div>
+      {/* Always present, so that a new hint is announced. */}
+      <div className="ticket__live" aria-live="polite">
+        {hints.length > 0 && (
+          <section className="ticket__section" aria-labelledby={hintsId}>
+            <h3 id={hintsId} className="ticket__section-title">
+              <InlineText text={ui.rich("ticket.hints")} textKey="ticket.hints" />
+            </h3>
+            <ol className="ticket__messages">
+              {hints.map((hint, index) => (
+                // Hints are only ever added at the end, so the index is a stable key.
+                <li
+                  key={index}
+                  ref={index === hints.length - 1 ? lastHint : undefined}
+                  className="ticket__message ticket__message--hint"
+                >
+                  <Icon name="hint" />
+                  <div className="ticket__message-text">
+                    <p className="ticket__hint-label">
+                      <InlineText
+                        text={ui.rich("ticket.hint", { number: index + 1, count: HINT_COUNT })}
+                        textKey="ticket.hint"
+                      />
+                    </p>
+                    <RichTextBlocks text={hint} />
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+      </div>
       {/* Always present, so that a new message is announced. */}
-      <div aria-live="polite">
+      <div className="ticket__live" aria-live="polite">
         {messageCount > 0 && (
-          <section className="ticket__updates" aria-labelledby={messagesId}>
-            <h3 id={messagesId} className="ticket__updates-title">
+          <section className="ticket__section" aria-labelledby={messagesId}>
+            <h3 id={messagesId} className="ticket__section-title">
               <InlineText text={ui.rich("ticket.updates")} textKey="ticket.updates" />
             </h3>
             <ol className="ticket__messages">
@@ -69,7 +129,61 @@ export function TicketPanel({ texts, stepCount, progress }: TicketPanelProps) {
           </section>
         )}
       </div>
+      {solved && <Explanation ref={explanation} explanation={texts.explanation} />}
     </article>
+  );
+}
+
+/**
+ * What the player learned: the explanation's text, the variants of the taught command with what
+ * they do, and a command to try. The commands are literal and the same in every language.
+ */
+function Explanation({
+  ref,
+  explanation,
+}: {
+  readonly ref: Ref<HTMLElement>;
+  readonly explanation: ExplanationTexts;
+}) {
+  const ui = useTexts();
+  const idPrefix = useId();
+  const titleId = `${idPrefix}-explanation`;
+  const optionsId = `${idPrefix}-options`;
+  const { text, options, example } = explanation;
+  return (
+    <section ref={ref} className="ticket__section ticket__explanation" aria-labelledby={titleId}>
+      <h3 id={titleId} className="ticket__section-title">
+        <InlineText text={ui.rich("ticket.explanation")} textKey="ticket.explanation" />
+      </h3>
+      <div className="ticket__text">
+        <RichTextBlocks text={text} />
+      </div>
+      {options.length > 0 && (
+        <>
+          <h4 id={optionsId} className="ticket__section-title ticket__options-title">
+            <InlineText text={ui.rich("ticket.options")} textKey="ticket.options" />
+          </h4>
+          <dl className="ticket__options" aria-labelledby={optionsId}>
+            {options.map(({ option, description }) => (
+              <div key={option} className="ticket__option">
+                <dt>
+                  <code>{option}</code>
+                </dt>
+                <dd className="ticket__message-text">
+                  <RichTextBlocks text={description} />
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </>
+      )}
+      {example !== undefined && (
+        <p className="ticket__example">
+          <InlineText text={ui.rich("ticket.example")} textKey="ticket.example" />{" "}
+          <code>{example}</code>
+        </p>
+      )}
+    </section>
   );
 }
 

@@ -1,9 +1,10 @@
-// End-to-end tests of the game screen and the pause menu (ROADMAP M3.1c, M3.4, M3.5a, ADR 0092,
-// ADR 0095, ADR 0096, ADR 0097): a new game starts with the keyboard alone and the terminal has the
-// focus, the tickets panel and the top bar show the ticket and that it is solved, the side panel's
+// End-to-end tests of the game screen and the pause menu (ROADMAP M3.1c, M3.4, M3.5a, M3.5b,
+// ADR 0092, ADR 0095, ADR 0096, ADR 0097, ADR 0098): a new game starts with the keyboard alone and
+// the terminal has the focus, the tickets panel and the top bar show the ticket and that it is
+// solved, F1 shows the hints and solving shows the explanation, the side panel's
 // tabs switch with the keyboard and the mouse, Esc opens and closes the pause menu, Main menu leads
 // back to the start screen, and axe-core finds no accessibility violations, with the pause menu
-// closed and open, with the ticket solved and with another tab chosen.
+// closed and open, with hints, with the ticket solved and with another tab chosen.
 import type { Page } from "@playwright/test";
 
 import { expect, test } from "./app";
@@ -18,6 +19,9 @@ const LANGUAGES = [
     input: "Command line",
     menuHint: "Esc Menu",
     completeHint: "Tab Complete",
+    hintHint: "F1 Hint",
+    hint: "Hint 1 of 3",
+    explanation: "What you learned",
     tickets: "Tickets",
     ticketTitle: "First steps",
     ticketStart: "Welcome to the IT department!",
@@ -36,6 +40,9 @@ const LANGUAGES = [
     input: "Befehlszeile",
     menuHint: "Esc Menü",
     completeHint: "Tab Vervollständigen",
+    hintHint: "F1 Hinweis",
+    hint: "Hinweis 1 von 3",
+    explanation: "Was du gelernt hast",
     tickets: "Tickets",
     ticketTitle: "Erste Schritte",
     ticketStart: "Willkommen in der IT-Abteilung!",
@@ -94,7 +101,23 @@ for (const language of LANGUAGES) {
       await expect(page.locator(".guide-words")).toHaveText(
         `${language.ticketTitle}${language.solved}`,
       );
+      await expect(
+        page.getByRole("heading", { level: 3, name: language.explanation }),
+      ).toBeVisible();
       expect(await axeViolations(page)).toEqual([]);
+    });
+
+    test("shows a hint with F1 and keeps the terminal's focus", async ({ page }) => {
+      await startGame(page);
+      await expect(page.getByRole("button", { name: language.hintHint })).toBeVisible();
+      await page.keyboard.type("cd wel");
+      await page.keyboard.press("F1");
+      await expect(page.locator(".ticket__hint-label")).toHaveText([language.hint]);
+      await expect(page.getByRole("textbox", { name: language.input })).toBeFocused();
+      expect(await axeViolations(page)).toEqual([]);
+      await page.keyboard.type("come");
+      await page.keyboard.press("Enter");
+      await expect(page.getByRole("status")).toHaveText(language.solved);
     });
 
     test("switches the side panel's tabs with the keyboard and goes back", async ({ page }) => {

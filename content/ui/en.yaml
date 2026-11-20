@@ -1,6 +1,7 @@
 app:
   name: PenguinOps
 keys:
+  f1: F1
   escape: Esc
   tab: Tab
 start:
@@ -46,6 +47,7 @@ game:
   handbook: Handbook
   mail-empty: No mail yet.
   handbook-empty: The commands you learn will appear here.
+  hint: Hint
   complete: Complete
   menu: Menu
 ticket:
@@ -54,6 +56,11 @@ ticket:
   updates: Updates
   step-done: Step done
   tip: Tip
+  hints: Hints
+  hint: "Hint {number} of {count}"
+  explanation: What you learned
+  options: Useful variants
+  example: "Try it:"
 terminal:
   output: Terminal output
   input: Command line

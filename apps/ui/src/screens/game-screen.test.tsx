@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 // Tests of the game screen in both languages: the areas of the workplace layout as landmarks, the
 // terminal that has the focus and plays the level, the ticket in the tickets panel and the top
-// bar that follow the player's progress (ADR 0097), and the pause menu that Esc or the key hint
-// opens and closes.
+// bar that follow the player's progress (ADR 0097), the hints that F1 or its key hint shows and the
+// explanation after solving (ADR 0098), and the pause menu that Esc or the key hint opens and
+// closes.
 import { MANDATORY_LANGUAGES, type MandatoryLanguage } from "@penguin-ops/content";
 import { levelSetup } from "@penguin-ops/gameplay";
 import { cleanup, render, screen } from "@testing-library/react";
@@ -28,6 +29,7 @@ const EXPECTED: Readonly<
       input: string;
       menuHint: string;
       completeHint: string;
+      hintHint: string;
       tickets: string;
       pause: string;
     }
@@ -40,6 +42,7 @@ const EXPECTED: Readonly<
     input: "Command line",
     menuHint: "Esc Menu",
     completeHint: "Tab Complete",
+    hintHint: "F1 Hint",
     tickets: "Tickets",
     pause: "Paused",
   },
@@ -50,6 +53,7 @@ const EXPECTED: Readonly<
     input: "Befehlszeile",
     menuHint: "Esc Menü",
     completeHint: "Tab Vervollständigen",
+    hintHint: "F1 Hinweis",
     tickets: "Tickets",
     pause: "Pause",
   },
@@ -104,6 +108,11 @@ function ticket() {
   return screen.getByRole("article");
 }
 
+/** The labels of the hints the ticket panel shows, such as "Hint 1 of 3". */
+function hintLabels() {
+  return [...document.querySelectorAll(".ticket__hint-label")].map((label) => label.textContent);
+}
+
 const TICKETS: Readonly<
   Record<
     MandatoryLanguage,
@@ -116,6 +125,8 @@ const TICKETS: Readonly<
       updates: string;
       backupDone: string;
       movedConfig: string;
+      hint: (number: number) => string;
+      explanation: string;
     }
   >
 > = {
@@ -128,6 +139,8 @@ const TICKETS: Readonly<
     updates: "Updates",
     backupDone: "Step doneThe backup is safe.",
     movedConfig: "TipThe configuration is now only in ~/backup",
+    hint: (number) => `Hint ${String(number)} of 3`,
+    explanation: "What you learned",
   },
   de: {
     firstSteps: "Erste Schritte",
@@ -138,6 +151,8 @@ const TICKETS: Readonly<
     updates: "Verlauf",
     backupDone: "Schritt erledigtDas Backup ist in Sicherheit.",
     movedConfig: "TippDie Konfiguration liegt jetzt nur noch in ~/backup",
+    hint: (number) => `Hinweis ${String(number)} von 3`,
+    explanation: "Was du gelernt hast",
   },
 };
 
@@ -178,13 +193,16 @@ describe("GameScreen", () => {
     "shows the key hints of the keys that work in the footer in %s",
     (language) => {
       renderGameScreen(language);
-      const { completeHint, menuHint: menu } = EXPECTED[language];
+      const { completeHint, menuHint: menu, hintHint } = EXPECTED[language];
       const footer = screen.getByRole("contentinfo");
       const hints = [...footer.querySelectorAll(".key-hint")];
-      expect(hints.map((hint) => hint.textContent)).toEqual([completeHint, menu]);
+      expect(hints.map((hint) => hint.textContent)).toEqual([hintHint, completeHint, menu]);
+      const hint = screen.getByRole("button", { name: hintHint });
+      expect(hint.getAttribute("aria-keyshortcuts")).toBe("F1");
+      expect(hint.querySelector("kbd")?.textContent).toBe("F1");
       // The terminal answers Tab itself, so its hint is text, not a button.
-      expect(hints[0]?.tagName).toBe("SPAN");
-      expect(hints[0]?.querySelector("kbd")?.textContent).toBe("Tab");
+      expect(hints[1]?.tagName).toBe("SPAN");
+      expect(hints[1]?.querySelector("kbd")?.textContent).toBe("Tab");
       expect(screen.queryByRole("button", { name: completeHint })).toBeNull();
     },
   );
@@ -366,8 +384,11 @@ describe("GameScreen", () => {
     await userEvent.keyboard("cd welcome{Enter}");
     expect(screen.getByRole("status").textContent).toBe(expected.solved);
     expect(guideWords().textContent).toBe(`${expected.firstSteps}${expected.solved}`);
-    // Solving says nothing more than the state.
-    expect(screen.queryByRole("heading", { level: 3 })).toBeNull();
+    // Solving shows the explanation and no message.
+    expect(
+      screen.getAllByRole("heading", { level: 3 }).map((heading) => heading.textContent),
+    ).toEqual([expected.explanation]);
+    expect(ticket().querySelector(".ticket__example code")?.textContent).toBe("cd ~/welcome");
   });
 
   test.each(MANDATORY_LANGUAGES)(
@@ -411,14 +432,18 @@ describe("GameScreen", () => {
     },
   );
 
-  test("announces the ticket's state and new messages politely", async () => {
+  test("announces the ticket's state, new hints and new messages politely", async () => {
     renderGameScreen("en", "switch-backup");
-    const messages = ticket().querySelector("[aria-live]");
+    const [hints, messages] = ticket().querySelectorAll("[aria-live]");
+    expect(hints?.getAttribute("aria-live")).toBe("polite");
     expect(messages?.getAttribute("aria-live")).toBe("polite");
     expect(messages?.textContent).toBe("");
     await userEvent.keyboard("mv ~/network/switch-floor2.conf ~/backup/{Enter}");
     expect(messages?.textContent).toContain("The configuration is now only in");
     expect(scrollIntoView).toHaveBeenCalledWith({ block: "nearest" });
+    expect(hints?.textContent).toBe("");
+    await userEvent.keyboard("{F1}");
+    expect(hints?.textContent).toContain("Hint 1 of 3");
   });
 
   test("keeps the ticket's progress while inputs change nothing in the game", async () => {
@@ -432,10 +457,84 @@ describe("GameScreen", () => {
     ).toHaveLength(1);
   });
 
+  test.each(MANDATORY_LANGUAGES)(
+    "shows the next hint with F1 from the terminal and keeps typing there in %s",
+    async (language) => {
+      renderGameScreen(language);
+      const expected = TICKETS[language];
+      await userEvent.keyboard("cd wel");
+      await userEvent.keyboard("{F1}");
+      expect(hintLabels()).toEqual([expected.hint(1)]);
+      expect(screen.getByRole("textbox", { name: EXPECTED[language].input })).toBe(
+        document.activeElement,
+      );
+      await userEvent.keyboard("come{Enter}");
+      expect(screen.getByRole("log").textContent).toContain("max@itdesk:~$ cd welcome");
+      expect(screen.getByRole("status").textContent).toBe(expected.solved);
+    },
+  );
+
+  test("shows one more hint with every F1, up to the solution", async () => {
+    renderGameScreen();
+    await userEvent.keyboard("{F1}{F1}");
+    expect(hintLabels()).toEqual(["Hint 1 of 3", "Hint 2 of 3"]);
+    await userEvent.keyboard("{F1}");
+    expect(hintLabels()).toEqual(["Hint 1 of 3", "Hint 2 of 3", "Hint 3 of 3"]);
+    expect(ticket().textContent).toContain("Type cd welcome.");
+    // There are no more hints; F1 changes nothing.
+    await userEvent.keyboard("{F1}");
+    expect(hintLabels()).toHaveLength(3);
+  });
+
+  test("shows only one hint while F1 is held down", async () => {
+    renderGameScreen();
+    await userEvent.keyboard("{F1>3/}");
+    expect(hintLabels()).toEqual(["Hint 1 of 3"]);
+  });
+
+  test("shows the next hint when the player clicks the key hint", async () => {
+    renderGameScreen();
+    await userEvent.click(screen.getByRole("button", { name: "F1 Hint" }));
+    expect(hintLabels()).toEqual(["Hint 1 of 3"]);
+    await userEvent.keyboard("{Enter}");
+    expect(hintLabels()).toEqual(["Hint 1 of 3", "Hint 2 of 3"]);
+  });
+
+  test("brings the tickets panel to the front with F1 and keeps the focus", async () => {
+    renderGameScreen();
+    await userEvent.click(screen.getByRole("tab", { name: "Mail" }));
+    await userEvent.keyboard("{F1}");
+    expect(screen.getByRole("tab", { name: "Tickets", selected: true })).toBeDefined();
+    expect(screen.getByRole("tabpanel", { name: "Tickets" }).contains(ticket())).toBe(true);
+    expect(hintLabels()).toEqual(["Hint 1 of 3"]);
+    expect(screen.getByRole("tab", { name: "Mail" })).toBe(document.activeElement);
+  });
+
+  test("still shows hints after the ticket is solved", async () => {
+    renderGameScreen();
+    await userEvent.keyboard("cd welcome{Enter}{F1}");
+    expect(hintLabels()).toEqual(["Hint 1 of 3"]);
+    expect(screen.getByRole("heading", { level: 3, name: "What you learned" })).toBeDefined();
+  });
+
+  test("shows no hint with F1 while the pause menu is open", async () => {
+    renderGameScreen();
+    await userEvent.keyboard("{Escape}{F1}");
+    await userEvent.keyboard("{Escape}");
+    expect(hintLabels()).toEqual([]);
+  });
+
+  test("keeps the hints while the player plays on", async () => {
+    renderGameScreen("en", "switch-backup");
+    await userEvent.keyboard("{F1}cp ~/network/switch-floor2.conf ~/backup/{Enter}{F1}");
+    expect(hintLabels()).toEqual(["Hint 1 of 3", "Hint 2 of 3"]);
+    expect(screen.getByRole("status").textContent).toBe("Step 2 of 2");
+  });
+
   test("ignores other keys", async () => {
     renderGameScreen();
     commandLine().blur();
-    await userEvent.keyboard("{F1}q{ArrowDown}");
+    await userEvent.keyboard("{F2}{F3}q{ArrowDown}");
     expect(pauseMenu()).toBeNull();
   });
 });

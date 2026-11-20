@@ -1,16 +1,18 @@
 // @vitest-environment jsdom
 // Tests of the side panel's tabs (ROADMAP M3.4, ADR 0096) in both languages: the WAI-ARIA tabs
 // pattern with its names, states and keys, the mouse, and the panels: the ticket the game screen
-// gives the tickets panel (ADR 0097) and the empty states of mail and handbook.
+// gives the tickets panel (ADR 0097), the empty states of mail and handbook, and the chosen tab
+// that the game screen keeps (ADR 0098).
 import { MANDATORY_LANGUAGES, type MandatoryLanguage } from "@penguin-ops/content";
 import { cleanup, render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { afterEach, describe, expect, test } from "vitest";
+import { useState } from "react";
+import { afterEach, describe, expect, test, vi } from "vitest";
 
 import { loadBundledContent } from "../content/bundled-content";
 import { TextsProvider } from "../texts/texts-context";
 import { createTexts } from "../texts/ui-texts";
-import { SIDE_PANEL_TABS, SidePanel, tabAfterKey } from "./side-panel";
+import { SIDE_PANEL_TABS, SidePanel, type SidePanelTab, tabAfterKey } from "./side-panel";
 
 const { uiCatalogs } = loadBundledContent();
 
@@ -45,10 +47,22 @@ const EXPECTED: Readonly<
   },
 };
 
+/** The side panel with its chosen tab kept in state, as the game screen keeps it. */
+function StatefulSidePanel() {
+  const [selected, setSelected] = useState<SidePanelTab>("tickets");
+  return (
+    <SidePanel
+      tickets={<p>The printer on the second floor prints blank pages.</p>}
+      selected={selected}
+      onSelect={setSelected}
+    />
+  );
+}
+
 function renderSidePanel(language: MandatoryLanguage = "en") {
   return render(
     <TextsProvider texts={createTexts(uiCatalogs, language)}>
-      <SidePanel tickets={<p>The printer on the second floor prints blank pages.</p>} />
+      <StatefulSidePanel />
     </TextsProvider>,
   );
 }
@@ -202,6 +216,20 @@ describe("SidePanel", () => {
       expect(visiblePanel()).toBe(document.activeElement);
     },
   );
+
+  test("shows the tab it is given and reports the choice without making it", async () => {
+    const onSelect = vi.fn<(tab: SidePanelTab) => void>();
+    render(
+      <TextsProvider texts={createTexts(uiCatalogs, "en")}>
+        <SidePanel tickets={<p>Tickets</p>} selected="mail" onSelect={onSelect} />
+      </TextsProvider>,
+    );
+    expect(tab("Mail").getAttribute("aria-selected")).toBe("true");
+    expect(visiblePanel().textContent).toBe("No mail yet.");
+    await userEvent.click(tab("Handbook"));
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith("handbook");
+    expect(tab("Mail").getAttribute("aria-selected")).toBe("true");
+  });
 
   test("marks every tab with the cable colour of its kind of work", () => {
     renderSidePanel();

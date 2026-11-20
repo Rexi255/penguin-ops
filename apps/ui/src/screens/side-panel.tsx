@@ -5,9 +5,10 @@
 // and choose the tab they reach.
 //
 // The tickets panel shows what the game screen gives it: the ticket being played (M3.5a,
-// ADR 0097). The mail and the handbook show their empty states until M3.11 fills them.
+// ADR 0097). The mail and the handbook show their empty states until M3.11 fills them. The game
+// screen keeps the chosen tab, because F1 brings the tickets panel to the front (ADR 0098).
 
-import { type KeyboardEvent, type ReactNode, useId, useRef, useState } from "react";
+import { type KeyboardEvent, type ReactNode, useId, useRef } from "react";
 
 import { Icon, type IconName } from "../icons/icon";
 import { InlineText } from "../texts/inline-text";
@@ -85,12 +86,15 @@ function panelContent(tab: SidePanelTab, tickets: ReactNode): ReactNode {
 export interface SidePanelProps {
   /** The content of the tickets panel: the ticket being played. */
   readonly tickets: ReactNode;
+  /** The chosen tab, whose panel is shown. */
+  readonly selected: SidePanelTab;
+  /** Called with the tab the player chooses with a click or a key. */
+  readonly onSelect: (tab: SidePanelTab) => void;
 }
 
-export function SidePanel({ tickets }: SidePanelProps) {
+export function SidePanel({ tickets, selected, onSelect }: SidePanelProps) {
   const texts = useTexts();
   const idPrefix = useId();
-  const [selected, setSelected] = useState<SidePanelTab>("tickets");
   const tabButtons = useRef(new Map<SidePanelTab, HTMLButtonElement>());
 
   const tabId = (tab: SidePanelTab) => `${idPrefix}-tab-${tab}`;
@@ -105,7 +109,7 @@ export function SidePanel({ tickets }: SidePanelProps) {
       return;
     }
     event.preventDefault();
-    setSelected(next);
+    onSelect(next);
     tabButtons.current.get(next)?.focus();
   };
 
@@ -133,7 +137,7 @@ export function SidePanel({ tickets }: SidePanelProps) {
               aria-controls={panelId(tab)}
               tabIndex={isSelected ? 0 : -1}
               onClick={() => {
-                setSelected(tab);
+                onSelect(tab);
               }}
               onKeyDown={(event) => {
                 onKeyDown(event, index);

@@ -2,7 +2,8 @@
 
 > **Status: skeleton.** The workspaces exist with strict TypeScript configs (ROADMAP M0.2);
 > the Electron app has its start, save slot, new game and game screens with the pause menu,
-> the terminal, the workplace layout, the ticket panel and the bundled content (M3.1–M3.5a), and
+> the terminal, the workplace layout, the ticket panel with hints and explanation and the bundled
+> content (M3.1–M3.5b), and
 > the engine has the core types of the
 > world model (M1.1), path lookup and permission checks (M1.2), its random generator, game
 > clock and world builder (M1.3), the shell lexer, parser, word expansion and execution
@@ -483,13 +484,16 @@ it, checked with `checkUserName` against the reserved names) and the mode as two
 as cards; each problem code has a catalog text in a live region that describes its field, and Start
 creates the game only without problems (ADR 0093, ADR 0094). `src/screens/game-screen.tsx` is the
 frame of the workplace layout as a CSS grid: top bar, side panel, terminal area and the key-hint
-footer, whose "Esc Menu" hint is a button and whose "Tab Complete" hint is text, because the
-terminal answers Tab itself. The side panel is `src/screens/side-panel.tsx`: the tabs Tickets, Mail
-and Handbook after the WAI-ARIA tabs pattern, each with its panel and the cable colour of its kind
-of work (ADR 0096); its tickets panel shows what the game screen gives it. It starts the level at
+footer, whose "F1 Hint" and "Esc Menu" hints are buttons and whose "Tab Complete" hint is text,
+because the terminal answers Tab itself. The side panel is `src/screens/side-panel.tsx`: the tabs
+Tickets, Mail and Handbook after the WAI-ARIA tabs pattern, each with its panel and the cable colour
+of its kind of work (ADR 0096); its tickets panel shows what the game screen gives it, and the game
+screen keeps the chosen tab, because F1 brings the tickets panel to the front (ADR 0098). It starts
+the level at
 `GAME_START_TIME` and shows it in the terminal, whose input line has the focus. The terminal reports
 the game events of every input (`onGameEvents`), and the game screen adds them up to the ticket's
-progress, which the ticket panel and the top bar's guide words show (ADR 0097). Esc opens
+progress, which the ticket panel and the top bar's guide words show (ADR 0097). F1 or its key hint
+adds the next hint to that progress (ADR 0098). Esc opens
 `src/screens/pause-menu.tsx`, a modal dialog (Continue, Main menu) over the game, whose frame is
 `inert` while it is open; the pause state lives in the game screen (ADR 0092). The styles of all
 screens are in `src/styles.css`. The visual world is "Label Tape & Patch Cable" (ADR 0081,
@@ -497,13 +501,15 @@ screens are in `src/styles.css`. The visual world is "Label Tape & Patch Cable" 
 `.impeccable/surfaces/src-app-tsx.md`, and `.impeccable/design.json` is impeccable's sidecar to
 `DESIGN.md`.
 
-Tickets (ADR 0097): `src/tickets/ticket-progress.ts` is a pure model of the ticket's progress
-(completed steps, solved, the step messages and tips in the order the game said them) with
-`applyGameEvents` and `stepPosition`. `src/tickets/ticket-texts.ts` formats a level's title and
-ticket text in the player's language (`ticketTexts`) and a step message or tip by its key
-(`messageText`). `src/tickets/ticket-panel.tsx` draws the ticket: title, a state row with the
-steps as tape segments or the solved state (`role="status"`), the ticket text and the messages in
-a polite live region. The app root gives the game screen the level's `TicketTexts`.
+Tickets (ADR 0097, ADR 0098): `src/tickets/ticket-progress.ts` is a pure model of the ticket's
+progress (completed steps, solved, the step messages and tips in the order the game said them, and
+how many hints the player asked for) with `applyGameEvents`, `showNextHint` and `stepPosition`.
+`src/tickets/ticket-texts.ts` formats a level's title, ticket text, hints and explanation in the
+player's language (`ticketTexts`) and a step message or tip by its key (`messageText`).
+`src/tickets/ticket-panel.tsx` draws the ticket: title, a state row with the steps as tape segments
+or the solved state (`role="status"`), the ticket text, the hints shown so far and the messages,
+each in its own polite live region, and after solving the explanation with its variants and a
+command to try. The app root gives the game screen the level's `TicketTexts`.
 
 Terminal (ADR 0095): `src/terminal/terminal-model.ts` holds the whole state of a terminal as an
 immutable value (the level session, the game time, the screen with its finished lines, page start

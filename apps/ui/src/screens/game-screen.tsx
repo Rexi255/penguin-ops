@@ -7,7 +7,9 @@
 // step or state (M3.5a); the rank and progress follow with M3.12.
 //
 // The game screen keeps the ticket's progress: the terminal reports the game events of every
-// input, and the ticket panel and the top bar show what they add up to.
+// input, and the ticket panel and the top bar show what they add up to. F1 or its key hint shows
+// the ticket's next hint and brings the tickets panel to the front (M3.5b, ADR 0098); the focus
+// stays where it is, so the player keeps typing.
 
 import { createGameClock } from "@penguin-ops/engine";
 import {
@@ -26,13 +28,14 @@ import { useTexts } from "../texts/texts-context";
 import { TicketPanel } from "../tickets/ticket-panel";
 import {
   applyGameEvents,
+  showNextHint,
   stepPosition,
   TICKET_START,
   type TicketProgress,
 } from "../tickets/ticket-progress";
 import type { TicketTexts } from "../tickets/ticket-texts";
 import { PauseMenu } from "./pause-menu";
-import { SidePanel } from "./side-panel";
+import { SidePanel, type SidePanelTab } from "./side-panel";
 
 export interface GameScreenProps {
   /**
@@ -59,6 +62,7 @@ export function GameScreen({ level, ticket, onMainMenu }: GameScreenProps) {
   // The level starts once, when the screen appears.
   const [terminal] = useState(() => startTerminal(level));
   const [progress, setProgress] = useState<TicketProgress>(TICKET_START);
+  const [tab, setTab] = useState<SidePanelTab>("tickets");
   const stepCount = level.level.steps?.length ?? 0;
   const terminalInput = useRef<HTMLTextAreaElement>(null);
   const menuHint = useRef<HTMLButtonElement>(null);
@@ -79,6 +83,12 @@ export function GameScreen({ level, ticket, onMainMenu }: GameScreenProps) {
     setProgress((current) => applyGameEvents(current, events));
   }, []);
 
+  // The hint appears in the tickets panel, so that panel comes to the front.
+  const showHint = useCallback(() => {
+    setProgress(showNextHint);
+    setTab("tickets");
+  }, []);
+
   // The keyboard is the main input (PRODUCT.md): when the screen appears, the terminal's input
   // line has the focus, and whenever the pause menu closes, the focus goes back to where it was.
   // The frame is inert while the menu is open, so this waits until it is not.
@@ -95,22 +105,29 @@ export function GameScreen({ level, ticket, onMainMenu }: GameScreenProps) {
     }
   }, [paused]);
 
-  // In the game, Esc opens the pause menu (ADR 0020); while it is open, the menu handles Esc.
+  // In the game, Esc opens the pause menu and F1 shows the next hint (ADR 0020); while the menu
+  // is open, it handles Esc and the game takes no keys. A held key acts once.
   useEffect(() => {
     if (paused) {
       return;
     }
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !event.repeat) {
+      if (event.repeat) {
+        return;
+      }
+      if (event.key === "Escape") {
         event.preventDefault();
         openPauseMenu();
+      } else if (event.key === "F1") {
+        event.preventDefault();
+        showHint();
       }
     };
     document.addEventListener("keydown", onKeyDown);
     return () => {
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [paused, openPauseMenu]);
+  }, [paused, openPauseMenu, showHint]);
 
   return (
     <div className="game-screen">
@@ -125,12 +142,20 @@ export function GameScreen({ level, ticket, onMainMenu }: GameScreenProps) {
         <aside className="game-screen__side-panel" aria-label={texts.plain("game.side-panel")}>
           <SidePanel
             tickets={<TicketPanel texts={ticket} stepCount={stepCount} progress={progress} />}
+            selected={tab}
+            onSelect={setTab}
           />
         </aside>
         <main className="game-screen__terminal" aria-label={texts.plain("game.terminal")}>
           <Terminal ref={terminalInput} initialState={terminal} onGameEvents={onGameEvents} />
         </main>
         <footer className="game-screen__footer">
+          <button type="button" className="key-hint" aria-keyshortcuts="F1" onClick={showHint}>
+            <kbd className="key-hint__key">
+              <InlineText text={texts.rich("keys.f1")} textKey="keys.f1" />
+            </kbd>{" "}
+            <InlineText text={texts.rich("game.hint")} textKey="game.hint" />
+          </button>
           {/* The terminal answers Tab itself, so its hint is no button (ADR 0096). */}
           <span className="key-hint key-hint--terminal">
             <kbd className="key-hint__key">

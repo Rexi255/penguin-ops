@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
-// Tests of the ticket panel (ADR 0097) in both languages: the title that names the ticket, the
-// state row with its tape segments, the ticket's text, and the messages with their labels.
+// Tests of the ticket panel (ADR 0097, ADR 0098) in both languages: the title that names the
+// ticket, the state row with its tape segments, the ticket's text, the messages with their labels,
+// the hints the player asked for and the explanation after solving.
 import { MANDATORY_LANGUAGES, type MandatoryLanguage } from "@penguin-ops/content";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, test, vi } from "vitest";
@@ -14,10 +15,53 @@ import { ticketTexts } from "./ticket-texts";
 
 const content = loadBundledContent();
 
-const LABELS: Readonly<Record<MandatoryLanguage, { stepDone: string; tip: string }>> = {
-  en: { stepDone: "Step done", tip: "Tip" },
-  de: { stepDone: "Schritt erledigt", tip: "Tipp" },
+const LABELS: Readonly<
+  Record<
+    MandatoryLanguage,
+    {
+      stepDone: string;
+      tip: string;
+      hints: string;
+      hint: (number: number) => string;
+      solution: string;
+      explanation: string;
+      explanationStart: string;
+      variants: string;
+      variantText: string;
+      example: string;
+    }
+  >
+> = {
+  en: {
+    stepDone: "Step done",
+    tip: "Tip",
+    hints: "Hints",
+    hint: (number) => `Hint ${String(number)} of 3`,
+    solution: "Type cd welcome.",
+    explanation: "What you learned",
+    explanationStart: "pwd (print working directory) shows where you are",
+    variants: "Useful variants",
+    variantText: "Go to the parent directory.",
+    example: "Try it: cd ~/welcome",
+  },
+  de: {
+    stepDone: "Schritt erledigt",
+    tip: "Tipp",
+    hints: "Hinweise",
+    hint: (number) => `Hinweis ${String(number)} von 3`,
+    solution: "Tippe cd welcome.",
+    explanation: "Was du gelernt hast",
+    explanationStart: "pwd (print working directory) zeigt, wo du bist",
+    variants: "Nützliche Varianten",
+    variantText: "Wechselt in das übergeordnete Verzeichnis.",
+    example: "Probier es aus: cd ~/welcome",
+  },
 };
+
+/** The hints the panel shows, each as its label and its text. */
+function shownHints(container: HTMLElement): string[] {
+  return [...container.querySelectorAll(".ticket__message--hint")].map((item) => item.textContent);
+}
 
 function renderPanel(
   progress: TicketProgress,
@@ -82,7 +126,7 @@ describe("TicketPanel", () => {
   });
 
   test("shows a solved ticket with every segment printed", () => {
-    const { container } = renderPanel({ completedSteps: 2, solved: true, messages: [] });
+    const { container } = renderPanel({ ...TICKET_START, completedSteps: 2, solved: true });
     expect(segments(container)).toEqual(["done", "done"]);
     const status = screen.getByRole("status");
     expect(status.textContent).toBe("Solved");
@@ -100,8 +144,8 @@ describe("TicketPanel", () => {
     (language) => {
       const { container } = renderPanel(
         {
+          ...TICKET_START,
           completedSteps: 1,
-          solved: false,
           messages: [
             { kind: "tip", say: "tip-moved-config" },
             { kind: "step", say: "step-backup" },
@@ -125,6 +169,125 @@ describe("TicketPanel", () => {
       }
     },
   );
+
+  test("shows no hints before the player asks for one", () => {
+    const { container } = renderPanel(TICKET_START, "first-steps");
+    expect(shownHints(container)).toEqual([]);
+    expect(screen.queryByRole("heading", { name: "Hints" })).toBeNull();
+  });
+
+  test.each(MANDATORY_LANGUAGES)(
+    "shows the hints the player asked for in their order in %s",
+    (language) => {
+      const labels = LABELS[language];
+      const { container } = renderPanel(
+        { ...TICKET_START, hintsShown: 2 },
+        "first-steps",
+        language,
+      );
+      expect(screen.getByRole("heading", { level: 3, name: labels.hints })).toBeDefined();
+      const hints = shownHints(container);
+      expect(hints).toHaveLength(2);
+      expect(hints[0]?.startsWith(labels.hint(1))).toBe(true);
+      expect(hints[1]?.startsWith(labels.hint(2))).toBe(true);
+      for (const item of container.querySelectorAll(".ticket__message--hint")) {
+        expect(item.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
+      }
+    },
+  );
+
+  test.each(MANDATORY_LANGUAGES)("shows the solution as the third hint in %s", (language) => {
+    const labels = LABELS[language];
+    const { container } = renderPanel({ ...TICKET_START, hintsShown: 3 }, "first-steps", language);
+    const third = container.querySelectorAll(".ticket__message--hint")[2];
+    expect(third?.textContent).toBe(`${labels.hint(3)}${labels.solution}`);
+    expect(third?.querySelector("code")?.textContent).toBe("cd welcome");
+  });
+
+  test("announces the hints politely in a region apart from the messages", () => {
+    const { container } = renderPanel({ ...TICKET_START, hintsShown: 1 }, "first-steps");
+    const regions = [...container.querySelectorAll("[aria-live]")];
+    expect(regions.map((region) => region.getAttribute("aria-live"))).toEqual(["polite", "polite"]);
+    expect(regions[0]?.textContent).toContain("Hint 1 of 3");
+    expect(regions[1]?.textContent).toBe("");
+  });
+
+  test("shows no explanation before the ticket is solved", () => {
+    renderPanel({ ...TICKET_START, hintsShown: 3 }, "first-steps");
+    expect(screen.queryByRole("heading", { name: "What you learned" })).toBeNull();
+    expect(screen.queryByRole("term")).toBeNull();
+  });
+
+  test.each(MANDATORY_LANGUAGES)(
+    "shows the explanation with its variants and example once solved in %s",
+    (language) => {
+      const labels = LABELS[language];
+      renderPanel({ ...TICKET_START, solved: true }, "first-steps", language);
+      const heading = screen.getByRole("heading", { level: 3, name: labels.explanation });
+      const section = heading.closest("section");
+      expect(section?.textContent).toContain(labels.explanationStart);
+      const variants = screen.getByRole("heading", { level: 4, name: labels.variants });
+      expect(section?.contains(variants)).toBe(true);
+      // The definition list of the variants is named by their heading.
+      const list = section?.querySelector("dl");
+      expect(list?.getAttribute("aria-labelledby")).toBe(variants.id);
+    },
+  );
+
+  test("shows the variants as commands with what they do", () => {
+    const { container } = renderPanel({ ...TICKET_START, solved: true }, "first-steps", "de");
+    const list = container.querySelector("dl");
+    expect(screen.getAllByRole("term")).toHaveLength(2);
+    expect([...(list?.querySelectorAll("dt code") ?? [])].map((code) => code.textContent)).toEqual([
+      "cd ..",
+      "cd ~",
+    ]);
+    expect(list?.querySelector("dd")?.textContent).toBe(LABELS.de.variantText);
+  });
+
+  test.each(MANDATORY_LANGUAGES)("shows the command to try as code in %s", (language) => {
+    const { container } = renderPanel({ ...TICKET_START, solved: true }, "first-steps", language);
+    const example = container.querySelector(".ticket__example");
+    expect(example?.textContent).toBe(LABELS[language].example);
+    expect(example?.querySelector("code")?.textContent).toBe("cd ~/welcome");
+  });
+
+  test("leaves out the variants and the example that a level does not have", () => {
+    const texts = ticketTexts(content, "first-steps", "en");
+    const { container } = render(
+      <TextsProvider texts={createTexts(content.uiCatalogs, "en")}>
+        <TicketPanel
+          texts={{ ...texts, explanation: { text: texts.explanation.text, options: [] } }}
+          stepCount={0}
+          progress={{ ...TICKET_START, solved: true }}
+        />
+      </TextsProvider>,
+    );
+    expect(screen.getByRole("heading", { name: "What you learned" })).toBeDefined();
+    expect(screen.queryByRole("heading", { name: "Useful variants" })).toBeNull();
+    expect(container.querySelector("dl")).toBeNull();
+    expect(container.querySelector(".ticket__example")).toBeNull();
+  });
+
+  test("scrolls a new hint into view, and the explanation from its heading once solved", () => {
+    const scroll = vi.fn<Element["scrollIntoView"]>();
+    Element.prototype.scrollIntoView = scroll;
+    const texts = ticketTexts(content, "first-steps", "en");
+    const panel = (progress: TicketProgress) => (
+      <TextsProvider texts={createTexts(content.uiCatalogs, "en")}>
+        <TicketPanel texts={texts} stepCount={0} progress={progress} />
+      </TextsProvider>
+    );
+    const view = render(panel(TICKET_START));
+    expect(scroll).not.toHaveBeenCalled();
+    view.rerender(panel({ ...TICKET_START, hintsShown: 1 }));
+    expect(scroll).toHaveBeenCalledExactlyOnceWith({ block: "nearest" });
+    expect(scroll.mock.contexts[0]).toBe(view.container.querySelector(".ticket__message--hint"));
+    view.rerender(panel({ ...TICKET_START, hintsShown: 1, solved: true }));
+    expect(scroll).toHaveBeenCalledTimes(2);
+    expect(scroll).toHaveBeenLastCalledWith({ block: "start" });
+    expect(scroll.mock.contexts[1]).toBe(view.container.querySelector(".ticket__explanation"));
+  });
 
   test("scrolls the newest message into view", () => {
     const scroll = vi.fn<Element["scrollIntoView"]>();

@@ -1,7 +1,8 @@
 // The progress of the ticket being played as the ticket panel and the top bar show it (ROADMAP
 // M3.5a, ADR 0097): how many steps are completed, whether the ticket is solved, and the messages
 // the game said about it, in the order it said them. The game events of every input that ran
-// update it; the functions are pure, so the tests need no DOM.
+// update it. It also counts the hints the player has asked for with F1 (M3.5b, ADR 0098). The
+// functions are pure, so the tests need no DOM.
 
 import type { GameEvent } from "@penguin-ops/gameplay";
 
@@ -20,10 +21,31 @@ export interface TicketProgress {
   readonly solved: boolean;
   /** The messages of completed steps and the tips, oldest first. */
   readonly messages: readonly TicketMessage[];
+  /** How many of the ticket's hints the player has asked for, from 0 to `HINT_COUNT`. */
+  readonly hintsShown: number;
 }
 
+/** Every level has exactly three hints: a tip, a concrete tip and the solution (ADR 0018). */
+export const HINT_COUNT = 3;
+
 /** The progress of a ticket that just started. */
-export const TICKET_START: TicketProgress = { completedSteps: 0, solved: false, messages: [] };
+export const TICKET_START: TicketProgress = {
+  completedSteps: 0,
+  solved: false,
+  messages: [],
+  hintsShown: 0,
+};
+
+/**
+ * The progress after the player asked for the next hint. Hints are free and stay available after
+ * the ticket is solved (ADR 0018); once all of them are shown, the progress stays the same.
+ */
+export function showNextHint(progress: TicketProgress): TicketProgress {
+  if (progress.hintsShown >= HINT_COUNT) {
+    return progress;
+  }
+  return { ...progress, hintsShown: progress.hintsShown + 1 };
+}
 
 /**
  * The progress after the game events of an input, in their order. Extra goals change nothing

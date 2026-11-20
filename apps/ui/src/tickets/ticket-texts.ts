@@ -1,6 +1,7 @@
 // The texts of the ticket being played in the player's language (ROADMAP M3.5a, ADR 0097): its
-// title, its text and the messages of its steps and tips, from the level's catalog with English
-// where a further language lacks a text (ADR 0074). The game passes no values to level texts.
+// title, its text and the messages of its steps and tips, and its hints and the explanation after
+// solving (M3.5b, ADR 0098), from the level's catalog with English where a further language lacks
+// a text (ADR 0074). The game passes no values to level texts.
 
 import {
   type CatalogText,
@@ -11,6 +12,21 @@ import {
   type RichTextInline,
 } from "@penguin-ops/content";
 
+/** A row of the explanation's option table: a literal command and what it does. */
+export interface ExplanationOption {
+  readonly option: string;
+  readonly description: RichText;
+}
+
+/** The explanation shown after the ticket is solved. */
+export interface ExplanationTexts {
+  readonly text: RichText;
+  /** Options of the taught command, possibly none. */
+  readonly options: readonly ExplanationOption[];
+  /** A literal command to try. */
+  readonly example?: string;
+}
+
 /** The texts a ticket panel shows for one level. */
 export interface TicketTexts {
   /** The level's ID, named in errors. */
@@ -19,6 +35,9 @@ export interface TicketTexts {
   readonly title: readonly RichTextInline[];
   /** The ticket's text. */
   readonly ticket: RichText;
+  /** The three hints: a tip, a concrete tip and the solution. */
+  readonly hints: readonly [tip: RichText, concreteTip: RichText, solution: RichText];
+  readonly explanation: ExplanationTexts;
   /** The level's other texts by their keys: step messages, tips and prose file contents. */
   readonly texts: ReadonlyMap<string, CatalogText>;
 }
@@ -38,7 +57,23 @@ export function ticketTexts(content: Content, levelId: string, language: string)
   if (block?.type !== "paragraph" || rest.length > 0) {
     throw new Error(`The title of the level "${levelId}" must be one paragraph.`);
   }
-  return { levelId, title: block.content, ticket: formatText(texts.ticket), texts: texts.texts };
+  const [tip, concreteTip, solution] = texts.hints;
+  const { explanation } = texts;
+  return {
+    levelId,
+    title: block.content,
+    ticket: formatText(texts.ticket),
+    hints: [formatText(tip), formatText(concreteTip), formatText(solution)],
+    explanation: {
+      text: formatText(explanation.text),
+      options: explanation.options.map(({ option, description }) => ({
+        option,
+        description: formatText(description),
+      })),
+      ...(explanation.example === undefined ? {} : { example: explanation.example }),
+    },
+    texts: texts.texts,
+  };
 }
 
 /**
