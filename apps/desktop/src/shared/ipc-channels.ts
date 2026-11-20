@@ -3,4 +3,8 @@
 export const IPC_CHANNELS = {
   getAppInfo: "app:get-info",
   quit: "app:quit",
+  readSlots: "saves:read-slots",
+  writeSlot: "saves:write-slot",
+  restoreBackup: "saves:restore-backup",
+  deleteSlot: "saves:delete-slot",
 } as const;

@@ -1,6 +1,8 @@
 // Starts the desktop app for a test and closes it afterwards: either the built app (`out/`, run
 // by the development Electron) or the packaged app from `npm run package` (ADR 0034).
 import { existsSync } from "node:fs";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import {
@@ -30,6 +32,12 @@ export interface TestOptions {
 }
 
 interface AppFixtures {
+  /**
+   * The app's per-user data folder, a new empty folder for every test, passed to Electron as
+   * `--user-data-dir`. The tests never touch the saves and settings of the person who runs them,
+   * and every test starts with empty save slots. Tests that need saves write them here first.
+   */
+  readonly userDataDir: string;
   readonly electronApp: ElectronApplication;
   readonly page: Page;
 }
@@ -52,7 +60,13 @@ function packagedExecutable(): string {
 export const test = base.extend<AppFixtures & TestOptions, AppOptions>({
   packaged: [false, { option: true, scope: "worker" }],
   appLocale: ["en-US", { option: true }],
-  electronApp: async ({ packaged, appLocale }, use) => {
+  // The folder name shows the test's locale, which helps when a failed test leaves it behind.
+  userDataDir: async ({ appLocale }, use) => {
+    const folder = await mkdtemp(join(tmpdir(), `penguin-ops-e2e-${appLocale}-`));
+    await use(folder);
+    await rm(folder, { recursive: true, force: true });
+  },
+  electronApp: async ({ packaged, appLocale, userDataDir }, use) => {
     // ELECTRON_RUN_AS_NODE (set for example by VS Code extension hosts) would start Electron as
     // plain Node.js without a window.
     const env = Object.fromEntries(
@@ -61,17 +75,18 @@ export const test = base.extend<AppFixtures & TestOptions, AppOptions>({
           entry[0] !== "ELECTRON_RUN_AS_NODE" && entry[1] !== undefined,
       ),
     );
+    const args = [`--lang=${appLocale}`, `--user-data-dir=${userDataDir}`];
     let app: ElectronApplication;
     if (packaged) {
       const executablePath = packagedExecutable();
       if (!existsSync(executablePath)) {
         throw new Error(`${executablePath} does not exist. Run "npm run package" first.`);
       }
-      app = await electron.launch({ executablePath, args: [`--lang=${appLocale}`], env });
+      app = await electron.launch({ executablePath, args, env });
     } else {
       // Electron starts the "main" file of the app folder's package.json (the built main process).
       // Chromium switches come before the app folder.
-      app = await electron.launch({ args: [`--lang=${appLocale}`, appFolder], env });
+      app = await electron.launch({ args: [...args, appFolder], env });
     }
     await use(app);
     await app.close();

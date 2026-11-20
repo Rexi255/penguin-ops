@@ -4,6 +4,12 @@ _Last updated: 2026-11-20_
 
 ## Recently completed
 
+- M3.7b Save files: the main process stores each slot's save as a text in
+  `<userData>/saves/slot-N.json`, written atomically (temporary file, flushed, renamed) with the
+  replaced save as `slot-N.backup.json`; restore, delete, one operation per slot at a time and
+  rename retries for Windows. The preload API `saves` validates slot and size in the main
+  process; the renderer parses the texts. End-to-end tests run with an empty user data folder of
+  their own (ADR 0105).
 - M3.7a Save game format: `packages/gameplay/src/save-game.ts` defines version 1 of a save slot's
   file (name, user name, mode, one game time for the whole game, play time, last played, current
   ticket, and per opened ticket solved, checkpoint step, hints shown and extra goals), writes it
@@ -24,22 +30,16 @@ _Last updated: 2026-11-20_
   (new token `terminal-cursor`) with the character under it in the terminal ground's colour, like
   GNOME Terminal; fibre orange is no longer a colour of the terminal (ADR 0101, partly
   superseding ADR 0095).
-- M3.5d Extra goals: a ticket with extra goals lists them under its text in a section "Extra
-  goals", each with its description, "+20 XP" and its state in words ("Open", or "Reached" with
-  the solved icon). Reaching one, also after solving, adds an "Extra goal reached" message with
-  the XP to the updates, which announces it; the progress keeps the reached IDs. M3.5 is complete
-  (ADR 0100).
-
 ## In progress
 
-- ROADMAP M3.7 save system: M3.7a (format) is done; M3.7b to M3.7d follow.
+- ROADMAP M3.7 save system: M3.7a (format) and M3.7b (files) are done; M3.7c and M3.7d follow.
 
 ## Next 3 steps
 
-1. ROADMAP M3.7b: save files in the main process (per-user data folder, atomic write, backup,
-   IPC).
-2. ROADMAP M3.7c: saving and resuming (autosave, slot metadata, checkpoint, one game time).
-3. ROADMAP M3.7d: export and import of a slot.
+1. ROADMAP M3.7c: saving and resuming (autosave, slot metadata, slot menu with delete,
+   checkpoint, one game time).
+2. ROADMAP M3.7d: export and import of a slot.
+3. ROADMAP M3.8: settings.
 
 ## Blockers and open questions
 

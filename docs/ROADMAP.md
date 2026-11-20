@@ -225,7 +225,8 @@ inventing it along the way.
       format with migration test, export and import (ADR 0013).
   - [x] M3.7a Save game format: the fields of a slot, writing and reading with problem codes,
         migrations and stored example saves; one game time per game (ADR 0104).
-  - [ ] M3.7b Save files in the main process: per-user data folder, atomic write, backup, IPC.
+  - [x] M3.7b Save files in the main process: per-user data folder, atomic write, backup, IPC
+        (ADR 0105).
   - [ ] M3.7c Saving and resuming: autosave, slot metadata on the slot screen, resuming at the
         checkpoint with the game time running on across tickets.
   - [ ] M3.7d Export and import of a slot as a file.

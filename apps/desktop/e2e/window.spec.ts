@@ -57,18 +57,23 @@ test("ships the font licenses next to the packaged app", async ({ electronApp, p
 test("runs the renderer without Node.js and exposes only the desktop API", async ({ page }) => {
   const globals = await page.evaluate(() => {
     const scope = globalThis as Record<string, unknown>;
+    const keys = (value: unknown): string[] =>
+      typeof value === "object" && value !== null ? Object.keys(value) : [];
     const desktopApi = scope["penguinOps"];
     return {
       require: typeof scope["require"],
       process: typeof scope["process"],
-      desktopApi:
-        typeof desktopApi === "object" && desktopApi !== null ? Object.keys(desktopApi) : [],
+      desktopApi: keys(desktopApi),
+      saves: keys(
+        keys(desktopApi).includes("saves") ? Reflect.get(Object(desktopApi), "saves") : undefined,
+      ),
     };
   });
   expect(globals).toEqual({
     require: "undefined",
     process: "undefined",
-    desktopApi: ["getAppInfo", "quit"],
+    desktopApi: ["getAppInfo", "quit", "saves"],
+    saves: ["readSlots", "writeSlot", "restoreBackup", "deleteSlot"],
   });
 });
 

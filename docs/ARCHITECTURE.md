@@ -600,8 +600,8 @@ ratios. Its layout is
 `src/styleguide/` and its build reads only `index.html`; both are tested.
 
 `src/desktop-api.ts` defines
-the preload contract (`DesktopApi`: `getAppInfo`, `quit`); `src/index.ts` exports only its
-types, for `apps/desktop`.
+the preload contract (`DesktopApi`: `getAppInfo`, `quit`, and `saves`, the save slot files as
+texts, ADR 0105); `src/index.ts` exports only its types, for `apps/desktop`.
 
 ## Desktop (`apps/desktop`)
 
@@ -622,14 +622,19 @@ apps/desktop/
   build/                    app icons that electron-builder reads while packaging (ADR 0040)
   playwright.config.ts      end-to-end tests against the built and the packaged app
   src/main/index.ts         app start, hardening of all web contents and the session, IPC handlers
-                            (app info; quit), each answering only the app's own page
+                            (app info; quit; save files), each answering only the app's own page
+                            and validating every argument
+  src/main/save-store.ts    the save slot files in <userData>/saves as texts: atomic writes with
+                            the replaced save as backup, restore, delete, one operation per slot
+                            at a time, rename retries on Windows (ADR 0105)
   src/main/window.ts        the main window
   src/main/web-preferences.ts  secure web preferences of every window
   src/main/security.ts      pure checks: allowed request URLs, trusted IPC senders
   src/preload/index.ts      exposes DesktopApi as window.penguinOps (built as CommonJS)
   src/shared/ipc-channels.ts  IPC channel names used by main and preload
   e2e/                      Playwright tests (*.spec.ts); the app is started with a fixed locale
-                            (`--lang`, default en-US); start-screen.spec.ts runs axe-core
+                            (`--lang`, default en-US) and a new empty user data folder per test
+                            (`--user-data-dir`); start-screen.spec.ts runs axe-core
 ```
 
 - `apps/desktop` may import only types from `@penguin-ops/ui` (the preload contract); ESLint

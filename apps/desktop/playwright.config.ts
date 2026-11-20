@@ -10,7 +10,8 @@ import type { AppOptions } from "./e2e/app";
 export default defineConfig<AppOptions>({
   testDir: "e2e",
   testMatch: "**/*.spec.ts",
-  // One Electron instance at a time: the tests share the user data folder of the app.
+  // One Electron instance at a time; every test has a user data folder of its own (e2e/app.ts),
+  // but several Electron windows at once make the timing of the tests unreliable.
   workers: 1,
   fullyParallel: false,
   forbidOnly: true,
