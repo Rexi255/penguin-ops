@@ -3,6 +3,7 @@ export {
   DEFAULT_LEVEL_XP,
   type ExtraGoal,
   type FileSource,
+  idSchema,
   LEVEL_FORMAT_VERSION,
   LEVEL_KINDS,
   type Level,

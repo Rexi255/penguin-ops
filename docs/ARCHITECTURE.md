@@ -448,9 +448,19 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   are solved), `inbox` the open chapters with each ticket's state (`new`, `started`, `solved`),
   `nextTicket` the ticket offered after a solved one, and `isTicketOpen`, `chapterOf` and
   `ticketState` the single answers.
+- Save game format (`src/save-game.ts`, ADR 0013, ADR 0104): `SaveGame` is what a save slot
+  keeps: the new game's name, user name and mode, one game time for the whole game, the real play
+  time and last played time, the current ticket and a `TicketRecord` per opened ticket (solved,
+  checkpoint as a step ID, hints shown, reached extra goals). `newSaveGame` starts one,
+  `serializeSave` writes it as JSON of format version `SAVE_FORMAT_VERSION` with its fields in a
+  fixed order, and `parseSave` reads a file back without the content: it migrates an older
+  version with `SAVE_MIGRATIONS` (`migrateSave`) and returns the save and the file's version or a
+  `SaveProblem` (`not-json`, `not-a-save`, `too-new`, `invalid` with path). Example saves of every
+  format version are stored byte for byte in `packages/gameplay/save-fixtures/`. `HINT_COUNT`
+  (three hints per level) lives here too.
 - Campaign, still planned: the playground (ADR 0017).
 - Progress: XP, ranks, achievements (ADR 0018).
-- Save data model with format version and migrations; settings model (ADR 0013).
+- Settings model (ADR 0013).
 
 ## UI (`apps/ui`)
 

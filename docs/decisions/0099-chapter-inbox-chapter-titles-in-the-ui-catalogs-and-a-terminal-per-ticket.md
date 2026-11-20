@@ -1,6 +1,8 @@
 # 0099. Chapter inbox, chapter titles in the UI catalogs and a terminal per ticket
 
-- Status: Accepted
+- Status: Accepted; partly superseded by
+  [0104](0104-save-game-format-version-1-and-one-game-time-per-game.md) (the game time of a ticket
+  opened for the first time)
 - Date: 2026-11-20
 - Supersedes: [0097](0097-ticket-panel-with-step-segments-and-messages-and-the-top-bars-guide-words.md)
   (only the order in which Shift+Tab leaves the terminal)

@@ -4,6 +4,12 @@ _Last updated: 2026-11-20_
 
 ## Recently completed
 
+- M3.7a Save game format: `packages/gameplay/src/save-game.ts` defines version 1 of a save slot's
+  file (name, user name, mode, one game time for the whole game, play time, last played, current
+  ticket, and per opened ticket solved, checkpoint step, hints shown and extra goals), writes it
+  as JSON in a fixed order and reads it back with problem codes (`not-json`, `not-a-save`,
+  `too-new`, `invalid`). Migrations run one version at a time; example saves of every version are
+  stored byte for byte and tested (ADR 0104, partly superseding ADR 0099).
 - M3.6b Game commands: `help` shows the game's overview (game commands, keys, every simulated
   command), `help NAME` a short description of each command or that the game does not know it;
   `hint` shows the ticket's next hint in the terminal and the Tickets tab and counts with F1. Both
@@ -23,22 +29,17 @@ _Last updated: 2026-11-20_
   the solved icon). Reaching one, also after solving, adds an "Extra goal reached" message with
   the XP to the updates, which announces it; the progress keeps the reached IDs. M3.5 is complete
   (ADR 0100).
-- M3.5c Chapter inbox: "Back to the inbox" in the Tickets tab lists every open chapter (title,
-  "1 of 3 solved") with its tickets as rows (New, In progress, Solved; the current one framed in
-  fibre orange). Story mode opens a chapter when the ones before it are solved, Sandbox opens all
-  (pure model `packages/gameplay/src/inbox.ts`). A solved ticket offers the next one and names a
-  chapter it opened; every opened ticket keeps its terminal and progress. Chapter titles are UI
-  texts `chapters.<id>`, checked by the content loader; the top bar shows the chapter (ADR 0099).
 
 ## In progress
 
-- Nothing.
+- ROADMAP M3.7 save system: M3.7a (format) is done; M3.7b to M3.7d follow.
 
 ## Next 3 steps
 
-1. ROADMAP M3.7: save system (three slots, autosave, versioned format).
-2. ROADMAP M3.8: settings (language, volumes, fullscreen, font size, colour scheme).
-3. ROADMAP M3.9: colour schemes and effects.
+1. ROADMAP M3.7b: save files in the main process (per-user data folder, atomic write, backup,
+   IPC).
+2. ROADMAP M3.7c: saving and resuming (autosave, slot metadata, checkpoint, one game time).
+3. ROADMAP M3.7d: export and import of a slot.
 
 ## Blockers and open questions
 
@@ -61,10 +62,10 @@ _Last updated: 2026-11-20_
   becomes relevant.
 - A hint asked for with the game command `hint` is announced twice to screen readers, by the
   terminal's log and the ticket panel (ADR 0103); M3.14 decides which stays quiet.
-- The game lives only in the game screen: the started and solved tickets, each ticket's messages,
-  hint count, reached extra goals and terminal. The save system (M3.7) has to keep or rebuild
-  them when it resumes a ticket at a checkpoint, and decide how game time runs across tickets,
-  which each start at the game's start time now (ADR 0097 to ADR 0100).
+- The game still lives only in the game screen until M3.7c: it has to build a game from a save
+  (check the levels, steps and extra goals against the content, decide what happens with a level
+  an update removed, rebuild the ticket messages) and start tickets at the game's one game time
+  instead of the start time (ADR 0104).
 - A later world that adds an account with a name an existing save already uses would collide
   with that save (ADR 0093); M3.7 or M4 decides how to handle it. The reserved Debian accounts
   are verified in M6.

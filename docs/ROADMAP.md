@@ -223,6 +223,12 @@ inventing it along the way.
         `hint` (the ticket's next hint, counted with F1, also shown in the terminal) (ADR 0103).
 - [ ] M3.7 Save system: three slots, metadata, autosave, atomic write and backup, versioned
       format with migration test, export and import (ADR 0013).
+  - [x] M3.7a Save game format: the fields of a slot, writing and reading with problem codes,
+        migrations and stored example saves; one game time per game (ADR 0104).
+  - [ ] M3.7b Save files in the main process: per-user data folder, atomic write, backup, IPC.
+  - [ ] M3.7c Saving and resuming: autosave, slot metadata on the slot screen, resuming at the
+        checkpoint with the game time running on across tickets.
+  - [ ] M3.7d Export and import of a slot as a file.
 - [ ] M3.8 Settings: language (OS default), volumes, fullscreen (F11), font size, colour
       scheme, effects, reduce motion; language switch restarts the ticket.
 - [ ] M3.9 Colour schemes and effects: retro CRT, Solarized and high contrast as value sets

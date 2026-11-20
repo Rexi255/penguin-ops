@@ -66,6 +66,21 @@ export {
   type SolutionProblem,
 } from "./reference-solutions";
 export {
+  HINT_COUNT,
+  migrateSave,
+  newSaveGame,
+  parseSave,
+  SAVE_FORMAT_NAME,
+  SAVE_FORMAT_VERSION,
+  SAVE_MIGRATIONS,
+  type SaveGame,
+  type SaveMigration,
+  type SaveParseResult,
+  type SaveProblem,
+  serializeSave,
+  type TicketRecord,
+} from "./save-game";
+export {
   checkUserName,
   deriveUserName,
   reservedUserNames,

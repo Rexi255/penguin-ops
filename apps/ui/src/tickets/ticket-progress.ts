@@ -5,7 +5,7 @@
 // (M3.5b, M3.6b, ADR 0098, ADR 0103) and keeps the extra goals the player has reached (M3.5d,
 // ADR 0100). The functions are pure, so the tests need no DOM.
 
-import type { GameEvent } from "@penguin-ops/gameplay";
+import { type GameEvent, HINT_COUNT } from "@penguin-ops/gameplay";
 
 /** A message of the game about the ticket. */
 export type TicketMessage =
@@ -38,8 +38,8 @@ export interface TicketProgress {
   readonly hintsShown: number;
 }
 
-/** Every level has exactly three hints: a tip, a concrete tip and the solution (ADR 0018). */
-export const HINT_COUNT = 3;
+/** Every level has exactly three hints (ADR 0018); the save format checks the count too. */
+export { HINT_COUNT };
 
 /** The progress of a ticket that just started. */
 export const TICKET_START: TicketProgress = {
