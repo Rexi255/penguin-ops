@@ -541,7 +541,7 @@ with its list and question, Enter (which runs the input with `runInput` and show
 Ctrl+C and Ctrl+L. `src/terminal/terminal-keys.ts` maps key presses to these actions (typed
 characters come from the input field, never from key codes) and counts the columns that fit.
 `src/terminal/terminal.tsx` draws the state as a scrolling log with the page after the last
-clear at least as high as the terminal, Debian's colour prompt, a fibre orange block cursor
+clear at least as high as the terminal, Debian's colour prompt, a block cursor in the text colour
 over a transparent text field the player types into, and game notices in the UI face with the
 hint icon; it measures the cell width of the monospace face for the terminal's width.
 

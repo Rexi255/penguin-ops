@@ -942,18 +942,19 @@ pre {
   font-weight: var(--font-weight-strong);
 }
 
-/* The cursor is a fibre orange block that does not blink (the One Motion Rule). While the input
-   line has the focus, it is filled and shows the character under it in the terminal ground's
-   colour; without the focus, only its frame is left, as in most terminals. */
+/* The cursor is a block in the terminal's text colour, as in GNOME Terminal (ADR 0101), that does
+   not blink (the One Motion Rule). While the input line has the focus, it is filled and shows the
+   character under it in the terminal ground's colour; without the focus, only its frame is left,
+   as in most terminals. */
 .terminal__cursor {
   position: relative;
-  outline: var(--border-width-rule) solid var(--color-player);
+  outline: var(--border-width-rule) solid var(--color-terminal-cursor);
   outline-offset: calc(-1 * var(--border-width-rule));
 }
 
 .terminal__cursor:focus-within {
   outline: none;
-  background: var(--color-player);
+  background: var(--color-terminal-cursor);
   color: var(--color-surface-terminal);
 }
 

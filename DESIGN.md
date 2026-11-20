@@ -14,6 +14,7 @@ colors:
   player: "#e0701a"
   prompt-user: "#8ae234"
   prompt-directory: "#729fcf"
+  terminal-cursor: "#e8e6e1"
   focus: "#e8e6e1"
   tape-primary: "#f2c230"
   tape-secondary: "#f1ede4"
@@ -107,8 +108,8 @@ ease-out. Nothing else moves, and "reduce motion" sets both to zero.
 - Label tape (yellow and white, black condensed caps) for ticket IDs, panel names, the rank and
   toasts.
 - Cable colours carry the kind of work: tickets, mail, handbook, incidents.
-- Fibre orange belongs to the player: their cursor and active ticket.
-- The terminal's prompt keeps Debian's colours, so it looks like the real system.
+- Fibre orange belongs to the player: their active ticket and current step.
+- The terminal's prompt and cursor keep Debian's colours, so it looks like the real system.
 - One grid: every size is a multiple of the terminal's character cell.
 
 ## Colors
@@ -120,8 +121,8 @@ ring), and a test proves it for every pair (ADR 0082).
 ### Primary
 
 - **Fibre Orange** (`player`): the player's own colour, the logo's prompt orange. Only the
-  terminal's cursor, the outline of the active ticket, the current step and the frame of the
-  player's choice on a choice card (ADR 0094, ADR 0095).
+  outline of the active ticket, the current step and the frame of the player's choice on a
+  choice card (ADR 0094, ADR 0095, ADR 0101).
 
 ### Secondary
 
@@ -152,6 +153,10 @@ system (ADR 0095). They appear nowhere else.
 
 Both are the bright Tango colours that GNOME Terminal shows for bold text; Tango's plain blue
 would not meet 4.5:1 on the terminal ground.
+
+- **Terminal Cursor** (`terminal-cursor`): the block cursor in the terminal's text colour, with
+  the character under it in the terminal ground's colour, as GNOME Terminal draws it by default
+  (ADR 0101).
 
 ### Neutral
 
@@ -285,8 +290,9 @@ where it marks a kind of work or a state, such as a ticket row's kind or a solve
 
 - **Do** print ticket IDs, the product name, the rank and toast titles on tape.
 - **Do** give each kind of work its cable colour, consistently, on tabs, toasts and states.
-- **Do** keep fibre orange for the player's cursor, active ticket and current choice only.
-- **Do** keep Debian's prompt colours in the terminal, and only there.
+- **Do** keep fibre orange for the player's active ticket, current step and current choice only.
+- **Do** keep Debian's prompt colours in the terminal, and only there, and draw the terminal's
+  cursor in its text colour (`terminal-cursor`, ADR 0101).
 - **Do** build every screen from the tokens in `apps/ui/src/tokens.css`; a missing value becomes
   a new token, not a literal.
 - **Do** let the one motion be the tape printing out, and show it at once when "reduce motion"

@@ -4,6 +4,10 @@ _Last updated: 2026-11-20_
 
 ## Recently completed
 
+- Terminal cursor in Debian's default look: the block cursor takes the terminal's text colour
+  (new token `terminal-cursor`) with the character under it in the terminal ground's colour, like
+  GNOME Terminal; fibre orange is no longer a colour of the terminal (ADR 0101, partly
+  superseding ADR 0095).
 - M3.5d Extra goals: a ticket with extra goals lists them under its text in a section "Extra
   goals", each with its description, "+20 XP" and its state in words ("Open", or "Reached" with
   the solved icon). Reaching one, also after solving, adds an "Extra goal reached" message with
@@ -27,13 +31,6 @@ _Last updated: 2026-11-20_
   ticket's title and its step or state. The terminal reports the game events of every input to
   the game screen. Level texts now write each paragraph on one line (ADR 0097, partly
   superseding ADR 0096: Shift+Tab from the terminal reaches the ticket first).
-- M3.4 Workplace layout: the side panel has the tabs Tickets, Mail and Handbook after the
-  WAI-ARIA tabs pattern (arrow keys, Home and End, automatic activation, only the chosen tab in
-  the tab order), each with its icon and the cable colour of its kind of work on the chosen tab;
-  mail and handbook show their empty states, the tickets panel waits for M3.5. The footer shows
-  "Tab Complete" as text and "Esc Menu" as a button; the top bar stays empty until M3.5 and
-  M3.12 (ADR 0096). Shift+Tab leaves the terminal for the tabs.
-
 ## In progress
 
 - Nothing.

@@ -87,12 +87,12 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
   ),
   ...allOn(
     ["--color-surface-terminal"],
-    ["--color-player"],
+    ["--color-terminal-cursor"],
     "text",
     "the character under the terminal's cursor",
   ),
   ...allOn(
-    ["--color-player"],
+    ["--color-terminal-cursor"],
     ["--color-surface-terminal"],
     "non-text",
     "the terminal's cursor, filled or as a frame without the focus",

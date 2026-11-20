@@ -41,7 +41,8 @@ project uses [Semantic Versioning](https://semver.org/).
   the line, Ctrl+L clears the screen, Ctrl+A and Ctrl+E jump to the start and the end, and
   Shift+PageUp and Shift+PageDown scroll back. An open quote continues on the next line. When
   you use something the game does not simulate yet, a note in the terminal says so. Ctrl+V
-  pastes, and Ctrl+C copies selected text.
+  pastes, and Ctrl+C copies selected text. The prompt and the block cursor have the colours of Debian's
+  terminal.
 - A new game starts on the "New game" screen: type your name, and your Linux user name is
   filled in from it ("Jörg Müller" becomes `joerg-mueller`); you can change it. If a name
   cannot be used, the screen says why. Choose the mode on one of two cards, Career or Sandbox;

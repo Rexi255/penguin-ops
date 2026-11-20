@@ -1,6 +1,8 @@
 # 0095. Terminal component on a pure terminal model with Debian's prompt and readline's keys
 
-- Status: Accepted
+- Status: Accepted; partly superseded by
+  [0101](0101-terminal-cursor-in-the-terminals-text-colour-like-gnome-terminal.md) (the colour of
+  the terminal's cursor)
 - Date: 2026-11-19
 - Supersedes: [0094](0094-new-game-screen-with-choice-cards-and-games-kept-in-memory-until-the-save-system.md)
   (only the uses of fibre orange)
