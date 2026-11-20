@@ -544,6 +544,8 @@ characters come from the input field, never from key codes) and counts the colum
 clear at least as high as the terminal, Debian's colour prompt, a block cursor in the text colour
 over a transparent text field the player types into, and game notices in the UI face with the
 hint icon; it measures the cell width of the monospace face for the terminal's width.
+`src/terminal/notice-text.ts` gives each notice its own text from the UI catalogs, keyed
+`notices.<key>` by the command notice's key or the unsupported feature (ADR 0102).
 
 Design tokens (ADR 0082): `src/tokens.css` defines every token as a CSS custom property on
 `:root`, named by purpose (colours, the terminal's character cell, spacing in quarter cells,

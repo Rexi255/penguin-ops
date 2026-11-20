@@ -4,6 +4,11 @@ _Last updated: 2026-11-20_
 
 ## Recently completed
 
+- M3.6a Game notices: every command notice (an option or variable the game does not simulate,
+  invalid UTF-8, input from the terminal) and every unsupported shell feature (35, such as here
+  strings or `for` loops) has a text of its own in English and German that names it, with the
+  command, option or variable as code; the general notice text is gone (ADR 0102, partly
+  superseding ADR 0095).
 - Terminal cursor in Debian's default look: the block cursor takes the terminal's text colour
   (new token `terminal-cursor`) with the character under it in the terminal ground's colour, like
   GNOME Terminal; fibre orange is no longer a colour of the terminal (ADR 0101, partly
@@ -25,20 +30,14 @@ _Last updated: 2026-11-20_
   solving. A solved ticket shows "What you learned" with the explanation, its variants as a
   definition list and a command to try. The hint count is part of the ticket's progress, and the
   game screen keeps the chosen side panel tab (ADR 0098).
-- M3.5a Ticket panel, part 1: the Tickets tab shows the ticket being played (title, text with
-  paragraphs and lists, the steps as tape segments with "Step 1 of 2", "Solved") and below it
-  the step messages and tips the game says, in a polite live region; the top bar shows the
-  ticket's title and its step or state. The terminal reports the game events of every input to
-  the game screen. Level texts now write each paragraph on one line (ADR 0097, partly
-  superseding ADR 0096: Shift+Tab from the terminal reaches the ticket first).
 
 ## In progress
 
-- Nothing.
+- ROADMAP M3.6b: game commands `help` and `hint`.
 
 ## Next 3 steps
 
-1. ROADMAP M3.6: game commands `help` and `hint`; engine notices in the player's language.
+1. ROADMAP M3.6b: game commands `help` and `hint`.
 2. ROADMAP M3.7: save system (three slots, autosave, versioned format).
 3. ROADMAP M3.8: settings (language, volumes, fullscreen, font size, colour scheme).
 

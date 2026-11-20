@@ -25,6 +25,7 @@ import {
 import { Icon } from "../icons/icon";
 import { InlineText } from "../texts/inline-text";
 import { useTexts } from "../texts/texts-context";
+import { noticeKey, noticeText } from "./notice-text";
 import {
   columnsFor,
   DEFAULT_COLUMNS,
@@ -291,7 +292,7 @@ const Line = memo(function Line({ line }: { readonly line: ScreenLine }) {
         <p className="terminal__notice">
           <Icon name="hint" />
           <span>
-            <InlineText text={texts.rich("terminal.notice")} textKey="terminal.notice" />
+            <InlineText text={noticeText(texts, line.event)} textKey={noticeKey(line.event)} />
           </span>
         </p>
       );

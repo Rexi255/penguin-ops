@@ -40,7 +40,8 @@ project uses [Semantic Versioning](https://semver.org/).
   commands, Tab completes commands and file names (twice lists the choices), Ctrl+C cancels
   the line, Ctrl+L clears the screen, Ctrl+A and Ctrl+E jump to the start and the end, and
   Shift+PageUp and Shift+PageDown scroll back. An open quote continues on the next line. When
-  you use something the game does not simulate yet, a note in the terminal says so. Ctrl+V
+  you use something the game does not simulate yet, a note in the terminal says what it was (the
+  option, the variable or the shell feature, such as here strings `<<<`). Ctrl+V
   pastes, and Ctrl+C copies selected text. The prompt and the block cursor have the colours of Debian's
   terminal.
 - A new game starts on the "New game" screen: type your name, and your Linux user name is

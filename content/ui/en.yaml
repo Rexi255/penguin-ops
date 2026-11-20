@@ -78,7 +78,46 @@ inbox:
 terminal:
   output: Terminal output
   input: Command line
-  notice: PenguinOps does not simulate this yet, so the input stopped here.
+notices:
+  option-not-simulated: PenguinOps does not simulate the option {option} of {command} yet, so the input stopped here.
+  variable-not-simulated: PenguinOps does not simulate the effect of the variable {variable} on {command} yet, so the input stopped here.
+  invalid-utf8-not-simulated: "{command} would write bytes that are not valid UTF-8 text. Files and the terminal hold only text in PenguinOps, so the input stopped here."
+  terminal-input-not-simulated: "{command} would now wait for you to type something. PenguinOps does not simulate typing into a running command yet, so the input stopped here."
+  command-substitution: PenguinOps does not simulate command substitution (`$(…)`) yet, so the input stopped here.
+  arithmetic-expansion: PenguinOps does not simulate arithmetic expansion (`$((…))`) yet, so the input stopped here.
+  parameter-expansion: PenguinOps does not simulate this form of parameter expansion (`${…}` with more than a name) yet, so the input stopped here.
+  process-substitution: PenguinOps does not simulate process substitution (`<(…)` and `>(…)`) yet, so the input stopped here.
+  ansi-c-quoting: PenguinOps does not simulate ANSI-C quoting (`$'…'`) yet, so the input stopped here.
+  locale-quoting: PenguinOps does not simulate locale quoting (`$"…"`) yet, so the input stopped here.
+  history-expansion: PenguinOps does not simulate history expansion with `!` (such as `!!`) yet, so the input stopped here.
+  background-job: PenguinOps does not simulate background jobs (`&`) yet, so the input stopped here.
+  subshell: PenguinOps does not simulate subshells (`( … )`) yet, so the input stopped here.
+  arithmetic-command: PenguinOps does not simulate arithmetic commands (`(( … ))`) yet, so the input stopped here.
+  stderr-pipe: PenguinOps does not simulate the pipe for standard error (`|&`) yet, so the input stopped here.
+  here-document: PenguinOps does not simulate here documents (`<<`) yet, so the input stopped here.
+  here-string: PenguinOps does not simulate here strings (`<<<`) yet, so the input stopped here.
+  fd-duplication: PenguinOps does not simulate duplicating file descriptors (`>&` and `<&`, as in `2>&1`) yet, so the input stopped here.
+  output-and-error-redirection: PenguinOps does not simulate redirecting output and errors together (`&>` and `&>>`) yet, so the input stopped here.
+  read-write-redirection: PenguinOps does not simulate opening a file for reading and writing (`<>`) yet, so the input stopped here.
+  clobber-redirection: PenguinOps does not simulate the redirection `>|` yet, so the input stopped here.
+  pipeline-negation: PenguinOps does not simulate negating a pipeline with `!` yet, so the input stopped here.
+  time-keyword: PenguinOps does not simulate the keyword `time` yet, so the input stopped here.
+  if-clause: PenguinOps does not simulate `if` statements yet, so the input stopped here.
+  while-loop: PenguinOps does not simulate `while` loops yet, so the input stopped here.
+  until-loop: PenguinOps does not simulate `until` loops yet, so the input stopped here.
+  for-loop: PenguinOps does not simulate `for` loops yet, so the input stopped here.
+  select-loop: PenguinOps does not simulate `select` menus yet, so the input stopped here.
+  case-clause: PenguinOps does not simulate `case` statements yet, so the input stopped here.
+  command-group: PenguinOps does not simulate command groups (`{ …; }`) yet, so the input stopped here.
+  conditional-command: PenguinOps does not simulate the test command `[[ … ]]` yet, so the input stopped here.
+  function-definition: PenguinOps does not simulate shell functions yet, so the input stopped here.
+  coprocess: PenguinOps does not simulate coprocesses (`coproc`) yet, so the input stopped here.
+  array: PenguinOps does not simulate arrays (such as `a=(…)` or `a[1]=…`) yet, so the input stopped here.
+  process-id: PenguinOps does not simulate process IDs (`$$`) yet, so the input stopped here.
+  shell-options: PenguinOps does not simulate the shell options (`$-`) yet, so the input stopped here.
+  file-descriptor: PenguinOps does not simulate file descriptors other than 0, 1 and 2 (such as `3>`) yet, so the input stopped here.
+  reversed-redirection: PenguinOps does not simulate redirections in this direction (such as `0>` or `2<`) yet, so the input stopped here.
+  command-path: PenguinOps does not run programs by their path (such as `./script.sh` or `/bin/ls`) yet, so the input stopped here. Type a command by its name alone, such as `ls`.
 pause:
   title: Paused
   continue: Continue

@@ -218,6 +218,9 @@ inventing it along the way.
   - [x] M3.5d Extra goals in the ticket panel: listed with their bonus XP and state from the start,
         and announced as a message when reached (ADR 0100).
 - [ ] M3.6 Game commands `help` and `hint`; engine notices rendered in the player's language.
+  - [x] M3.6a A text of its own for every game notice, in both languages (ADR 0102).
+  - [ ] M3.6b Game commands `help` (overview and `help NAME` for every simulated command) and
+        `hint` (the ticket's next hint, counted with F1, also shown in the terminal).
 - [ ] M3.7 Save system: three slots, metadata, autosave, atomic write and backup, versioned
       format with migration test, export and import (ADR 0013).
 - [ ] M3.8 Settings: language (OS default), volumes, fullscreen (F11), font size, colour

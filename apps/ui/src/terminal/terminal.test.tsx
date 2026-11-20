@@ -23,12 +23,14 @@ const NAMES: Readonly<
   en: {
     output: "Terminal output",
     input: "Command line",
-    notice: "PenguinOps does not simulate this yet, so the input stopped here.",
+    notice:
+      "cat would now wait for you to type something. PenguinOps does not simulate typing into a running command yet, so the input stopped here.",
   },
   de: {
     output: "Terminalausgabe",
     input: "Befehlszeile",
-    notice: "Das simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.",
+    notice:
+      "cat würde jetzt warten, bis du etwas eintippst. Eingaben in einen laufenden Befehl simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.",
   },
 };
 
@@ -271,6 +273,7 @@ describe("Terminal", () => {
     const notice = log.querySelector(".terminal__notice");
     expect(notice?.textContent).toBe(NAMES[language].notice);
     expect(notice?.querySelector("svg.icon")).not.toBeNull();
+    expect(notice?.querySelector("code")?.textContent).toBe("cat");
   });
 
   test("puts the focus back into the input line on a click", async () => {

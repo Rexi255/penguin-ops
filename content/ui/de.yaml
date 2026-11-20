@@ -78,7 +78,46 @@ inbox:
 terminal:
   output: Terminalausgabe
   input: Befehlszeile
-  notice: Das simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+notices:
+  option-not-simulated: Die Option {option} von {command} simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  variable-not-simulated: Die Wirkung der Variablen {variable} auf {command} simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  invalid-utf8-not-simulated: "{command} würde Bytes schreiben, die kein gültiger UTF-8-Text sind. Dateien und Terminal enthalten in PenguinOps nur Text, darum hat die Eingabe hier angehalten."
+  terminal-input-not-simulated: "{command} würde jetzt warten, bis du etwas eintippst. Eingaben in einen laufenden Befehl simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten."
+  command-substitution: Befehlssubstitution (`$(…)`) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  arithmetic-expansion: Arithmetische Expansion (`$((…))`) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  parameter-expansion: Diese Form der Parameterexpansion (`${…}` mit mehr als einem Namen) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  process-substitution: Prozesssubstitution (`<(…)` und `>(…)`) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  ansi-c-quoting: ANSI-C-Quoting (`$'…'`) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  locale-quoting: Locale-Quoting (`$"…"`) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  history-expansion: History-Expansion mit `!` (etwa `!!`) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  background-job: Hintergrundjobs (`&`) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  subshell: Subshells (`( … )`) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  arithmetic-command: Arithmetische Befehle (`(( … ))`) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  stderr-pipe: Die Pipe für die Standardfehlerausgabe (`|&`) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  here-document: Here-Documents (`<<`) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  here-string: Here-Strings (`<<<`) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  fd-duplication: Das Duplizieren von Dateideskriptoren (`>&` und `<&`, wie in `2>&1`) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  output-and-error-redirection: Das gemeinsame Umleiten von Ausgabe und Fehlern (`&>` und `&>>`) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  read-write-redirection: Das Öffnen einer Datei zum Lesen und Schreiben (`<>`) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  clobber-redirection: Die Umleitung `>|` simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  pipeline-negation: Das Verneinen einer Pipeline mit `!` simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  time-keyword: Das Schlüsselwort `time` simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  if-clause: "`if`-Abfragen simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten."
+  while-loop: "`while`-Schleifen simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten."
+  until-loop: "`until`-Schleifen simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten."
+  for-loop: "`for`-Schleifen simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten."
+  select-loop: "`select`-Menüs simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten."
+  case-clause: "`case`-Anweisungen simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten."
+  command-group: Befehlsgruppen (`{ …; }`) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  conditional-command: Den Testbefehl `[[ … ]]` simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  function-definition: Shell-Funktionen simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  coprocess: Koprozesse (`coproc`) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  array: Arrays (etwa `a=(…)` oder `a[1]=…`) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  process-id: Prozess-IDs (`$$`) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  shell-options: Die Shell-Optionen (`$-`) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  file-descriptor: Andere Dateideskriptoren als 0, 1 und 2 (etwa `3>`) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  reversed-redirection: Umleitungen in diese Richtung (etwa `0>` oder `2<`) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
+  command-path: Programme über ihren Pfad starten (etwa `./script.sh` oder `/bin/ls`) kann PenguinOps noch nicht, darum hat die Eingabe hier angehalten. Tippe einen Befehl nur mit seinem Namen, etwa `ls`.
 pause:
   title: Pause
   continue: Weiterspielen

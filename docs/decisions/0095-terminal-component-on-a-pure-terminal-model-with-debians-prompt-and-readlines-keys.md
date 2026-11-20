@@ -2,7 +2,8 @@
 
 - Status: Accepted; partly superseded by
   [0101](0101-terminal-cursor-in-the-terminals-text-colour-like-gnome-terminal.md) (the colour of
-  the terminal's cursor)
+  the terminal's cursor) and [0102](0102-a-text-of-its-own-for-every-game-notice.md) (the general
+  text of game notices)
 - Date: 2026-11-19
 - Supersedes: [0094](0094-new-game-screen-with-choice-cards-and-games-kept-in-memory-until-the-save-system.md)
   (only the uses of fibre orange)

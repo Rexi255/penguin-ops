@@ -13,13 +13,15 @@ const LANGUAGES = [
     locale: "en-US",
     input: "Command line",
     output: "Terminal output",
-    notice: "PenguinOps does not simulate this yet, so the input stopped here.",
+    notice:
+      "cat would now wait for you to type something. PenguinOps does not simulate typing into a running command yet, so the input stopped here.",
   },
   {
     locale: "de-DE",
     input: "Befehlszeile",
     output: "Terminalausgabe",
-    notice: "Das simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.",
+    notice:
+      "cat würde jetzt warten, bis du etwas eintippst. Eingaben in einen laufenden Befehl simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.",
   },
 ] as const;
 

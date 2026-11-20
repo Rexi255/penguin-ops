@@ -158,11 +158,55 @@ export const UI_TEXT_PLACEHOLDERS = {
   "terminal.output": [],
   /** The accessible name of the terminal's input line. */
   "terminal.input": [],
-  /**
-   * A game notice in the terminal: the input used something the game does not simulate yet, and
-   * the input stopped there. ROADMAP M3.6 gives each kind of notice its own text.
+  /*
+   * The game notices in the terminal (ADR 0102): the input used something the game does not
+   * simulate yet, and the input stopped there. `command` is the command name as the player wrote
+   * it, `option` and `variable` what the command met; all three are code values.
    */
-  "terminal.notice": [],
+  /** The command notice `option-not-simulated`. */
+  "notices.option-not-simulated": ["command", "option"],
+  /** The command notice `variable-not-simulated`. */
+  "notices.variable-not-simulated": ["command", "variable"],
+  /** The command notice `invalid-utf8-not-simulated`. */
+  "notices.invalid-utf8-not-simulated": ["command"],
+  /** The command notice `terminal-input-not-simulated`. */
+  "notices.terminal-input-not-simulated": ["command"],
+  /** The shell features the game does not simulate yet, one text each, named by the feature. */
+  "notices.command-substitution": [],
+  "notices.arithmetic-expansion": [],
+  "notices.parameter-expansion": [],
+  "notices.process-substitution": [],
+  "notices.ansi-c-quoting": [],
+  "notices.locale-quoting": [],
+  "notices.history-expansion": [],
+  "notices.background-job": [],
+  "notices.subshell": [],
+  "notices.arithmetic-command": [],
+  "notices.stderr-pipe": [],
+  "notices.here-document": [],
+  "notices.here-string": [],
+  "notices.fd-duplication": [],
+  "notices.output-and-error-redirection": [],
+  "notices.read-write-redirection": [],
+  "notices.clobber-redirection": [],
+  "notices.pipeline-negation": [],
+  "notices.time-keyword": [],
+  "notices.if-clause": [],
+  "notices.while-loop": [],
+  "notices.until-loop": [],
+  "notices.for-loop": [],
+  "notices.select-loop": [],
+  "notices.case-clause": [],
+  "notices.command-group": [],
+  "notices.conditional-command": [],
+  "notices.function-definition": [],
+  "notices.coprocess": [],
+  "notices.array": [],
+  "notices.process-id": [],
+  "notices.shell-options": [],
+  "notices.file-descriptor": [],
+  "notices.reversed-redirection": [],
+  "notices.command-path": [],
   /** The title of the pause menu. */
   "pause.title": [],
   /** The pause menu entry that closes the menu and returns to the game. */
