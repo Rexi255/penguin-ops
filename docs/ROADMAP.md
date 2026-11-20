@@ -207,7 +207,7 @@ inventing it along the way.
 - [x] M3.4 Workplace layout: top bar, side panel tabs, footer key hints (ADR 0020), built
       only from the design tokens and icons of M3.0b–e. (ADR 0096: the top bar's content comes
       with M3.5 and M3.12.)
-- [ ] M3.5 Ticket panel: chapter inbox, ticket text, hints (F1), explanation after solving,
+- [x] M3.5 Ticket panel: chapter inbox, ticket text, hints (F1), explanation after solving,
       extra goals.
   - [x] M3.5a Ticket text in the tickets panel with the steps as tape segments, the solved
         state, step messages and tips; the top bar names the ticket and its step (ADR 0097).
@@ -215,7 +215,8 @@ inventing it along the way.
   - [x] M3.5c Chapter inbox: the open chapters' tickets with their states, chapter titles, the
         next ticket after solving, a terminal per ticket that goes on where the player left it
         (ADR 0099).
-  - [ ] M3.5d Extra goals in the ticket panel.
+  - [x] M3.5d Extra goals in the ticket panel: listed with their bonus XP and state from the start,
+        and announced as a message when reached (ADR 0100).
 - [ ] M3.6 Game commands `help` and `hint`; engine notices rendered in the player's language.
 - [ ] M3.7 Save system: three slots, metadata, autosave, atomic write and backup, versioned
       format with migration test, export and import (ADR 0013).

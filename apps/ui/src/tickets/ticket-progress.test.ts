@@ -1,5 +1,6 @@
-// Tests of the ticket's progress (ADR 0097, ADR 0098): what the game events of an input add up to,
-// the step the player works on, and the hints the player asked for.
+// Tests of the ticket's progress (ADR 0097, ADR 0098, ADR 0100): what the game events of an input
+// add up to, the step the player works on, the hints the player asked for and the reached extra
+// goals.
 import type { GameEvent } from "@penguin-ops/gameplay";
 import { describe, expect, test } from "vitest";
 
@@ -13,11 +14,12 @@ import {
 } from "./ticket-progress";
 
 describe("applyGameEvents", () => {
-  test("starts with no step, unsolved, without messages and without hints", () => {
+  test("starts with no step, unsolved, without messages, extra goals and hints", () => {
     expect(TICKET_START).toEqual({
       completedSteps: 0,
       solved: false,
       messages: [],
+      reachedExtraGoals: [],
       hintsShown: 0,
     });
   });
@@ -35,6 +37,7 @@ describe("applyGameEvents", () => {
       completedSteps: 2,
       solved: false,
       messages: [{ kind: "step", say: "step-backup" }],
+      reachedExtraGoals: [],
       hintsShown: 0,
     });
   });
@@ -60,9 +63,33 @@ describe("applyGameEvents", () => {
     expect(first.messages).toEqual([{ kind: "tip", say: "tip-moved-config" }]);
   });
 
-  test("leaves the progress unchanged for an extra goal", () => {
+  test("keeps a reached extra goal and adds a message with its bonus XP", () => {
     const events: GameEvent[] = [{ kind: "extra-goal", id: "floor1", xp: 20 }];
-    expect(applyGameEvents(TICKET_START, events)).toEqual(TICKET_START);
+    expect(applyGameEvents(TICKET_START, events)).toEqual({
+      ...TICKET_START,
+      reachedExtraGoals: ["floor1"],
+      messages: [{ kind: "extra-goal", id: "floor1", xp: 20 }],
+    });
+  });
+
+  test("keeps extra goals in the order reached, also after solving", () => {
+    const first = applyGameEvents(TICKET_START, [
+      { kind: "step-completed", step: "backup", say: "step-backup" },
+      { kind: "extra-goal", id: "floor1", xp: 20 },
+    ]);
+    const second = applyGameEvents(first, [
+      { kind: "solved" },
+      { kind: "extra-goal", id: "careful", xp: 50 },
+    ]);
+    expect(second.solved).toBe(true);
+    expect(second.reachedExtraGoals).toEqual(["floor1", "careful"]);
+    expect(second.messages).toEqual([
+      { kind: "step", say: "step-backup" },
+      { kind: "extra-goal", id: "floor1", xp: 20 },
+      { kind: "extra-goal", id: "careful", xp: 50 },
+    ]);
+    // The earlier progress is unchanged.
+    expect(first.reachedExtraGoals).toEqual(["floor1"]);
   });
 
   test("keeps the hints shown", () => {
@@ -97,6 +124,7 @@ describe("showNextHint", () => {
       completedSteps: 1,
       solved: false,
       messages: [{ kind: "tip", say: "tip-moved-config" }],
+      reachedExtraGoals: ["floor1"],
       hintsShown: 1,
     };
     expect(showNextHint(progress)).toEqual({ ...progress, hintsShown: 2 });
@@ -108,6 +136,7 @@ describe("stepPosition", () => {
     completedSteps,
     solved,
     messages: [],
+    reachedExtraGoals: [],
     hintsShown: 0,
   });
 

@@ -1,6 +1,7 @@
 // The texts of the ticket being played in the player's language (ROADMAP M3.5a, ADR 0097): its
 // title, its text and the messages of its steps and tips, and its hints and the explanation after
-// solving (M3.5b, ADR 0098), from the level's catalog with English where a further language lacks
+// solving (M3.5b, ADR 0098) and the descriptions of its extra goals (M3.5d, ADR 0100), from the
+// level's catalog with English where a further language lacks
 // a text (ADR 0074). The game passes no values to level texts.
 
 import {
@@ -38,6 +39,8 @@ export interface TicketTexts {
   /** The three hints: a tip, a concrete tip and the solution. */
   readonly hints: readonly [tip: RichText, concreteTip: RichText, solution: RichText];
   readonly explanation: ExplanationTexts;
+  /** The descriptions of the extra goals by their IDs. */
+  readonly extraGoals: ReadonlyMap<string, RichText>;
   /** The level's other texts by their keys: step messages, tips and prose file contents. */
   readonly texts: ReadonlyMap<string, CatalogText>;
 }
@@ -72,6 +75,9 @@ export function ticketTexts(content: Content, levelId: string, language: string)
       })),
       ...(explanation.example === undefined ? {} : { example: explanation.example }),
     },
+    extraGoals: new Map(
+      [...texts.extraGoals].map(([id, description]) => [id, formatText(description)]),
+    ),
     texts: texts.texts,
   };
 }
@@ -86,4 +92,16 @@ export function messageText(texts: TicketTexts, say: string): RichText {
     throw new Error(`The level "${texts.levelId}" has no text "${say}".`);
   }
   return formatText(text);
+}
+
+/**
+ * The formatted description of an extra goal by its ID. Throws if the level has no such
+ * description, which the content loader rules out for every extra goal of the level.
+ */
+export function extraGoalText(texts: TicketTexts, id: string): RichText {
+  const text = texts.extraGoals.get(id);
+  if (text === undefined) {
+    throw new Error(`The level "${texts.levelId}" has no description of the extra goal "${id}".`);
+  }
+  return text;
 }

@@ -56,6 +56,11 @@ ticket:
   updates: Verlauf
   step-done: Schritt erledigt
   tip: Tipp
+  extra-goals: Extraziele
+  xp: "+{xp} XP"
+  extra-goal-open: Offen
+  extra-goal-reached: Erreicht
+  extra-goal-done: Extraziel erreicht
   hints: Hinweise
   hint: "Hinweis {number} von {count}"
   explanation: Was du gelernt hast

@@ -1,11 +1,11 @@
-// Tests of the ticket's texts (ADR 0097, ADR 0098): the title, the text, the messages, the hints
-// and the explanation of a level in both languages, the English fallback of a further language,
-// and the errors.
+// Tests of the ticket's texts (ADR 0097, ADR 0098, ADR 0100): the title, the text, the messages,
+// the hints, the explanation and the extra goals of a level in both languages, the English
+// fallback of a further language, and the errors.
 import { MANDATORY_LANGUAGES } from "@penguin-ops/content";
 import { describe, expect, test } from "vitest";
 
 import { loadBundledContent } from "../content/bundled-content";
-import { messageText, ticketTexts } from "./ticket-texts";
+import { extraGoalText, messageText, ticketTexts } from "./ticket-texts";
 
 const content = loadBundledContent();
 
@@ -133,6 +133,38 @@ describe("messageText", () => {
   test("throws for a key the level does not have", () => {
     expect(() => messageText(ticketTexts(content, "switch-backup", "en"), "tip-nothing")).toThrow(
       'The level "switch-backup" has no text "tip-nothing".',
+    );
+  });
+});
+
+describe("extraGoalText", () => {
+  test.each(MANDATORY_LANGUAGES)(
+    "has a description of every extra goal of every level in %s",
+    (language) => {
+      for (const [levelId, level] of content.levels) {
+        const texts = ticketTexts(content, levelId, language);
+        expect([...texts.extraGoals.keys()]).toEqual(level.extraGoals.map((goal) => goal.id));
+        for (const { id } of level.extraGoals) {
+          expect(extraGoalText(texts, id).length).toBeGreaterThan(0);
+        }
+      }
+    },
+  );
+
+  test.each([
+    ["en", "Marketing loves a README. Create an empty "],
+    ["de", "Das Marketing liebt READMEs. Lege eine leere "],
+  ] as const)("formats an extra goal's description with code in %s", (language, start) => {
+    const [block] = extraGoalText(ticketTexts(content, "project-folders", language), "readme");
+    expect(block?.type === "paragraph" && block.content.slice(0, 2)).toEqual([
+      { type: "text", text: start },
+      { type: "code", text: "README.txt" },
+    ]);
+  });
+
+  test("throws for an extra goal the level does not have", () => {
+    expect(() => extraGoalText(ticketTexts(content, "first-steps", "en"), "fast")).toThrow(
+      'The level "first-steps" has no description of the extra goal "fast".',
     );
   });
 });

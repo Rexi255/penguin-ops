@@ -15,7 +15,7 @@
 // focus stays where it is, so the player keeps typing. Until the save system (M3.7), the game
 // starts again whenever the screen appears.
 
-import type { Content, RichTextInline } from "@penguin-ops/content";
+import type { Content, ExtraGoal, RichTextInline } from "@penguin-ops/content";
 import { createGameClock } from "@penguin-ops/engine";
 import {
   chapterOf,
@@ -63,6 +63,9 @@ export interface GameScreenProps {
   /** Leaves the game for the start screen. */
   readonly onMainMenu: () => void;
 }
+
+/** The extra goals of a level without any, one value so that the ticket panel keeps its props. */
+const NO_EXTRA_GOALS: readonly ExtraGoal[] = [];
 
 /** What the Tickets tab shows: the ticket being played, or the chapter inbox. */
 export type TicketsView = "ticket" | "inbox";
@@ -139,7 +142,9 @@ export function GameScreen({ content, mode, userName, firstTicket, onMainMenu }:
 
   const levelId = opened.levelId;
   const ticketProgress = progress.get(levelId) ?? TICKET_START;
-  const stepCount = content.levels.get(levelId)?.steps?.length ?? 0;
+  const level = content.levels.get(levelId);
+  const stepCount = level?.steps?.length ?? 0;
+  const extraGoals = level?.extraGoals ?? NO_EXTRA_GOALS;
   const started = useMemo(() => new Set(progress.keys()), [progress]);
   const solved = useMemo(() => levelsWhere(progress, (entry) => entry.solved), [progress]);
 
@@ -254,6 +259,7 @@ export function GameScreen({ content, mode, userName, firstTicket, onMainMenu }:
             key={levelId}
             texts={ticket}
             stepCount={stepCount}
+            extraGoals={extraGoals}
             progress={ticketProgress}
           />
           {ticketProgress.solved && <NextTicket next={next} onOpen={openTicket} />}

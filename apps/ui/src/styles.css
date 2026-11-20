@@ -636,7 +636,8 @@ pre {
   line-height: var(--text-hint-leading);
 }
 
-.ticket__messages {
+.ticket__messages,
+.ticket__goals {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -651,20 +652,59 @@ pre {
   gap: var(--space-2);
 }
 
-.ticket__message--step .icon {
+.ticket__message--step .icon,
+.ticket__message--extra-goal > .icon {
   color: var(--color-cable-handbook);
 }
 
-/* "Hint 1 of 3" above a hint's text, in the muted hint type like the section titles. */
-.ticket__message-text > .ticket__hint-label {
+/* "Hint 1 of 3" above a hint's text and "Extra goal reached" with the bonus XP above an extra
+   goal's description, in the muted hint type like the section titles. */
+.ticket__message-text > .ticket__hint-label,
+.ticket__message-text > .ticket__message-label {
   color: var(--color-text-muted);
   font-size: var(--text-hint-size);
   font-weight: var(--font-weight-control);
   line-height: var(--text-hint-leading);
 }
 
-.ticket__message-text > .ticket__hint-label + * {
+.ticket__message-label {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.ticket__message-text > .ticket__hint-label + *,
+.ticket__message-text > .ticket__message-label + * {
   margin-block-start: 0;
+}
+
+/* An extra goal (ADR 0100): its description, then its bonus XP and its state in words in the muted
+   hint type; a reached one says so in the colour of success with its icon. */
+.ticket__goal {
+  display: flex;
+  flex-direction: column;
+}
+
+.ticket__goal-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-hint-size);
+  font-weight: var(--font-weight-control);
+  line-height: var(--text-hint-leading);
+}
+
+.ticket__goal-state {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.ticket__goal--reached .ticket__goal-state {
+  color: var(--color-cable-handbook);
 }
 
 /* The explanation after solving: its text, then the variants of the taught command and a

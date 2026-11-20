@@ -26,6 +26,9 @@ project uses [Semantic Versioning](https://semver.org/).
   tab comes to the front to show them.
 - A solved ticket explains what you learned: a short explanation, useful variants of the command
   and a command to try.
+- Some tickets have optional extra goals for bonus XP. The Tickets tab lists them under the
+  ticket's text with their XP and whether you have reached them; reaching one, also after
+  solving, adds "Extra goal reached" to the ticket's updates.
 - The Tickets tab has an inbox: "Back to the inbox" lists the tickets of every open chapter with
   their state (New, In progress, Solved) and how many of each chapter you have solved. Click a
   ticket to work on it; a ticket you left goes on where you left it, terminal included. In Career

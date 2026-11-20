@@ -118,6 +118,16 @@ export const UI_TEXT_PLACEHOLDERS = {
   "ticket.step-done": [],
   /** What a tip for a typical mistake is, for screen readers before its text. */
   "ticket.tip": [],
+  /** The heading of the ticket's extra goals (ADR 0100). */
+  "ticket.extra-goals": [],
+  /** The bonus XP of an extra goal; `xp` is a number. */
+  "ticket.xp": ["xp"],
+  /** The state of an extra goal the player has not reached yet. */
+  "ticket.extra-goal-open": [],
+  /** The state of a reached extra goal. */
+  "ticket.extra-goal-reached": [],
+  /** The label of a message about a reached extra goal, before its description. */
+  "ticket.extra-goal-done": [],
   /** The heading of the hints the player asked for. */
   "ticket.hints": [],
   /** The label of a hint; `number` counts from 1, `count` is the number of hints. */

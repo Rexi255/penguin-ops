@@ -476,6 +476,29 @@ describe("GameScreen", () => {
     expect(hints?.textContent).toContain("Hint 1 of 3");
   });
 
+  test.each(MANDATORY_LANGUAGES)(
+    "marks an extra goal reached and announces it, also after solving, in %s",
+    async (language) => {
+      const { view } = renderGameScreen(language, "project-folders");
+      const reached = language === "en" ? "Reached" : "Erreicht";
+      const done = language === "en" ? "Extra goal reached" : "Extraziel erreicht";
+      const goalState = () => view.container.querySelector(".ticket__goal-state")?.textContent;
+      const [, messages] = ticket().querySelectorAll("[aria-live]");
+      expect(goalState()).toBe(language === "en" ? "Open" : "Offen");
+      await solve("project-folders");
+      expect(screen.getByRole("status").textContent).toBe(TICKETS[language].solved);
+      expect(goalState()).toBe(language === "en" ? "Open" : "Offen");
+      await userEvent.keyboard("touch ~/projects/relaunch/README.txt{Enter}");
+      expect(goalState()).toBe(reached);
+      expect(messages?.querySelector(".ticket__message--extra-goal")?.textContent).toContain(
+        `${done}+20 XP`,
+      );
+      // The extra goal is reached once: doing it again adds no message.
+      await userEvent.keyboard("touch ~/projects/relaunch/README.txt{Enter}");
+      expect(messages?.querySelectorAll(".ticket__message--extra-goal")).toHaveLength(1);
+    },
+  );
+
   test("keeps the ticket's progress while inputs change nothing in the game", async () => {
     renderGameScreen("en", "switch-backup");
     await userEvent.keyboard("cp ~/network/switch-floor2.conf ~/backup/{Enter}");

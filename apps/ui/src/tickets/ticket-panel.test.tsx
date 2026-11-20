@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
-// Tests of the ticket panel (ADR 0097, ADR 0098) in both languages: the title that names the
-// ticket, the state row with its tape segments, the ticket's text, the messages with their labels,
-// the hints the player asked for and the explanation after solving.
+// Tests of the ticket panel (ADR 0097, ADR 0098, ADR 0100) in both languages: the title that names
+// the ticket, the state row with its tape segments, the ticket's text, the extra goals with their
+// states, the messages with their labels, the hints the player asked for and the explanation after
+// solving.
 import { MANDATORY_LANGUAGES, type MandatoryLanguage } from "@penguin-ops/content";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, test, vi } from "vitest";
 
 import { loadBundledContent } from "../content/bundled-content";
@@ -29,6 +30,11 @@ const LABELS: Readonly<
       variants: string;
       variantText: string;
       example: string;
+      extraGoals: string;
+      floor1: string;
+      open: string;
+      reached: string;
+      extraGoalDone: string;
     }
   >
 > = {
@@ -43,6 +49,11 @@ const LABELS: Readonly<
     variants: "Useful variants",
     variantText: "Go to the parent directory.",
     example: "Try it: cd ~/welcome",
+    extraGoals: "Extra goals",
+    floor1: "The switch on the first floor is next. Back up its configuration too.",
+    open: "Open",
+    reached: "Reached",
+    extraGoalDone: "Extra goal reached",
   },
   de: {
     stepDone: "Schritt erledigt",
@@ -55,6 +66,11 @@ const LABELS: Readonly<
     variants: "Nützliche Varianten",
     variantText: "Wechselt in das übergeordnete Verzeichnis.",
     example: "Probier es aus: cd ~/welcome",
+    extraGoals: "Extraziele",
+    floor1: "Als Nächstes ist der Switch im ersten Stock dran. Sichere auch seine Konfiguration.",
+    open: "Offen",
+    reached: "Erreicht",
+    extraGoalDone: "Extraziel erreicht",
   },
 };
 
@@ -68,12 +84,13 @@ function renderPanel(
   levelId = "switch-backup",
   language: MandatoryLanguage = "en",
 ) {
-  const stepCount = content.levels.get(levelId)?.steps?.length ?? 0;
+  const level = content.levels.get(levelId);
   return render(
     <TextsProvider texts={createTexts(content.uiCatalogs, language)}>
       <TicketPanel
         texts={ticketTexts(content, levelId, language)}
-        stepCount={stepCount}
+        stepCount={level?.steps?.length ?? 0}
+        extraGoals={level?.extraGoals ?? []}
         progress={progress}
       />
     </TextsProvider>,
@@ -134,7 +151,7 @@ describe("TicketPanel", () => {
   });
 
   test("shows no messages before the game says something", () => {
-    renderPanel(TICKET_START);
+    renderPanel(TICKET_START, "first-steps");
     expect(screen.queryByRole("heading", { level: 3 })).toBeNull();
     expect(document.querySelector(".ticket__messages")).toBeNull();
   });
@@ -167,6 +184,81 @@ describe("TicketPanel", () => {
         expect(item.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
         expect(item.querySelector(".ticket__message-text p")).not.toBeNull();
       }
+    },
+  );
+
+  test("shows no extra goals for a ticket without any", () => {
+    const { container } = renderPanel(TICKET_START, "first-steps");
+    expect(screen.queryByRole("heading", { name: "Extra goals" })).toBeNull();
+    expect(container.querySelector(".ticket__goal")).toBeNull();
+  });
+
+  test.each(MANDATORY_LANGUAGES)(
+    "lists the extra goals with their bonus XP as open from the start in %s",
+    (language) => {
+      const labels = LABELS[language];
+      renderPanel(TICKET_START, "switch-backup", language);
+      const heading = screen.getByRole("heading", { level: 3, name: labels.extraGoals });
+      const items = within(heading.closest("section") ?? document.body).getAllByRole("listitem");
+      expect(items.map((item) => item.textContent)).toEqual([
+        `${labels.floor1}+20 XP${labels.open}`,
+      ]);
+      expect(items[0]?.querySelector("svg")).toBeNull();
+      // The extra goals come right after the ticket's text, before the hints and messages.
+      expect(heading.closest("section")?.previousElementSibling?.className).toBe("ticket__text");
+    },
+  );
+
+  test.each(MANDATORY_LANGUAGES)(
+    "marks a reached extra goal in words and with the icon of success in %s",
+    (language) => {
+      const labels = LABELS[language];
+      const { container } = renderPanel(
+        { ...TICKET_START, reachedExtraGoals: ["floor1"] },
+        "switch-backup",
+        language,
+      );
+      const goal = container.querySelector(".ticket__goal");
+      expect(goal?.classList.contains("ticket__goal--reached")).toBe(true);
+      expect(goal?.querySelector(".ticket__goal-state")?.textContent).toBe(labels.reached);
+      expect(goal?.querySelector(".ticket__goal-state svg")?.getAttribute("aria-hidden")).toBe(
+        "true",
+      );
+    },
+  );
+
+  test("draws the code in an extra goal's description", () => {
+    const { container } = renderPanel(TICKET_START, "project-folders");
+    expect(container.querySelector(".ticket__goal code")?.textContent).toBe("README.txt");
+    expect(container.querySelector(".ticket__goal")?.getAttribute("data-extra-goal")).toBe(
+      "readme",
+    );
+  });
+
+  test.each(MANDATORY_LANGUAGES)(
+    "announces a reached extra goal with a visible label and its bonus XP in %s",
+    (language) => {
+      const labels = LABELS[language];
+      const { container } = renderPanel(
+        {
+          ...TICKET_START,
+          reachedExtraGoals: ["floor1"],
+          messages: [{ kind: "extra-goal", id: "floor1", xp: 20 }],
+        },
+        "switch-backup",
+        language,
+      );
+      const regions = [...container.querySelectorAll("[aria-live]")];
+      const message = regions[1]?.querySelector(".ticket__message--extra-goal");
+      expect(message?.querySelector(".ticket__message-label")?.textContent).toBe(
+        `${labels.extraGoalDone}+20 XP`,
+      );
+      expect(message?.querySelector(".ticket__message-text")?.textContent).toBe(
+        `${labels.extraGoalDone}+20 XP${labels.floor1}`,
+      );
+      expect(message?.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
+      // The list of extra goals is not a live region, so the goal is announced once.
+      expect(container.querySelector(".ticket__goal")?.closest("[aria-live]")).toBeNull();
     },
   );
 
@@ -259,6 +351,7 @@ describe("TicketPanel", () => {
         <TicketPanel
           texts={{ ...texts, explanation: { text: texts.explanation.text, options: [] } }}
           stepCount={0}
+          extraGoals={[]}
           progress={{ ...TICKET_START, solved: true }}
         />
       </TextsProvider>,
@@ -275,7 +368,7 @@ describe("TicketPanel", () => {
     const texts = ticketTexts(content, "first-steps", "en");
     const panel = (progress: TicketProgress) => (
       <TextsProvider texts={createTexts(content.uiCatalogs, "en")}>
-        <TicketPanel texts={texts} stepCount={0} progress={progress} />
+        <TicketPanel texts={texts} stepCount={0} extraGoals={[]} progress={progress} />
       </TextsProvider>
     );
     const view = render(panel(TICKET_START));
@@ -299,6 +392,7 @@ describe("TicketPanel", () => {
         <TicketPanel
           texts={ticketTexts(content, "switch-backup", "en")}
           stepCount={2}
+          extraGoals={content.levels.get("switch-backup")?.extraGoals ?? []}
           progress={{ ...TICKET_START, messages: [{ kind: "tip", say: "tip-moved-config" }] }}
         />
       </TextsProvider>,

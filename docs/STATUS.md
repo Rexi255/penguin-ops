@@ -4,6 +4,11 @@ _Last updated: 2026-11-20_
 
 ## Recently completed
 
+- M3.5d Extra goals: a ticket with extra goals lists them under its text in a section "Extra
+  goals", each with its description, "+20 XP" and its state in words ("Open", or "Reached" with
+  the solved icon). Reaching one, also after solving, adds an "Extra goal reached" message with
+  the XP to the updates, which announces it; the progress keeps the reached IDs. M3.5 is complete
+  (ADR 0100).
 - M3.5c Chapter inbox: "Back to the inbox" in the Tickets tab lists every open chapter (title,
   "1 of 3 solved") with its tickets as rows (New, In progress, Solved; the current one framed in
   fibre orange). Story mode opens a chapter when the ones before it are solved, Sandbox opens all
@@ -28,15 +33,6 @@ _Last updated: 2026-11-20_
   mail and handbook show their empty states, the tickets panel waits for M3.5. The footer shows
   "Tab Complete" as text and "Esc Menu" as a button; the top bar stays empty until M3.5 and
   M3.12 (ADR 0096). Shift+Tab leaves the terminal for the tabs.
-- M3.3 Terminal component: the game screen plays the first level in a terminal that behaves
-  like bash 5.2 on Debian 13: Debian's green and blue colour prompt (engine `prompt.ts`),
-  output with partial lines, continuation lines behind `> `, game notices with one general text
-  until M3.6, Up/Down history, Tab completion with the list on a second Tab and readline's
-  question from 100 matches, Ctrl+C (`^C`, exit status 130), Ctrl+L, Ctrl+A/E, Home/End,
-  Shift+PageUp/Down and 10,000 lines of scrollback. A pure terminal model with one function per
-  key; typed text comes from a transparent text field, so AltGr and dead keys work; unsimulated
-  readline Ctrl keys are swallowed (ADR 0095). Model, component and end-to-end tests in both
-  languages with axe-core.
 
 ## In progress
 
@@ -44,9 +40,9 @@ _Last updated: 2026-11-20_
 
 ## Next 3 steps
 
-1. ROADMAP M3.5d: extra goals in the ticket panel.
-2. ROADMAP M3.6: game commands `help` and `hint`; engine notices in the player's language.
-3. ROADMAP M3.7: save system (three slots, autosave, versioned format).
+1. ROADMAP M3.6: game commands `help` and `hint`; engine notices in the player's language.
+2. ROADMAP M3.7: save system (three slots, autosave, versioned format).
+3. ROADMAP M3.8: settings (language, volumes, fullscreen, font size, colour scheme).
 
 ## Blockers and open questions
 
@@ -67,10 +63,10 @@ _Last updated: 2026-11-20_
   with `STYLEGUIDE_CHROMIUM_PATH` set to the preinstalled Chromium.
 - Steam release is assumed to be "maybe later" (ADR 0002); confirm with the owner when it
   becomes relevant.
-- The game lives only in the game screen: the started and solved tickets, each ticket's messages
-  and hint count and its terminal. The save system (M3.7) has to keep or rebuild them when it
-  resumes a ticket at a checkpoint, and decide how game time runs across tickets, which each
-  start at the game's start time now (ADR 0097, ADR 0098, ADR 0099).
+- The game lives only in the game screen: the started and solved tickets, each ticket's messages,
+  hint count, reached extra goals and terminal. The save system (M3.7) has to keep or rebuild
+  them when it resumes a ticket at a checkpoint, and decide how game time runs across tickets,
+  which each start at the game's start time now (ADR 0097 to ADR 0100).
 - A later world that adds an account with a name an existing save already uses would collide
   with that save (ADR 0093); M3.7 or M4 decides how to handle it. The reserved Debian accounts
   are verified in M6.

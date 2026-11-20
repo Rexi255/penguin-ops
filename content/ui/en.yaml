@@ -56,6 +56,11 @@ ticket:
   updates: Updates
   step-done: Step done
   tip: Tip
+  extra-goals: Extra goals
+  xp: "+{xp} XP"
+  extra-goal-open: Open
+  extra-goal-reached: Reached
+  extra-goal-done: Extra goal reached
   hints: Hints
   hint: "Hint {number} of {count}"
   explanation: What you learned

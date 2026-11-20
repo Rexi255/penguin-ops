@@ -2,8 +2,8 @@
 
 > **Status: skeleton.** The workspaces exist with strict TypeScript configs (ROADMAP M0.2);
 > the Electron app has its start, save slot, new game and game screens with the pause menu,
-> the terminal, the workplace layout, the ticket panel with hints and explanation and the bundled
-> content (M3.1–M3.5b), and
+> the terminal, the workplace layout, the ticket panel with hints, explanation and extra goals,
+> the chapter inbox and the bundled content (M3.1–M3.5), and
 > the engine has the core types of the
 > world model (M1.1), path lookup and permission checks (M1.2), its random generator, game
 > clock and world builder (M1.3), the shell lexer, parser, word expansion and execution
@@ -515,15 +515,17 @@ screens are in `src/styles.css`. The visual world is "Label Tape & Patch Cable" 
 `.impeccable/surfaces/src-app-tsx.md`, and `.impeccable/design.json` is impeccable's sidecar to
 `DESIGN.md`.
 
-Tickets (ADR 0097, ADR 0098): `src/tickets/ticket-progress.ts` is a pure model of the ticket's
-progress (completed steps, solved, the step messages and tips in the order the game said them, and
-how many hints the player asked for) with `applyGameEvents`, `showNextHint` and `stepPosition`.
-`src/tickets/ticket-texts.ts` formats a level's title, ticket text, hints and explanation in the
-player's language (`ticketTexts`) and a step message or tip by its key (`messageText`).
-`src/tickets/ticket-panel.tsx` draws the ticket: title, a state row with the steps as tape segments
-or the solved state (`role="status"`), the ticket text, the hints shown so far and the messages,
-each in its own polite live region, and after solving the explanation with its variants and a
-command to try. The game screen formats the `TicketTexts` of every level once per language.
+Tickets (ADR 0097, ADR 0098, ADR 0100): `src/tickets/ticket-progress.ts` is a pure model of the
+ticket's progress (completed steps, solved, the step messages, tips and reached extra goals in the
+order the game said them, the IDs of the reached extra goals, and how many hints the player asked
+for) with `applyGameEvents`, `showNextHint` and `stepPosition`. `src/tickets/ticket-texts.ts`
+formats a level's title, ticket text, hints, explanation and extra goal descriptions in the
+player's language (`ticketTexts`), a step message or tip by its key (`messageText`) and an extra
+goal's description by its ID (`extraGoalText`). `src/tickets/ticket-panel.tsx` draws the ticket:
+title, a state row with the steps as tape segments or the solved state (`role="status"`), the
+ticket text, the extra goals with their bonus XP and state, the hints shown so far and the
+messages, each of the last two in its own polite live region, and after solving the explanation
+with its variants and a command to try. The game screen formats the `TicketTexts` of every level once per language.
 `src/tickets/inbox-panel.tsx` draws the inbox of `packages/gameplay`: each open chapter with its
 title and how many tickets are solved, and each ticket as a row (`TicketRow`) that opens it, with
 its state in words and the current one framed and marked with `aria-current`.
