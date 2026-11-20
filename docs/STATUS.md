@@ -31,6 +31,7 @@ _Last updated: 2026-11-20_
   ticket's title and its step or state. The terminal reports the game events of every input to
   the game screen. Level texts now write each paragraph on one line (ADR 0097, partly
   superseding ADR 0096: Shift+Tab from the terminal reaches the ticket first).
+
 ## In progress
 
 - Nothing.
