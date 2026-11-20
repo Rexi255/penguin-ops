@@ -51,12 +51,12 @@ _Last updated: 2026-11-20_
 ## Blockers and open questions
 
 - The start, save slot, new game and game screens, the pause menu, the terminal, the ticket
-  panel and the inbox have no screenshot tests yet; the screenshot test setup for all screens, languages and
-  colour schemes is ROADMAP M3.15.
+  panel and the inbox have no screenshot tests yet; the screenshot test setup for all screens,
+  languages and colour schemes is ROADMAP M3.15.
 - The texts of the five prototype levels, the three chapter titles and the office world's host
-  name `itdesk` were written as test content without the owner's review (the prototype's source is not in the
-  repository, so levels 2 to 5 follow the titles in `docs/CURRICULUM.md`); the story workshop
-  (M4) replaces them.
+  name `itdesk` were written as test content without the owner's review (the prototype's source
+  is not in the repository, so levels 2 to 5 follow the titles in `docs/CURRICULUM.md`); the
+  story workshop (M4) replaces them.
 - Linux is verified only by CI; the owner plays on Windows and has no Linux machine, so no
   manual Linux check is planned. CI builds the AppImage but starts the unpacked app, so the
   M5 criterion "the AppImage runs on Linux" needs CI to start the AppImage itself (ROADMAP
