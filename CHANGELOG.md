@@ -15,8 +15,12 @@ project uses [Semantic Versioning](https://semver.org/).
   exists; choosing one starts a new game. Back or Esc returns to the start screen.
 - The game screen shows the workplace: a top bar, the side panel, the terminal and a footer
   with key hints. The side panel has the tabs Tickets, Mail and Handbook: click one, or press
-  Shift+Tab in the terminal and switch with the arrow keys. Mail and the handbook are still
-  empty, the tickets come next. The footer shows "Tab Complete" and "Esc Menu".
+  Shift+Tab in the terminal twice and switch with the arrow keys. Mail and the handbook are
+  still empty. The footer shows "Tab Complete" and "Esc Menu".
+- The Tickets tab shows the ticket you are working on: its title, its text and, for a ticket
+  with several steps, one tape segment per step with "Step 1 of 2". When you finish a step or
+  make a typical mistake, a message or a tip appears under the ticket in "Updates". A solved
+  ticket says "Solved". The top bar always shows the ticket's title and its step or state.
 - The terminal works like bash on Debian: type commands after the prompt `you@itdesk:~$` and
   see their output. The first ticket's files are there. Up and Down bring back earlier
   commands, Tab completes commands and file names (twice lists the choices), Ctrl+C cancels

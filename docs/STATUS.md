@@ -4,6 +4,12 @@ _Last updated: 2026-11-20_
 
 ## Recently completed
 
+- M3.5a Ticket panel, part 1: the Tickets tab shows the ticket being played (title, text with
+  paragraphs and lists, the steps as tape segments with "Step 1 of 2", "Solved") and below it
+  the step messages and tips the game says, in a polite live region; the top bar shows the
+  ticket's title and its step or state. The terminal reports the game events of every input to
+  the game screen. Level texts now write each paragraph on one line (ADR 0097, partly
+  superseding ADR 0096: Shift+Tab from the terminal reaches the ticket first).
 - M3.4 Workplace layout: the side panel has the tabs Tickets, Mail and Handbook after the
   WAI-ARIA tabs pattern (arrow keys, Home and End, automatic activation, only the chosen tab in
   the tab order), each with its icon and the cable colour of its kind of work on the chosen tab;
@@ -28,11 +34,6 @@ _Last updated: 2026-11-20_
   empty without a Latin letter), `checkUserName` returns the first problem as a code, and
   `reservedUserNames` holds Debian's system accounts and every account of the base worlds
   (ADR 0093). `isValidPlayerName` uses the same check.
-- M3.1c Game screen and pause menu (M3.1 complete): an empty slot is now a button ("Slot 1 New
-  game", first slot focused) that opens the game screen, the workplace frame as a CSS grid (top
-  bar, side panel, terminal area, footer with an "Esc Menu" key hint button). Esc opens a modal
-  pause menu (Continue, Main menu) over the inert game; Esc or Continue closes it and returns the
-  focus (ADR 0092, partly superseding ADR 0091).
 
 ## In progress
 
@@ -40,16 +41,15 @@ _Last updated: 2026-11-20_
 
 ## Next 3 steps
 
-1. ROADMAP M3.5: ticket panel (chapter inbox, ticket text, hints with F1, explanation, extra
-   goals), with the top bar's ticket and step.
-2. ROADMAP M3.6: game commands `help` and `hint`; engine notices in the player's language.
-3. ROADMAP M3.7: save system.
+1. ROADMAP M3.5b: hints with F1 (one level at a time) and the explanation after solving.
+2. ROADMAP M3.5c: chapter inbox (ticket list, the next ticket after solving) and extra goals.
+3. ROADMAP M3.6: game commands `help` and `hint`; engine notices in the player's language.
 
 ## Blockers and open questions
 
-- The start, save slot, new game and game screens, the pause menu and the terminal have no
-  screenshot tests yet; the screenshot test setup for all screens, languages and colour schemes
-  is ROADMAP M3.15.
+- The start, save slot, new game and game screens, the pause menu, the terminal and the ticket
+  panel have no screenshot tests yet; the screenshot test setup for all screens, languages and
+  colour schemes is ROADMAP M3.15.
 - The texts of the five prototype levels and the office world's host name `itdesk` were
   written as test content without the owner's review (the prototype's source is not in the
   repository, so levels 2 to 5 follow the titles in `docs/CURRICULUM.md`); the story workshop
@@ -64,6 +64,8 @@ _Last updated: 2026-11-20_
   with `STYLEGUIDE_CHROMIUM_PATH` set to the preinstalled Chromium.
 - Steam release is assumed to be "maybe later" (ADR 0002); confirm with the owner when it
   becomes relevant.
+- The ticket's messages live only in the game screen; the save system (M3.7) has to keep or
+  rebuild them when it resumes a ticket at a checkpoint (ADR 0097).
 - A later world that adds an account with a name an existing save already uses would collide
   with that save (ADR 0093); M3.7 or M4 decides how to handle it. The reserved Debian accounts
   are verified in M6.

@@ -17,7 +17,8 @@ export function InlineText({ text, textKey }: InlineTextProps) {
   return <Inlines inlines={paragraphOf(text, textKey)} />;
 }
 
-function Inlines({ inlines }: { readonly inlines: readonly RichTextInline[] }) {
+/** Inline pieces of a text with their markup, without a wrapping element. */
+export function Inlines({ inlines }: { readonly inlines: readonly RichTextInline[] }) {
   // The pieces never change order while the text stays the same, so the index is a stable key.
   return inlines.map((inline, index) => {
     switch (inline.type) {

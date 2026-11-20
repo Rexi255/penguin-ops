@@ -284,14 +284,14 @@ Every level has an English (`en.yaml`) and a German (`de.yaml`) catalog next to 
 
 | Key | Required | Meaning |
 |---|---|---|
-| `title` | yes | Ticket title. |
+| `title` | yes | Ticket title, one paragraph; shown in the ticket panel and the top bar. |
 | `ticket` | yes | Ticket text shown in the ticket panel. |
 | `hints` | yes | Exactly three hints: tip, concrete tip, solution. |
 | `explanation.text` | yes | Explanation shown after solving. |
 | `explanation.options` | no | List of `[option, description]` pairs. |
 | `explanation.example` | no | A command to try. |
 | `extra_goals.<id>` | no | Description of each extra goal, by its ID. |
-| any other key | no | Prose file contents, tips and step messages referenced from `level.yaml`. |
+| any other key | no | Prose file contents, tips and step messages referenced from `level.yaml`; tips and step messages appear under the ticket text in the ticket panel. |
 
 - Every text is a string and not empty. Long texts use a YAML block (`|`), which keeps the
   line breaks and ends with one.
@@ -356,7 +356,8 @@ ticket: |
 ```
 
 - **Lines:** a line break is kept as written. An empty line (or one of spaces) starts a new
-  paragraph.
+  paragraph. Write each paragraph on one line, however long: the UI wraps it to the width of the
+  panel, and a paragraph wrapped by hand keeps its breaks in the middle of the panel's lines.
 - **Lists:** a line that starts with `- ` (hyphen and space) is a list item; consecutive items
   form a list, also right after a paragraph line. A line without `- ` ends the list. There are
   no nested or numbered lists.

@@ -1,6 +1,8 @@
 # 0096. Side panel tabs and key hints of the workplace layout
 
-- Status: Accepted
+- Status: Accepted; partly superseded by
+  [0097](0097-ticket-panel-with-step-segments-and-messages-and-the-top-bars-guide-words.md) (the
+  empty tickets panel and the focus order)
 - Date: 2026-11-20
 - Supersedes: –
 

@@ -48,6 +48,12 @@ game:
   handbook-empty: The commands you learn will appear here.
   complete: Complete
   menu: Menu
+ticket:
+  step: "Step {current} of {count}"
+  solved: Solved
+  updates: Updates
+  step-done: Step done
+  tip: Tip
 terminal:
   output: Terminal output
   input: Command line

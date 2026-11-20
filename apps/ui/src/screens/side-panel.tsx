@@ -4,9 +4,8 @@
 // only the chosen tab is in the tab order, the arrow keys, Home and End move between the tabs
 // and choose the tab they reach.
 //
-// The tickets panel stays empty until the ticket panel (M3.5) fills it, because a level is
-// always being played and "no tickets" would be wrong. The mail and the handbook show their
-// empty states until M3.11 fills them.
+// The tickets panel shows what the game screen gives it: the ticket being played (M3.5a,
+// ADR 0097). The mail and the handbook show their empty states until M3.11 fills them.
 
 import { type KeyboardEvent, type ReactNode, useId, useRef, useState } from "react";
 
@@ -71,11 +70,11 @@ function EmptyState({ textKey }: { readonly textKey: EmptyStateKey }) {
   );
 }
 
-/** The content of a tab's panel, or `null` while the panel has none. */
-function panelContent(tab: SidePanelTab): ReactNode {
+/** The content of a tab's panel. */
+function panelContent(tab: SidePanelTab, tickets: ReactNode): ReactNode {
   switch (tab) {
     case "tickets":
-      return null;
+      return tickets;
     case "mail":
       return <EmptyState textKey="game.mail-empty" />;
     case "handbook":
@@ -83,7 +82,12 @@ function panelContent(tab: SidePanelTab): ReactNode {
   }
 }
 
-export function SidePanel() {
+export interface SidePanelProps {
+  /** The content of the tickets panel: the ticket being played. */
+  readonly tickets: ReactNode;
+}
+
+export function SidePanel({ tickets }: SidePanelProps) {
   const texts = useTexts();
   const idPrefix = useId();
   const [selected, setSelected] = useState<SidePanelTab>("tickets");
@@ -141,24 +145,21 @@ export function SidePanel() {
           );
         })}
       </div>
-      {SIDE_PANEL_TABS.map((tab) => {
-        const content = panelContent(tab);
-        return (
-          <div
-            key={tab}
-            id={panelId(tab)}
-            role="tabpanel"
-            className="side-panel__panel"
-            aria-labelledby={tabId(tab)}
-            hidden={tab !== selected}
-            // A panel without a control of its own takes the focus, so the keyboard reaches its
-            // text (WAI-ARIA tabs pattern); an empty panel has nothing to reach.
-            tabIndex={content === null ? undefined : 0}
-          >
-            {content}
-          </div>
-        );
-      })}
+      {SIDE_PANEL_TABS.map((tab) => (
+        <div
+          key={tab}
+          id={panelId(tab)}
+          role="tabpanel"
+          className="side-panel__panel"
+          aria-labelledby={tabId(tab)}
+          hidden={tab !== selected}
+          // A panel without a control of its own takes the focus, so the keyboard reaches its
+          // text (WAI-ARIA tabs pattern).
+          tabIndex={0}
+        >
+          {panelContent(tab, tickets)}
+        </div>
+      ))}
     </div>
   );
 }

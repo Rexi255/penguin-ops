@@ -13,6 +13,7 @@ import { NewGameScreen } from "./screens/new-game-screen";
 import { SAVE_SLOT_COUNT, SaveSlotScreen } from "./screens/save-slot-screen";
 import { StartScreen } from "./screens/start-screen";
 import { TextsProvider } from "./texts/texts-context";
+import { ticketTexts } from "./tickets/ticket-texts";
 import type { Texts } from "./texts/ui-texts";
 
 /** The screens the app can show; a slot is an index counting from 0. */
@@ -95,10 +96,11 @@ export function App({ info, content, texts, reservedUserNames, onQuit }: AppProp
         throw new Error(`The save slot ${String(screen.slot + 1)} has no game to play.`);
       }
       // Until the campaign (M3.5) and the save system (M3.7), a game plays its first level.
-      const level = levelSetup(content, startingLevelId(content), texts.language, game.userName);
+      const levelId = startingLevelId(content);
       shown = (
         <GameScreen
-          level={level}
+          level={levelSetup(content, levelId, texts.language, game.userName)}
+          ticket={ticketTexts(content, levelId, texts.language)}
           onMainMenu={() => {
             setScreen({ name: "start" });
           }}

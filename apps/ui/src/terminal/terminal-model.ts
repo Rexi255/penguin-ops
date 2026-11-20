@@ -22,6 +22,7 @@ import {
 } from "@penguin-ops/engine";
 import {
   completeInput,
+  type GameEvent,
   interruptLevelInput,
   levelPrompt,
   type LevelSession,
@@ -100,6 +101,13 @@ export interface TerminalState {
   readonly tabUnchanged: boolean;
   /** readline's question before a long list, while it waits for the answer. */
   readonly question: CompletionQuestion | undefined;
+  /**
+   * What happened in the game after the last input that ran (`runInput`): steps, the solved
+   * ticket, tips and extra goals. Every input that runs replaces it with a new list, also an
+   * empty one, so the terminal component tells new events from old ones by identity; every other
+   * change keeps it.
+   */
+  readonly gameEvents: readonly GameEvent[];
 }
 
 /**
@@ -129,6 +137,7 @@ export function createTerminal(session: LevelSession, time: number): TerminalSta
     navigation: AT_NEW_LINE,
     tabUnchanged: false,
     question: undefined,
+    gameEvents: [],
   };
 }
 
@@ -338,6 +347,8 @@ export function submit(state: TerminalState, columns: number): TerminalState {
         session: result.session,
         screen: showEvents(screen, result.terminal),
         pending: undefined,
+        // A copy, so that every input that runs has a list of its own (see `gameEvents`).
+        gameEvents: [...result.game],
       };
   }
 }

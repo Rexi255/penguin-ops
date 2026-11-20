@@ -1,8 +1,9 @@
-// End-to-end tests of the game screen and the pause menu (ROADMAP M3.1c, M3.4, ADR 0092, ADR 0095,
-// ADR 0096): a new game starts with the keyboard alone and the terminal has the focus, the side
-// panel's tabs switch with the keyboard and the mouse, Esc opens and closes the pause menu, Main
-// menu leads back to the start screen, and axe-core finds no accessibility violations, with the
-// pause menu closed and open and with another tab chosen.
+// End-to-end tests of the game screen and the pause menu (ROADMAP M3.1c, M3.4, M3.5a, ADR 0092,
+// ADR 0095, ADR 0096, ADR 0097): a new game starts with the keyboard alone and the terminal has the
+// focus, the tickets panel and the top bar show the ticket and that it is solved, the side panel's
+// tabs switch with the keyboard and the mouse, Esc opens and closes the pause menu, Main menu leads
+// back to the start screen, and axe-core finds no accessibility violations, with the pause menu
+// closed and open, with the ticket solved and with another tab chosen.
 import type { Page } from "@playwright/test";
 
 import { expect, test } from "./app";
@@ -18,6 +19,9 @@ const LANGUAGES = [
     menuHint: "Esc Menu",
     completeHint: "Tab Complete",
     tickets: "Tickets",
+    ticketTitle: "First steps",
+    ticketStart: "Welcome to the IT department!",
+    solved: "Solved",
     mail: "Mail",
     mailEmpty: "No mail yet.",
     pause: "Paused",
@@ -33,6 +37,9 @@ const LANGUAGES = [
     menuHint: "Esc Menü",
     completeHint: "Tab Vervollständigen",
     tickets: "Tickets",
+    ticketTitle: "Erste Schritte",
+    ticketStart: "Willkommen in der IT-Abteilung!",
+    solved: "Gelöst",
     mail: "Mails",
     mailEmpty: "Noch keine Mails.",
     pause: "Pause",
@@ -75,8 +82,26 @@ for (const language of LANGUAGES) {
       );
     });
 
+    test("shows the ticket and that it is solved", async ({ page }) => {
+      await startGame(page);
+      const ticket = page.getByRole("article", { name: language.ticketTitle });
+      await expect(ticket).toBeVisible();
+      await expect(ticket).toContainText(language.ticketStart);
+      await expect(page.locator(".guide-words")).toHaveText(language.ticketTitle);
+      await page.keyboard.type("cd welcome");
+      await page.keyboard.press("Enter");
+      await expect(page.getByRole("status")).toHaveText(language.solved);
+      await expect(page.locator(".guide-words")).toHaveText(
+        `${language.ticketTitle}${language.solved}`,
+      );
+      expect(await axeViolations(page)).toEqual([]);
+    });
+
     test("switches the side panel's tabs with the keyboard and goes back", async ({ page }) => {
       await startGame(page);
+      // Shift+Tab goes from the terminal to the ticket, then to the tabs.
+      await page.keyboard.press("Shift+Tab");
+      await expect(page.getByRole("tabpanel", { name: language.tickets })).toBeFocused();
       await page.keyboard.press("Shift+Tab");
       await expect(page.getByRole("tab", { name: language.tickets })).toBeFocused();
       await page.keyboard.press("ArrowRight");

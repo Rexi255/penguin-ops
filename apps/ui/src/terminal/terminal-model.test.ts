@@ -1,5 +1,6 @@
 // Tests of the terminal model: line editing, Enter with output, notices and continuation lines,
-// Ctrl+C, Ctrl+L and clear, the history keys, Tab with its list and question, and the scrollback.
+// the game events of an input, Ctrl+C, Ctrl+L and clear, the history keys, Tab with its list and
+// question, and the scrollback.
 import { baseWorldSchema, levelSchema } from "@penguin-ops/content";
 import { COMPLETION_QUERY_ITEMS, createGameClock, TIME_PER_INPUT } from "@penguin-ops/engine";
 import { startLevel } from "@penguin-ops/gameplay";
@@ -255,6 +256,46 @@ describe("Enter", () => {
     const state = run(terminal(), "echo -n x; cat");
     expect(screenText(state)).toEqual(["alice@desk:~$ echo -n x; cat", "x", "[notice]"]);
     expect(state.screen.partial).toEqual([]);
+  });
+});
+
+describe("the game events of an input", () => {
+  test("start empty", () => {
+    expect(terminal().gameEvents).toEqual([]);
+  });
+
+  test("are what happened in the game after the input that ran last", () => {
+    const solved = run(terminal(), "cd /var/log");
+    expect(solved.gameEvents).toEqual([{ kind: "solved" }]);
+    const after = run(solved, "pwd");
+    expect(after.gameEvents).toEqual([]);
+    expect(after.gameEvents).not.toBe(solved.gameEvents);
+  });
+
+  test("are a new list for every input that ran, also an empty one", () => {
+    const first = run(terminal(), "pwd");
+    const second = run(first, "pwd");
+    expect(second.gameEvents).toEqual([]);
+    expect(second.gameEvents).not.toBe(first.gameEvents);
+  });
+
+  test("stay the same list for every change that runs no input", () => {
+    const solved = run(terminal(), "cd /var/log");
+    const { gameEvents } = solved;
+    const changes: ((state: TerminalState) => TerminalState)[] = [
+      (state) => insertText(state, 'echo "', COLUMNS),
+      (state) => submit(state, COLUMNS),
+      (state) => insertText(state, "x", COLUMNS),
+      (state) => pressTab(state, COLUMNS),
+      (state) => historyUp(state),
+      (state) => interrupt(state),
+      (state) => clearScreen(state),
+    ];
+    let state = solved;
+    for (const change of changes) {
+      state = change(state);
+      expect(state.gameEvents).toBe(gameEvents);
+    }
   });
 });
 

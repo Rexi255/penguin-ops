@@ -1,7 +1,6 @@
 title: New project folders
 ticket: |
-  Marketing starts the website relaunch and needs a place for its files. Please create in
-  `~/projects`:
+  Marketing starts the website relaunch and needs a place for its files. Please create in `~/projects`:
   - a folder `relaunch` with the subfolders `docs` and `drafts`
   - an empty file `notes.txt` in `docs`
 
@@ -9,17 +8,14 @@ ticket: |
 step-folders: |
   The folders are there. Now the empty file `notes.txt` in `docs`.
 tip-wrong-place: |
-  That folder landed in your home directory. The project belongs in `~/projects`: change there
-  with `cd projects` first, or give the whole path.
+  That folder landed in your home directory. The project belongs in `~/projects`: change there with `cd projects` first, or give the whole path.
 hints:
   - First the folders, then the file. Each needs its own command.
   - "`mkdir name` creates a folder, `touch name` an empty file. Both also take paths like `relaunch/docs`."
   - "Type `cd projects`, then `mkdir relaunch relaunch/docs relaunch/drafts` and `touch relaunch/docs/notes.txt`."
 explanation:
   text: |
-    `mkdir` (make directory) creates folders, `touch` creates empty files. With `-p`,
-    `mkdir` also creates the missing parent folders and does not complain about folders
-    that already exist.
+    `mkdir` (make directory) creates folders, `touch` creates empty files. With `-p`, `mkdir` also creates the missing parent folders and does not complain about folders that already exist.
   options:
     - ["mkdir -p a/b/c", "Create the folder with all its parents."]
     - ["touch file", "Create an empty file, or update the time of an existing one."]

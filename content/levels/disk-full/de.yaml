@@ -1,13 +1,10 @@
 title: Platte voll!
 ticket: |
-  **Störfall:** Die App meldet „no space left on device“. Dein Vorgänger hat nie etwas
-  gelöscht.
+  **Störfall:** Die App meldet „no space left on device“. Dein Vorgänger hat nie etwas gelöscht.
 
   Lösche die alten Logdateien in `~/logs/old`. Das aktuelle Log `~/logs/app.log` bleibt.
 tip-current-log: |
-  Das war das aktuelle Log. `rm` hat keinen Papierkorb, es ist also endgültig weg. Das Ticket
-  lässt sich trotzdem lösen, aber schau beim nächsten Mal vor dem Löschen hin: erst `ls`, dann
-  `rm`.
+  Das war das aktuelle Log. `rm` hat keinen Papierkorb, es ist also endgültig weg. Das Ticket lässt sich trotzdem lösen, aber schau beim nächsten Mal vor dem Löschen hin: erst `ls`, dann `rm`.
 tip-directory: |
   `rm` löscht Dateien. Für einen Ordner brauchst du `rm -r`, das ihn mit allem darin löscht.
 hints:
@@ -16,8 +13,7 @@ hints:
   - "Tippe `rm ~/logs/old/*.log`."
 explanation:
   text: |
-    `rm` (remove) löscht Dateien endgültig: Es gibt keinen Papierkorb. Mit `-r` löscht es auch
-    Ordner mit allem darin, also prüfe den Pfad zweimal.
+    `rm` (remove) löscht Dateien endgültig: Es gibt keinen Papierkorb. Mit `-r` löscht es auch Ordner mit allem darin, also prüfe den Pfad zweimal.
   options:
     - ["rm -i file", "Fragt vor jeder Datei nach."]
     - ["rm -r folder", "Löscht einen Ordner mit allem darin."]

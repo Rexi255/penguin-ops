@@ -101,6 +101,16 @@ export const UI_TEXT_PLACEHOLDERS = {
   "game.complete": [],
   /** The key hint that opens the pause menu, after the key's label. */
   "game.menu": [],
+  /** Where the player is in a ticket with steps; `current` counts from 1, `count` is the total. */
+  "ticket.step": ["current", "count"],
+  /** The state of a solved ticket. */
+  "ticket.solved": [],
+  /** The heading of the messages about the ticket: completed steps and tips. */
+  "ticket.updates": [],
+  /** What a message about a completed step is, for screen readers before its text. */
+  "ticket.step-done": [],
+  /** What a tip for a typical mistake is, for screen readers before its text. */
+  "ticket.tip": [],
   /** The accessible name of the terminal's screen, a log of its lines. */
   "terminal.output": [],
   /** The accessible name of the terminal's input line. */

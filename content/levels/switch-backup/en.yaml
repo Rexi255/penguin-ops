@@ -8,19 +8,16 @@ ticket: |
 step-backup: |
   The backup is safe. Now the firmware still has to move to `~/network/firmware`.
 tip-moved-config: |
-  The configuration is now only in `~/backup`: `mv` moved it instead of copying it. Move it
-  back with `mv ~/backup/switch-floor2.conf ~/network/` and use `cp` for the backup.
+  The configuration is now only in `~/backup`: `mv` moved it instead of copying it. Move it back with `mv ~/backup/switch-floor2.conf ~/network/` and use `cp` for the backup.
 tip-copied-firmware: |
-  The firmware is now in two places. The ticket asks to move it: use `mv`, or remove the copy
-  in `~/downloads`.
+  The firmware is now in two places. The ticket asks to move it: use `mv`, or remove the copy in `~/downloads`.
 hints:
   - A backup is a copy. Moving a file is a different command.
   - "`cp source target` copies a file, `mv source target` moves it. The target may be a folder."
   - "Type `cp ~/network/switch-floor2.conf ~/backup/`, then `mv ~/downloads/firmware-3.0.bin ~/network/firmware/`."
 explanation:
   text: |
-    `cp` (copy) copies files, `mv` (move) moves or renames them. If the target is a folder,
-    the file keeps its name inside it.
+    `cp` (copy) copies files, `mv` (move) moves or renames them. If the target is a folder, the file keeps its name inside it.
   options:
     - ["cp -r folder target", "Copy a folder with everything in it."]
     - ["mv old new", "Rename a file."]

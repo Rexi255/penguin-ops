@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 // Tests of the side panel's tabs (ROADMAP M3.4, ADR 0096) in both languages: the WAI-ARIA tabs
-// pattern with its names, states and keys, the mouse, and the panels with their empty states.
+// pattern with its names, states and keys, the mouse, and the panels: the ticket the game screen
+// gives the tickets panel (ADR 0097) and the empty states of mail and handbook.
 import { MANDATORY_LANGUAGES, type MandatoryLanguage } from "@penguin-ops/content";
 import { cleanup, render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
@@ -47,7 +48,7 @@ const EXPECTED: Readonly<
 function renderSidePanel(language: MandatoryLanguage = "en") {
   return render(
     <TextsProvider texts={createTexts(uiCatalogs, language)}>
-      <SidePanel />
+      <SidePanel tickets={<p>The printer on the second floor prints blank pages.</p>} />
     </TextsProvider>,
   );
 }
@@ -116,15 +117,15 @@ describe("SidePanel", () => {
     },
   );
 
-  test("starts with the tickets tab chosen and its panel empty", () => {
+  test("starts with the tickets tab chosen and shows the tickets it gets", () => {
     renderSidePanel();
     expect(tab("Tickets").getAttribute("aria-selected")).toBe("true");
     expect(tab("Mail").getAttribute("aria-selected")).toBe("false");
     expect(tab("Handbook").getAttribute("aria-selected")).toBe("false");
     const panel = visiblePanel();
-    expect(panel.textContent).toBe("");
-    // An empty panel has nothing for the keyboard to reach.
-    expect(panel.hasAttribute("tabindex")).toBe(false);
+    expect(panel.textContent).toBe("The printer on the second floor prints blank pages.");
+    // A panel with text takes the focus, so the keyboard reaches its text.
+    expect(panel.tabIndex).toBe(0);
   });
 
   test("links every tab with its panel", () => {
@@ -191,12 +192,16 @@ describe("SidePanel", () => {
     expect(tab("Tickets").getAttribute("aria-selected")).toBe("true");
   });
 
-  test("goes from the chosen tab to its panel with Tab when the panel has text", async () => {
-    renderSidePanel();
-    await userEvent.click(tab("Mail"));
-    await userEvent.tab();
-    expect(visiblePanel()).toBe(document.activeElement);
-  });
+  test.each(SIDE_PANEL_TABS)(
+    "goes from the chosen tab to its panel with Tab when %s is chosen",
+    async (chosen) => {
+      renderSidePanel();
+      const names = { tickets: "Tickets", mail: "Mail", handbook: "Handbook" } as const;
+      await userEvent.click(tab(names[chosen]));
+      await userEvent.tab();
+      expect(visiblePanel()).toBe(document.activeElement);
+    },
+  );
 
   test("marks every tab with the cable colour of its kind of work", () => {
     renderSidePanel();

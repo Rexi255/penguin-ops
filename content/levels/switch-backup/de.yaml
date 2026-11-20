@@ -8,20 +8,16 @@ ticket: |
 step-backup: |
   Das Backup ist in Sicherheit. Jetzt muss noch die Firmware nach `~/network/firmware`.
 tip-moved-config: |
-  Die Konfiguration liegt jetzt nur noch in `~/backup`: `mv` hat sie verschoben statt kopiert.
-  Schieb sie mit `mv ~/backup/switch-floor2.conf ~/network/` zurück und nimm `cp` für das
-  Backup.
+  Die Konfiguration liegt jetzt nur noch in `~/backup`: `mv` hat sie verschoben statt kopiert. Schieb sie mit `mv ~/backup/switch-floor2.conf ~/network/` zurück und nimm `cp` für das Backup.
 tip-copied-firmware: |
-  Die Firmware liegt jetzt an zwei Stellen. Das Ticket will sie verschoben haben: Nimm `mv`
-  oder lösche die Kopie in `~/downloads`.
+  Die Firmware liegt jetzt an zwei Stellen. Das Ticket will sie verschoben haben: Nimm `mv` oder lösche die Kopie in `~/downloads`.
 hints:
   - Ein Backup ist eine Kopie. Eine Datei zu verschieben ist ein anderer Befehl.
   - "`cp quelle ziel` kopiert eine Datei, `mv quelle ziel` verschiebt sie. Das Ziel darf ein Ordner sein."
   - "Tippe `cp ~/network/switch-floor2.conf ~/backup/`, dann `mv ~/downloads/firmware-3.0.bin ~/network/firmware/`."
 explanation:
   text: |
-    `cp` (copy) kopiert Dateien, `mv` (move) verschiebt oder benennt sie um. Ist das Ziel ein
-    Ordner, behält die Datei darin ihren Namen.
+    `cp` (copy) kopiert Dateien, `mv` (move) verschiebt oder benennt sie um. Ist das Ziel ein Ordner, behält die Datei darin ihren Namen.
   options:
     - ["cp -r folder target", "Kopiert einen Ordner mit allem, was darin liegt."]
     - ["mv old new", "Benennt eine Datei um."]

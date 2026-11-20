@@ -1,16 +1,18 @@
 // @vitest-environment jsdom
 // Tests of the game screen in both languages: the areas of the workplace layout as landmarks, the
-// terminal that has the focus and plays the level, and the pause menu that Esc or the key hint
+// terminal that has the focus and plays the level, the ticket in the tickets panel and the top
+// bar that follow the player's progress (ADR 0097), and the pause menu that Esc or the key hint
 // opens and closes.
 import { MANDATORY_LANGUAGES, type MandatoryLanguage } from "@penguin-ops/content";
 import { levelSetup } from "@penguin-ops/gameplay";
 import { cleanup, render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { afterEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, test, vi } from "vitest";
 
 import { loadBundledContent } from "../content/bundled-content";
 import { TextsProvider } from "../texts/texts-context";
 import { createTexts } from "../texts/ui-texts";
+import { ticketTexts } from "../tickets/ticket-texts";
 import { GameScreen } from "./game-screen";
 
 const content = loadBundledContent();
@@ -53,12 +55,13 @@ const EXPECTED: Readonly<
   },
 };
 
-function renderGameScreen(language: MandatoryLanguage = "en") {
+function renderGameScreen(language: MandatoryLanguage = "en", levelId = "first-steps") {
   const onMainMenu = vi.fn<() => void>();
   const view = render(
     <TextsProvider texts={createTexts(uiCatalogs, language)}>
       <GameScreen
-        level={levelSetup(content, "first-steps", language, "max")}
+        level={levelSetup(content, levelId, language, "max")}
+        ticket={ticketTexts(content, levelId, language)}
         onMainMenu={onMainMenu}
       />
     </TextsProvider>,
@@ -86,6 +89,64 @@ function frame() {
   }
   return frameElement;
 }
+
+/** The ticket's title, step and state in the top bar. */
+function guideWords() {
+  const words = screen.getByRole("banner").querySelector(".guide-words");
+  if (words === null) {
+    throw new Error("The top bar has no guide words.");
+  }
+  return words;
+}
+
+/** The ticket in the tickets panel. */
+function ticket() {
+  return screen.getByRole("article");
+}
+
+const TICKETS: Readonly<
+  Record<
+    MandatoryLanguage,
+    {
+      firstSteps: string;
+      welcome: string;
+      backup: string;
+      solved: string;
+      step: (current: number) => string;
+      updates: string;
+      backupDone: string;
+      movedConfig: string;
+    }
+  >
+> = {
+  en: {
+    firstSteps: "First steps",
+    welcome: "Welcome to the IT department!",
+    backup: "Backup before the switch update",
+    solved: "Solved",
+    step: (current) => `Step ${String(current)} of 2`,
+    updates: "Updates",
+    backupDone: "Step doneThe backup is safe.",
+    movedConfig: "TipThe configuration is now only in ~/backup",
+  },
+  de: {
+    firstSteps: "Erste Schritte",
+    welcome: "Willkommen in der IT-Abteilung!",
+    backup: "Backup vor dem Switch-Update",
+    solved: "Gelöst",
+    step: (current) => `Schritt ${String(current)} von 2`,
+    updates: "Verlauf",
+    backupDone: "Schritt erledigtDas Backup ist in Sicherheit.",
+    movedConfig: "TippDie Konfiguration liegt jetzt nur noch in ~/backup",
+  },
+};
+
+/** jsdom lays nothing out, so it has no scrollIntoView; the ticket panel scrolls new messages. */
+const scrollIntoView = vi.fn<Element["scrollIntoView"]>();
+
+beforeAll(() => {
+  Element.prototype.scrollIntoView = scrollIntoView;
+});
 
 afterEach(() => {
   cleanup();
@@ -137,8 +198,10 @@ describe("GameScreen", () => {
     expect(screen.getAllByRole("tab")).toHaveLength(3);
   });
 
-  test("leaves the terminal for the side panel with Shift+Tab", async () => {
+  test("leaves the terminal for the ticket and then the tabs with Shift+Tab", async () => {
     renderGameScreen();
+    await userEvent.tab({ shift: true });
+    expect(screen.getByRole("tabpanel", { name: "Tickets" })).toBe(document.activeElement);
     await userEvent.tab({ shift: true });
     expect(screen.getByRole("tab", { name: "Tickets" })).toBe(document.activeElement);
   });
@@ -146,6 +209,7 @@ describe("GameScreen", () => {
   test("keeps the terminal's focus and input when the player switches tabs", async () => {
     renderGameScreen();
     await userEvent.keyboard("pw");
+    await userEvent.tab({ shift: true });
     await userEvent.tab({ shift: true });
     await userEvent.keyboard("{ArrowRight}");
     expect(screen.getByRole("tab", { name: "Mail", selected: true })).toBe(document.activeElement);
@@ -158,6 +222,7 @@ describe("GameScreen", () => {
 
   test("opens the pause menu with Esc from a tab and gives the focus back to it", async () => {
     renderGameScreen();
+    await userEvent.tab({ shift: true });
     await userEvent.tab({ shift: true });
     await userEvent.keyboard("{Escape}");
     expect(pauseMenu()).not.toBeNull();
@@ -276,6 +341,95 @@ describe("GameScreen", () => {
     await userEvent.keyboard("{Escape}{Escape}{Escape}");
     expect(onMainMenu).not.toHaveBeenCalled();
     expect(pauseMenu()).not.toBeNull();
+  });
+
+  test.each(MANDATORY_LANGUAGES)(
+    "shows the ticket in the tickets panel and its title in the top bar in %s",
+    (language) => {
+      renderGameScreen(language);
+      const expected = TICKETS[language];
+      const panel = screen.getByRole("tabpanel", { name: EXPECTED[language].tickets });
+      expect(panel.contains(ticket())).toBe(true);
+      expect(screen.getByRole("heading", { level: 2, name: expected.firstSteps })).toBeDefined();
+      expect(ticket().textContent).toContain(expected.welcome);
+      // A ticket with a single goal has no step to show until it is solved.
+      expect(guideWords().textContent).toBe(expected.firstSteps);
+      expect(screen.getByRole("status").textContent).toBe("");
+    },
+  );
+
+  test.each(MANDATORY_LANGUAGES)("shows the solved ticket in %s", async (language) => {
+    renderGameScreen(language);
+    const expected = TICKETS[language];
+    await userEvent.keyboard("ls{Enter}");
+    expect(screen.getByRole("status").textContent).toBe("");
+    await userEvent.keyboard("cd welcome{Enter}");
+    expect(screen.getByRole("status").textContent).toBe(expected.solved);
+    expect(guideWords().textContent).toBe(`${expected.firstSteps}${expected.solved}`);
+    // Solving says nothing more than the state.
+    expect(screen.queryByRole("heading", { level: 3 })).toBeNull();
+  });
+
+  test.each(MANDATORY_LANGUAGES)(
+    "follows the steps, the step messages and the tips of a ticket in %s",
+    async (language) => {
+      const { view } = renderGameScreen(language, "switch-backup");
+      const expected = TICKETS[language];
+      const segments = () =>
+        [...view.container.querySelectorAll(".ticket__segment")].map((segment) =>
+          segment.className.replace("ticket__segment ticket__segment--", ""),
+        );
+      expect(guideWords().textContent).toBe(`${expected.backup}${expected.step(1)}`);
+      expect(screen.getByRole("status").textContent).toBe(expected.step(1));
+      expect(segments()).toEqual(["current", "open"]);
+
+      // A typical mistake gives a tip.
+      await userEvent.keyboard("mv ~/network/switch-floor2.conf ~/backup/{Enter}");
+      expect(screen.getByRole("heading", { level: 3, name: expected.updates })).toBeDefined();
+      const messages = () =>
+        screen
+          .getAllByRole("listitem")
+          .filter((item) => item.closest(".ticket__messages") !== null);
+      expect(messages()).toHaveLength(1);
+      expect(messages()[0]?.textContent).toContain(expected.movedConfig);
+
+      // The first step completes with its message, after the tip.
+      await userEvent.keyboard("mv ~/backup/switch-floor2.conf ~/network/{Enter}");
+      await userEvent.keyboard("cp ~/network/switch-floor2.conf ~/backup/{Enter}");
+      expect(guideWords().textContent).toBe(`${expected.backup}${expected.step(2)}`);
+      expect(screen.getByRole("status").textContent).toBe(expected.step(2));
+      expect(segments()).toEqual(["done", "current"]);
+      expect(messages()).toHaveLength(2);
+      expect(messages()[1]?.textContent).toContain(expected.backupDone);
+
+      // The last step solves the ticket.
+      await userEvent.keyboard("mv ~/downloads/firmware-3.0.bin ~/network/firmware/{Enter}");
+      expect(guideWords().textContent).toBe(`${expected.backup}${expected.solved}`);
+      expect(screen.getByRole("status").textContent).toBe(expected.solved);
+      expect(segments()).toEqual(["done", "done"]);
+      expect(messages()).toHaveLength(2);
+    },
+  );
+
+  test("announces the ticket's state and new messages politely", async () => {
+    renderGameScreen("en", "switch-backup");
+    const messages = ticket().querySelector("[aria-live]");
+    expect(messages?.getAttribute("aria-live")).toBe("polite");
+    expect(messages?.textContent).toBe("");
+    await userEvent.keyboard("mv ~/network/switch-floor2.conf ~/backup/{Enter}");
+    expect(messages?.textContent).toContain("The configuration is now only in");
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: "nearest" });
+  });
+
+  test("keeps the ticket's progress while inputs change nothing in the game", async () => {
+    renderGameScreen("en", "switch-backup");
+    await userEvent.keyboard("cp ~/network/switch-floor2.conf ~/backup/{Enter}");
+    await userEvent.keyboard("pwd{Enter}ls{Enter}{ArrowUp}{ArrowUp}");
+    await userEvent.keyboard("{Control>}c{/Control}{Control>}l{/Control}");
+    expect(screen.getByRole("status").textContent).toBe("Step 2 of 2");
+    expect(
+      screen.getAllByRole("listitem").filter((item) => item.closest(".ticket__messages") !== null),
+    ).toHaveLength(1);
   });
 
   test("ignores other keys", async () => {

@@ -3,7 +3,10 @@
 // the page after the last screen clear is at least as high as the terminal, so a clear moves the
 // prompt to the top and leaves the lines before it in the scrollback above. The player types into
 // a transparent text field under the cursor, so that dead keys, AltGr and input methods work.
+// What happens in the game after an input goes to the game screen (`onGameEvents`), which shows
+// the ticket's progress (ROADMAP M3.5a, ADR 0097).
 
+import type { GameEvent } from "@penguin-ops/gameplay";
 import {
   type ClipboardEvent,
   type KeyboardEvent,
@@ -78,9 +81,14 @@ export interface TerminalProps {
   readonly initialState: TerminalState;
   /** The text field the player types into, for the game screen to focus. */
   readonly ref?: Ref<HTMLTextAreaElement>;
+  /**
+   * Gets what happened in the game after an input that ran, in order; inputs after which nothing
+   * happened in the game are not reported.
+   */
+  readonly onGameEvents: (events: readonly GameEvent[]) => void;
 }
 
-export function Terminal({ initialState, ref }: TerminalProps) {
+export function Terminal({ initialState, ref, onGameEvents }: TerminalProps) {
   const texts = useTexts();
   const [state, setState] = useState(initialState);
   // The newest state and width, for key presses that follow each other before React renders.
@@ -103,13 +111,22 @@ export function Terminal({ initialState, ref }: TerminalProps) {
     [ref],
   );
 
-  const apply = useCallback((change: Change) => {
-    const next = change(latest.current, columns.current);
-    if (next !== latest.current) {
+  const apply = useCallback(
+    (change: Change) => {
+      const previous = latest.current;
+      const next = change(previous, columns.current);
+      if (next === previous) {
+        return;
+      }
       latest.current = next;
       setState(next);
-    }
-  }, []);
+      // Every input that runs brings a list of its own (`TerminalState.gameEvents`).
+      if (next.gameEvents !== previous.gameEvents && next.gameEvents.length > 0) {
+        onGameEvents(next.gameEvents);
+      }
+    },
+    [onGameEvents],
+  );
 
   // The width in cells follows the size of the terminal and the font once it has loaded.
   useLayoutEffect(() => {

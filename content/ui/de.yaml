@@ -48,6 +48,12 @@ game:
   handbook-empty: Hier erscheinen die Befehle, die du lernst.
   complete: Vervollständigen
   menu: Menü
+ticket:
+  step: "Schritt {current} von {count}"
+  solved: Gelöst
+  updates: Verlauf
+  step-done: Schritt erledigt
+  tip: Tipp
 terminal:
   output: Terminalausgabe
   input: Befehlszeile

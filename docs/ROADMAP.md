@@ -209,6 +209,10 @@ inventing it along the way.
       with M3.5 and M3.12.)
 - [ ] M3.5 Ticket panel: chapter inbox, ticket text, hints (F1), explanation after solving,
       extra goals.
+  - [x] M3.5a Ticket text in the tickets panel with the steps as tape segments, the solved
+        state, step messages and tips; the top bar names the ticket and its step (ADR 0097).
+  - [ ] M3.5b Hints with F1, one level at a time, and the explanation after solving.
+  - [ ] M3.5c Chapter inbox (ticket list, the next ticket after solving) and extra goals.
 - [ ] M3.6 Game commands `help` and `hint`; engine notices rendered in the player's language.
 - [ ] M3.7 Save system: three slots, metadata, autosave, atomic write and backup, versioned
       format with migration test, export and import (ADR 0013).
@@ -303,6 +307,9 @@ AppImage runs on Linux, and chapters 0–2 are playable in both languages.
 - Upgrade to TypeScript 7 once `typescript-eslint` supports it (ADR 0026).
 - Lint rules that enforce ADR 0008 in engine and gameplay: ban `Date.now()`, `new Date()`
   without arguments, `performance.now()` and `Math.random()`.
+- Code spans in the side panel break after a hyphen (`switch-` / `floor2.conf`), which reads
+  like a hyphenated word; break opportunities only at spaces and slashes would keep paths
+  readable without overflowing the panel (ADR 0097).
 - CI starts the packaged AppImage itself (not only the unpacked app), so that the M5 criterion
   "the AppImage runs on Linux" is verified without a Linux machine of the owner.
 - `vim` side chapter; Rocky Linux side chapter ("the new customer runs Rocky Linux").

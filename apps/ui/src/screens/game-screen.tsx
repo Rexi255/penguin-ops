@@ -1,19 +1,36 @@
 // The game screen (ROADMAP M3.1c): the frame of the workplace layout of ADR 0020 with a top bar,
 // the side panel, the terminal and the key-hint footer, and the pause menu that Esc opens
 // (ADR 0092). The terminal (M3.3, ADR 0095) plays the level it gets and has the focus. The side
-// panel holds the tabs of the tickets, the mail and the handbook (M3.4, ADR 0096), whose panels
-// M3.5 and M3.11 fill; the footer shows the key hints of the keys that work. The top bar stays
-// empty until it can name where the player is: the ticket and step (M3.5) and the rank and
-// progress (M3.12).
+// panel holds the tabs of the tickets, the mail and the handbook (M3.4, ADR 0096); the tickets
+// panel shows the ticket being played (M3.5a, ADR 0097), M3.11 fills the others. The footer shows
+// the key hints of the keys that work. The top bar names where the player is: the ticket and its
+// step or state (M3.5a); the rank and progress follow with M3.12.
+//
+// The game screen keeps the ticket's progress: the terminal reports the game events of every
+// input, and the ticket panel and the top bar show what they add up to.
 
 import { createGameClock } from "@penguin-ops/engine";
-import { GAME_START_TIME, type LevelSetup, startLevel } from "@penguin-ops/gameplay";
+import {
+  GAME_START_TIME,
+  type GameEvent,
+  type LevelSetup,
+  startLevel,
+} from "@penguin-ops/gameplay";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { Icon } from "../icons/icon";
 import { Terminal } from "../terminal/terminal";
 import { createTerminal, type TerminalState } from "../terminal/terminal-model";
-import { InlineText } from "../texts/inline-text";
+import { InlineText, Inlines } from "../texts/inline-text";
 import { useTexts } from "../texts/texts-context";
+import { TicketPanel } from "../tickets/ticket-panel";
+import {
+  applyGameEvents,
+  stepPosition,
+  TICKET_START,
+  type TicketProgress,
+} from "../tickets/ticket-progress";
+import type { TicketTexts } from "../tickets/ticket-texts";
 import { PauseMenu } from "./pause-menu";
 import { SidePanel } from "./side-panel";
 
@@ -23,6 +40,8 @@ export interface GameScreenProps {
    * (ROADMAP M3.7), the level starts again whenever the game screen appears.
    */
   readonly level: LevelSetup;
+  /** The texts of the level's ticket in the player's language. */
+  readonly ticket: TicketTexts;
   /** Leaves the game for the start screen. */
   readonly onMainMenu: () => void;
 }
@@ -34,11 +53,13 @@ function startTerminal(level: LevelSetup): TerminalState {
   return createTerminal(session, clock.now());
 }
 
-export function GameScreen({ level, onMainMenu }: GameScreenProps) {
+export function GameScreen({ level, ticket, onMainMenu }: GameScreenProps) {
   const texts = useTexts();
   const [paused, setPaused] = useState(false);
   // The level starts once, when the screen appears.
   const [terminal] = useState(() => startTerminal(level));
+  const [progress, setProgress] = useState<TicketProgress>(TICKET_START);
+  const stepCount = level.level.steps?.length ?? 0;
   const terminalInput = useRef<HTMLTextAreaElement>(null);
   const menuHint = useRef<HTMLButtonElement>(null);
   // The element that had the focus when the pause menu opened; it gets the focus back.
@@ -52,6 +73,10 @@ export function GameScreen({ level, onMainMenu }: GameScreenProps) {
 
   const closePauseMenu = useCallback(() => {
     setPaused(false);
+  }, []);
+
+  const onGameEvents = useCallback((events: readonly GameEvent[]) => {
+    setProgress((current) => applyGameEvents(current, events));
   }, []);
 
   // The keyboard is the main input (PRODUCT.md): when the screen appears, the terminal's input
@@ -95,12 +120,15 @@ export function GameScreen({ level, onMainMenu }: GameScreenProps) {
           <h1 className="visually-hidden">
             <InlineText text={texts.rich("game.title")} textKey="game.title" />
           </h1>
+          <GuideWords ticket={ticket} stepCount={stepCount} progress={progress} />
         </header>
         <aside className="game-screen__side-panel" aria-label={texts.plain("game.side-panel")}>
-          <SidePanel />
+          <SidePanel
+            tickets={<TicketPanel texts={ticket} stepCount={stepCount} progress={progress} />}
+          />
         </aside>
         <main className="game-screen__terminal" aria-label={texts.plain("game.terminal")}>
-          <Terminal ref={terminalInput} initialState={terminal} />
+          <Terminal ref={terminalInput} initialState={terminal} onGameEvents={onGameEvents} />
         </main>
         <footer className="game-screen__footer">
           {/* The terminal answers Tab itself, so its hint is no button (ADR 0096). */}
@@ -128,5 +156,43 @@ export function GameScreen({ level, onMainMenu }: GameScreenProps) {
       </div>
       {paused && <PauseMenu onContinue={closePauseMenu} onMainMenu={onMainMenu} />}
     </div>
+  );
+}
+
+/**
+ * The top bar's guide words (DESIGN.md): the ticket's title and the step the player works on, or
+ * that the ticket is solved. The ticket panel announces changes, so these are not live.
+ */
+function GuideWords({
+  ticket,
+  stepCount,
+  progress,
+}: {
+  readonly ticket: TicketTexts;
+  readonly stepCount: number;
+  readonly progress: TicketProgress;
+}) {
+  const texts = useTexts();
+  const position = stepPosition(progress, stepCount);
+  return (
+    <p className="guide-words">
+      <span className="guide-words__ticket">
+        <Inlines inlines={ticket.title} />
+      </span>
+      {position !== undefined && (
+        <span className="guide-words__state">
+          <InlineText
+            text={texts.rich("ticket.step", { current: position.current, count: position.count })}
+            textKey="ticket.step"
+          />
+        </span>
+      )}
+      {progress.solved && (
+        <span className="guide-words__state guide-words__state--solved">
+          <Icon name="solved" />
+          <InlineText text={texts.rich("ticket.solved")} textKey="ticket.solved" />
+        </span>
+      )}
+    </p>
   );
 }

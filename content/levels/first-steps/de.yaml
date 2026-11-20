@@ -1,19 +1,15 @@
 title: Erste Schritte
 ticket: |
-  Willkommen in der IT-Abteilung! Im Ordner `welcome` in deinem Home-Verzeichnis wartet eine
-  Checkliste für deinen ersten Tag.
+  Willkommen in der IT-Abteilung! Im Ordner `welcome` in deinem Home-Verzeichnis wartet eine Checkliste für deinen ersten Tag.
 
-  Finde mit `pwd` heraus, wo du bist, schau dich mit `ls` um und wechsle mit `cd` in den
-  Ordner `welcome`.
+  Finde mit `pwd` heraus, wo du bist, schau dich mit `ls` um und wechsle mit `cd` in den Ordner `welcome`.
 hints:
   - In deinem Home-Verzeichnis liegen ein paar Ordner. Welcher Befehl zeigt sie an?
   - "`ls` zeigt die Ordner in deinem Home-Verzeichnis, und `cd` mit einem Ordnernamen wechselt hinein."
   - "Tippe `cd welcome`."
 explanation:
   text: |
-    `pwd` (print working directory) zeigt, wo du bist, `ls` listet den Inhalt eines
-    Verzeichnisses auf, und `cd` wechselt das Verzeichnis. `cd` ohne Ordner bringt dich nach
-    Hause, und `~` ist die Abkürzung für dein Home-Verzeichnis.
+    `pwd` (print working directory) zeigt, wo du bist, `ls` listet den Inhalt eines Verzeichnisses auf, und `cd` wechselt das Verzeichnis. `cd` ohne Ordner bringt dich nach Hause, und `~` ist die Abkürzung für dein Home-Verzeichnis.
   options:
     - ["cd ..", "Wechselt in das übergeordnete Verzeichnis."]
     - ["cd ~", "Wechselt in dein Home-Verzeichnis."]
@@ -24,5 +20,4 @@ checklist: |
   - Die Tickets in ~/tickets lesen
   - Einen Kaffee holen
 tip-spelling: |
-  Die Shell nimmt es mit der Schreibweise genau. Mit `ls` siehst du die genauen Namen der
-  Ordner.
+  Die Shell nimmt es mit der Schreibweise genau. Mit `ls` siehst du die genauen Namen der Ordner.

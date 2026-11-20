@@ -2,7 +2,8 @@
 
 > **Status: skeleton.** The workspaces exist with strict TypeScript configs (ROADMAP M0.2);
 > the Electron app has its start, save slot, new game and game screens with the pause menu,
-> the terminal and the bundled content (M3.1–M3.3), and the engine has the core types of the
+> the terminal, the workplace layout, the ticket panel and the bundled content (M3.1–M3.5a), and
+> the engine has the core types of the
 > world model (M1.1), path lookup and permission checks (M1.2), its random generator, game
 > clock and world builder (M1.3), the shell lexer, parser, word expansion and execution
 > (M1.4–M1.6b) and the write side of the file system (M1.6c-1).
@@ -467,37 +468,48 @@ and `loadContent` (zod set to `jitless` for the Content Security Policy); a prob
 (ADR 0012) and `main.tsx` sets the document's `lang`. `src/texts/ui-texts.ts` lists every UI
 text key with its placeholders (`UI_TEXT_PLACEHOLDERS`, checked against both catalogs by a
 test) and `createTexts` gives each text as rich or plain text; `src/texts/texts-context.tsx`
-hands the texts to every component (`TextsProvider`, `useTexts`), and
-`src/texts/inline-text.tsx` draws a one-paragraph text with its markup.
+hands the texts to every component (`TextsProvider`, `useTexts`),
+`src/texts/inline-text.tsx` draws a one-paragraph text with its markup, and
+`src/texts/rich-text.tsx` draws a text of several paragraphs and lists (ADR 0073).
 
-Screens: `src/screens/start-screen.tsx` shows the logo (`assets/brand/svg/`) as the level 1
-heading, the main menu (Play and Quit) with the keyboard focus on Play, and the version as code
-in the footer. `src/screens/save-slot-screen.tsx` shows the title, the three save slots and
-Back; every slot is a button: an empty one opens the new game screen for it, one with a game
-shows the player's name and the mode and returns to the game; the first slot, or the one the
-player comes back from, has the focus; Esc also goes back (ADR 0092, ADR 0094).
-`src/screens/new-game-screen.tsx` is a form with the player's name, the Linux user name (derived
-with `deriveUserName` until the player edits it, checked with `checkUserName` against the
-reserved names) and the mode as two radio buttons drawn as cards; each problem code has a
-catalog text in a live region that describes its field, and Start creates the game only without
-problems (ADR 0093, ADR 0094). `src/screens/game-screen.tsx` is the frame of the
-workplace layout as a CSS grid: top bar, side panel, terminal area and the key-hint footer,
-whose "Esc Menu" hint is a button and whose "Tab Complete" hint is text, because the terminal
-answers Tab itself. The side panel is `src/screens/side-panel.tsx`: the tabs Tickets, Mail and
-Handbook after the WAI-ARIA tabs pattern, each with its panel and the cable colour of its kind
-of work (ADR 0096). It starts the level at `GAME_START_TIME` and shows it in the
-terminal, whose input line has the focus. Esc opens `src/screens/pause-menu.tsx`, a
-modal dialog (Continue, Main menu) over the game, whose frame is `inert` while it is open; the
-pause state lives in the game screen (ADR 0092). The styles of all screens are in
-`src/styles.css`. The visual world is "Label Tape & Patch Cable" (ADR 0081, `DESIGN.md`); the
-workplace screen's direction contract is the impeccable surface brief
+Screens: `src/screens/start-screen.tsx` shows the logo (`assets/brand/svg/`) as the level 1 heading,
+the main menu (Play and Quit) with the keyboard focus on Play, and the version as code in the
+footer. `src/screens/save-slot-screen.tsx` shows the title, the three save slots and Back; every
+slot is a button: an empty one opens the new game screen for it, one with a game shows the player's
+name and the mode and returns to the game; the first slot, or the one the player comes back from,
+has the focus; Esc also goes back (ADR 0092, ADR 0094). `src/screens/new-game-screen.tsx` is a form
+with the player's name, the Linux user name (derived with `deriveUserName` until the player edits
+it, checked with `checkUserName` against the reserved names) and the mode as two radio buttons drawn
+as cards; each problem code has a catalog text in a live region that describes its field, and Start
+creates the game only without problems (ADR 0093, ADR 0094). `src/screens/game-screen.tsx` is the
+frame of the workplace layout as a CSS grid: top bar, side panel, terminal area and the key-hint
+footer, whose "Esc Menu" hint is a button and whose "Tab Complete" hint is text, because the
+terminal answers Tab itself. The side panel is `src/screens/side-panel.tsx`: the tabs Tickets, Mail
+and Handbook after the WAI-ARIA tabs pattern, each with its panel and the cable colour of its kind
+of work (ADR 0096); its tickets panel shows what the game screen gives it. It starts the level at
+`GAME_START_TIME` and shows it in the terminal, whose input line has the focus. The terminal reports
+the game events of every input (`onGameEvents`), and the game screen adds them up to the ticket's
+progress, which the ticket panel and the top bar's guide words show (ADR 0097). Esc opens
+`src/screens/pause-menu.tsx`, a modal dialog (Continue, Main menu) over the game, whose frame is
+`inert` while it is open; the pause state lives in the game screen (ADR 0092). The styles of all
+screens are in `src/styles.css`. The visual world is "Label Tape & Patch Cable" (ADR 0081,
+`DESIGN.md`); the workplace screen's direction contract is the impeccable surface brief
 `.impeccable/surfaces/src-app-tsx.md`, and `.impeccable/design.json` is impeccable's sidecar to
 `DESIGN.md`.
+
+Tickets (ADR 0097): `src/tickets/ticket-progress.ts` is a pure model of the ticket's progress
+(completed steps, solved, the step messages and tips in the order the game said them) with
+`applyGameEvents` and `stepPosition`. `src/tickets/ticket-texts.ts` formats a level's title and
+ticket text in the player's language (`ticketTexts`) and a step message or tip by its key
+(`messageText`). `src/tickets/ticket-panel.tsx` draws the ticket: title, a state row with the
+steps as tape segments or the solved state (`role="status"`), the ticket text and the messages in
+a polite live region. The app root gives the game screen the level's `TicketTexts`.
 
 Terminal (ADR 0095): `src/terminal/terminal-model.ts` holds the whole state of a terminal as an
 immutable value (the level session, the game time, the screen with its finished lines, page start
 and partial line, the input line and cursor, an incomplete input, the history navigation, the
-Tab state and readline's question) and has one pure function per key: editing, history, Tab
+Tab state, readline's question and the game events of the last input that ran) and has one pure
+function per key: editing, history, Tab
 with its list and question, Enter (which runs the input with `runInput` and shows its events),
 Ctrl+C and Ctrl+L. `src/terminal/terminal-keys.ts` maps key presses to these actions (typed
 characters come from the input field, never from key codes) and counts the columns that fit.

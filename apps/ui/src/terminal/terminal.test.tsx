@@ -4,10 +4,10 @@
 // does not own (Esc, F-keys, Shift+Tab, paste) stay with the browser and the game screen.
 import { MANDATORY_LANGUAGES, type MandatoryLanguage } from "@penguin-ops/content";
 import { createGameClock } from "@penguin-ops/engine";
-import { GAME_START_TIME, levelSetup, startLevel } from "@penguin-ops/gameplay";
+import { GAME_START_TIME, type GameEvent, levelSetup, startLevel } from "@penguin-ops/gameplay";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { afterEach, describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 
 import { loadBundledContent } from "../content/bundled-content";
 import { TextsProvider } from "../texts/texts-context";
@@ -32,17 +32,23 @@ const NAMES: Readonly<
   },
 };
 
-function renderTerminal(language: MandatoryLanguage = "en") {
+function renderTerminal(language: MandatoryLanguage = "en", levelId = "first-steps") {
   const clock = createGameClock(GAME_START_TIME);
-  const session = startLevel(levelSetup(content, "first-steps", language, "max"), clock);
+  const session = startLevel(levelSetup(content, levelId, language, "max"), clock);
+  const onGameEvents = vi.fn<(events: readonly GameEvent[]) => void>();
   const view = render(
     <TextsProvider texts={createTexts(content.uiCatalogs, language)}>
-      <Terminal initialState={createTerminal(session, clock.now())} />
+      <Terminal initialState={createTerminal(session, clock.now())} onGameEvents={onGameEvents} />
     </TextsProvider>,
   );
   const input = screen.getByRole("textbox", { name: NAMES[language].input });
   input.focus();
-  return { view, input, log: screen.getByRole("log", { name: NAMES[language].output }) };
+  return {
+    view,
+    input,
+    log: screen.getByRole("log", { name: NAMES[language].output }),
+    onGameEvents,
+  };
 }
 
 /** The finished lines and the input line as text, one entry per line. */
@@ -67,6 +73,30 @@ afterEach(() => {
 });
 
 describe("Terminal", () => {
+  test("reports what happened in the game after an input", async () => {
+    const { onGameEvents } = renderTerminal();
+    await userEvent.keyboard("cd welcome{Enter}");
+    expect(onGameEvents).toHaveBeenCalledExactlyOnceWith([{ kind: "solved" }]);
+  });
+
+  test("reports the events of every input in order", async () => {
+    const { onGameEvents } = renderTerminal("en", "switch-backup");
+    await userEvent.keyboard("mv ~/network/switch-floor2.conf ~/backup/{Enter}");
+    await userEvent.keyboard("mv ~/backup/switch-floor2.conf ~/network/{Enter}");
+    await userEvent.keyboard("cp ~/network/switch-floor2.conf ~/backup/{Enter}");
+    expect(onGameEvents.mock.calls).toEqual([
+      [[{ kind: "tip", say: "tip-moved-config" }]],
+      [[{ kind: "step-completed", step: "backup", say: "step-backup" }]],
+    ]);
+  });
+
+  test("reports nothing for inputs and keys after which nothing happened in the game", async () => {
+    const { onGameEvents } = renderTerminal();
+    await userEvent.keyboard("pwd{Enter}ls{Enter}{ArrowUp}echo 'a{Enter}b'{Enter}");
+    await userEvent.keyboard("cd wel{Tab}{Control>}c{/Control}{Control>}l{/Control}");
+    expect(onGameEvents).not.toHaveBeenCalled();
+  });
+
   test.each(MANDATORY_LANGUAGES)("shows the prompt and names its parts in %s", (language) => {
     const { log, input } = renderTerminal(language);
     expect(inputLine(log)).toBe("max@itdesk:~$  ");

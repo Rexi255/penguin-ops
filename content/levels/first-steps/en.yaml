@@ -1,19 +1,15 @@
 title: First steps
 ticket: |
-  Welcome to the IT department! A checklist for your first day is waiting in the folder
-  `welcome` in your home directory.
+  Welcome to the IT department! A checklist for your first day is waiting in the folder `welcome` in your home directory.
 
-  Find out where you are with `pwd`, look around with `ls` and change into the folder
-  `welcome` with `cd`.
+  Find out where you are with `pwd`, look around with `ls` and change into the folder `welcome` with `cd`.
 hints:
   - Your home directory contains a few folders. Which command lists them?
   - "`ls` shows the folders in your home directory, and `cd` followed by a folder name changes into it."
   - "Type `cd welcome`."
 explanation:
   text: |
-    `pwd` (print working directory) shows where you are, `ls` lists the contents of a
-    directory, and `cd` changes the directory. `cd` without a folder takes you back home,
-    and `~` is short for your home directory.
+    `pwd` (print working directory) shows where you are, `ls` lists the contents of a directory, and `cd` changes the directory. `cd` without a folder takes you back home, and `~` is short for your home directory.
   options:
     - ["cd ..", "Go to the parent directory."]
     - ["cd ~", "Go to your home directory."]
