@@ -5,7 +5,14 @@
 // explanation after solving (ADR 0098), and the pause menu that Esc or the key hint opens and
 // closes.
 import { MANDATORY_LANGUAGES, type MandatoryLanguage } from "@penguin-ops/content";
-import type { GameMode } from "@penguin-ops/gameplay";
+import {
+  GAME_START_TIME,
+  type GameMode,
+  newSaveGame,
+  newTicketRecord,
+  type SaveGame,
+  type TicketRecord,
+} from "@penguin-ops/gameplay";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, beforeAll, describe, expect, test, vi } from "vitest";
@@ -13,7 +20,7 @@ import { afterEach, beforeAll, describe, expect, test, vi } from "vitest";
 import { loadBundledContent } from "../content/bundled-content";
 import { TextsProvider } from "../texts/texts-context";
 import { createTexts } from "../texts/ui-texts";
-import { GameScreen } from "./game-screen";
+import { type GameProgress, GameScreen } from "./game-screen";
 
 const content = loadBundledContent();
 const { uiCatalogs } = content;
@@ -58,28 +65,36 @@ const EXPECTED: Readonly<
   },
 };
 
+/** A new game of Max in `mode` that starts with `firstTicket`. */
+function newGame(firstTicket = "first-steps", mode: GameMode = "story"): SaveGame {
+  return newSaveGame({ playerName: "Max", userName: "max", mode }, firstTicket, 0);
+}
+
 /**
- * The game screen of a new game that starts with `firstTicket`. A first ticket outside the first
- * chapter is only open in Sandbox mode.
+ * The game screen of a new game that starts with `firstTicket`, or of `save`. A first ticket
+ * outside the first chapter is only open in Sandbox mode.
  */
 function renderGameScreen(
   language: MandatoryLanguage = "en",
   firstTicket = "first-steps",
   mode: GameMode = firstTicket === "first-steps" ? "story" : "sandbox",
+  save: SaveGame = newGame(firstTicket, mode),
+  saveFailed = false,
 ) {
   const onMainMenu = vi.fn<() => void>();
+  const onProgress = vi.fn<(progress: GameProgress, autosave: boolean) => void>();
   const view = render(
     <TextsProvider texts={createTexts(uiCatalogs, language)}>
       <GameScreen
         content={content}
-        mode={mode}
-        userName="max"
-        firstTicket={firstTicket}
+        save={save}
+        onProgress={onProgress}
+        saveFailed={saveFailed}
         onMainMenu={onMainMenu}
       />
     </TextsProvider>,
   );
-  return { onMainMenu, view };
+  return { onMainMenu, onProgress, view };
 }
 
 function pauseMenu() {
@@ -851,13 +866,175 @@ describe("GameScreen: the chapter inbox", () => {
         order.map(() => INBOX[language].states.solved),
       );
     },
+    // The test types every reference solution of the story key by key; that takes some seconds.
+    30_000,
   );
 
-  test("throws for a first ticket in a closed chapter", () => {
+  test("throws for a current ticket in a closed chapter", () => {
     // React reports the error of the render; the test only needs it thrown.
     vi.spyOn(console, "error").mockImplementation(() => undefined);
     expect(() => renderGameScreen("en", "disk-full", "story")).toThrow(
-      'The level "disk-full" is not open in a new story game.',
+      'The current ticket "disk-full" of the save is not open.',
     );
+  });
+});
+
+/** The game the game screen reported last, and whether it asked for an autosave. */
+function lastReport(onProgress: ReturnType<typeof renderGameScreen>["onProgress"]) {
+  const call = onProgress.mock.calls.at(-1);
+  if (call === undefined) {
+    throw new Error("The game screen reported nothing.");
+  }
+  return { progress: call[0], autosave: call[1] };
+}
+
+/** The last report that asked for an autosave. */
+function lastAutosave(onProgress: ReturnType<typeof renderGameScreen>["onProgress"]) {
+  const call = onProgress.mock.calls.findLast(([, autosave]) => autosave);
+  if (call === undefined) {
+    throw new Error("The game screen asked for no autosave.");
+  }
+  return call[0];
+}
+
+const ticketRecord = (level: string, fields: Partial<TicketRecord> = {}): TicketRecord => ({
+  ...newTicketRecord(level),
+  ...fields,
+});
+
+describe("GameScreen: saves (ADR 0106)", () => {
+  test("asks to save a new game as soon as it appears", () => {
+    const { onProgress } = renderGameScreen();
+    expect(lastReport(onProgress)).toEqual({
+      progress: {
+        gameTime: GAME_START_TIME,
+        currentTicket: "first-steps",
+        tickets: [ticketRecord("first-steps")],
+      },
+      autosave: true,
+    });
+  });
+
+  test("reports the game time of an input without asking for an autosave", async () => {
+    const { onProgress } = renderGameScreen();
+    await userEvent.keyboard("pwd{Enter}");
+    const { progress, autosave } = lastReport(onProgress);
+    expect(autosave).toBe(false);
+    expect(progress.gameTime).toBeGreaterThan(GAME_START_TIME);
+    expect(progress.tickets).toEqual([ticketRecord("first-steps")]);
+  });
+
+  test("asks for an autosave when the ticket is solved", async () => {
+    const { onProgress } = renderGameScreen();
+    await userEvent.keyboard("cd welcome{Enter}");
+    expect(lastReport(onProgress).autosave).toBe(true);
+    expect(lastAutosave(onProgress).tickets).toEqual([
+      ticketRecord("first-steps", { solved: true }),
+    ]);
+  });
+
+  test("keeps a completed step as the checkpoint", async () => {
+    const { onProgress } = renderGameScreen("en", "project-folders");
+    await userEvent.keyboard("mkdir -p ~/projects/relaunch/docs ~/projects/relaunch/drafts{Enter}");
+    expect(lastAutosave(onProgress).tickets).toEqual([
+      ticketRecord("project-folders", { checkpoint: "folders" }),
+    ]);
+  });
+
+  test("asks for an autosave when the player asks for a hint", async () => {
+    const { onProgress } = renderGameScreen();
+    await userEvent.keyboard("{F1}");
+    expect(lastAutosave(onProgress).tickets).toEqual([
+      ticketRecord("first-steps", { hintsShown: 1 }),
+    ]);
+  });
+
+  test("asks for an autosave when the player opens another ticket", async () => {
+    const { onProgress } = renderGameScreen("en", "first-steps", "sandbox");
+    await userEvent.click(screen.getByRole("button", { name: "Back to the inbox" }));
+    await userEvent.click(screen.getByRole("button", { name: /^New project folders/u }));
+    expect(lastAutosave(onProgress)).toEqual({
+      gameTime: GAME_START_TIME,
+      currentTicket: "project-folders",
+      tickets: [ticketRecord("first-steps"), ticketRecord("project-folders")],
+    });
+  });
+
+  test("resumes a ticket at its checkpoint with its hints and messages", async () => {
+    const save: SaveGame = {
+      ...newGame("project-folders", "sandbox"),
+      tickets: [
+        ticketRecord("project-folders", {
+          checkpoint: "folders",
+          hintsShown: 1,
+          reachedExtraGoals: ["readme"],
+        }),
+      ],
+    };
+    const { onProgress } = renderGameScreen("en", "project-folders", "sandbox", save);
+    expect(guideWords().textContent).toContain("Step 2 of 2");
+    expect(hintLabels()).toEqual(["Hint 1 of 3"]);
+    expect(ticket().textContent).toContain("The folders are there.");
+    // The terminal starts empty in the world of the checkpoint.
+    await userEvent.keyboard("ls ~/projects/relaunch{Enter}");
+    const terminal = screen.getByRole("log", { name: "Terminal output" });
+    expect(terminal.textContent).toContain("docs");
+    expect(terminal.textContent).toContain("drafts");
+    // The replay of the checkpoint moved the game time on.
+    expect(lastReport(onProgress).progress.gameTime).toBeGreaterThan(GAME_START_TIME);
+  });
+
+  test("resumes a solved ticket as solved and offers the next one", () => {
+    const save: SaveGame = {
+      ...newGame(),
+      tickets: [ticketRecord("first-steps", { solved: true })],
+    };
+    renderGameScreen("en", "first-steps", "story", save);
+    expect(guideWords().textContent).toContain("Solved");
+    expect(nextTicketSection().textContent).toContain("The printer on the second floor");
+  });
+
+  test("resumes at the game time of the save and keeps it running across tickets", async () => {
+    const later = GAME_START_TIME + 86_400_000;
+    const save: SaveGame = { ...newGame("first-steps", "sandbox"), gameTime: later };
+    const { onProgress } = renderGameScreen("en", "first-steps", "sandbox", save);
+    expect(lastReport(onProgress).progress.gameTime).toBe(later);
+    await userEvent.keyboard("pwd{Enter}");
+    await userEvent.click(screen.getByRole("button", { name: "Back to the inbox" }));
+    await userEvent.click(screen.getByRole("button", { name: /^New project folders/u }));
+    await userEvent.keyboard("pwd{Enter}");
+    await userEvent.click(screen.getByRole("button", { name: "Back to the inbox" }));
+    await userEvent.click(screen.getByRole("button", { name: /^First steps/u }));
+    await userEvent.keyboard("pwd{Enter}");
+    const times = onProgress.mock.calls.map(([progress]) => progress.gameTime);
+    expect(times.toSorted((a, b) => a - b)).toEqual(times);
+    expect(times.at(-1)).toBeGreaterThan(later);
+  });
+
+  test("resumes a ticket of the save that the player opens from the inbox", async () => {
+    const save: SaveGame = {
+      ...newGame("first-steps", "sandbox"),
+      tickets: [
+        ticketRecord("first-steps"),
+        ticketRecord("project-folders", { checkpoint: "folders" }),
+      ],
+    };
+    renderGameScreen("en", "first-steps", "sandbox", save);
+    await userEvent.click(screen.getByRole("button", { name: "Back to the inbox" }));
+    await userEvent.click(screen.getByRole("button", { name: /^New project folders/u }));
+    expect(guideWords().textContent).toContain("Step 2 of 2");
+  });
+
+  test.each([
+    ["en", "Not saved: the game could not write its save file."],
+    ["de", "Nicht gespeichert: Das Spiel konnte seinen Spielstand nicht schreiben."],
+  ] as const)("says in %s that the game is not saved after a failed save", (language, text) => {
+    renderGameScreen(language, "first-steps", "story", newGame(), true);
+    expect(screen.getByRole("alert").textContent).toBe(text);
+  });
+
+  test("keeps the alert empty while saving works", () => {
+    renderGameScreen();
+    expect(screen.getByRole("alert").textContent).toBe("");
   });
 });

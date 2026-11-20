@@ -3,30 +3,101 @@
 // the start screen, Play opens the save slot screen, Back and Esc return, an empty slot opens the
 // new game screen, Start puts the game into the slot and opens the game, a slot with a game
 // returns to it, the pause menu leads back to the start screen, and the keyboard focus follows.
-// The game screen plays the first level as the player's Linux user (ADR 0095).
-import { cleanup, render, screen } from "@testing-library/react";
+// The game screen plays the first level as the player's Linux user (ADR 0095). The app saves a new
+// game at once, after every change of the progress, when the player leaves the game and before
+// the window closes, with the play time and the time last played; it deletes a slot after the
+// player confirmed it (ADR 0106).
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, beforeAll, describe, expect, test, vi } from "vitest";
 
+import {
+  GAME_START_TIME,
+  newSaveGame,
+  parseSave,
+  type SaveGame,
+  serializeSave,
+} from "@penguin-ops/gameplay";
+
 import { App } from "./app";
 import { loadBundledContent } from "./content/bundled-content";
+import type { SaveFilesApi } from "./desktop-api";
+import { EMPTY_SLOT, type SlotState } from "./saves/save-slots";
 import { createTexts } from "./texts/ui-texts";
 
 const content = loadBundledContent();
 const { uiCatalogs } = content;
 
-function renderApp() {
+/** Matches an accessible name that starts with `start`, for slots named by their details too. */
+function startsWith(start: string): (name: string) => boolean {
+  return (name) => name.startsWith(start);
+}
+
+/** A fake of the desktop's save files that keeps the written texts. */
+function fakeSaveFiles() {
+  const written = new Map<number, string>();
+  return {
+    written,
+    writeSlot: vi.fn<SaveFilesApi["writeSlot"]>((slot, text) => {
+      written.set(slot, text);
+      return Promise.resolve();
+    }),
+    deleteSlot: vi.fn<SaveFilesApi["deleteSlot"]>((slot) => {
+      written.delete(slot);
+      return Promise.resolve();
+    }),
+    exportSave: vi.fn<SaveFilesApi["exportSave"]>(() => Promise.resolve("saved")),
+    importSave: vi.fn<SaveFilesApi["importSave"]>(() => Promise.resolve({ kind: "canceled" })),
+  };
+}
+
+const EMPTY: readonly SlotState[] = [EMPTY_SLOT, EMPTY_SLOT, EMPTY_SLOT];
+
+/** The real time the fake clock starts at: 2026-11-20, 10:00 UTC. */
+const START = 1_795_168_800_000;
+
+function renderApp(slots: readonly SlotState[] = EMPTY) {
   const onQuit = vi.fn<() => void>();
+  const onSaveError = vi.fn<(error: unknown) => void>();
+  const saveFiles = fakeSaveFiles();
+  const clock = { time: START };
+  let closeHandler: (() => Promise<void>) | undefined;
   render(
     <App
       info={{ name: "PenguinOps", version: "1.2.3" }}
       content={content}
       texts={createTexts(uiCatalogs, "en")}
       reservedUserNames={new Set(["root"])}
+      slots={slots}
+      saveFiles={saveFiles}
+      now={() => clock.time}
+      setCloseHandler={(handler) => {
+        closeHandler = handler;
+      }}
+      onSaveError={onSaveError}
       onQuit={onQuit}
     />,
   );
-  return onQuit;
+  const close = async () => {
+    if (closeHandler === undefined) {
+      throw new Error("The app set no close handler.");
+    }
+    await closeHandler();
+  };
+  return { onQuit, onSaveError, saveFiles, clock, close };
+}
+
+/** The save in the text that the app wrote to `slot`. */
+function writtenSave(saveFiles: ReturnType<typeof fakeSaveFiles>, slot: number): SaveGame {
+  const text = saveFiles.written.get(slot);
+  if (text === undefined) {
+    throw new Error(`Nothing was written to the slot ${String(slot)}.`);
+  }
+  const parsed = parseSave(text);
+  if (parsed.kind !== "save") {
+    throw new Error(`The slot ${String(slot)} holds no save.`);
+  }
+  return parsed.save;
 }
 
 function startScreenTitle() {
@@ -122,10 +193,14 @@ describe("App", () => {
     await userEvent.click(screen.getByRole("button", { name: "Main menu" }));
     await userEvent.click(screen.getByRole("button", { name: "Play" }));
     expect(screen.getByRole("button", { name: "Slot 1 New game" })).toBeDefined();
-    expect(screen.getByRole("button", { name: "Slot 2 Jörg Müller · Sandbox" })).toBeDefined();
+    expect(
+      screen.getByRole("button", { name: startsWith("Slot 2 Jörg Müller · Sandbox") }),
+    ).toBeDefined();
     expect(screen.getByRole("button", { name: "Slot 3 New game" })).toBeDefined();
 
-    await userEvent.click(screen.getByRole("button", { name: "Slot 2 Jörg Müller · Sandbox" }));
+    await userEvent.click(
+      screen.getByRole("button", { name: startsWith("Slot 2 Jörg Müller · Sandbox") }),
+    );
     expect(gameTitle()).not.toBeNull();
   });
 
@@ -180,15 +255,350 @@ describe("App", () => {
   });
 
   test("ignores Esc on the start screen", async () => {
-    const onQuit = renderApp();
+    const { onQuit } = renderApp();
     await userEvent.keyboard("{Escape}");
     expect(startScreenTitle()).not.toBeNull();
     expect(onQuit).not.toHaveBeenCalled();
   });
 
   test("quits from the start screen", async () => {
-    const onQuit = renderApp();
+    const { onQuit } = renderApp();
     await userEvent.click(screen.getByRole("button", { name: "Quit" }));
     expect(onQuit).toHaveBeenCalledExactlyOnceWith();
+  });
+});
+
+/** Jörg's saved game in Sandbox mode with the first ticket solved, last played at `START`. */
+const JOERG: SaveGame = {
+  ...newSaveGame(
+    { playerName: "Jörg Müller", userName: "joerg-mueller", mode: "sandbox" },
+    "first-steps",
+    START - 3_600_000,
+  ),
+  playTime: 600_000,
+  tickets: [{ level: "first-steps", solved: true, hintsShown: 0, reachedExtraGoals: [] }],
+};
+
+/** Starts a new game of Max in slot 1 with the keyboard alone. */
+async function startNewGame() {
+  await userEvent.keyboard("{Enter}");
+  await userEvent.keyboard("{Enter}");
+  await userEvent.keyboard("Max{Enter}");
+}
+
+describe("App: saves (ADR 0106)", () => {
+  test("saves a new game in its slot as soon as it starts", async () => {
+    const { saveFiles } = renderApp();
+    await startNewGame();
+    await vi.waitFor(() => {
+      expect(saveFiles.written.has(0)).toBe(true);
+    });
+    expect(writtenSave(saveFiles, 0)).toEqual(
+      newSaveGame({ playerName: "Max", userName: "max", mode: "story" }, "first-steps", START),
+    );
+  });
+
+  test("saves the progress at once, with the play time and the time last played", async () => {
+    const { saveFiles, clock } = renderApp();
+    await startNewGame();
+    clock.time = START + 90_000;
+    await userEvent.keyboard("cd welcome{Enter}");
+    await vi.waitFor(() => {
+      expect(writtenSave(saveFiles, 0).tickets[0]?.solved).toBe(true);
+    });
+    const save = writtenSave(saveFiles, 0);
+    expect(save.playTime).toBe(90_000);
+    expect(save.lastPlayed).toBe(START + 90_000);
+    expect(save.gameTime).toBeGreaterThan(GAME_START_TIME);
+  });
+
+  test("saves when the player leaves the game and shows it on the slot", async () => {
+    const { saveFiles, clock } = renderApp();
+    await startNewGame();
+    clock.time = START + 3 * 60_000;
+    await userEvent.keyboard("pwd{Enter}");
+    await userEvent.keyboard("{Escape}");
+    await userEvent.click(screen.getByRole("button", { name: "Main menu" }));
+    await vi.waitFor(() => {
+      expect(writtenSave(saveFiles, 0).playTime).toBe(3 * 60_000);
+    });
+    // The game time of the input is saved too, though the input changed no progress.
+    expect(writtenSave(saveFiles, 0).gameTime).toBeGreaterThan(GAME_START_TIME);
+    await userEvent.click(screen.getByRole("button", { name: "Play" }));
+    const slot = screen.getByRole("button", { name: startsWith("Slot 1 Max · Career") });
+    expect(slot.textContent).toContain("3 min played");
+  });
+
+  test("resumes a saved game from its slot and adds the new play time", async () => {
+    const { saveFiles, clock } = renderApp([EMPTY_SLOT, { kind: "game", save: JOERG }, EMPTY_SLOT]);
+    await userEvent.click(screen.getByRole("button", { name: "Play" }));
+    await userEvent.click(
+      screen.getByRole("button", { name: startsWith("Slot 2 Jörg Müller · Sandbox") }),
+    );
+    expect(gameTitle()).not.toBeNull();
+    // The game plays as the save's user, on the save's solved ticket.
+    expect(screen.getByRole("log", { name: "Terminal output" }).textContent).toContain(
+      "joerg-mueller@itdesk:~$",
+    );
+    expect(screen.getByRole("banner").textContent).toContain("Solved");
+    clock.time = START + 60_000;
+    await userEvent.keyboard("{F1}");
+    await vi.waitFor(() => {
+      expect(writtenSave(saveFiles, 1).tickets[0]?.hintsShown).toBe(1);
+    });
+    expect(writtenSave(saveFiles, 1).playTime).toBe(JOERG.playTime + 60_000);
+  });
+
+  test("saves the game being played before the window closes", async () => {
+    const { saveFiles, clock, close } = renderApp();
+    await startNewGame();
+    await userEvent.keyboard("pwd{Enter}");
+    clock.time = START + 120_000;
+    await close();
+    expect(writtenSave(saveFiles, 0).playTime).toBe(120_000);
+    expect(writtenSave(saveFiles, 0).lastPlayed).toBe(START + 120_000);
+  });
+
+  test("writes nothing before the window closes outside a game", async () => {
+    const { saveFiles, close } = renderApp();
+    await close();
+    expect(saveFiles.writeSlot).not.toHaveBeenCalled();
+  });
+
+  test("says that the game is not saved while saving fails, and logs the error", async () => {
+    const { saveFiles, onSaveError } = renderApp();
+    saveFiles.writeSlot.mockRejectedValue(new Error("disk full"));
+    await startNewGame();
+    await vi.waitFor(() => {
+      expect(screen.getByRole("alert").textContent).toBe(
+        "Not saved: the game could not write its save file.",
+      );
+    });
+    expect(onSaveError).toHaveBeenCalledWith(new Error("disk full"));
+    saveFiles.writeSlot.mockResolvedValue();
+    await userEvent.keyboard("{F1}");
+    await vi.waitFor(() => {
+      expect(screen.getByRole("alert").textContent).toBe("");
+    });
+  });
+
+  test("deletes a slot after the player confirmed it", async () => {
+    const { saveFiles } = renderApp([{ kind: "game", save: JOERG }, EMPTY_SLOT, EMPTY_SLOT]);
+    await userEvent.click(screen.getByRole("button", { name: "Play" }));
+    await userEvent.click(screen.getByRole("button", { name: "Actions for slot 1" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
+    await userEvent.click(screen.getByRole("button", { name: "Delete" }));
+    expect(saveFiles.deleteSlot).toHaveBeenCalledExactlyOnceWith(0);
+    await vi.waitFor(() => {
+      expect(screen.getByRole("status").textContent).toBe("Slot 1 was deleted.");
+    });
+    expect(screen.getByRole("button", { name: "Slot 1 New game" })).toBe(document.activeElement);
+  });
+
+  test("keeps the slot and says so when it cannot be deleted", async () => {
+    const { saveFiles, onSaveError } = renderApp([
+      { kind: "game", save: JOERG },
+      EMPTY_SLOT,
+      EMPTY_SLOT,
+    ]);
+    saveFiles.deleteSlot.mockRejectedValue(new Error("locked"));
+    await userEvent.click(screen.getByRole("button", { name: "Play" }));
+    await userEvent.click(screen.getByRole("button", { name: "Actions for slot 1" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
+    await userEvent.click(screen.getByRole("button", { name: "Delete" }));
+    await vi.waitFor(() => {
+      expect(screen.getByRole("status").textContent).toBe("Slot 1 could not be deleted.");
+    });
+    expect(onSaveError).toHaveBeenCalledWith(new Error("locked"));
+    expect(
+      screen.getByRole("button", { name: startsWith("Slot 1 Jörg Müller · Sandbox") }),
+    ).toBeDefined();
+  });
+
+  test("forgets the message when the player comes back to the slots", async () => {
+    renderApp([{ kind: "game", save: JOERG }, EMPTY_SLOT, EMPTY_SLOT]);
+    await userEvent.click(screen.getByRole("button", { name: "Play" }));
+    await userEvent.click(screen.getByRole("button", { name: "Actions for slot 1" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
+    await userEvent.click(screen.getByRole("button", { name: "Delete" }));
+    await vi.waitFor(() => {
+      expect(screen.getByRole("status").textContent).toBe("Slot 1 was deleted.");
+    });
+    await userEvent.click(screen.getByRole("button", { name: "Back" }));
+    await userEvent.click(screen.getByRole("button", { name: "Play" }));
+    expect(screen.getByRole("status").textContent).toBe("");
+  });
+});
+
+/** Opens the slot screen and the menu of the slot `number`, counting from 1. */
+async function openSlotMenu(number: number) {
+  await userEvent.click(screen.getByRole("button", { name: "Play" }));
+  await userEvent.click(screen.getByRole("button", { name: `Actions for slot ${String(number)}` }));
+}
+
+/** Ada's game, as a file the player imports. */
+const ADA: SaveGame = newSaveGame(
+  { playerName: "Ada Lovelace", userName: "ada", mode: "story" },
+  "first-steps",
+  START - 86_400_000,
+);
+
+describe("App: export and import (ADR 0107)", () => {
+  test("exports a slot's game with the dialog's texts and a suggested file name", async () => {
+    const { saveFiles } = renderApp([EMPTY_SLOT, { kind: "game", save: JOERG }, EMPTY_SLOT]);
+    await openSlotMenu(2);
+    await userEvent.click(screen.getByRole("menuitem", { name: "Export" }));
+    expect(saveFiles.exportSave).toHaveBeenCalledExactlyOnceWith({
+      title: "Export slot 2",
+      fileType: "PenguinOps save",
+      text: serializeSave(JOERG),
+      fileName: "penguin-ops-slot-2-joerg-mueller.json",
+    });
+    await vi.waitFor(() => {
+      expect(screen.getByRole("status").textContent).toBe("Slot 2 was exported.");
+    });
+  });
+
+  test("says nothing when the player cancels the export", async () => {
+    const { saveFiles } = renderApp([{ kind: "game", save: JOERG }, EMPTY_SLOT, EMPTY_SLOT]);
+    saveFiles.exportSave.mockResolvedValue("canceled");
+    await openSlotMenu(1);
+    await userEvent.click(screen.getByRole("menuitem", { name: "Export" }));
+    await vi.waitFor(() => {
+      expect(saveFiles.exportSave).toHaveBeenCalledOnce();
+    });
+    expect(screen.getByRole("status").textContent).toBe("");
+  });
+
+  test("says so when the export fails", async () => {
+    const { saveFiles, onSaveError } = renderApp([
+      { kind: "game", save: JOERG },
+      EMPTY_SLOT,
+      EMPTY_SLOT,
+    ]);
+    saveFiles.exportSave.mockRejectedValue(new Error("read-only"));
+    await openSlotMenu(1);
+    await userEvent.click(screen.getByRole("menuitem", { name: "Export" }));
+    await vi.waitFor(() => {
+      expect(screen.getByRole("status").textContent).toBe("Slot 1 could not be exported.");
+    });
+    expect(onSaveError).toHaveBeenCalledWith(new Error("read-only"));
+  });
+
+  test("imports a file into an empty slot at once", async () => {
+    const { saveFiles } = renderApp();
+    saveFiles.importSave.mockResolvedValue({
+      kind: "file",
+      file: { kind: "text", text: serializeSave(ADA) },
+    });
+    await openSlotMenu(3);
+    await userEvent.click(screen.getByRole("menuitem", { name: "Import" }));
+    expect(saveFiles.importSave).toHaveBeenCalledExactlyOnceWith({
+      title: "Import into slot 3",
+      fileType: "PenguinOps save",
+    });
+    await vi.waitFor(() => {
+      expect(screen.getByRole("status").textContent).toBe("The game was imported into slot 3.");
+    });
+    expect(writtenSave(saveFiles, 2)).toEqual(ADA);
+    expect(
+      screen.getByRole("button", { name: startsWith("Slot 3 Ada Lovelace · Career") }),
+    ).toBeDefined();
+  });
+
+  test("asks before an import replaces a game and replaces it when the player confirms", async () => {
+    const { saveFiles } = renderApp([{ kind: "game", save: JOERG }, EMPTY_SLOT, EMPTY_SLOT]);
+    saveFiles.importSave.mockResolvedValue({
+      kind: "file",
+      file: { kind: "text", text: serializeSave(ADA) },
+    });
+    await openSlotMenu(1);
+    await userEvent.click(screen.getByRole("menuitem", { name: "Import" }));
+    const dialog = await screen.findByRole("alertdialog", { name: "Replace slot 1?" });
+    expect(saveFiles.writeSlot).not.toHaveBeenCalled();
+    await userEvent.click(within(dialog).getByRole("button", { name: "Replace" }));
+    await vi.waitFor(() => {
+      expect(screen.getByRole("status").textContent).toBe("The game was imported into slot 1.");
+    });
+    expect(writtenSave(saveFiles, 0)).toEqual(ADA);
+    expect(screen.getByRole("button", { name: startsWith("Slot 1 Ada Lovelace") })).toBe(
+      document.activeElement,
+    );
+  });
+
+  test("keeps the game when the player cancels the replacement", async () => {
+    const { saveFiles } = renderApp([{ kind: "game", save: JOERG }, EMPTY_SLOT, EMPTY_SLOT]);
+    saveFiles.importSave.mockResolvedValue({
+      kind: "file",
+      file: { kind: "text", text: serializeSave(ADA) },
+    });
+    await openSlotMenu(1);
+    await userEvent.click(screen.getByRole("menuitem", { name: "Import" }));
+    await screen.findByRole("alertdialog");
+    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(saveFiles.writeSlot).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: startsWith("Slot 1 Jörg Müller") })).toBe(
+      document.activeElement,
+    );
+  });
+
+  test.each([
+    [{ kind: "unreadable" }, "The game could not be imported. Slot 1 is unchanged."],
+    [{ kind: "text", text: "{}" }, "The file is not a PenguinOps save. Slot 1 is unchanged."],
+    [
+      { kind: "text", text: serializeSave(ADA).replace('"ada"', '"Ada"') },
+      "The save in the file is damaged. Slot 1 is unchanged.",
+    ],
+    [
+      { kind: "text", text: '{"format": "penguin-ops-save", "version": 99}' },
+      "A newer version of PenguinOps saved the file. Slot 1 is unchanged.",
+    ],
+    [
+      { kind: "text", text: serializeSave({ ...ADA, userName: "root" }) },
+      "The game's user name is taken on the system. Slot 1 is unchanged.",
+    ],
+  ] as const)("refuses a file that cannot be imported %#", async (file, message) => {
+    const { saveFiles } = renderApp();
+    saveFiles.importSave.mockResolvedValue({ kind: "file", file });
+    await openSlotMenu(1);
+    await userEvent.click(screen.getByRole("menuitem", { name: "Import" }));
+    await vi.waitFor(() => {
+      expect(screen.getByRole("status").textContent).toBe(message);
+    });
+    expect(saveFiles.writeSlot).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Slot 1 New game" })).toBeDefined();
+  });
+
+  test("does nothing when the player cancels the import", async () => {
+    const { saveFiles } = renderApp();
+    await openSlotMenu(1);
+    await userEvent.click(screen.getByRole("menuitem", { name: "Import" }));
+    await vi.waitFor(() => {
+      expect(saveFiles.importSave).toHaveBeenCalledOnce();
+    });
+    expect(saveFiles.writeSlot).not.toHaveBeenCalled();
+    expect(screen.getByRole("status").textContent).toBe("");
+  });
+
+  test.each([
+    ["the dialog fails", "importSave"],
+    ["the slot cannot be written", "writeSlot"],
+  ] as const)("says so when %s", async (_name, failing) => {
+    const { saveFiles, onSaveError } = renderApp();
+    saveFiles.importSave.mockResolvedValue({
+      kind: "file",
+      file: { kind: "text", text: serializeSave(ADA) },
+    });
+    saveFiles[failing].mockRejectedValue(new Error("broken"));
+    await openSlotMenu(1);
+    await userEvent.click(screen.getByRole("menuitem", { name: "Import" }));
+    await vi.waitFor(() => {
+      expect(screen.getByRole("status").textContent).toBe(
+        "The game could not be imported. Slot 1 is unchanged.",
+      );
+    });
+    expect(onSaveError).toHaveBeenCalledWith(new Error("broken"));
+    expect(screen.getByRole("button", { name: "Slot 1 New game" })).toBeDefined();
   });
 });

@@ -6,6 +6,8 @@ import { BrowserWindow } from "electron";
 // electron-vite copies the file into the build output and returns its path at run time.
 import windowIcon from "../../build/icons/256x256.png?asset";
 
+import { IPC_CHANNELS } from "../shared/ipc-channels";
+import { guardClose } from "./close-guard";
 import type { AppLocation } from "./security";
 import { secureWebPreferences } from "./web-preferences";
 
@@ -29,6 +31,28 @@ export async function createMainWindow(location: AppLocation): Promise<BrowserWi
   });
   window.once("ready-to-show", () => {
     window.show();
+  });
+  // The game is saved before the window closes (ADR 0106). The answer comes only from this
+  // window's own page.
+  guardClose({
+    onClose: (listener) => {
+      window.on("close", (event) => {
+        listener(() => {
+          event.preventDefault();
+        });
+      });
+    },
+    requestClose: () => {
+      window.webContents.send(IPC_CHANNELS.closeRequested);
+    },
+    onceReady: (listener) => {
+      window.webContents.ipc.once(IPC_CHANNELS.closeReady, () => {
+        listener();
+      });
+    },
+    close: () => {
+      window.close();
+    },
   });
 
   switch (location.kind) {

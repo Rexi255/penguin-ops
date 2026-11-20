@@ -1,16 +1,20 @@
 // Tests of the ticket's progress (ADR 0097, ADR 0098, ADR 0100): what the game events of an input
 // add up to, the step the player works on, the hints the player asked for and the reached extra
 // goals.
-import type { GameEvent } from "@penguin-ops/gameplay";
+import type { Level } from "@penguin-ops/content";
+import { type GameEvent, newTicketRecord } from "@penguin-ops/gameplay";
 import { describe, expect, test } from "vitest";
 
+import { loadBundledContent } from "../content/bundled-content";
 import {
   applyGameEvents,
   HINT_COUNT,
+  progressFromRecord,
   showNextHint,
   stepPosition,
   TICKET_START,
   type TicketProgress,
+  ticketRecordOf,
 } from "./ticket-progress";
 
 describe("applyGameEvents", () => {
@@ -167,5 +171,89 @@ describe("stepPosition", () => {
 
   test("never names a step after the last one", () => {
     expect(stepPosition(progress(5), 3)).toEqual({ current: 3, count: 3 });
+  });
+});
+
+describe("saved tickets (ADR 0106)", () => {
+  const content = loadBundledContent();
+  function level(id: string): Level {
+    const found = content.levels.get(id);
+    if (found === undefined) {
+      throw new Error(`The content has no level "${id}".`);
+    }
+    return found;
+  }
+  // project-folders has the steps `folders` (with a message) and `notes`, and the extra goal
+  // `readme` with 20 XP.
+  const steps = level("project-folders");
+  const single = level("first-steps");
+
+  test("rebuilds a new ticket as the start of a ticket", () => {
+    expect(progressFromRecord(steps, newTicketRecord("project-folders"))).toEqual(TICKET_START);
+  });
+
+  test("rebuilds the completed steps and their messages from the checkpoint", () => {
+    const progress = progressFromRecord(steps, {
+      ...newTicketRecord("project-folders"),
+      checkpoint: "folders",
+      hintsShown: 2,
+      reachedExtraGoals: ["readme"],
+    });
+    expect(progress).toEqual({
+      completedSteps: 1,
+      solved: false,
+      messages: [
+        { kind: "step", say: "step-folders" },
+        { kind: "extra-goal", id: "readme", xp: 20 },
+      ],
+      reachedExtraGoals: ["readme"],
+      hintsShown: 2,
+    });
+  });
+
+  test("rebuilds a solved ticket with every step completed", () => {
+    const progress = progressFromRecord(steps, {
+      ...newTicketRecord("project-folders"),
+      solved: true,
+      checkpoint: "notes",
+    });
+    expect(progress.completedSteps).toBe(2);
+    expect(progress.solved).toBe(true);
+  });
+
+  test("leaves out an extra goal that the level does not have", () => {
+    const progress = progressFromRecord(single, {
+      ...newTicketRecord("first-steps"),
+      reachedExtraGoals: ["gone"],
+    });
+    expect(progress.messages).toEqual([]);
+  });
+
+  test("keeps the last completed step as the checkpoint", () => {
+    const progress: TicketProgress = { ...TICKET_START, completedSteps: 1, hintsShown: 1 };
+    expect(ticketRecordOf(steps, progress)).toEqual({
+      level: "project-folders",
+      solved: false,
+      checkpoint: "folders",
+      hintsShown: 1,
+      reachedExtraGoals: [],
+    });
+  });
+
+  test("keeps no checkpoint without a completed step or for a ticket with one goal", () => {
+    expect(ticketRecordOf(steps, TICKET_START)).toEqual(newTicketRecord("project-folders"));
+    expect(ticketRecordOf(single, { ...TICKET_START, solved: true })).toEqual({
+      ...newTicketRecord("first-steps"),
+      solved: true,
+    });
+  });
+
+  test("gives back the same progress after a round trip without tips", () => {
+    const progress = applyGameEvents(TICKET_START, [
+      { kind: "step-completed", step: "folders", say: "step-folders" },
+      { kind: "extra-goal", id: "readme", xp: 20 },
+      { kind: "hint-requested" },
+    ]);
+    expect(progressFromRecord(steps, ticketRecordOf(steps, progress))).toEqual(progress);
   });
 });

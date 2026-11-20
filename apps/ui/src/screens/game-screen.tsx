@@ -13,22 +13,27 @@
 // left goes on where they left it. After solving, the ticket offers the next one. F1 or its key
 // hint shows the ticket's next hint and brings the ticket to the front (M3.5b, ADR 0098); the
 // focus stays where it is, so the player keeps typing. The game command `hint` does the same and
-// shows the hint in the terminal too (M3.6b, ADR 0103). Until the save system (M3.7), the game
-// starts again whenever the screen appears.
+// shows the hint in the terminal too (M3.6b, ADR 0103).
+//
+// The game screen plays a save (M3.7c, ADR 0106): it resumes every ticket of the save at its
+// checkpoint, with one game time that runs on across the tickets (ADR 0104), and reports the game
+// as a save keeps it whenever it changes. A change of the progress or of the open ticket asks for
+// an autosave; a game time that only moved on does not.
 
 import type { Content, ExtraGoal, RichTextInline } from "@penguin-ops/content";
 import { createGameClock } from "@penguin-ops/engine";
 import {
   chapterOf,
-  GAME_START_TIME,
   type GameEvent,
   type GameMode,
   inbox,
   isTicketOpen,
   levelSetup,
-  type LevelSetup,
+  newTicketRecord,
   nextTicket,
-  startLevel,
+  resumeTicket,
+  type SaveGame,
+  type TicketRecord,
   ticketState,
 } from "@penguin-ops/gameplay";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -43,24 +48,36 @@ import { NextTicket, type NextTicketOffer } from "../tickets/next-ticket";
 import { TicketPanel } from "../tickets/ticket-panel";
 import {
   applyGameEvents,
+  progressFromRecord,
   showNextHint,
   stepPosition,
   TICKET_START,
   type TicketProgress,
+  ticketRecordOf,
 } from "../tickets/ticket-progress";
 import { type TicketTexts, ticketTexts } from "../tickets/ticket-texts";
 import { PauseMenu } from "./pause-menu";
 import { SidePanel, type SidePanelTab } from "./side-panel";
 
+/** What a save keeps of the game being played; the save slot adds the rest. */
+export type GameProgress = Pick<SaveGame, "gameTime" | "currentTicket" | "tickets">;
+
 export interface GameScreenProps {
   /** The loaded content: the chapters and levels the game offers. */
   readonly content: Content;
-  /** The game's mode, which decides which chapters are open (ADR 0017). */
-  readonly mode: GameMode;
-  /** The player's Linux user name. */
-  readonly userName: string;
-  /** The level the game starts with; it must be in an open chapter of a new game. */
-  readonly firstTicket: string;
+  /**
+   * The game to play, fitted to the content (`fitSaveToContent`): its mode decides which chapters
+   * are open (ADR 0017), and its current ticket is open first.
+   */
+  readonly save: SaveGame;
+  /**
+   * Gets the game whenever it changes. `autosave` is true after a change of the progress or the
+   * open ticket, which the save slot saves at once (ADR 0013), and false when only the game time
+   * moved on.
+   */
+  readonly onProgress: (progress: GameProgress, autosave: boolean) => void;
+  /** Whether the latest save failed; the footer then says that the game is not saved. */
+  readonly saveFailed?: boolean;
   /** Leaves the game for the start screen. */
   readonly onMainMenu: () => void;
 }
@@ -77,13 +94,6 @@ interface OpenedTicket {
   readonly terminal: TerminalState;
 }
 
-/** A terminal for `level`, started at the game's start time. */
-function startTerminal(level: LevelSetup): TerminalState {
-  const clock = createGameClock(GAME_START_TIME);
-  const session = startLevel(level, clock);
-  return createTerminal(session, clock.now());
-}
-
 /** The keys of the tickets in `progress` that match `test`. */
 function levelsWhere(
   progress: ReadonlyMap<string, TicketProgress>,
@@ -92,10 +102,26 @@ function levelsWhere(
   return new Set([...progress].filter(([, ticket]) => test(ticket)).map(([levelId]) => levelId));
 }
 
-export function GameScreen({ content, mode, userName, firstTicket, onMainMenu }: GameScreenProps) {
+/** The level `levelId` of `content`. Throws if the content has none. */
+function levelOf(content: Content, levelId: string) {
+  const level = content.levels.get(levelId);
+  if (level === undefined) {
+    throw new Error(`The content has no level "${levelId}".`);
+  }
+  return level;
+}
+
+export function GameScreen({
+  content,
+  save,
+  onProgress,
+  saveFailed = false,
+  onMainMenu,
+}: GameScreenProps) {
   const texts = useTexts();
   const { language } = texts;
   const { chapters } = content;
+  const { mode, userName } = save;
   const [paused, setPaused] = useState(false);
   // The texts of every ticket in the player's language.
   const tickets = useMemo(
@@ -112,23 +138,45 @@ export function GameScreen({ content, mode, userName, firstTicket, onMainMenu }:
     () => new Map([...tickets].map(([levelId, ticket]) => [levelId, ticket.title])),
     [tickets],
   );
-  const newTerminal = useCallback(
-    (levelId: string) => startTerminal(levelSetup(content, levelId, language, userName)),
+  // The game time of the whole game (ADR 0104): the latest time of any of its terminals.
+  const gameTime = useRef(save.gameTime);
+  // A terminal for the ticket of `record`, resumed where the save left it at the game time.
+  const resumeTerminal = useCallback(
+    (record: TicketRecord) => {
+      const clock = createGameClock(gameTime.current);
+      const setup = levelSetup(content, record.level, language, userName);
+      const session = resumeTicket(setup, clock, record);
+      gameTime.current = clock.now();
+      return createTerminal(session, clock.now());
+    },
     [content, language, userName],
   );
-  // The game starts once, when the screen appears, with the first ticket open.
+  // The progress of every ticket the player opened, in the order opened; the opened ones are the
+  // started ones. The game starts once, when the screen appears, with the save's tickets.
+  const [progress, setProgress] = useState<ReadonlyMap<string, TicketProgress>>(
+    () =>
+      new Map(
+        save.tickets.map((record) => [
+          record.level,
+          progressFromRecord(levelOf(content, record.level), record),
+        ]),
+      ),
+  );
+  // The save's current ticket is open first.
   const [opened, setOpened] = useState<OpenedTicket>(() => {
-    if (!isTicketOpen(chapters, mode, new Set(), firstTicket)) {
-      throw new Error(`The level "${firstTicket}" is not open in a new ${mode} game.`);
+    const record = save.tickets.find((ticket) => ticket.level === save.currentTicket);
+    const solvedBefore = new Set(
+      save.tickets.filter((ticket) => ticket.solved).map((ticket) => ticket.level),
+    );
+    if (record === undefined || !isTicketOpen(chapters, mode, solvedBefore, record.level)) {
+      throw new Error(`The current ticket "${save.currentTicket}" of the save is not open.`);
     }
-    return { levelId: firstTicket, terminal: newTerminal(firstTicket) };
+    return { levelId: record.level, terminal: resumeTerminal(record) };
   });
   // The latest terminal of every ticket the player opened, to go on there when they come back.
   const terminals = useRef(new Map<string, TerminalState>());
-  // The progress of every ticket the player opened; the opened ones are the started ones.
-  const [progress, setProgress] = useState<ReadonlyMap<string, TicketProgress>>(
-    () => new Map([[firstTicket, TICKET_START]]),
-  );
+  // The latest progress, for reports that do not come with a change of it.
+  const latestProgress = useRef(progress);
   const [tab, setTab] = useState<SidePanelTab>("tickets");
   const [ticketsView, setTicketsView] = useState<TicketsView>("ticket");
   const terminalInput = useRef<HTMLTextAreaElement>(null);
@@ -177,22 +225,53 @@ export function GameScreen({ content, mode, userName, firstTicket, onMainMenu }:
     [levelId],
   );
 
+  /** The game as a save keeps it, with the open ticket `current` and the progress `tickets`. */
+  const gameProgress = useCallback(
+    (current: string, tickets: ReadonlyMap<string, TicketProgress>): GameProgress => ({
+      gameTime: gameTime.current,
+      currentTicket: current,
+      tickets: [...tickets].map(([id, ticket]) => ticketRecordOf(levelOf(content, id), ticket)),
+    }),
+    [content],
+  );
+
   const onTerminalChange = useCallback(
     (state: TerminalState) => {
       terminals.current.set(levelId, state);
+      if (state.time > gameTime.current) {
+        gameTime.current = state.time;
+        onProgress(gameProgress(levelId, latestProgress.current), false);
+      }
     },
-    [levelId],
+    [levelId, onProgress, gameProgress],
   );
 
-  // Opening a ticket shows it, goes on in its terminal where the player left it, or starts it,
-  // and gives its terminal the focus.
+  // Every change of the progress or of the open ticket is saved at once (ADR 0013), the first
+  // one when the game appears, so that a save fitted to the content is written back.
+  useEffect(() => {
+    latestProgress.current = progress;
+    onProgress(gameProgress(levelId, progress), true);
+  }, [progress, levelId, onProgress, gameProgress]);
+
+  // Opening a ticket shows it, goes on in its terminal where the player left it, or resumes it
+  // from the save, and gives its terminal the focus. Its terminal goes on at the game time.
   const openTicket = useCallback(
     (id: string) => {
       if (id !== levelId) {
         if (!terminals.current.has(levelId)) {
           terminals.current.set(levelId, opened.terminal);
         }
-        setOpened({ levelId: id, terminal: terminals.current.get(id) ?? newTerminal(id) });
+        const kept = terminals.current.get(id);
+        const ticket = progress.get(id);
+        const terminal =
+          kept === undefined
+            ? resumeTerminal(
+                ticket === undefined
+                  ? newTicketRecord(id)
+                  : ticketRecordOf(levelOf(content, id), ticket),
+              )
+            : { ...kept, time: Math.max(kept.time, gameTime.current) };
+        setOpened({ levelId: id, terminal });
         setProgress((current) =>
           current.has(id) ? current : new Map(current).set(id, TICKET_START),
         );
@@ -200,7 +279,7 @@ export function GameScreen({ content, mode, userName, firstTicket, onMainMenu }:
       setTicketsView("ticket");
       pendingFocus.current = "terminal";
     },
-    [levelId, opened.terminal, newTerminal],
+    [levelId, opened.terminal, progress, content, resumeTerminal],
   );
 
   const showInbox = useCallback(() => {
@@ -373,6 +452,15 @@ export function GameScreen({ content, mode, userName, firstTicket, onMainMenu }:
             </kbd>{" "}
             <InlineText text={texts.rich("game.menu")} textKey="game.menu" />
           </button>
+          {/* An alert, so that the player hears it at once; it stays until a save works again. */}
+          <p className="save-warning" role="alert">
+            {saveFailed && (
+              <>
+                <Icon name="incident" />
+                <InlineText text={texts.rich("game.not-saved")} textKey="game.not-saved" />
+              </>
+            )}
+          </p>
         </footer>
       </div>
       {paused && <PauseMenu onContinue={closePauseMenu} onMainMenu={onMainMenu} />}

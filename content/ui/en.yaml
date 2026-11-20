@@ -14,6 +14,38 @@ slots:
   slot: Slot {number}
   new-game: New game
   game: "{player} · {mode}"
+  solved: "{count, plural, one {# ticket solved} other {# tickets solved}}"
+  play-time-minutes: "{minutes} min played"
+  play-time-hours: "{hours} h {minutes} min played"
+  last-played: "Last played {date}"
+  damaged: This save is damaged and cannot be loaded.
+  too-new: A newer version of PenguinOps saved this game.
+  user-name-taken: The game's user name is now taken on the system.
+  actions: "Actions for slot {number}"
+  export: Export
+  import: Import
+  delete: Delete
+  delete-title: "Delete slot {number}?"
+  delete-game: "The game of {player} will be deleted for good."
+  delete-save: The save will be deleted for good.
+  cancel: Cancel
+  deleted: "Slot {number} was deleted."
+  delete-failed: "Slot {number} could not be deleted."
+  export-title: "Export slot {number}"
+  import-title: "Import into slot {number}"
+  file-type: PenguinOps save
+  exported: "Slot {number} was exported."
+  export-failed: "Slot {number} could not be exported."
+  imported: "The game was imported into slot {number}."
+  import-failed: "The game could not be imported. Slot {number} is unchanged."
+  import-not-a-save: "The file is not a PenguinOps save. Slot {number} is unchanged."
+  import-damaged: "The save in the file is damaged. Slot {number} is unchanged."
+  import-too-new: "A newer version of PenguinOps saved the file. Slot {number} is unchanged."
+  import-user-name-taken: "The game's user name is taken on the system. Slot {number} is unchanged."
+  replace-title: "Replace slot {number}?"
+  replace-game: "The game of {player} will be replaced by the game of {imported}."
+  replace-save: "The save will be replaced by the game of {imported}."
+  replace: Replace
   back: Back
 modes:
   story: Career
@@ -50,6 +82,7 @@ game:
   hint: Hint
   complete: Complete
   menu: Menu
+  not-saved: "Not saved: the game could not write its save file."
 ticket:
   step: "Step {current} of {count}"
   solved: Solved

@@ -3,8 +3,12 @@
 export const IPC_CHANNELS = {
   getAppInfo: "app:get-info",
   quit: "app:quit",
+  closeRequested: "app:close-requested",
+  closeReady: "app:close-ready",
   readSlots: "saves:read-slots",
   writeSlot: "saves:write-slot",
   restoreBackup: "saves:restore-backup",
   deleteSlot: "saves:delete-slot",
+  exportSave: "saves:export",
+  importSave: "saves:import",
 } as const;

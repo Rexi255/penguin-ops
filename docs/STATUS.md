@@ -4,6 +4,16 @@ _Last updated: 2026-11-20_
 
 ## Recently completed
 
+- M3.7d Export and import (M3.7 complete): the slot menu offers Export for a game, Import for
+  every slot and Delete; the main process shows the system's file dialogs with the texts the
+  renderer passes and writes or reads the file; the renderer refuses a file that is no playable
+  save with a message and asks before an import replaces a game (ADR 0107).
+- M3.7c Saving and resuming: the slots are read at start (backup restored, migrated saves written
+  again, damaged, too new or taken user names locked); every save is fitted to the content and
+  resumed at its tickets' checkpoints with one game time; autosave on a new game, every progress
+  change, the main menu and the window's close (the main process waits for the page, at most
+  5 s); the slot shows solved tickets, play time and last played; a menu button per slot with
+  Delete and a confirmation; a failed save shows an alert in the footer (ADR 0106).
 - M3.7b Save files: the main process stores each slot's save as a text in
   `<userData>/saves/slot-N.json`, written atomically (temporary file, flushed, renamed) with the
   replaced save as `slot-N.backup.json`; restore, delete, one operation per slot at a time and
@@ -16,36 +26,23 @@ _Last updated: 2026-11-20_
   as JSON in a fixed order and reads it back with problem codes (`not-json`, `not-a-save`,
   `too-new`, `invalid`). Migrations run one version at a time; example saves of every version are
   stored byte for byte and tested (ADR 0104, partly superseding ADR 0099).
-- M3.6b Game commands: `help` shows the game's overview (game commands, keys, every simulated
-  command), `help NAME` a short description of each command or that the game does not know it;
-  `hint` shows the ticket's next hint in the terminal and the Tickets tab and counts with F1. Both
-  are builtins of the engine whose text the UI writes; into a pipe or a file they stop with a
-  notice. M3.6 is complete (ADR 0103).
-- M3.6a Game notices: every command notice (an option or variable the game does not simulate,
-  invalid UTF-8, input from the terminal) and every unsupported shell feature (35, such as here
-  strings or `for` loops) has a text of its own in English and German that names it, with the
-  command, option or variable as code; the general notice text is gone (ADR 0102, partly
-  superseding ADR 0095).
-- Terminal cursor in Debian's default look: the block cursor takes the terminal's text colour
-  (new token `terminal-cursor`) with the character under it in the terminal ground's colour, like
-  GNOME Terminal; fibre orange is no longer a colour of the terminal (ADR 0101, partly
-  superseding ADR 0095).
+
 ## In progress
 
-- ROADMAP M3.7 save system: M3.7a (format) and M3.7b (files) are done; M3.7c and M3.7d follow.
+- Nothing.
 
 ## Next 3 steps
 
-1. ROADMAP M3.7c: saving and resuming (autosave, slot metadata, slot menu with delete,
-   checkpoint, one game time).
-2. ROADMAP M3.7d: export and import of a slot.
-3. ROADMAP M3.8: settings.
+1. ROADMAP M3.8: settings (language, volumes, fullscreen, font size, colour scheme, effects,
+   reduce motion).
+2. ROADMAP M3.9: colour schemes and effects.
+3. ROADMAP M3.10: UI sounds.
 
 ## Blockers and open questions
 
-- The start, save slot, new game and game screens, the pause menu, the terminal, the ticket
-  panel and the inbox have no screenshot tests yet; the screenshot test setup for all screens,
-  languages and colour schemes is ROADMAP M3.15.
+- The start, save slot, new game and game screens, the pause menu, the slot menu and dialogs,
+  the terminal, the ticket panel and the inbox have no screenshot tests yet; the screenshot test
+  setup for all screens, languages and colour schemes is ROADMAP M3.15.
 - The texts of the five prototype levels, the three chapter titles and the office world's host
   name `itdesk` were written as test content without the owner's review (the prototype's source
   is not in the repository, so levels 2 to 5 follow the titles in `docs/CURRICULUM.md`); the
@@ -66,9 +63,9 @@ _Last updated: 2026-11-20_
   (check the levels, steps and extra goals against the content, decide what happens with a level
   an update removed, rebuild the ticket messages) and start tickets at the game's one game time
   instead of the start time (ADR 0104).
-- A later world that adds an account with a name an existing save already uses would collide
-  with that save (ADR 0093); M3.7 or M4 decides how to handle it. The reserved Debian accounts
-  are verified in M6.
+- A save whose user name a later world reserves is locked (ADR 0106); the player can only delete
+  it or import over it. A way to rename the user is an idea for later. The reserved Debian
+  accounts are verified in M6.
 - Some details of `ls`, `clear`, `history`, `cat`, `head`, `tail`, `touch`, `rm`, `cp`, `mv` and
   `grep` could not be checked against a real Debian 13 (tests marked `@differential`, ADR 0054
   to ADR 0064); grep 3.11's own source could not be fetched, so grep follows an earlier 3.x

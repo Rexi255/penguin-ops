@@ -458,6 +458,12 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   `SaveProblem` (`not-json`, `not-a-save`, `too-new`, `invalid` with path). Example saves of every
   format version are stored byte for byte in `packages/gameplay/save-fixtures/`. `HINT_COUNT`
   (three hints per level) lives here too.
+- Resuming (`src/resume.ts`, ADR 0106): `fitSaveToContent` makes a save match the content the game
+  ships now (drops tickets, checkpoints and extra goals that no longer exist, gives a solved
+  ticket with steps its last step as the checkpoint, moves a current ticket that was dropped or is
+  not open to the first unsolved open ticket), `resumeTicket` starts a ticket at its checkpoint,
+  solved if it was and with its reached extra goals, and `newTicketRecord` is the record of a
+  ticket opened for the first time.
 - Campaign, still planned: the playground (ADR 0017).
 - Progress: XP, ranks, achievements (ADR 0018).
 - Settings model (ADR 0013).
@@ -476,14 +482,22 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
 
 Current state (ADR 0033): `index.html` (with the strict Content Security Policy) loads
 `src/main.tsx`, which loads the bundled content, picks the language, asks the desktop API for
-the app info and computes the reserved user names of the loaded worlds, and renders
-`src/app.tsx`, which shows the current screen (ADR 0091, ADR 0094): it holds the screen as
-React state of the union type `Screen`, whose members carry their slot where they need one, and
-picks the screen component with an exhaustive `switch`; screens get callbacks such as `onPlay`
-and `onBack` and do not know each other. Until the save system (M3.7), the app root also holds
-the game of each of the three slots (`NewGame` of `packages/gameplay`) as React state, and gives
-the game screen the content, the slot's mode and user name and the first ticket of the content
-(ADR 0095, ADR 0099).
+the app info, computes the reserved user names of the loaded worlds, reads the save slots
+(`loadSlots`) and renders `src/app.tsx`, which shows the current screen (ADR 0091, ADR 0094): it
+holds the screen as React state of the union type `Screen`, whose members carry their slot where
+they need one, and picks the screen component with an exhaustive `switch`; screens get callbacks
+such as `onPlay` and `onBack` and do not know each other. The app root also holds what each of
+the three slots holds (`SlotState`) and saves the games (ADR 0106): a new game at once, every
+autosave the game screen asks for, the game when the player leaves it and, through the desktop's
+close handler, before the window closes; each save adds the real play time since the game screen
+appeared and the real time as "last played" from the injected clock `now`, and the saves are
+written one after the other. A failed save is logged and shown in the game screen's footer.
+
+Saves (`src/saves/save-slots.ts`, ADR 0105, ADR 0106): `readSlot` decides from a slot's stored save
+and backup whether it is empty, holds a game (fitted to the content) or is locked (`damaged`,
+`too-new`, `user-name-taken`), and whether the backup must be restored or a migrated save written
+again; `loadSlots` reads every slot through the desktop API and does those repairs. `readImport`
+reads a file the player imports the same way, and `exportFileName` names an export.
 
 Content and texts (ADR 0090): `src/content/bundled-content.ts` imports every `.yaml` file of
 `content/` as text with `import.meta.glob` at build time and loads it with `sortContentFiles`
@@ -499,10 +513,18 @@ hands the texts to every component (`TextsProvider`, `useTexts`),
 
 Screens: `src/screens/start-screen.tsx` shows the logo (`assets/brand/svg/`) as the level 1 heading,
 the main menu (Play and Quit) with the keyboard focus on Play, and the version as code in the
-footer. `src/screens/save-slot-screen.tsx` shows the title, the three save slots and Back; every
-slot is a button: an empty one opens the new game screen for it, one with a game shows the player's
-name and the mode and returns to the game; the first slot, or the one the player comes back from,
-has the focus; Esc also goes back (ADR 0092, ADR 0094). `src/screens/new-game-screen.tsx` is a form
+footer. `src/screens/save-slot-screen.tsx` shows the title, the three save slots, a status line
+for messages about a slot and Back; every slot is a button: an empty one opens the new game screen
+for it, one with a game shows the player's name, the mode, the solved tickets, the play time and
+when it was last played and resumes the game, a locked one says why and is `aria-disabled`; the
+first slot, or the one the player comes back from, has the focus; Esc also goes back (ADR 0092,
+ADR 0094, ADR 0106). Next to every slot, `src/screens/slot-menu.tsx` is a menu button after the
+WAI-ARIA pattern with the slot's actions: Export for a game, Import for every slot, Delete for a
+slot with a save (ADR 0107); Delete, and an import over a save, ask first in
+`src/screens/confirm-dialog.tsx`, a modal alert dialog with the focus on Cancel. The app root
+exports a slot's game through the desktop's save dialog with the suggested file name
+`exportFileName`, and reads an imported file with `readImport`, which refuses files that are no
+playable save with a reason the status line names. `src/screens/new-game-screen.tsx` is a form
 with the player's name, the Linux user name (derived with `deriveUserName` until the player edits
 it, checked with `checkUserName` against the reserved names) and the mode as two radio buttons drawn
 as cards; each problem code has a catalog text in a live region that describes its field, and Start
@@ -515,7 +537,10 @@ of its kind of work (ADR 0096); its tickets panel shows what the game screen giv
 screen keeps the chosen tab, because F1 brings the tickets panel to the front (ADR 0098). The game
 screen keeps the game (ADR 0099): the ticket being played, the progress of every ticket the player
 opened and the latest terminal state of each (`onStateChange`), so a ticket the player comes back
-to goes on where they left it; a ticket opened for the first time starts at `GAME_START_TIME`. The
+to goes on where they left it. It plays a save (ADR 0106): every ticket's progress is rebuilt from
+its record (`progressFromRecord`), a ticket is resumed at its checkpoint (`resumeTicket`), and one
+game time runs on across the tickets (ADR 0104). It reports the game as a save keeps it
+(`onProgress`), asking for an autosave after every change of the progress or the open ticket. The
 terminal and the ticket panel are keyed by the level, and the terminal's input line has the focus.
 The terminal reports the game events of every input (`onGameEvents`), and the game screen adds
 them up to the ticket's progress, which the ticket panel and the top bar's guide words (chapter,
@@ -600,8 +625,8 @@ ratios. Its layout is
 `src/styleguide/` and its build reads only `index.html`; both are tested.
 
 `src/desktop-api.ts` defines
-the preload contract (`DesktopApi`: `getAppInfo`, `quit`, and `saves`, the save slot files as
-texts, ADR 0105); `src/index.ts` exports only its types, for `apps/desktop`.
+the preload contract (`DesktopApi`: `getAppInfo`, `quit`, `setCloseHandler`, and `saves`, the
+save slot files as texts, ADR 0105, ADR 0106); `src/index.ts` exports only its types, for `apps/desktop`.
 
 ## Desktop (`apps/desktop`)
 
@@ -622,8 +647,13 @@ apps/desktop/
   build/                    app icons that electron-builder reads while packaging (ADR 0040)
   playwright.config.ts      end-to-end tests against the built and the packaged app
   src/main/index.ts         app start, hardening of all web contents and the session, IPC handlers
-                            (app info; quit; save files), each answering only the app's own page
+                            (app info; quit; save files; export and import), each answering only the app's own page
                             and validating every argument
+  src/main/close-guard.ts   holds the window's close back until the page has saved, at most 5 s
+                            (ADR 0106)
+  src/main/save-transfer.ts  export and import of a slot through the system's file dialogs:
+                            checks the request, writes the text or reads the chosen file
+                            (ADR 0107)
   src/main/save-store.ts    the save slot files in <userData>/saves as texts: atomic writes with
                             the replaced save as backup, restore, delete, one operation per slot
                             at a time, rename retries on Windows (ADR 0105)

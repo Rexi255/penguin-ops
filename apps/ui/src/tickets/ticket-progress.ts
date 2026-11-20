@@ -3,9 +3,11 @@
 // the game said about it, in the order it said them. The game events of every input that ran
 // update it. It also counts the hints the player has asked for with F1 or the game command `hint`
 // (M3.5b, M3.6b, ADR 0098, ADR 0103) and keeps the extra goals the player has reached (M3.5d,
-// ADR 0100). The functions are pure, so the tests need no DOM.
+// ADR 0100). A save keeps it as a ticket record and rebuilds it from one (M3.7c, ADR 0106). The
+// functions are pure, so the tests need no DOM.
 
-import { type GameEvent, HINT_COUNT } from "@penguin-ops/gameplay";
+import type { Level } from "@penguin-ops/content";
+import { type GameEvent, HINT_COUNT, type TicketRecord } from "@penguin-ops/gameplay";
 
 /** A message of the game about the ticket. */
 export type TicketMessage =
@@ -116,4 +118,48 @@ export function stepPosition(
     return undefined;
   }
   return { current: Math.min(progress.completedSteps + 1, stepCount), count: stepCount };
+}
+
+/**
+ * The progress of a saved ticket of `level` (ADR 0104, ADR 0106): its completed steps follow from
+ * the checkpoint, and the messages are rebuilt from the completed steps and the reached extra
+ * goals, in that order. Tips are not saved. `record` must fit the level (`fitSaveToContent`).
+ */
+export function progressFromRecord(level: Level, record: TicketRecord): TicketProgress {
+  const steps = level.steps ?? [];
+  const completedSteps = record.solved
+    ? steps.length
+    : steps.findIndex((step) => step.id === record.checkpoint) + 1;
+  const stepMessages = steps
+    .slice(0, completedSteps)
+    .flatMap((step): TicketMessage[] =>
+      step.say === undefined ? [] : [{ kind: "step", say: step.say }],
+    );
+  const goalMessages = record.reachedExtraGoals.flatMap((id): TicketMessage[] => {
+    const goal = level.extraGoals.find((candidate) => candidate.id === id);
+    return goal === undefined ? [] : [{ kind: "extra-goal", id, xp: goal.xp }];
+  });
+  return {
+    completedSteps,
+    solved: record.solved,
+    messages: [...stepMessages, ...goalMessages],
+    reachedExtraGoals: record.reachedExtraGoals,
+    hintsShown: record.hintsShown,
+  };
+}
+
+/**
+ * What a save keeps of the ticket of `level` with `progress`: the checkpoint is the ID of the
+ * last completed step (`lastCompletedStep`).
+ */
+export function ticketRecordOf(level: Level, progress: TicketProgress): TicketRecord {
+  const checkpoint =
+    progress.completedSteps === 0 ? undefined : level.steps?.[progress.completedSteps - 1]?.id;
+  return {
+    level: level.id,
+    solved: progress.solved,
+    ...(checkpoint === undefined ? {} : { checkpoint }),
+    hintsShown: progress.hintsShown,
+    reachedExtraGoals: progress.reachedExtraGoals,
+  };
 }

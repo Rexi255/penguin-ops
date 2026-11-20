@@ -72,8 +72,8 @@ test("runs the renderer without Node.js and exposes only the desktop API", async
   expect(globals).toEqual({
     require: "undefined",
     process: "undefined",
-    desktopApi: ["getAppInfo", "quit", "saves"],
-    saves: ["readSlots", "writeSlot", "restoreBackup", "deleteSlot"],
+    desktopApi: ["getAppInfo", "quit", "setCloseHandler", "saves"],
+    saves: ["readSlots", "writeSlot", "restoreBackup", "deleteSlot", "exportSave", "importSave"],
   });
 });
 

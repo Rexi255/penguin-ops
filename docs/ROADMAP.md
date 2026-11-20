@@ -221,15 +221,15 @@ inventing it along the way.
   - [x] M3.6a A text of its own for every game notice, in both languages (ADR 0102).
   - [x] M3.6b Game commands `help` (overview and `help NAME` for every simulated command) and
         `hint` (the ticket's next hint, counted with F1, also shown in the terminal) (ADR 0103).
-- [ ] M3.7 Save system: three slots, metadata, autosave, atomic write and backup, versioned
+- [x] M3.7 Save system: three slots, metadata, autosave, atomic write and backup, versioned
       format with migration test, export and import (ADR 0013).
   - [x] M3.7a Save game format: the fields of a slot, writing and reading with problem codes,
         migrations and stored example saves; one game time per game (ADR 0104).
   - [x] M3.7b Save files in the main process: per-user data folder, atomic write, backup, IPC
         (ADR 0105).
-  - [ ] M3.7c Saving and resuming: autosave, slot metadata on the slot screen, resuming at the
-        checkpoint with the game time running on across tickets.
-  - [ ] M3.7d Export and import of a slot as a file.
+  - [x] M3.7c Saving and resuming: autosave, slot metadata on the slot screen, resuming at the
+        checkpoint with the game time running on across tickets; slot menu with Delete (ADR 0106).
+  - [x] M3.7d Export and import of a slot as a file (ADR 0107).
 - [ ] M3.8 Settings: language (OS default), volumes, fullscreen (F11), font size, colour
       scheme, effects, reduce motion; language switch restarts the ticket.
 - [ ] M3.9 Colour schemes and effects: retro CRT, Solarized and high contrast as value sets
@@ -294,6 +294,8 @@ AppImage runs on Linux, and chapters 0–2 are playable in both languages.
 
 ## Ideas (not planned)
 
+- Rename the Linux user of a save that a later world locks because its user name is now
+  reserved, instead of only deleting or replacing it (ADR 0106).
 - Pictures or symbols on the mode cards of the new game screen, such as a trainee badge on
   Career and a sandbox on Sandbox (ADR 0094).
 - A small simulated internet beyond the company network (ADR 0009).

@@ -151,15 +151,23 @@ pre {
   list-style: none;
 }
 
+/* A row of the list: the slot and, for a slot with a save, the button of its menu (ADR 0106). The
+   menu button has a column of its own, so that every slot is equally wide. */
+.save-slot-row {
+  display: grid;
+  grid-template-columns: calc(var(--cell-inline) * 45) calc(var(--cell-block) * 2);
+  gap: var(--space-1);
+  max-inline-size: 100%;
+}
+
 /* A slot sits flush like a unit in a rack (the Flat Rack Rule): a panel row with its name on the
-   left and its state on the right. It is a button that lightens on hover like the standard
-   button. */
+   left and its state on the right, and the details of its game below. It is a button that
+   lightens on hover like the standard button. */
 .save-slot {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: var(--space-4);
-  inline-size: calc(var(--cell-inline) * 45);
+  flex-direction: column;
+  gap: var(--space-1);
+  min-inline-size: 0;
   max-inline-size: 100%;
   padding: var(--space-3) var(--space-4);
   border: none;
@@ -183,8 +191,37 @@ pre {
   background: var(--color-surface-selection);
 }
 
+/* A slot whose save the game cannot play is no control: it does not lighten. */
+.save-slot--locked,
+.save-slot--locked:hover,
+.save-slot--locked:active {
+  background: var(--color-surface-panel);
+  cursor: default;
+}
+
+.save-slot__heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-4);
+}
+
+/* The details of a game: solved tickets, play time and when it was last played, as meta data. */
+.save-slot__details {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--text-hint-size);
+  font-weight: var(--font-weight-control);
+  line-height: var(--text-hint-leading);
+}
+
+/* The slot's name keeps its width when a long state wraps beside it. */
 .save-slot__name {
+  flex: none;
   font-weight: var(--font-weight-heading);
+  white-space: nowrap;
 }
 
 /* The state: "New game", or the player's name and the mode. A long name wraps instead of pushing
@@ -194,6 +231,88 @@ pre {
   color: var(--color-text-muted);
   overflow-wrap: anywhere;
   text-align: end;
+}
+
+/* The slots and the message about them, close together. */
+.save-slot-screen__group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* The message about a slot, such as that it was deleted. It keeps its height while it is empty, so
+   the screen does not jump. */
+.save-slot-screen__message {
+  min-block-size: var(--text-hint-leading);
+  margin: 0;
+  font-size: var(--text-hint-size);
+  font-weight: var(--font-weight-control);
+  line-height: var(--text-hint-leading);
+}
+
+/* The menu of a slot: a button with three dots next to it, as high as the slot, and the list of
+   the slot's actions that floats below it with one soft shadow, because it covers the slots under
+   it (DESIGN.md, Elevation & Depth). */
+.slot-menu {
+  position: relative;
+  display: flex;
+}
+
+.slot-menu__button {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-corner);
+  background: var(--color-surface-panel);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background-color var(--motion-duration-state) var(--motion-easing-state);
+}
+
+.slot-menu__button:hover,
+.slot-menu__button[aria-expanded="true"] {
+  background: var(--color-surface-raised);
+}
+
+.slot-menu__list {
+  position: absolute;
+  inset-block-start: calc(100% + var(--space-1));
+  inset-inline-end: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-inline-size: calc(var(--cell-inline) * 20);
+  margin: 0;
+  padding: var(--space-1);
+  border: var(--border-width-rule) solid var(--color-rule);
+  border-radius: var(--radius-corner);
+  background: var(--color-surface-ground);
+  box-shadow: var(--shadow-floating);
+  list-style: none;
+}
+
+.slot-menu__entry {
+  inline-size: 100%;
+  padding: var(--space-1) var(--space-2);
+  border: none;
+  border-radius: var(--radius-corner);
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-size: var(--text-body-size);
+  font-weight: var(--font-weight-control);
+  line-height: var(--text-body-leading);
+  text-align: start;
+  cursor: pointer;
+}
+
+.slot-menu__entry:hover,
+.slot-menu__entry:focus-visible {
+  background: var(--color-surface-raised);
 }
 
 /* The new game screen: one form column of 61 cells in the middle of the ground, wide enough for
@@ -1102,6 +1221,61 @@ pre {
   font-size: var(--text-title-size);
   font-weight: var(--font-weight-heading);
   line-height: var(--text-title-leading);
+}
+
+/* A question before an action that cannot be undone: a floating dialog like the pause menu, with
+   its text and the buttons Cancel and the action. */
+.dialog-layer {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+.dialog {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-inline-size: calc(var(--cell-inline) * 50);
+  padding: var(--space-6);
+  border: var(--border-width-rule) solid var(--color-rule);
+  border-radius: var(--radius-corner);
+  background: var(--color-surface-ground);
+  box-shadow: var(--shadow-floating);
+}
+
+.dialog__title {
+  margin: 0;
+  font-size: var(--text-title-size);
+  font-weight: var(--font-weight-heading);
+  line-height: var(--text-title-leading);
+}
+
+.dialog__text {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+/* The footer's alert after a failed save, at the end of the footer in the red of real errors; the
+   text says what is wrong. */
+.save-warning {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+  margin-inline-start: auto;
+  color: var(--color-cable-incident);
+  font-size: var(--text-hint-size);
+  font-weight: var(--font-weight-control);
+  line-height: var(--text-hint-leading);
 }
 
 /* Text for screen readers only, such as the heading of a screen whose areas name themselves. */

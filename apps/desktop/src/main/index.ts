@@ -6,6 +6,7 @@ import type { AppInfo } from "@penguin-ops/ui";
 import {
   app,
   BrowserWindow,
+  dialog,
   ipcMain,
   type IpcMainEvent,
   type IpcMainInvokeEvent,
@@ -13,7 +14,19 @@ import {
 } from "electron";
 
 import { IPC_CHANNELS } from "../shared/ipc-channels";
-import { checkSaveText, checkSlot, createSaveStore, type SaveStore } from "./save-store";
+import {
+  checkSaveText,
+  checkSlot,
+  createSaveStore,
+  NODE_FILE_SYSTEM,
+  type SaveStore,
+} from "./save-store";
+import {
+  exportSave,
+  importSave,
+  type SaveDialogs,
+  type SaveTransferOptions,
+} from "./save-transfer";
 import { isAllowedRequest, isTrustedSender, type AppLocation } from "./security";
 import { createMainWindow } from "./window";
 
@@ -64,13 +77,50 @@ function isFromApp(event: IpcMainEvent | IpcMainInvokeEvent): boolean {
  * Answers `channel` with `handler` for the app's own page only. The handler gets the arguments
  * as `unknown`: it validates every one before it uses it (ADR 0014).
  */
-function handleFromApp(channel: string, handler: (...args: readonly unknown[]) => unknown): void {
-  ipcMain.handle(channel, (event, ...args: unknown[]) => {
+function handleFromApp(
+  channel: string,
+  handler: (argument: unknown, second: unknown, event: IpcMainInvokeEvent) => unknown,
+): void {
+  ipcMain.handle(channel, (event, argument: unknown, second: unknown) => {
     if (!isFromApp(event)) {
       throw new Error(`Rejected ${channel} from an untrusted sender.`);
     }
-    return handler(...args);
+    return handler(argument, second, event);
   });
+}
+
+/** The system's file dialogs for export and import, modal to the window that asked. */
+function saveDialogs(event: IpcMainInvokeEvent): SaveDialogs {
+  return {
+    chooseExportPath: async ({ title, defaultPath, fileType }) => {
+      const options = { title, defaultPath, filters: [{ name: fileType, extensions: ["json"] }] };
+      const window = BrowserWindow.fromWebContents(event.sender);
+      const result = await (window === null
+        ? dialog.showSaveDialog(options)
+        : dialog.showSaveDialog(window, options));
+      return result.canceled || result.filePath === "" ? undefined : result.filePath;
+    },
+    chooseImportPath: async ({ title, fileType }) => {
+      const options = {
+        title,
+        filters: [{ name: fileType, extensions: ["json"] }],
+        properties: ["openFile" as const],
+      };
+      const window = BrowserWindow.fromWebContents(event.sender);
+      const result = await (window === null
+        ? dialog.showOpenDialog(options)
+        : dialog.showOpenDialog(window, options));
+      return result.canceled ? undefined : result.filePaths[0];
+    },
+  };
+}
+
+function transferOptions(event: IpcMainInvokeEvent): SaveTransferOptions {
+  return {
+    dialogs: saveDialogs(event),
+    fileSystem: NODE_FILE_SYSTEM,
+    exportFolder: app.getPath("documents"),
+  };
 }
 
 function registerIpcHandlers(saves: SaveStore): void {
@@ -92,6 +142,13 @@ function registerIpcHandlers(saves: SaveStore): void {
     checkSlot(slot);
     return saves.deleteSlot(slot);
   });
+  // The transfer checks the request before it shows a dialog.
+  handleFromApp(IPC_CHANNELS.exportSave, (request, _second, event) =>
+    exportSave(request, transferOptions(event)),
+  );
+  handleFromApp(IPC_CHANNELS.importSave, (request, _second, event) =>
+    importSave(request, transferOptions(event)),
+  );
   // A one-way message: the renderer does not wait for an answer while the app closes.
   ipcMain.on(IPC_CHANNELS.quit, (event) => {
     if (!isFromApp(event)) {

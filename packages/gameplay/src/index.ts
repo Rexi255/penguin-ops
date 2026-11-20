@@ -65,6 +65,7 @@ export {
   REFERENCE_START_TIME,
   type SolutionProblem,
 } from "./reference-solutions";
+export { fitSaveToContent, newTicketRecord, resumeTicket } from "./resume";
 export {
   HINT_COUNT,
   migrateSave,

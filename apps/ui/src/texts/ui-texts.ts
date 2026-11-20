@@ -42,6 +42,70 @@ export const UI_TEXT_PLACEHOLDERS = {
   "slots.new-game": [],
   /** The state of a slot with a game; `player` is the player's name, `mode` the mode's name. */
   "slots.game": ["player", "mode"],
+  /** How many tickets a slot's game has solved; `count` is a number. */
+  "slots.solved": ["count"],
+  /** The play time of a slot's game under an hour; `minutes` is a number. */
+  "slots.play-time-minutes": ["minutes"],
+  /** The play time of a slot's game from an hour; `hours` and `minutes` are numbers. */
+  "slots.play-time-hours": ["hours", "minutes"],
+  /** When a slot's game was last played; `date` is the date and time in the player's language. */
+  "slots.last-played": ["date"],
+  /** The state of a slot whose save and backup cannot be read (ADR 0106). */
+  "slots.damaged": [],
+  /** The state of a slot whose save a newer version of the game wrote. */
+  "slots.too-new": [],
+  /** The state of a slot whose user name the game's worlds now hold. */
+  "slots.user-name-taken": [],
+  /** The accessible name of a slot's menu and its button; `number` counts from 1. */
+  "slots.actions": ["number"],
+  /** The slot menu entry that exports a slot's game to a file (ADR 0107). */
+  "slots.export": [],
+  /** The slot menu entry that imports a file into a slot. */
+  "slots.import": [],
+  /** The slot menu entry and the dialog button that delete a slot. */
+  "slots.delete": [],
+  /** The question before a slot is deleted; `number` counts from 1. */
+  "slots.delete-title": ["number"],
+  /** What deleting a slot with a game does; `player` is the player's name. */
+  "slots.delete-game": ["player"],
+  /** What deleting a slot whose save cannot be played does. */
+  "slots.delete-save": [],
+  /** The dialog button that keeps the slot. */
+  "slots.cancel": [],
+  /** The message after a slot was deleted; `number` counts from 1. */
+  "slots.deleted": ["number"],
+  /** The message when a slot could not be deleted; `number` counts from 1. */
+  "slots.delete-failed": ["number"],
+  /** The title of the system's dialog that exports a slot; `number` counts from 1. */
+  "slots.export-title": ["number"],
+  /** The title of the system's dialog that imports into a slot; `number` counts from 1. */
+  "slots.import-title": ["number"],
+  /** The name of the save file type in the system's file dialogs. */
+  "slots.file-type": [],
+  /** The message after a slot was exported; `number` counts from 1. */
+  "slots.exported": ["number"],
+  /** The message when a slot could not be exported; `number` counts from 1. */
+  "slots.export-failed": ["number"],
+  /** The message after a game was imported; `number` counts from 1. */
+  "slots.imported": ["number"],
+  /** The message when a file could not be read or the game not written; `number` from 1. */
+  "slots.import-failed": ["number"],
+  /** The import problem `not-a-save`; `number` counts from 1. */
+  "slots.import-not-a-save": ["number"],
+  /** The import problem `damaged`; `number` counts from 1. */
+  "slots.import-damaged": ["number"],
+  /** The import problem `too-new`; `number` counts from 1. */
+  "slots.import-too-new": ["number"],
+  /** The import problem `user-name-taken`; `number` counts from 1. */
+  "slots.import-user-name-taken": ["number"],
+  /** The question before an import replaces a slot's save; `number` counts from 1. */
+  "slots.replace-title": ["number"],
+  /** What the import does to a slot with a game; `player` and `imported` are players' names. */
+  "slots.replace-game": ["player", "imported"],
+  /** What the import does to a slot whose save cannot be played; `imported` is a player's name. */
+  "slots.replace-save": ["imported"],
+  /** The dialog button that replaces a slot's save with the imported game. */
+  "slots.replace": [],
   /** The button that returns from the save slot screen to the start screen. */
   "slots.back": [],
   /** The name of the Story mode (ADR 0017), shown as "Career": its card title and on a slot. */
@@ -108,6 +172,8 @@ export const UI_TEXT_PLACEHOLDERS = {
   "game.complete": [],
   /** The key hint that opens the pause menu, after the key's label. */
   "game.menu": [],
+  /** The footer's alert while the game's latest save failed (ADR 0106). */
+  "game.not-saved": [],
   /** Where the player is in a ticket with steps; `current` counts from 1, `count` is the total. */
   "ticket.step": ["current", "count"],
   /** The state of a solved ticket. */

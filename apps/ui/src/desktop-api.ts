@@ -24,6 +24,26 @@ export interface StoredSlot {
   readonly backup: StoredFile;
 }
 
+/** The texts of a file dialog in the player's language. */
+export interface FileDialogTexts {
+  /** The dialog's title. */
+  readonly title: string;
+  /** The name of the file type in the dialog's filter, such as "PenguinOps save". */
+  readonly fileType: string;
+}
+
+/** What `exportSave` writes, and where the dialog suggests to write it. */
+export interface ExportRequest extends FileDialogTexts {
+  /** The save's text. */
+  readonly text: string;
+  /** The suggested file name: lowercase letters, digits and hyphens, ending in `.json`. */
+  readonly fileName: string;
+}
+
+/** The file the player chose to import, or that they canceled the dialog. */
+export type ImportedFile =
+  { readonly kind: "canceled" } | { readonly kind: "file"; readonly file: StoredFile };
+
 /**
  * The save slot files in the per-user data folder (ADR 0013, ADR 0105). The desktop stores the
  * texts without reading them; the UI parses and migrates them with the gameplay package. A slot
@@ -39,6 +59,13 @@ export interface SaveFilesApi {
   readonly restoreBackup: (slot: number) => Promise<void>;
   /** Removes the slot's save and backup. */
   readonly deleteSlot: (slot: number) => Promise<void>;
+  /**
+   * Asks the player in the system's file dialog where to export a save and writes it there
+   * (ADR 0107); `canceled` when the player cancels the dialog.
+   */
+  readonly exportSave: (request: ExportRequest) => Promise<"saved" | "canceled">;
+  /** Asks the player in the system's file dialog which file to import and reads its text. */
+  readonly importSave: (texts: FileDialogTexts) => Promise<ImportedFile>;
 }
 
 /** Functions the desktop shell offers to the renderer. */
@@ -47,6 +74,11 @@ export interface DesktopApi {
   readonly getAppInfo: () => Promise<AppInfo>;
   /** Closes the game. */
   readonly quit: () => void;
+  /**
+   * Sets what the page does before the window closes, for its close button as for `quit`: the
+   * window waits until the promise settles, at most a few seconds (ADR 0106).
+   */
+  readonly setCloseHandler: (handler: () => Promise<void>) => void;
   /** The save slot files. */
   readonly saves: SaveFilesApi;
 }

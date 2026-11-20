@@ -11,8 +11,18 @@ project uses [Semantic Versioning](https://semver.org/).
 - The game opens on a start screen with the PenguinOps logo, a main menu and the version. The
   menu has Play and Quit; Play has the keyboard focus, so Enter works at once. The game is in
   German when the system's language is German and in English otherwise.
-- Play opens the save slot screen with three save slots. They are all empty until saving
-  exists; choosing one starts a new game. Back or Esc returns to the start screen.
+- Play opens the save slot screen with three save slots. An empty slot starts a new game; a slot
+  with a game shows your name, the mode, how many tickets you have solved, how long you have
+  played and when you last played, and continues the game. Back or Esc returns to the start
+  screen.
+- The game saves itself: when a game starts, after every solved ticket, finished step, hint and
+  ticket you open, when you go back to the main menu and when you close the window. A ticket with
+  several steps continues after the last finished step; the terminal starts empty. If saving
+  fails, the footer says so. A damaged save, or one from a newer version of PenguinOps, is
+  shown as such and left alone.
+- The button with three dots next to a slot opens its menu. Export saves the slot's game as a
+  file wherever you choose, for a backup or another PC; Import loads such a file into the slot,
+  after asking if it would replace a game. Delete removes the game after you confirm it.
 - The game screen shows the workplace: a top bar, the side panel, the terminal and a footer
   with key hints. The side panel has the tabs Tickets, Mail and Handbook: click one, or press
   Shift+Tab in the terminal twice and switch with the arrow keys. Mail and the handbook are

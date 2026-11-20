@@ -14,6 +14,38 @@ slots:
   slot: Spielstand {number}
   new-game: Neues Spiel
   game: "{player} · {mode}"
+  solved: "{count, plural, one {# Ticket gelöst} other {# Tickets gelöst}}"
+  play-time-minutes: "{minutes} Min. gespielt"
+  play-time-hours: "{hours} Std. {minutes} Min. gespielt"
+  last-played: "Zuletzt gespielt: {date}"
+  damaged: Dieser Spielstand ist beschädigt und kann nicht geladen werden.
+  too-new: Eine neuere Version von PenguinOps hat dieses Spiel gespeichert.
+  user-name-taken: Der Benutzername dieses Spiels ist jetzt im System vergeben.
+  actions: "Aktionen für Spielstand {number}"
+  export: Exportieren
+  import: Importieren
+  delete: Löschen
+  delete-title: "Spielstand {number} löschen?"
+  delete-game: "Das Spiel von {player} wird endgültig gelöscht."
+  delete-save: Der Spielstand wird endgültig gelöscht.
+  cancel: Abbrechen
+  deleted: "Spielstand {number} wurde gelöscht."
+  delete-failed: "Spielstand {number} konnte nicht gelöscht werden."
+  export-title: "Spielstand {number} exportieren"
+  import-title: "In Spielstand {number} importieren"
+  file-type: PenguinOps-Spielstand
+  exported: "Spielstand {number} wurde exportiert."
+  export-failed: "Spielstand {number} konnte nicht exportiert werden."
+  imported: "Das Spiel wurde in Spielstand {number} importiert."
+  import-failed: "Das Spiel konnte nicht importiert werden. Spielstand {number} bleibt, wie er ist."
+  import-not-a-save: "Die Datei ist kein PenguinOps-Spielstand. Spielstand {number} bleibt, wie er ist."
+  import-damaged: "Der Spielstand in der Datei ist beschädigt. Spielstand {number} bleibt, wie er ist."
+  import-too-new: "Eine neuere Version von PenguinOps hat die Datei gespeichert. Spielstand {number} bleibt, wie er ist."
+  import-user-name-taken: "Der Benutzername des Spiels ist im System vergeben. Spielstand {number} bleibt, wie er ist."
+  replace-title: "Spielstand {number} ersetzen?"
+  replace-game: "Das Spiel von {player} wird durch das Spiel von {imported} ersetzt."
+  replace-save: "Der Spielstand wird durch das Spiel von {imported} ersetzt."
+  replace: Ersetzen
   back: Zurück
 modes:
   story: Karriere
@@ -50,6 +82,7 @@ game:
   hint: Hinweis
   complete: Vervollständigen
   menu: Menü
+  not-saved: "Nicht gespeichert: Das Spiel konnte seinen Spielstand nicht schreiben."
 ticket:
   step: "Schritt {current} von {count}"
   solved: Gelöst

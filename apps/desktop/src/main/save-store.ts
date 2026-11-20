@@ -96,6 +96,24 @@ function errorCode(error: unknown): string | undefined {
   return undefined;
 }
 
+/**
+ * Reads the save file at `path`: `missing` if there is none, `unreadable` if it is no file, is
+ * longer than `MAX_SAVE_TEXT_LENGTH` or cannot be read.
+ */
+export async function readStoredFile(fs: SaveFileSystem, path: string): Promise<StoredFile> {
+  try {
+    const stats = await fs.stat(path);
+    // UTF-8 needs at most three bytes for a UTF-16 code unit, so a larger file is too long.
+    if (!stats.isFile() || stats.size > MAX_SAVE_TEXT_LENGTH * 3) {
+      return { kind: "unreadable" };
+    }
+    const text = await fs.readFile(path, "utf8");
+    return text.length > MAX_SAVE_TEXT_LENGTH ? { kind: "unreadable" } : { kind: "text", text };
+  } catch (error) {
+    return errorCode(error) === "ENOENT" ? { kind: "missing" } : { kind: "unreadable" };
+  }
+}
+
 /** Throws a TypeError unless `slot` is the index of a save slot. */
 export function checkSlot(slot: unknown): asserts slot is number {
   if (typeof slot !== "number" || !Number.isInteger(slot) || slot < 0 || slot >= SAVE_SLOT_COUNT) {
@@ -169,20 +187,6 @@ export function createSaveStore(directory: string, options: SaveStoreOptions = {
     }
   }
 
-  async function readStoredFile(path: string): Promise<StoredFile> {
-    try {
-      const stats = await fs.stat(path);
-      // A UTF-8 file has at least as many bytes as its text has UTF-16 code units.
-      if (!stats.isFile() || stats.size > MAX_SAVE_TEXT_LENGTH * 3) {
-        return { kind: "unreadable" };
-      }
-      const text = await fs.readFile(path, "utf8");
-      return text.length > MAX_SAVE_TEXT_LENGTH ? { kind: "unreadable" } : { kind: "text", text };
-    } catch (error) {
-      return errorCode(error) === "ENOENT" ? { kind: "missing" } : { kind: "unreadable" };
-    }
-  }
-
   async function exists(path: string): Promise<boolean> {
     try {
       await fs.stat(path);
@@ -214,7 +218,10 @@ export function createSaveStore(directory: string, options: SaveStoreOptions = {
         Array.from({ length: SAVE_SLOT_COUNT }, (_, slot) =>
           queued(slot, async (): Promise<StoredSlot> => {
             const { save, backup } = paths(slot);
-            return { save: await readStoredFile(save), backup: await readStoredFile(backup) };
+            return {
+              save: await readStoredFile(fs, save),
+              backup: await readStoredFile(fs, backup),
+            };
           }),
         ),
       ),
