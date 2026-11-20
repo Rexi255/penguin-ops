@@ -1,6 +1,8 @@
 # 0097. Ticket panel with step segments and messages, and the top bar's guide words
 
-- Status: Accepted
+- Status: Accepted; partly superseded by
+  [0099](0099-chapter-inbox-chapter-titles-in-the-ui-catalogs-and-a-terminal-per-ticket.md) (the
+  order in which Shift+Tab leaves the terminal)
 - Date: 2026-11-20
 - Supersedes: [0096](0096-side-panel-tabs-and-key-hints-of-the-workplace-layout.md) (only the empty
   tickets panel and the focus order)

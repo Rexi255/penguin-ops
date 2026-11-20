@@ -4,6 +4,12 @@ _Last updated: 2026-11-20_
 
 ## Recently completed
 
+- M3.5c Chapter inbox: "Back to the inbox" in the Tickets tab lists every open chapter (title,
+  "1 of 3 solved") with its tickets as rows (New, In progress, Solved; the current one framed in
+  fibre orange). Story mode opens a chapter when the ones before it are solved, Sandbox opens all
+  (pure model `packages/gameplay/src/inbox.ts`). A solved ticket offers the next one and names a
+  chapter it opened; every opened ticket keeps its terminal and progress. Chapter titles are UI
+  texts `chapters.<id>`, checked by the content loader; the top bar shows the chapter (ADR 0099).
 - M3.5b Hints and explanation: F1 or the footer's "F1 Hint" shows the ticket's next hint (tip,
   concrete tip, solution) in a "Hints" section of the ticket panel, in its own polite live region,
   and brings the Tickets tab to the front while the focus stays in the terminal; hints stay after
@@ -31,10 +37,6 @@ _Last updated: 2026-11-20_
   key; typed text comes from a transparent text field, so AltGr and dead keys work; unsimulated
   readline Ctrl keys are swallowed (ADR 0095). Model, component and end-to-end tests in both
   languages with axe-core.
-- M3.2b New game screen (M3.2 complete): an empty slot opens "New game" with the player's name,
-  the Linux user name (derived while typing until the player edits it), a catalog text for
-  every problem code in a live region, and the mode as two cards, Career (Story, the default)
-  and Sandbox; Start fills the slot in memory (until M3.7) and opens the game (ADR 0094).
 
 ## In progress
 
@@ -42,17 +44,17 @@ _Last updated: 2026-11-20_
 
 ## Next 3 steps
 
-1. ROADMAP M3.5c: chapter inbox (ticket list, the next ticket after solving) and extra goals.
+1. ROADMAP M3.5d: extra goals in the ticket panel.
 2. ROADMAP M3.6: game commands `help` and `hint`; engine notices in the player's language.
 3. ROADMAP M3.7: save system (three slots, autosave, versioned format).
 
 ## Blockers and open questions
 
-- The start, save slot, new game and game screens, the pause menu, the terminal and the ticket
-  panel have no screenshot tests yet; the screenshot test setup for all screens, languages and
+- The start, save slot, new game and game screens, the pause menu, the terminal, the ticket
+  panel and the inbox have no screenshot tests yet; the screenshot test setup for all screens, languages and
   colour schemes is ROADMAP M3.15.
-- The texts of the five prototype levels and the office world's host name `itdesk` were
-  written as test content without the owner's review (the prototype's source is not in the
+- The texts of the five prototype levels, the three chapter titles and the office world's host
+  name `itdesk` were written as test content without the owner's review (the prototype's source is not in the
   repository, so levels 2 to 5 follow the titles in `docs/CURRICULUM.md`); the story workshop
   (M4) replaces them.
 - Linux is verified only by CI; the owner plays on Windows and has no Linux machine, so no
@@ -65,8 +67,10 @@ _Last updated: 2026-11-20_
   with `STYLEGUIDE_CHROMIUM_PATH` set to the preinstalled Chromium.
 - Steam release is assumed to be "maybe later" (ADR 0002); confirm with the owner when it
   becomes relevant.
-- The ticket's messages and hint count live only in the game screen; the save system (M3.7) has
-  to keep or rebuild them when it resumes a ticket at a checkpoint (ADR 0097, ADR 0098).
+- The game lives only in the game screen: the started and solved tickets, each ticket's messages
+  and hint count and its terminal. The save system (M3.7) has to keep or rebuild them when it
+  resumes a ticket at a checkpoint, and decide how game time runs across tickets, which each
+  start at the game's start time now (ADR 0097, ADR 0098, ADR 0099).
 - A later world that adds an account with a name an existing save already uses would collide
   with that save (ADR 0093); M3.7 or M4 decides how to handle it. The reserved Debian accounts
   are verified in M6.

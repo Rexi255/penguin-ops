@@ -344,7 +344,9 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   `chaptersSchema` checks `content/chapters.yaml` (chapter IDs and their level IDs in order).
   `loadContent({ chapters, levels })` reads the chapters file and every `level.yaml` from
   `{ file, text }` pairs, then checks the files against each other: the folder name is the
-  level ID, every listed level exists, every level is in exactly one chapter. It returns the
+  level ID, every listed level exists, every level is in exactly one chapter, and every
+  chapter has a title `chapters.<id>` in the English UI catalog and no title lacks a chapter
+  (`chapterTitleKey`, ADR 0099). It returns the
   chapters and the levels by ID in chapter order, or all problems of all files. The caller
   finds and reads the files; `sortContentFiles` (`src/content-files.ts`, ADR 0090) sorts files
   by their path (`content/...`) into the inputs of `loadContent` and reports files that are not
@@ -436,7 +438,13 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   and each extra goal with the state of every rule inside `all`, `any` and `not`. Unknown
   levels, steps and solutions throw a `DeveloperModeError`. The developer mode UI (M3.16)
   builds on it.
-- Campaign: chapters, inbox, unlocking, Story and Sandbox modes, playground (ADR 0017).
+- Chapter inbox (`src/inbox.ts`, ADR 0017, ADR 0099): pure functions over the content's chapters
+  and the levels started and solved (`CampaignProgress`). `openChapters` gives the open chapters
+  (every chapter in Sandbox mode; in Story mode the first and each one whose earlier chapters
+  are solved), `inbox` the open chapters with each ticket's state (`new`, `started`, `solved`),
+  `nextTicket` the ticket offered after a solved one, and `isTicketOpen`, `chapterOf` and
+  `ticketState` the single answers.
+- Campaign, still planned: the playground (ADR 0017).
 - Progress: XP, ranks, achievements (ADR 0018).
 - Save data model with format version and migrations; settings model (ADR 0013).
 
@@ -460,7 +468,8 @@ React state of the union type `Screen`, whose members carry their slot where the
 picks the screen component with an exhaustive `switch`; screens get callbacks such as `onPlay`
 and `onBack` and do not know each other. Until the save system (M3.7), the app root also holds
 the game of each of the three slots (`NewGame` of `packages/gameplay`) as React state, and gives
-the game screen the first level of the content for the slot's player (`levelSetup`, ADR 0095).
+the game screen the content, the slot's mode and user name and the first ticket of the content
+(ADR 0095, ADR 0099).
 
 Content and texts (ADR 0090): `src/content/bundled-content.ts` imports every `.yaml` file of
 `content/` as text with `import.meta.glob` at build time and loads it with `sortContentFiles`
@@ -468,7 +477,8 @@ and `loadContent` (zod set to `jitless` for the Content Security Policy); a prob
 `ContentLoadError`. `src/texts/language.ts` turns `navigator.language` into German or English
 (ADR 0012) and `main.tsx` sets the document's `lang`. `src/texts/ui-texts.ts` lists every UI
 text key with its placeholders (`UI_TEXT_PLACEHOLDERS`, checked against both catalogs by a
-test) and `createTexts` gives each text as rich or plain text; `src/texts/texts-context.tsx`
+test) and `createTexts` gives each text as rich or plain text and each chapter's title (`chapterTitle`,
+ADR 0099); `src/texts/texts-context.tsx`
 hands the texts to every component (`TextsProvider`, `useTexts`),
 `src/texts/inline-text.tsx` draws a one-paragraph text with its markup, and
 `src/texts/rich-text.tsx` draws a text of several paragraphs and lists (ADR 0073).
@@ -488,12 +498,16 @@ footer, whose "F1 Hint" and "Esc Menu" hints are buttons and whose "Tab Complete
 because the terminal answers Tab itself. The side panel is `src/screens/side-panel.tsx`: the tabs
 Tickets, Mail and Handbook after the WAI-ARIA tabs pattern, each with its panel and the cable colour
 of its kind of work (ADR 0096); its tickets panel shows what the game screen gives it, and the game
-screen keeps the chosen tab, because F1 brings the tickets panel to the front (ADR 0098). It starts
-the level at
-`GAME_START_TIME` and shows it in the terminal, whose input line has the focus. The terminal reports
-the game events of every input (`onGameEvents`), and the game screen adds them up to the ticket's
-progress, which the ticket panel and the top bar's guide words show (ADR 0097). F1 or its key hint
-adds the next hint to that progress (ADR 0098). Esc opens
+screen keeps the chosen tab, because F1 brings the tickets panel to the front (ADR 0098). The game
+screen keeps the game (ADR 0099): the ticket being played, the progress of every ticket the player
+opened and the latest terminal state of each (`onStateChange`), so a ticket the player comes back
+to goes on where they left it; a ticket opened for the first time starts at `GAME_START_TIME`. The
+terminal and the ticket panel are keyed by the level, and the terminal's input line has the focus.
+The terminal reports the game events of every input (`onGameEvents`), and the game screen adds
+them up to the ticket's progress, which the ticket panel and the top bar's guide words (chapter,
+ticket, step or state) show (ADR 0097). F1 or its key hint adds the next hint to that progress
+(ADR 0098). The Tickets tab shows the ticket below "Back to the inbox", with the next ticket after
+solving, or the chapter inbox (ADR 0099). Esc opens
 `src/screens/pause-menu.tsx`, a modal dialog (Continue, Main menu) over the game, whose frame is
 `inert` while it is open; the pause state lives in the game screen (ADR 0092). The styles of all
 screens are in `src/styles.css`. The visual world is "Label Tape & Patch Cable" (ADR 0081,
@@ -509,7 +523,12 @@ player's language (`ticketTexts`) and a step message or tip by its key (`message
 `src/tickets/ticket-panel.tsx` draws the ticket: title, a state row with the steps as tape segments
 or the solved state (`role="status"`), the ticket text, the hints shown so far and the messages,
 each in its own polite live region, and after solving the explanation with its variants and a
-command to try. The app root gives the game screen the level's `TicketTexts`.
+command to try. The game screen formats the `TicketTexts` of every level once per language.
+`src/tickets/inbox-panel.tsx` draws the inbox of `packages/gameplay`: each open chapter with its
+title and how many tickets are solved, and each ticket as a row (`TicketRow`) that opens it, with
+its state in words and the current one framed and marked with `aria-current`.
+`src/tickets/next-ticket.tsx` draws the ticket offered after solving, the chapter it opened, or
+that every open ticket is solved (ADR 0099).
 
 Terminal (ADR 0095): `src/terminal/terminal-model.ts` holds the whole state of a terminal as an
 immutable value (the level session, the game time, the screen with its finished lines, page start

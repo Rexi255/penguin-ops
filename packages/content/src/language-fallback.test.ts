@@ -66,8 +66,20 @@ const OFFICE_WORLD: ContentFile = {
 };
 
 const UI_CATALOGS: readonly ContentFile[] = [
-  { file: "content/ui/en.yaml", text: yaml("menu:", "  new-game: New game", "  quit: Quit") },
-  { file: "content/ui/de.yaml", text: yaml("menu:", "  new-game: Neues Spiel", "  quit: Beenden") },
+  {
+    file: "content/ui/en.yaml",
+    text: yaml("menu:", "  new-game: New game", "  quit: Quit", "chapters:", "  a: Chapter a"),
+  },
+  {
+    file: "content/ui/de.yaml",
+    text: yaml(
+      "menu:",
+      "  new-game: Neues Spiel",
+      "  quit: Beenden",
+      "chapters:",
+      "  a: Kapitel a",
+    ),
+  },
 ];
 
 /** Levels x and y with complete English and German catalogs, and further catalogs. */
@@ -226,7 +238,11 @@ describe("levelTexts", () => {
       });
       // English has no options and no example, so the language misses neither.
       expect(missingTexts(result.value)).toEqual([
-        { language: "fr", catalogMissing: true, keys: ["menu.new-game", "menu.quit"] },
+        {
+          language: "fr",
+          catalogMissing: true,
+          keys: ["menu.new-game", "menu.quit", "chapters.a"],
+        },
         {
           language: "fr",
           level: "x",
@@ -249,12 +265,14 @@ describe("uiTexts", () => {
       new Map([
         ["menu.new-game", t("en", "New game")],
         ["menu.quit", t("en", "Quit")],
+        ["chapters.a", t("en", "Chapter a")],
       ]),
     );
     expect(uiTexts(content.uiCatalogs, "de")).toEqual(
       new Map([
         ["menu.new-game", t("de", "Neues Spiel")],
         ["menu.quit", t("de", "Beenden")],
+        ["chapters.a", t("de", "Kapitel a")],
       ]),
     );
   });
@@ -264,6 +282,7 @@ describe("uiTexts", () => {
       new Map([
         ["menu.new-game", t("fr", "Nouvelle partie")],
         ["menu.quit", t("en", "Quit")],
+        ["chapters.a", t("en", "Chapter a")],
       ]),
     );
   });
@@ -308,9 +327,9 @@ describe("missingTexts", () => {
       "tip-wrong",
     ];
     expect(missingTexts(content)).toEqual([
-      { language: "es", catalogMissing: true, keys: ["menu.new-game", "menu.quit"] },
+      { language: "es", catalogMissing: true, keys: ["menu.new-game", "menu.quit", "chapters.a"] },
       { language: "es", level: "x", catalogMissing: true, keys: all },
-      { language: "fr", catalogMissing: false, keys: ["menu.new-game"] },
+      { language: "fr", catalogMissing: false, keys: ["menu.new-game", "chapters.a"] },
       {
         language: "fr",
         level: "x",

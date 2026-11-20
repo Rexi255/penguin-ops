@@ -61,6 +61,8 @@ const UI = yaml(
   "menu:",
   "  new-game: New game",
   "  solved: '{count, plural, one {# solved} other {# solved}}'",
+  "chapters:",
+  "  a: Chapter a",
 );
 
 /** The standard world that levels without `world` use. */
@@ -273,7 +275,16 @@ describe("UI catalogs against English", () => {
       problems({
         ui: ui(
           ["en", UI],
-          ["de", yaml("menu:", "  new-game: Neues Spiel", "  quit: Beenden")],
+          [
+            "de",
+            yaml(
+              "menu:",
+              "  new-game: Neues Spiel",
+              "  quit: Beenden",
+              "chapters:",
+              "  a: Kapitel a",
+            ),
+          ],
           ["fr", yaml("menu:", "  load: Charger")],
         ),
       }),
@@ -295,9 +306,19 @@ describe("UI catalogs against English", () => {
               "b: '{count, plural, one {#} other {#}}'",
               "c: Plain",
               "d: '{x} and {y}'",
+              "chapters: { a: Chapter a }",
             ),
           ],
-          ["de", yaml("a: Hallo {nme}", "b: '{count}'", "c: '{extra}'", "d: '{y} und {x}'")],
+          [
+            "de",
+            yaml(
+              "a: Hallo {nme}",
+              "b: '{count}'",
+              "c: '{extra}'",
+              "d: '{y} und {x}'",
+              "chapters: { a: Kapitel a }",
+            ),
+          ],
           ["fr", yaml("a: Salut")],
         ),
       }),

@@ -61,6 +61,15 @@ ticket:
   explanation: Was du gelernt hast
   options: Nützliche Varianten
   example: "Probier es aus:"
+inbox:
+  title: Posteingang
+  progress: "{solved} von {count} gelöst"
+  new: Neu
+  started: Begonnen
+  back: Zurück zum Posteingang
+  next: Nächstes Ticket
+  chapter-open: "Ein neues Kapitel ist offen:"
+  all-solved: Alle Tickets in deinem Posteingang sind gelöst.
 terminal:
   output: Terminalausgabe
   input: Befehlszeile
@@ -69,3 +78,7 @@ pause:
   title: Pause
   continue: Weiterspielen
   main-menu: Hauptmenü
+chapters:
+  first-day: Der erste Tag
+  left-behind: Was andere liegen ließen
+  tidying-up: Aufräumen

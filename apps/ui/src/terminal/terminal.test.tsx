@@ -13,7 +13,7 @@ import { loadBundledContent } from "../content/bundled-content";
 import { TextsProvider } from "../texts/texts-context";
 import { createTexts } from "../texts/ui-texts";
 import { Terminal } from "./terminal";
-import { createTerminal } from "./terminal-model";
+import { createTerminal, type TerminalState } from "./terminal-model";
 
 const content = loadBundledContent();
 
@@ -36,9 +36,14 @@ function renderTerminal(language: MandatoryLanguage = "en", levelId = "first-ste
   const clock = createGameClock(GAME_START_TIME);
   const session = startLevel(levelSetup(content, levelId, language, "max"), clock);
   const onGameEvents = vi.fn<(events: readonly GameEvent[]) => void>();
+  const onStateChange = vi.fn<(state: TerminalState) => void>();
   const view = render(
     <TextsProvider texts={createTexts(content.uiCatalogs, language)}>
-      <Terminal initialState={createTerminal(session, clock.now())} onGameEvents={onGameEvents} />
+      <Terminal
+        initialState={createTerminal(session, clock.now())}
+        onGameEvents={onGameEvents}
+        onStateChange={onStateChange}
+      />
     </TextsProvider>,
   );
   const input = screen.getByRole("textbox", { name: NAMES[language].input });
@@ -48,6 +53,7 @@ function renderTerminal(language: MandatoryLanguage = "en", levelId = "first-ste
     input,
     log: screen.getByRole("log", { name: NAMES[language].output }),
     onGameEvents,
+    onStateChange,
   };
 }
 
@@ -88,6 +94,34 @@ describe("Terminal", () => {
       [[{ kind: "tip", say: "tip-moved-config" }]],
       [[{ kind: "step-completed", step: "backup", say: "step-backup" }]],
     ]);
+  });
+
+  test("reports every new state", async () => {
+    const { onStateChange, log } = renderTerminal();
+    expect(onStateChange).not.toHaveBeenCalled();
+    await userEvent.keyboard("pw");
+    expect(onStateChange).toHaveBeenCalledTimes(2);
+    const latest = onStateChange.mock.lastCall?.[0];
+    expect(latest?.line).toBe("pw");
+    expect(inputLine(log)).toContain("pw");
+  });
+
+  test("starts again from a state it reported", async () => {
+    const { onStateChange, view } = renderTerminal();
+    await userEvent.keyboard("cd welcome{Enter}ec");
+    const kept = onStateChange.mock.lastCall?.[0];
+    if (kept === undefined) {
+      throw new Error("The terminal reported no state.");
+    }
+    view.unmount();
+    render(
+      <TextsProvider texts={createTexts(content.uiCatalogs, "en")}>
+        <Terminal initialState={kept} onGameEvents={vi.fn()} />
+      </TextsProvider>,
+    );
+    const log = screen.getByRole("log", { name: NAMES.en.output });
+    expect(lines(log)).toContain("max@itdesk:~$ cd welcome");
+    expect(inputLine(log)).toContain("max@itdesk:~/welcome$ ec");
   });
 
   test("reports nothing for inputs and keys after which nothing happened in the game", async () => {

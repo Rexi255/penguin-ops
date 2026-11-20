@@ -4,7 +4,8 @@
 // prompt to the top and leaves the lines before it in the scrollback above. The player types into
 // a transparent text field under the cursor, so that dead keys, AltGr and input methods work.
 // What happens in the game after an input goes to the game screen (`onGameEvents`), which shows
-// the ticket's progress (ROADMAP M3.5a, ADR 0097).
+// the ticket's progress (ROADMAP M3.5a, ADR 0097); every new state goes there too
+// (`onStateChange`), which keeps the terminal of each ticket the player opened (M3.5c, ADR 0099).
 
 import type { GameEvent } from "@penguin-ops/gameplay";
 import {
@@ -86,9 +87,14 @@ export interface TerminalProps {
    * happened in the game are not reported.
    */
   readonly onGameEvents: (events: readonly GameEvent[]) => void;
+  /**
+   * Gets every new state, so that the game screen can keep the terminal of a ticket the player
+   * leaves and start it again from there (ROADMAP M3.5c, ADR 0099).
+   */
+  readonly onStateChange?: (state: TerminalState) => void;
 }
 
-export function Terminal({ initialState, ref, onGameEvents }: TerminalProps) {
+export function Terminal({ initialState, ref, onGameEvents, onStateChange }: TerminalProps) {
   const texts = useTexts();
   const [state, setState] = useState(initialState);
   // The newest state and width, for key presses that follow each other before React renders.
@@ -120,12 +126,13 @@ export function Terminal({ initialState, ref, onGameEvents }: TerminalProps) {
       }
       latest.current = next;
       setState(next);
+      onStateChange?.(next);
       // Every input that runs brings a list of its own (`TerminalState.gameEvents`).
       if (next.gameEvents !== previous.gameEvents && next.gameEvents.length > 0) {
         onGameEvents(next.gameEvents);
       }
     },
-    [onGameEvents],
+    [onGameEvents, onStateChange],
   );
 
   // The width in cells follows the size of the terminal and the font once it has loaded.

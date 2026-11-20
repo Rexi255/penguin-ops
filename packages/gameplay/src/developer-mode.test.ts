@@ -23,7 +23,7 @@ function catalog(...lines: string[]): string {
 
 /** Loads content with the levels `single` (one goal) and `multi` (three steps). */
 function loadTestContent(extra: readonly ContentFile[] = []): Content {
-  const ui = yaml("app:", "  name: PenguinOps");
+  const ui = yaml("app:", "  name: PenguinOps", "chapters:", "  a: Chapter a");
   const result = loadContent({
     chapters: {
       file: "content/chapters.yaml",

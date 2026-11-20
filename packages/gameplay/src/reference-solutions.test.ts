@@ -39,7 +39,7 @@ interface Files {
 
 /** Loads content with one level `x` in one chapter. */
 function content({ level, en, de, extra = [], world = WORLD_LINES }: Files): Content {
-  const ui = yaml("app:", "  name: PenguinOps");
+  const ui = yaml("app:", "  name: PenguinOps", "chapters:", "  a: Chapter a");
   const result = loadContent({
     chapters: {
       file: "content/chapters.yaml",

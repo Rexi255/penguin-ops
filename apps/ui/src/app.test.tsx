@@ -6,7 +6,7 @@
 // The game screen plays the first level as the player's Linux user (ADR 0095).
 import { cleanup, render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { afterEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, test, vi } from "vitest";
 
 import { App } from "./app";
 import { loadBundledContent } from "./content/bundled-content";
@@ -44,6 +44,11 @@ function newGameTitle() {
 function gameTitle() {
   return screen.queryByRole("heading", { level: 1, name: "Workplace" });
 }
+
+/** jsdom lays nothing out, so it has no scrollIntoView; the tickets panel scrolls. */
+beforeAll(() => {
+  Element.prototype.scrollIntoView = vi.fn<Element["scrollIntoView"]>();
+});
 
 afterEach(() => {
   cleanup();

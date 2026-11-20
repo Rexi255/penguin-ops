@@ -48,7 +48,27 @@ const CATALOG_TEXT = yaml(
   "  text: Explanation",
 );
 
-const UI_TEXT = yaml("menu:", "  new-game: New game");
+/** A valid UI catalog with a title for each chapter of `chapterIds`. */
+function uiText(chapterIds: readonly string[]): string {
+  const titles = chapterIds.map((id) => `  ${id}: Chapter ${id}`);
+  return yaml(
+    "menu:",
+    "  new-game: New game",
+    ...(titles.length > 0 ? ["chapters:", ...titles] : []),
+  );
+}
+
+/** A valid UI catalog for content with the one chapter `a`. */
+const UI_TEXT = uiText(["a"]);
+
+/** Valid English and German UI catalogs with a title for every chapter of a chapters file. */
+function uiCatalogsFor(chapters: ContentFile): ContentFile[] {
+  const ids = [...chapters.text.matchAll(/- id: (\S+)/gu)].map((match) => match[1] ?? "");
+  return [
+    { file: "content/ui/en.yaml", text: uiText(ids) },
+    { file: "content/ui/de.yaml", text: uiText(ids) },
+  ];
+}
 
 /** Valid English and German catalogs for every level file in a level folder. */
 function catalogsFor(levels: readonly ContentFile[]): ContentFile[] {
@@ -89,7 +109,7 @@ type Files = Pick<ContentFiles, "chapters" | "levels"> & Partial<ContentFiles>;
 function load(files: Files) {
   return loadContent({
     levelCatalogs: catalogsFor(files.levels),
-    uiCatalogs: UI_CATALOGS,
+    uiCatalogs: uiCatalogsFor(files.chapters),
     worlds: [OFFICE_WORLD],
     ...files,
   });
@@ -294,8 +314,12 @@ describe("loadContent: catalogs", () => {
     expect(levelCatalogs.get("y")?.extra).toEqual(
       new Map([["fr", { title: "fr y", extraGoals: new Map(), texts: new Map() }]]),
     );
-    expect(uiCatalogs.en).toEqual(new Map([["menu.new-game", "New game"]]));
-    expect(uiCatalogs.de).toEqual(new Map([["menu.new-game", "New game"]]));
+    const english = new Map([
+      ["menu.new-game", "New game"],
+      ["chapters.a", "Chapter a"],
+    ]);
+    expect(uiCatalogs.en).toEqual(english);
+    expect(uiCatalogs.de).toEqual(english);
     expect(uiCatalogs.extra).toEqual(
       new Map([["pt-br", new Map([["menu.new-game", "Novo jogo"]])]]),
     );
@@ -435,6 +459,83 @@ describe("loadContent: UI catalogs", () => {
         uiCatalogs: [...UI_CATALOGS.slice(0, 1), { file: "content/ui/de.yaml", text: "- a\n" }],
       }),
     ).toEqual(["content/ui/de.yaml:1:1: UI texts are a map of keys and texts or groups of texts"]);
+  });
+});
+
+describe("loadContent: chapter titles", () => {
+  test("a chapter without a title in the English UI catalog is reported at its ID", () => {
+    expect(
+      problemsOf({
+        chapters: chaptersFile(["a", "x"], ["b", "y"]),
+        levels: [levelFile("x"), levelFile("y")],
+        uiCatalogs: UI_CATALOGS,
+      }),
+    ).toEqual([
+      `${CHAPTERS}:5:5: chapters[1].id: the chapter "b" has no title: the UI catalog ui/en.yaml needs "chapters.b"`,
+    ]);
+  });
+
+  test("a title that only German lacks is reported as a missing German UI text", () => {
+    expect(
+      problemsOf({
+        chapters: chaptersFile(["a", "x"], ["b", "y"]),
+        levels: [levelFile("x"), levelFile("y")],
+        uiCatalogs: [
+          { file: "content/ui/en.yaml", text: uiText(["a", "b"]) },
+          { file: "content/ui/de.yaml", text: uiText(["a"]) },
+        ],
+      }),
+    ).toEqual(['content/ui/de.yaml:1:1: the UI text "chapters.b" is missing: English has it']);
+  });
+
+  test("a title of a chapter that does not exist is reported at the title", () => {
+    expect(
+      problemsOf({
+        chapters: chaptersFile(["a", "x"]),
+        levels: [levelFile("x")],
+        uiCatalogs: [
+          { file: "content/ui/en.yaml", text: uiText(["a", "gone"]) },
+          { file: "content/ui/de.yaml", text: uiText(["a", "gone"]) },
+        ],
+      }),
+    ).toEqual([`content/ui/en.yaml:5:3: chapters.gone: there is no chapter "gone" in ${CHAPTERS}`]);
+  });
+
+  test("a chapter title that is a group of texts is reported once", () => {
+    const text = yaml(
+      "menu:",
+      "  new-game: New game",
+      "chapters:",
+      "  a:",
+      "    title: Chapter a",
+      "    intro: Intro",
+    );
+    expect(
+      problemsOf({
+        chapters: chaptersFile(["a", "x"]),
+        levels: [levelFile("x")],
+        uiCatalogs: [
+          { file: "content/ui/en.yaml", text },
+          { file: "content/ui/de.yaml", text },
+        ],
+      }),
+    ).toEqual([
+      `${CHAPTERS}:3:5: chapters[0].id: the chapter "a" has no title: the UI catalog ui/en.yaml needs "chapters.a"`,
+      "content/ui/en.yaml:4:3: chapters.a: a chapter title is a text, not a group of texts",
+    ]);
+  });
+
+  test("texts outside the chapters group are no chapter titles", () => {
+    const text = yaml("menu:", "  chapters: Chapters", "chapters:", "  a: Chapter a");
+    const result = load({
+      chapters: chaptersFile(["a", "x"]),
+      levels: [levelFile("x")],
+      uiCatalogs: [
+        { file: "content/ui/en.yaml", text },
+        { file: "content/ui/de.yaml", text },
+      ],
+    });
+    expect(result.ok).toBe(true);
   });
 });
 

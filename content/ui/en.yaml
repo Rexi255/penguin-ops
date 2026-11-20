@@ -61,6 +61,15 @@ ticket:
   explanation: What you learned
   options: Useful variants
   example: "Try it:"
+inbox:
+  title: Inbox
+  progress: "{solved} of {count} solved"
+  new: New
+  started: In progress
+  back: Back to the inbox
+  next: Next ticket
+  chapter-open: "A new chapter is open:"
+  all-solved: Every ticket in your inbox is solved.
 terminal:
   output: Terminal output
   input: Command line
@@ -69,3 +78,7 @@ pause:
   title: Paused
   continue: Continue
   main-menu: Main menu
+chapters:
+  first-day: First day
+  left-behind: What others left behind
+  tidying-up: Tidying up

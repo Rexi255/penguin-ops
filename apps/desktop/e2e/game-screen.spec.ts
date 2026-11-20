@@ -1,7 +1,8 @@
 // End-to-end tests of the game screen and the pause menu (ROADMAP M3.1c, M3.4, M3.5a, M3.5b,
-// ADR 0092, ADR 0095, ADR 0096, ADR 0097, ADR 0098): a new game starts with the keyboard alone and
-// the terminal has the focus, the tickets panel and the top bar show the ticket and that it is
-// solved, F1 shows the hints and solving shows the explanation, the side panel's
+// M3.5c, ADR 0092, ADR 0095, ADR 0096, ADR 0097, ADR 0098, ADR 0099): a new game starts with the
+// keyboard alone and the terminal has the focus, the tickets panel and the top bar show the ticket
+// and that it is solved, F1 shows the hints and solving shows the explanation and the next ticket,
+// the inbox opens tickets and a ticket goes on where the player left it, the side panel's
 // tabs switch with the keyboard and the mouse, Esc opens and closes the pause menu, Main menu leads
 // back to the start screen, and axe-core finds no accessibility violations, with the pause menu
 // closed and open, with hints, with the ticket solved and with another tab chosen.
@@ -23,8 +24,15 @@ const LANGUAGES = [
     hint: "Hint 1 of 3",
     explanation: "What you learned",
     tickets: "Tickets",
+    chapterTitle: "First day",
     ticketTitle: "First steps",
     ticketStart: "Welcome to the IT department!",
+    back: "Back to the inbox",
+    inbox: "Inbox",
+    nextChapter: "What others left behind",
+    nextTicket: "The printer on the second floor",
+    newState: "New",
+    startedState: "In progress",
     solved: "Solved",
     mail: "Mail",
     mailEmpty: "No mail yet.",
@@ -44,8 +52,15 @@ const LANGUAGES = [
     hint: "Hinweis 1 von 3",
     explanation: "Was du gelernt hast",
     tickets: "Tickets",
+    chapterTitle: "Der erste Tag",
     ticketTitle: "Erste Schritte",
     ticketStart: "Willkommen in der IT-Abteilung!",
+    back: "Zurück zum Posteingang",
+    inbox: "Posteingang",
+    nextChapter: "Was andere liegen ließen",
+    nextTicket: "Der Drucker im zweiten Stock",
+    newState: "Neu",
+    startedState: "Begonnen",
     solved: "Gelöst",
     mail: "Mails",
     mailEmpty: "Noch keine Mails.",
@@ -94,12 +109,14 @@ for (const language of LANGUAGES) {
       const ticket = page.getByRole("article", { name: language.ticketTitle });
       await expect(ticket).toBeVisible();
       await expect(ticket).toContainText(language.ticketStart);
-      await expect(page.locator(".guide-words")).toHaveText(language.ticketTitle);
+      await expect(page.locator(".guide-words")).toHaveText(
+        `${language.chapterTitle}${language.ticketTitle}`,
+      );
       await page.keyboard.type("cd welcome");
       await page.keyboard.press("Enter");
       await expect(page.getByRole("status")).toHaveText(language.solved);
       await expect(page.locator(".guide-words")).toHaveText(
-        `${language.ticketTitle}${language.solved}`,
+        `${language.chapterTitle}${language.ticketTitle}${language.solved}`,
       );
       await expect(
         page.getByRole("heading", { level: 3, name: language.explanation }),
@@ -122,7 +139,9 @@ for (const language of LANGUAGES) {
 
     test("switches the side panel's tabs with the keyboard and goes back", async ({ page }) => {
       await startGame(page);
-      // Shift+Tab goes from the terminal to the ticket, then to the tabs.
+      // Shift+Tab goes from the terminal to the button back to the inbox, the ticket and the tabs.
+      await page.keyboard.press("Shift+Tab");
+      await expect(page.getByRole("button", { name: language.back })).toBeFocused();
       await page.keyboard.press("Shift+Tab");
       await expect(page.getByRole("tabpanel", { name: language.tickets })).toBeFocused();
       await page.keyboard.press("Shift+Tab");
@@ -136,6 +155,43 @@ for (const language of LANGUAGES) {
       await page.keyboard.press("Tab");
       await page.keyboard.press("Tab");
       await expect(page.getByRole("textbox", { name: language.input })).toBeFocused();
+    });
+
+    test("goes from ticket to ticket and through the inbox with the keyboard", async ({ page }) => {
+      await startGame(page);
+      await page.keyboard.type("cd welcome");
+      await page.keyboard.press("Enter");
+      const next = page.locator(".next-ticket");
+      await expect(next).toContainText(language.nextChapter);
+      await expect(next.getByRole("button")).toHaveText(
+        `${language.nextTicket} ${language.newState}`,
+      );
+      expect(await axeViolations(page)).toEqual([]);
+
+      await next.getByRole("button").click();
+      await expect(page.getByRole("article", { name: language.nextTicket })).toBeVisible();
+      await expect(page.locator(".guide-words")).toHaveText(
+        `${language.nextChapter}${language.nextTicket}`,
+      );
+      await expect(page.getByRole("textbox", { name: language.input })).toBeFocused();
+
+      // Back to the inbox: the current ticket's row has the focus.
+      await page.keyboard.press("Shift+Tab");
+      await page.keyboard.press("Enter");
+      await expect(page.getByRole("heading", { level: 2, name: language.inbox })).toBeVisible();
+      const current = page.getByRole("button", {
+        name: `${language.nextTicket} ${language.startedState}`,
+      });
+      await expect(current).toBeFocused();
+      await expect(current).toHaveAttribute("aria-current", "true");
+      expect(await axeViolations(page)).toEqual([]);
+
+      // The first ticket goes on where the player left it.
+      await page
+        .getByRole("button", { name: `${language.ticketTitle} ${language.solved}` })
+        .click();
+      await expect(page.getByRole("textbox", { name: language.input })).toBeFocused();
+      await expect(page.getByRole("log")).toContainText("max@itdesk:~/welcome$");
     });
 
     test("opens and closes the pause menu with Esc", async ({ page }) => {

@@ -63,7 +63,8 @@ item. A missing required field points at the map that lacks it.
 ## `content/chapters.yaml`
 
 The chapters file sets the order of the chapters and of the levels in each chapter (ADR 0070).
-Chapter titles and texts belong in the translation catalogs, so the file holds only IDs:
+Chapter titles and texts belong in the translation catalogs, so the file holds only IDs; each
+chapter's title is the UI text `chapters.<chapter-id>` (see "UI texts" below, ADR 0099):
 
 ```yaml
 format: 1
@@ -87,11 +88,19 @@ The loader also checks the levels against this file and against their folders:
 - The `id` of a level is the name of its folder (`content/levels/<level-id>/level.yaml`).
 - Every level that a chapter lists has a `level.yaml`.
 - Every level is in exactly one chapter, and only once.
+- Every chapter has a title `chapters.<chapter-id>` in the English UI catalog, and every title
+  there belongs to a chapter.
 
 ```
 content/chapters.yaml:4:27: chapters[0].levels[1]: there is no level "printer-flor2" (no file levels/printer-flor2/level.yaml)
 content/levels/handover/level.yaml:2:1: id: the level is in no chapter of content/chapters.yaml
+content/chapters.yaml:5:5: chapters[1].id: the chapter "left-behind" has no title: the UI catalog ui/en.yaml needs "chapters.left-behind"
 ```
+
+In Story mode the chapters open one after another: the first chapter is open from the start, and
+a chapter opens when every ticket of the chapters before it is solved. Inside an open chapter the
+tickets can be solved in any order. Sandbox mode opens every chapter at once (ADR 0017,
+ADR 0099).
 
 ## Base worlds: `content/worlds/<world-id>.yaml`
 
@@ -432,6 +441,16 @@ lists every key with the values the UI passes, and a test fails if the English o
 catalog lacks a key, has a key the UI does not use, or uses other placeholders (ADR 0090). A
 new UI text therefore needs its key there and in both catalogs. Labels, menu entries and texts
 in attributes must be one paragraph.
+
+The group `chapters` is content, not a text of the UI's code: it holds one title per chapter of
+`content/chapters.yaml`, by the chapter's ID, as one paragraph without placeholders (ADR 0099).
+A new chapter needs its title in both catalogs:
+
+```yaml
+chapters:
+  first-day: First day
+  left-behind: What others left behind
+```
 
 ## Example
 

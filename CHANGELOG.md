@@ -26,6 +26,12 @@ project uses [Semantic Versioning](https://semver.org/).
   tab comes to the front to show them.
 - A solved ticket explains what you learned: a short explanation, useful variants of the command
   and a command to try.
+- The Tickets tab has an inbox: "Back to the inbox" lists the tickets of every open chapter with
+  their state (New, In progress, Solved) and how many of each chapter you have solved. Click a
+  ticket to work on it; a ticket you left goes on where you left it, terminal included. In Career
+  mode the next chapter opens once every ticket of the chapter is solved; in Sandbox mode every
+  chapter is open. A solved ticket offers the next one and says when it opened a new chapter.
+  The top bar now also shows the chapter.
 - The terminal works like bash on Debian: type commands after the prompt `you@itdesk:~$` and
   see their output. The first ticket's files are there. Up and Down bring back earlier
   commands, Tab completes commands and file names (twice lists the choices), Ctrl+C cancels

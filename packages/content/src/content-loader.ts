@@ -160,7 +160,8 @@ export function loadContent(files: ContentFiles): LoadResult<Content> {
   }
 
   const levelCatalogs = readLevelCatalogs(files.levelCatalogs, levels, problems);
-  const uiCatalogs = readUiCatalogs(files.uiCatalogs, files.chapters.file, problems);
+  const ui = readUiCatalogs(files.uiCatalogs, files.chapters.file, problems);
+  const uiCatalogs = ui.catalogs;
   const worlds = readWorlds(files.worlds, problems);
   problems.push(...levelWorldProblems(levels, worlds, files.chapters.file));
 
@@ -173,6 +174,17 @@ export function loadContent(files: ContentFiles): LoadResult<Content> {
         levels,
       ),
     );
+    if (uiCatalogs !== undefined) {
+      problems.push(
+        ...chapterTitleProblems(
+          chapters.result.value.chapters,
+          files.chapters.file,
+          chapters.source,
+          uiCatalogs.en,
+          ui.sources.get("en"),
+        ),
+      );
+    }
   }
 
   if (problems.length > 0 || !chapters.result.ok || uiCatalogs === undefined) {
@@ -449,13 +461,17 @@ function readLevelCatalogs(
 /**
  * Reads the UI catalogs: each lies in a `ui` folder, is named after its language and is given
  * once; English and German exist. A missing one is reported at the file where it belongs, in
- * the folder of `chaptersFile`. Returns `undefined` if a mandatory catalog is missing or broken.
+ * the folder of `chaptersFile`. The catalogs are `undefined` if a mandatory catalog is missing
+ * or broken; the sources of the valid catalogs by language serve the checks across files.
  */
 function readUiCatalogs(
   files: readonly ContentFile[],
   chaptersFile: string,
   problems: ContentProblem[],
-): UiCatalogs | undefined {
+): {
+  readonly catalogs: UiCatalogs | undefined;
+  readonly sources: ReadonlyMap<string, YamlSource>;
+} {
   const catalogs = emptyCatalogsRead<UiCatalog, UiCatalog>();
   for (const { file, text } of files) {
     const language = UI_CATALOG_FILE_PATTERN.exec(file)?.[1];
@@ -483,7 +499,7 @@ function readUiCatalogs(
     );
   }
   problems.push(...uiCompletenessProblems(checkedCatalogs(catalogs)));
-  return toCatalogs(catalogs);
+  return { catalogs: toCatalogs(catalogs), sources: catalogs.sources };
 }
 
 /** The valid catalogs read, with their sources, for the completeness checks. */
@@ -641,6 +657,71 @@ function chapterProblems(
     if (!chapterOf.has(entry.folder)) {
       problems.push(
         located(entry.file, entry.source, ["id"], `the level is in no chapter of ${chaptersFile}`),
+      );
+    }
+  }
+  return problems;
+}
+
+/** The UI text key of a chapter's title (ADR 0099). */
+export function chapterTitleKey(chapterId: string): string {
+  return `${CHAPTER_TITLE_GROUP}.${chapterId}`;
+}
+
+/** The group of the UI catalogs that holds the chapter titles by chapter ID. */
+const CHAPTER_TITLE_GROUP = "chapters";
+
+/**
+ * Checks the chapter titles against the chapters (ADR 0099): every chapter has a title in the
+ * English UI catalog, and every title there belongs to a chapter and is a text, not a group.
+ * The completeness checks of the UI catalogs carry this over to German and further languages.
+ */
+function chapterTitleProblems(
+  chapters: readonly Chapter[],
+  chaptersFile: string,
+  chaptersSource: YamlSource | undefined,
+  english: UiCatalog,
+  englishSource: YamlSource | undefined,
+): ContentProblem[] {
+  const problems: ContentProblem[] = [];
+  chapters.forEach((chapter, index) => {
+    const key = chapterTitleKey(chapter.id);
+    if (!english.has(key)) {
+      problems.push(
+        located(
+          chaptersFile,
+          chaptersSource,
+          ["chapters", index, "id"],
+          `the chapter "${chapter.id}" has no title: the UI catalog ui/en.yaml needs "${key}"`,
+        ),
+      );
+    }
+  });
+  const ids = new Set(chapters.map((chapter) => chapter.id));
+  const prefix = `${CHAPTER_TITLE_GROUP}.`;
+  const groups = new Set<string>();
+  for (const key of english.keys()) {
+    if (!key.startsWith(prefix) || englishSource === undefined) {
+      continue;
+    }
+    const path = key.split(".");
+    const id = key.slice(prefix.length);
+    if (path.length > 2) {
+      const group = path.slice(0, 2).join(".");
+      if (groups.has(group)) {
+        continue;
+      }
+      groups.add(group);
+      problems.push(
+        sourceProblem(
+          englishSource,
+          path.slice(0, 2),
+          "a chapter title is a text, not a group of texts",
+        ),
+      );
+    } else if (!ids.has(id)) {
+      problems.push(
+        sourceProblem(englishSource, path, `there is no chapter "${id}" in ${chaptersFile}`),
       );
     }
   }

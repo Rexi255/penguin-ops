@@ -212,7 +212,10 @@ inventing it along the way.
   - [x] M3.5a Ticket text in the tickets panel with the steps as tape segments, the solved
         state, step messages and tips; the top bar names the ticket and its step (ADR 0097).
   - [x] M3.5b Hints with F1, one level at a time, and the explanation after solving (ADR 0098).
-  - [ ] M3.5c Chapter inbox (ticket list, the next ticket after solving) and extra goals.
+  - [x] M3.5c Chapter inbox: the open chapters' tickets with their states, chapter titles, the
+        next ticket after solving, a terminal per ticket that goes on where the player left it
+        (ADR 0099).
+  - [ ] M3.5d Extra goals in the ticket panel.
 - [ ] M3.6 Game commands `help` and `hint`; engine notices rendered in the player's language.
 - [ ] M3.7 Save system: three slots, metadata, autosave, atomic write and backup, versioned
       format with migration test, export and import (ADR 0013).

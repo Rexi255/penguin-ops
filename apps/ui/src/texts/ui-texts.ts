@@ -1,9 +1,12 @@
 // The UI texts of `content/ui/<language>.yaml` (ADR 0012, ADR 0090). `UI_TEXT_PLACEHOLDERS`
 // lists every key the UI uses with the names of the values it passes; a test checks that the
 // English and German catalogs hold exactly these keys with exactly these placeholders, so a
-// catalog text can neither be missing nor wait for a value the UI never passes.
+// catalog text can neither be missing nor wait for a value the UI never passes. The chapter
+// titles in the group `chapters` are content: the content loader checks them against the
+// chapters (ADR 0099).
 
 import {
+  chapterTitleKey,
   formatText,
   type MandatoryLanguage,
   type RichText,
@@ -125,6 +128,22 @@ export const UI_TEXT_PLACEHOLDERS = {
   "ticket.options": [],
   /** The label before the explanation's command to try. */
   "ticket.example": [],
+  /** The heading of the chapter inbox, the list of the open chapters' tickets (ADR 0099). */
+  "inbox.title": [],
+  /** How many tickets of a chapter are solved; `solved` and `count` are numbers. */
+  "inbox.progress": ["solved", "count"],
+  /** The state of a ticket the player has not opened yet. */
+  "inbox.new": [],
+  /** The state of a ticket the player has opened and not solved yet. */
+  "inbox.started": [],
+  /** The button above a ticket that shows the inbox. */
+  "inbox.back": [],
+  /** The heading of the ticket offered after a solved one. */
+  "inbox.next": [],
+  /** Before the title of a chapter that solving the ticket opened. */
+  "inbox.chapter-open": [],
+  /** Instead of a next ticket, when every ticket of the open chapters is solved. */
+  "inbox.all-solved": [],
   /** The accessible name of the terminal's screen, a log of its lines. */
   "terminal.output": [],
   /** The accessible name of the terminal's input line. */
@@ -162,6 +181,11 @@ export interface Texts {
    * paragraph; code and bold become plain text.
    */
   readonly plain: <K extends UiTextKey>(key: K, ...values: UiTextValues<K>) => string;
+  /**
+   * The title of the chapter `chapterId`, one paragraph without placeholders (ADR 0099). The
+   * content loader makes sure that every chapter has one.
+   */
+  readonly chapterTitle: (chapterId: string) => readonly RichTextInline[];
 }
 
 /** The UI texts of the loaded catalogs in a language. */
@@ -178,6 +202,14 @@ export function createTexts(catalogs: UiCatalogs, language: MandatoryLanguage): 
     language,
     rich,
     plain: (key, ...values) => plainText(paragraphOf(rich(key, ...values), key)),
+    chapterTitle: (chapterId) => {
+      const key = chapterTitleKey(chapterId);
+      const text = texts.get(key);
+      if (text === undefined) {
+        throw new Error(`The UI catalog "${language}" has no title of the chapter "${chapterId}".`);
+      }
+      return paragraphOf(formatText(text), key);
+    },
   };
 }
 

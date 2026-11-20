@@ -48,6 +48,7 @@ export {
   chaptersSchema,
 } from "./chapters-schema";
 export {
+  chapterTitleKey,
   type Content,
   type ContentFile,
   type ContentFiles,

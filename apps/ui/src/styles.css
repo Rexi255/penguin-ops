@@ -415,8 +415,9 @@ pre {
   border-block-end: var(--border-width-rule) solid var(--color-rule);
 }
 
-/* The top bar's guide words (ADR 0097): the ticket's title, then its step or state after a
-   hairline rule, like the guide words at the head of a dictionary page. */
+/* The top bar's guide words (ADR 0097, ADR 0099): the chapter's title, the ticket's title, then
+   its step or state, each after a hairline rule, like the guide words at the head of a dictionary
+   page. */
 .guide-words {
   display: flex;
   align-items: center;
@@ -426,7 +427,13 @@ pre {
   line-height: var(--text-body-leading);
 }
 
+.guide-words__chapter {
+  color: var(--color-text-muted);
+}
+
 .guide-words__ticket {
+  padding-inline-start: var(--space-2);
+  border-inline-start: var(--border-width-rule) solid var(--color-rule);
   color: var(--color-text);
   font-weight: var(--font-weight-control);
 }
@@ -695,6 +702,153 @@ pre {
 
 .ticket__example {
   margin: var(--space-2) 0 0;
+}
+
+/* The Tickets tab (ADR 0099): the ticket being played below the button back to the inbox, and
+   after solving the next ticket; or the chapter inbox. */
+.tickets-tab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-leading);
+}
+
+/* The button back to the inbox: quiet like a key hint, so the ticket stays the main thing. Its
+   negative margin lines its text up with the ticket's. */
+.back-button {
+  display: flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: var(--space-1);
+  margin-inline-start: calc(-1 * var(--space-1));
+  padding: 0 var(--space-1);
+  border: none;
+  border-radius: var(--radius-corner);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: var(--font-ui);
+  font-size: var(--text-body-size);
+  font-weight: var(--font-weight-control);
+  line-height: var(--text-body-leading);
+  cursor: pointer;
+  transition:
+    color var(--motion-duration-state) var(--motion-easing-state),
+    background-color var(--motion-duration-state) var(--motion-easing-state);
+}
+
+.back-button:hover {
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+/* The next ticket follows the ticket like its other sections, after a hairline rule. */
+.tickets-tab > .next-ticket {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-block-start: 0;
+}
+
+.next-ticket .ticket__section-title,
+.next-ticket__text {
+  margin: 0;
+}
+
+/* The chapter inbox: its heading, then each open chapter with its title, how many of its tickets
+   are solved and its tickets as rows. */
+.inbox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.inbox__title {
+  margin: 0;
+  font-size: var(--text-heading-size);
+  font-weight: var(--font-weight-heading);
+  line-height: var(--text-heading-leading);
+}
+
+.inbox__chapter-title {
+  margin: 0;
+  font-size: var(--text-body-size);
+  font-weight: var(--font-weight-heading);
+  line-height: var(--text-body-leading);
+}
+
+.inbox__progress {
+  margin: 0 0 var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--text-hint-size);
+  line-height: var(--text-hint-leading);
+}
+
+.inbox__tickets {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Rows sit flush like units in a rack, with a hairline rule between them (the Flat Rack Rule). */
+.inbox__tickets > li + li {
+  border-block-start: var(--border-width-rule) solid var(--color-rule);
+}
+
+/* A ticket row: the icon of its kind in its cable colour, the title and the state in words. It
+   lightens on hover like the other rows; the ticket being played is framed in fibre orange on the
+   raised surface, so the frame is not the only sign. */
+.inbox-ticket {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+  inline-size: 100%;
+  padding: calc(var(--space-1) - var(--border-width-choice)) var(--space-1);
+  border: var(--border-width-choice) solid transparent;
+  border-radius: var(--radius-corner);
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-size: var(--text-body-size);
+  font-weight: var(--font-weight-body);
+  line-height: var(--text-body-leading);
+  text-align: start;
+  cursor: pointer;
+  transition: background-color var(--motion-duration-state) var(--motion-easing-state);
+}
+
+.inbox-ticket:hover {
+  background: var(--color-surface-raised);
+}
+
+.inbox-ticket[aria-current="true"] {
+  border-color: var(--color-player);
+  background: var(--color-surface-raised);
+}
+
+.inbox-ticket__kind {
+  display: flex;
+  color: var(--color-cable-ticket);
+}
+
+.inbox-ticket__title {
+  font-weight: var(--font-weight-control);
+  overflow-wrap: anywhere;
+}
+
+.inbox-ticket__state {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--text-hint-size);
+  line-height: var(--text-hint-leading);
+}
+
+/* A solved ticket takes the colour of success (DESIGN.md, Icon Colour Rule). */
+.inbox-ticket__state--solved {
+  color: var(--color-cable-handbook);
 }
 
 .game-screen__terminal {
