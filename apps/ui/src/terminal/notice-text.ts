@@ -51,6 +51,7 @@ function commandNoticeText(
       });
     case "invalid-utf8-not-simulated":
     case "terminal-input-not-simulated":
+    case "game-output-not-simulated":
       return texts.rich(`notices.${notice.key}`, { command });
   }
 }

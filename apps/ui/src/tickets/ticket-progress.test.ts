@@ -92,6 +92,17 @@ describe("applyGameEvents", () => {
     expect(first.reachedExtraGoals).toEqual(["floor1"]);
   });
 
+  test("shows the next hint for every hint the game command asked for", () => {
+    const progress = applyGameEvents(TICKET_START, [
+      { kind: "hint-requested" },
+      { kind: "hint-requested" },
+      { kind: "solved" },
+    ]);
+    expect(progress).toEqual({ ...TICKET_START, solved: true, hintsShown: 2 });
+    const all = applyGameEvents(progress, [{ kind: "hint-requested" }, { kind: "hint-requested" }]);
+    expect(all.hintsShown).toBe(3);
+  });
+
   test("keeps the hints shown", () => {
     const hinted = showNextHint(TICKET_START);
     expect(applyGameEvents(hinted, [{ kind: "solved" }]).hintsShown).toBe(1);

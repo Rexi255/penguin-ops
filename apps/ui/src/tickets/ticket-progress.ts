@@ -1,9 +1,9 @@
 // The progress of the ticket being played as the ticket panel and the top bar show it (ROADMAP
 // M3.5a, ADR 0097): how many steps are completed, whether the ticket is solved, and the messages
 // the game said about it, in the order it said them. The game events of every input that ran
-// update it. It also counts the hints the player has asked for with F1 (M3.5b, ADR 0098) and
-// keeps the extra goals the player has reached (M3.5d, ADR 0100). The functions are pure, so the
-// tests need no DOM.
+// update it. It also counts the hints the player has asked for with F1 or the game command `hint`
+// (M3.5b, M3.6b, ADR 0098, ADR 0103) and keeps the extra goals the player has reached (M3.5d,
+// ADR 0100). The functions are pure, so the tests need no DOM.
 
 import type { GameEvent } from "@penguin-ops/gameplay";
 
@@ -62,7 +62,8 @@ export function showNextHint(progress: TicketProgress): TicketProgress {
 }
 
 /**
- * The progress after the game events of an input, in their order. A reached extra goal is kept
+ * The progress after the game events of an input, in their order. The game command `hint` asks
+ * for the next hint like F1 (ADR 0103). A reached extra goal is kept
  * and gets a message, also after the ticket is solved; the level session reaches each extra goal
  * only once.
  */
@@ -72,6 +73,8 @@ export function applyGameEvents(
 ): TicketProgress {
   return events.reduce((current, event): TicketProgress => {
     switch (event.kind) {
+      case "hint-requested":
+        return showNextHint(current);
       case "step-completed":
         return {
           ...current,

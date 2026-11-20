@@ -2,7 +2,7 @@
 // commands and sees their output and notices, completes with Tab, interrupts with Ctrl+C, clears
 // with Ctrl+L and scrolls back through long output; readline keys that the game does not simulate
 // yet (Ctrl+W, Ctrl+R) change nothing; and axe-core finds no accessibility violations with output
-// and a notice on the screen.
+// and a notice and the texts of the game commands `help` and `hint` (M3.6b) on the screen.
 import type { Page } from "@playwright/test";
 
 import { expect, test } from "./app";
@@ -13,6 +13,7 @@ const LANGUAGES = [
     locale: "en-US",
     input: "Command line",
     output: "Terminal output",
+    hint: "Hint 1 of 3",
     notice:
       "cat would now wait for you to type something. PenguinOps does not simulate typing into a running command yet, so the input stopped here.",
   },
@@ -20,6 +21,7 @@ const LANGUAGES = [
     locale: "de-DE",
     input: "Befehlszeile",
     output: "Terminalausgabe",
+    hint: "Hinweis 1 von 3",
     notice:
       "cat würde jetzt warten, bis du etwas eintippst. Eingaben in einen laufenden Befehl simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.",
   },
@@ -69,8 +71,19 @@ for (const language of LANGUAGES) {
       await startGame(page);
       await run(page, "ls");
       await run(page, "cat");
+      await run(page, "help");
+      await run(page, "hint");
       await page.keyboard.type("echo");
       expect(await axeViolations(page)).toEqual([]);
+    });
+
+    test("shows the texts of the game commands help and hint", async ({ page }) => {
+      await startGame(page);
+      await run(page, "help");
+      await expect(page.locator(".terminal__commands code").first()).toHaveText("cat");
+      await run(page, "hint");
+      await expect(page.locator(".terminal__game-label")).toHaveText(language.hint);
+      await expect(page.locator(".ticket__hint-label")).toHaveText(language.hint);
     });
   });
 }

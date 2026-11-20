@@ -988,6 +988,38 @@ pre {
   white-space: normal;
 }
 
+/* The text of a game command (ADR 0103): blocks like a ticket text, in the notice's voice; a hint
+   starts with its label, `help` lists the commands in a row. */
+.terminal__game-text > * {
+  margin: 0;
+}
+
+.terminal__game-text > * + * {
+  margin-block-start: var(--space-2);
+}
+
+.terminal__game-text ul {
+  padding-inline-start: var(--space-4);
+}
+
+.terminal__game-text > .terminal__game-label {
+  font-size: var(--text-hint-size);
+  font-weight: var(--font-weight-control);
+  line-height: var(--text-hint-leading);
+}
+
+.terminal__game-text > .terminal__game-label + * {
+  margin-block-start: 0;
+}
+
+.terminal__game-text > .terminal__commands {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  padding-inline-start: 0;
+  list-style: none;
+}
+
 /* Ten zeros in the terminal face, measured to find the width of one cell. */
 .terminal__measure {
   position: absolute;

@@ -277,7 +277,10 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
     converts between text and UTF-8 bytes.
   - `src/commands/` holds the commands, one module each, and `COMMANDS`, the list for
     `createCommandLookup`. `cd`, `pwd`, `echo` and `history` are builtins (`history` lists, clears
-    and deletes entries of the session's history list, ADR 0057); `whoami`, `ls`, `cat`, `head`,
+    and deletes entries of the session's history list, ADR 0057). The game commands `help` and
+    `hint` are builtins too: on the terminal they call `CommandTerminal.showGameOutput`, which
+    gives a `game-output` event whose text the UI writes, into a pipe or a file they stop with the
+    notice `game-output-not-simulated` (ADR 0103). `whoami`, `ls`, `cat`, `head`,
     `tail`, `mkdir`, `touch`, `rm`, `cp`, `mv` and `grep` use `defineCommand`. `clear` is ncurses'
     program with plain `getopt`: on the terminal it clears the screen, into a pipe or a file it
     writes the escape sequences of `xterm-256color`, the `TERM` that `createSession` sets (ADR
@@ -420,7 +423,8 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   line, else records it in the history, runs it (or reports bash's syntax error or unsupported
   syntax) and `evaluate`s the rules: the goal or the next steps in order, extra goals, then
   tips while unsolved. It returns the new immutable `LevelSession`, the `TerminalEvent`s and
-  the `GameEvent`s (`step-completed`, `solved`, `extra-goal`, `tip`).
+  the `GameEvent`s (`hint-requested` for every game command `hint`, then `step-completed`,
+  `solved`, `extra-goal`, `tip`).
   `lastCompletedStep` is the checkpoint that save games keep. For the terminal (ADR 0095),
   `levelPrompt` gives the prompt of the player's shell, `completeInput` completes an input line
   with the simulated commands (`COMMAND_NAMES`), and `interruptLevelInput` is Ctrl+C.
@@ -506,7 +510,8 @@ terminal and the ticket panel are keyed by the level, and the terminal's input l
 The terminal reports the game events of every input (`onGameEvents`), and the game screen adds
 them up to the ticket's progress, which the ticket panel and the top bar's guide words (chapter,
 ticket, step or state) show (ADR 0097). F1 or its key hint adds the next hint to that progress
-(ADR 0098). The Tickets tab shows the ticket below "Back to the inbox", with the next ticket after
+(ADR 0098), and so does the game command `hint`, whose `hint-requested` event also brings the
+Tickets tab to the front (ADR 0103). The Tickets tab shows the ticket below "Back to the inbox", with the next ticket after
 solving, or the chapter inbox (ADR 0099). Esc opens
 `src/screens/pause-menu.tsx`, a modal dialog (Continue, Main menu) over the game, whose frame is
 `inert` while it is open; the pause state lives in the game screen (ADR 0092). The styles of all
@@ -546,6 +551,9 @@ over a transparent text field the player types into, and game notices in the UI 
 hint icon; it measures the cell width of the monospace face for the terminal's width.
 `src/terminal/notice-text.ts` gives each notice its own text from the UI catalogs, keyed
 `notices.<key>` by the command notice's key or the unsupported feature (ADR 0102).
+`src/terminal/game-line.tsx` writes the texts of the game commands (ADR 0103): `help`'s overview
+with `COMMAND_NAMES`, a command's description (`help-topics.<name>`), and the ticket's hint with
+its number, which the terminal model gives each `hint` after the hints seen so far.
 
 Design tokens (ADR 0082): `src/tokens.css` defines every token as a CSS custom property on
 `:root`, named by purpose (colours, the terminal's character cell, spacing in quarter cells,

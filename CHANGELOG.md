@@ -24,6 +24,9 @@ project uses [Semantic Versioning](https://semver.org/).
 - Stuck? Press F1 or click "F1 Hint" for a hint. Each press shows one more, up to three: a tip, a
   concrete tip and the solution. Hints are free, you keep typing in the terminal, and the Tickets
   tab comes to the front to show them.
+- Type `help` in the terminal for an overview of the game commands, the keys and every command
+  you can use, and `help ls` (or any other command) for what a command does. `hint` shows the
+  ticket's next hint right in the terminal and in the Tickets tab; it counts together with F1.
 - A solved ticket explains what you learned: a short explanation, useful variants of the command
   and a command to try.
 - Some tickets have optional extra goals for bonus XP. The Tickets tab lists them under the

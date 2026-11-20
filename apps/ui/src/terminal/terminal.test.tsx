@@ -4,7 +4,13 @@
 // does not own (Esc, F-keys, Shift+Tab, paste) stay with the browser and the game screen.
 import { MANDATORY_LANGUAGES, type MandatoryLanguage } from "@penguin-ops/content";
 import { createGameClock } from "@penguin-ops/engine";
-import { GAME_START_TIME, type GameEvent, levelSetup, startLevel } from "@penguin-ops/gameplay";
+import {
+  COMMAND_NAMES,
+  GAME_START_TIME,
+  type GameEvent,
+  levelSetup,
+  startLevel,
+} from "@penguin-ops/gameplay";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, test, vi } from "vitest";
@@ -13,6 +19,7 @@ import { loadBundledContent } from "../content/bundled-content";
 import { TextsProvider } from "../texts/texts-context";
 import { createTexts } from "../texts/ui-texts";
 import { Terminal } from "./terminal";
+import { ticketTexts } from "../tickets/ticket-texts";
 import { createTerminal, type TerminalState } from "./terminal-model";
 
 const content = loadBundledContent();
@@ -34,20 +41,33 @@ const NAMES: Readonly<
   },
 };
 
-function renderTerminal(language: MandatoryLanguage = "en", levelId = "first-steps") {
+function renderTerminal(
+  language: MandatoryLanguage = "en",
+  levelId = "first-steps",
+  hintsShown = 0,
+) {
   const clock = createGameClock(GAME_START_TIME);
   const session = startLevel(levelSetup(content, levelId, language, "max"), clock);
   const onGameEvents = vi.fn<(events: readonly GameEvent[]) => void>();
   const onStateChange = vi.fn<(state: TerminalState) => void>();
-  const view = render(
+  const { hints } = ticketTexts(content, levelId, language);
+  const initialState = createTerminal(session, clock.now());
+  const terminal = (shown: number) => (
     <TextsProvider texts={createTexts(content.uiCatalogs, language)}>
       <Terminal
-        initialState={createTerminal(session, clock.now())}
+        initialState={initialState}
         onGameEvents={onGameEvents}
         onStateChange={onStateChange}
+        hints={hints}
+        hintsShown={shown}
       />
-    </TextsProvider>,
+    </TextsProvider>
   );
+  const view = render(terminal(hintsShown));
+  /** Draws the terminal again with another count of hints seen, as after F1. */
+  const showHints = (shown: number) => {
+    view.rerender(terminal(shown));
+  };
   const input = screen.getByRole("textbox", { name: NAMES[language].input });
   input.focus();
   return {
@@ -56,6 +76,7 @@ function renderTerminal(language: MandatoryLanguage = "en", levelId = "first-ste
     log: screen.getByRole("log", { name: NAMES[language].output }),
     onGameEvents,
     onStateChange,
+    showHints,
   };
 }
 
@@ -118,7 +139,12 @@ describe("Terminal", () => {
     view.unmount();
     render(
       <TextsProvider texts={createTexts(content.uiCatalogs, "en")}>
-        <Terminal initialState={kept} onGameEvents={vi.fn()} />
+        <Terminal
+          initialState={kept}
+          onGameEvents={vi.fn()}
+          hints={ticketTexts(content, "first-steps", "en").hints}
+          hintsShown={0}
+        />
       </TextsProvider>,
     );
     const log = screen.getByRole("log", { name: NAMES.en.output });
@@ -304,5 +330,78 @@ describe("Terminal", () => {
     expect(fireEvent.keyDown(input, { key: "PageDown", shiftKey: true })).toBe(false);
     expect(log.scrollTop).toBe(0);
     expect(inputLine(log)).toBe("max@itdesk:~$  ");
+  });
+});
+
+describe("the game commands", () => {
+  /** The game's lines as text, newest last. */
+  function gameLines(log: HTMLElement): string[] {
+    return [...log.querySelectorAll(".terminal__game")].map((line) => line.textContent);
+  }
+
+  test.each(MANDATORY_LANGUAGES)(
+    "help shows the overview with every command in %s",
+    async (language) => {
+      const { log } = renderTerminal(language);
+      await userEvent.keyboard("help{Enter}");
+      const line = log.querySelector(".terminal__game");
+      expect(line?.querySelector("svg.icon")).not.toBeNull();
+      expect(line?.querySelectorAll("ul")).toHaveLength(2);
+      const commands = [...(line?.querySelectorAll(".terminal__commands code") ?? [])];
+      expect(commands.map((command) => command.textContent)).toEqual(COMMAND_NAMES);
+      expect(inputLine(log)).toBe("max@itdesk:~$  ");
+    },
+  );
+
+  test("help NAME describes a command, or says that the game does not know it", async () => {
+    const { log } = renderTerminal();
+    await userEvent.keyboard("help pwd nano{Enter}");
+    expect(gameLines(log)).toEqual([
+      "pwd prints the working directory: where you are.",
+      "PenguinOps does not know the command nano. help lists the commands you can use.",
+    ]);
+  });
+
+  test("help in a pipe stops with a notice", async () => {
+    const { log } = renderTerminal("de");
+    await userEvent.keyboard("help | cat{Enter}");
+    expect(log.querySelector(".terminal__notice")?.textContent).toBe(
+      "help ist ein Spielbefehl: Sein Text erscheint nur im Terminal, nicht in einer Pipe oder " +
+        "Datei, darum hat die Eingabe hier angehalten.",
+    );
+    expect(gameLines(log)).toEqual([]);
+  });
+
+  test("hint shows the next hints one by one and reports each", async () => {
+    const { log, onGameEvents } = renderTerminal();
+    await userEvent.keyboard("hint{Enter}hint; hint{Enter}");
+    expect(gameLines(log)).toEqual([
+      "Hint 1 of 3Your home directory contains a few folders. Which command lists them?",
+      "Hint 2 of 3ls shows the folders in your home directory, and cd followed by a folder name " +
+        "changes into it.",
+      "Hint 3 of 3Type cd welcome.",
+    ]);
+    expect(onGameEvents.mock.calls).toEqual([
+      [[{ kind: "hint-requested" }]],
+      [[{ kind: "hint-requested" }, { kind: "hint-requested" }]],
+    ]);
+  });
+
+  test("hint goes on after the hints shown with F1", async () => {
+    const { log, showHints } = renderTerminal("de");
+    showHints(2);
+    await userEvent.keyboard("hint{Enter}hint{Enter}");
+    expect(gameLines(log)).toEqual([
+      "Hinweis 3 von 3Tippe cd welcome.",
+      "Du hast alle drei Hinweise zu diesem Ticket gesehen. Sie bleiben im Tab Tickets.",
+    ]);
+  });
+
+  test("hint with an argument gives bash's error and shows no hint", async () => {
+    const { log, onGameEvents } = renderTerminal();
+    await userEvent.keyboard("hint please{Enter}");
+    expect(lines(log)).toContain("bash: hint: too many arguments");
+    expect(gameLines(log)).toEqual([]);
+    expect(onGameEvents).not.toHaveBeenCalled();
   });
 });

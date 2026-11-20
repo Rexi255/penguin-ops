@@ -12,7 +12,8 @@
 // bar show what they add up to. The inbox opens any ticket of an open chapter; a ticket the player
 // left goes on where they left it. After solving, the ticket offers the next one. F1 or its key
 // hint shows the ticket's next hint and brings the ticket to the front (M3.5b, ADR 0098); the
-// focus stays where it is, so the player keeps typing. Until the save system (M3.7), the game
+// focus stays where it is, so the player keeps typing. The game command `hint` does the same and
+// shows the hint in the terminal too (M3.6b, ADR 0103). Until the save system (M3.7), the game
 // starts again whenever the screen appears.
 
 import type { Content, ExtraGoal, RichTextInline } from "@penguin-ops/content";
@@ -166,6 +167,12 @@ export function GameScreen({ content, mode, userName, firstTicket, onMainMenu }:
           applyGameEvents(current.get(levelId) ?? TICKET_START, events),
         ),
       );
+      // The game command `hint` shows the hint in the ticket too, which comes to the front as
+      // after F1 (ADR 0103).
+      if (events.some((event) => event.kind === "hint-requested")) {
+        setTab("tickets");
+        setTicketsView("ticket");
+      }
     },
     [levelId],
   );
@@ -334,6 +341,8 @@ export function GameScreen({ content, mode, userName, firstTicket, onMainMenu }:
             initialState={opened.terminal}
             onGameEvents={onGameEvents}
             onStateChange={onTerminalChange}
+            hints={ticket.hints}
+            hintsShown={ticketProgress.hintsShown}
           />
         </main>
         <footer className="game-screen__footer">

@@ -81,11 +81,19 @@ function run(state: TerminalState, text: string): TerminalState {
   return submit(insertText(state, text, COLUMNS), COLUMNS);
 }
 
-/** The text of a screen line; a notice shows its event kind in brackets. */
+/**
+ * The text of a screen line; a notice shows its event kind in brackets, a game line its message
+ * kind and a hint's number.
+ */
 function lineText(line: ScreenLine): string {
-  return line.kind === "text"
-    ? line.spans.map((span) => span.text).join("")
-    : `[${line.event.kind}]`;
+  switch (line.kind) {
+    case "text":
+      return line.spans.map((span) => span.text).join("");
+    case "notice":
+      return `[${line.event.kind}]`;
+    case "game":
+      return `[${line.message.kind}${line.message.kind === "hint" ? ` ${String(line.message.number)}` : ""}]`;
+  }
 }
 
 function screenText(state: TerminalState): string[] {
@@ -296,6 +304,39 @@ describe("the game events of an input", () => {
       state = change(state);
       expect(state.gameEvents).toBe(gameEvents);
     }
+  });
+});
+
+describe("the game commands", () => {
+  test("help shows its overview and descriptions as lines of the game", () => {
+    const state = run(terminal(), "echo -n partial; help; help ls nano");
+    expect(screenText(state)).toEqual([
+      "alice@desk:~$ echo -n partial; help; help ls nano",
+      "partial",
+      "[help]",
+      "[help-topic]",
+      "[help-unknown]",
+    ]);
+    expect(
+      state.screen.lines.slice(3).map((line) => (line.kind === "game" ? line.message : line)),
+    ).toEqual([
+      { kind: "help-topic", topic: "ls" },
+      { kind: "help-unknown", topic: "nano" },
+    ]);
+  });
+
+  test("hint shows the hints after the ones seen, then that there are no more", () => {
+    const state = submit(insertText(terminal(), "hint; hint; hint", COLUMNS), COLUMNS, 1);
+    expect(screenText(state).slice(1)).toEqual(["[hint 2]", "[hint 3]", "[no-more-hints]"]);
+    expect(state.gameEvents).toEqual([
+      { kind: "hint-requested" },
+      { kind: "hint-requested" },
+      { kind: "hint-requested" },
+    ]);
+  });
+
+  test("hint starts with the first hint when none was seen", () => {
+    expect(screenText(run(terminal(), "hint")).slice(1)).toEqual(["[hint 1]"]);
   });
 });
 

@@ -19,6 +19,7 @@ const INPUTS: Readonly<Record<string, string>> = {
   "notices.variable-not-simulated": "HISTTIMEFORMAT=%F history",
   "notices.invalid-utf8-not-simulated": "echo -e '\\xff'",
   "notices.terminal-input-not-simulated": "cat",
+  "notices.game-output-not-simulated": "help > out.txt",
   "notices.command-substitution": "echo $(pwd)",
   "notices.arithmetic-expansion": "echo $((1 + 2))",
   "notices.parameter-expansion": "echo ${HOME:-/}",

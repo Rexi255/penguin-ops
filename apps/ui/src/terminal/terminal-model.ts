@@ -30,6 +30,8 @@ import {
   type TerminalEvent,
 } from "@penguin-ops/gameplay";
 
+import { HINT_COUNT } from "../tickets/ticket-progress";
+
 /**
  * How a piece of text is drawn: plain terminal text, or one of the coloured parts of Debian's
  * prompt, `user@host` (bold green) and the working directory (bold blue).
@@ -48,12 +50,26 @@ export type NoticeEvent = Extract<
   { readonly kind: "unsupported" | "notice" | "syntax-unsupported" }
 >;
 
+/**
+ * What a game command shows in the terminal (ADR 0103): the game's overview (`help`), the
+ * description of a command (`help NAME`) or that the game does not know it, the hint with its
+ * number from 1 to `HINT_COUNT` (`hint`), or that every hint is shown already.
+ */
+export type GameMessage =
+  | { readonly kind: "help" }
+  | { readonly kind: "help-topic"; readonly topic: string }
+  | { readonly kind: "help-unknown"; readonly topic: string }
+  | { readonly kind: "hint"; readonly number: number }
+  | { readonly kind: "no-more-hints" };
+
 /** A finished line of the screen. `id` is unique within a terminal and never reused. */
 export type ScreenLine =
   /** Text the terminal shows: output, or an echoed prompt with its input. */
   | { readonly kind: "text"; readonly id: number; readonly spans: readonly Span[] }
   /** A game notice: the game, not the shell, says something (ADR 0052). */
-  | { readonly kind: "notice"; readonly id: number; readonly event: NoticeEvent };
+  | { readonly kind: "notice"; readonly id: number; readonly event: NoticeEvent }
+  /** The text of a game command (ADR 0103), in the game's voice like a notice. */
+  | { readonly kind: "game"; readonly id: number; readonly message: GameMessage };
 
 /** What the terminal shows above the input line. */
 export interface Screen {
@@ -317,8 +333,12 @@ export function pressTab(state: TerminalState, columns: number): TerminalState {
  * waits for it behind the continuation prompt; any other input runs, and its output and notices
  * follow on the screen. The game time moves on as the session runs the input. While readline
  * asks its question, Enter changes nothing.
+ *
+ * `hintsShown` is how many of the ticket's hints the player has seen before this input; each
+ * `hint` of the input shows the next one, or says that every hint is shown (ADR 0103). The game
+ * screen counts them with the input's `hint-requested` game events.
  */
-export function submit(state: TerminalState, columns: number): TerminalState {
+export function submit(state: TerminalState, columns: number, hintsShown = 0): TerminalState {
   if (state.question !== undefined) {
     return state;
   }
@@ -345,7 +365,7 @@ export function submit(state: TerminalState, columns: number): TerminalState {
       return {
         ...next,
         session: result.session,
-        screen: showEvents(screen, result.terminal),
+        screen: showEvents(screen, result.terminal, hintsShown),
         pending: undefined,
         // A copy, so that every input that runs has a list of its own (see `gameEvents`).
         gameEvents: [...result.game],
@@ -452,8 +472,12 @@ function moveTo(state: TerminalState, cursor: number): TerminalState {
   return { ...state, cursor, tabUnchanged: false };
 }
 
-/** Shows the events of an input: output text, screen clears and game notices, in order. */
-function showEvents(screen: Screen, events: readonly TerminalEvent[]): Screen {
+/**
+ * Shows the events of an input: output text, screen clears, the texts of game commands and game
+ * notices, in order. The hints of the input continue after the `hintsShown` hints seen before.
+ */
+function showEvents(screen: Screen, events: readonly TerminalEvent[], hintsShown: number): Screen {
+  let hints = hintsShown;
   return events.reduce((current, event): Screen => {
     switch (event.kind) {
       case "output":
@@ -465,12 +489,28 @@ function showEvents(screen: Screen, events: readonly TerminalEvent[]): Screen {
       case "unsupported":
       case "notice":
       case "syntax-unsupported": {
-        const finished =
-          current.partial.length > 0 ? finishLine(current, current.partial) : current;
+        const finished = finishPartial(current);
         return addLine(finished, { kind: "notice", id: finished.nextId, event });
+      }
+      case "game-output": {
+        const finished = finishPartial(current);
+        let message: GameMessage;
+        if (event.output.kind === "hint") {
+          hints += 1;
+          message =
+            hints <= HINT_COUNT ? { kind: "hint", number: hints } : { kind: "no-more-hints" };
+        } else {
+          message = event.output;
+        }
+        return addLine(finished, { kind: "game", id: finished.nextId, message });
       }
     }
   }, screen);
+}
+
+/** Finishes a partial line of output, so that the game's own line starts below it. */
+function finishPartial(screen: Screen): Screen {
+  return screen.partial.length > 0 ? finishLine(screen, screen.partial) : screen;
 }
 
 /**

@@ -78,11 +78,13 @@ inbox:
 terminal:
   output: Terminalausgabe
   input: Befehlszeile
+  no-more-hints: Du hast alle drei Hinweise zu diesem Ticket gesehen. Sie bleiben im Tab Tickets.
 notices:
   option-not-simulated: Die Option {option} von {command} simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
   variable-not-simulated: Die Wirkung der Variablen {variable} auf {command} simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
   invalid-utf8-not-simulated: "{command} würde Bytes schreiben, die kein gültiger UTF-8-Text sind. Dateien und Terminal enthalten in PenguinOps nur Text, darum hat die Eingabe hier angehalten."
   terminal-input-not-simulated: "{command} würde jetzt warten, bis du etwas eintippst. Eingaben in einen laufenden Befehl simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten."
+  game-output-not-simulated: "{command} ist ein Spielbefehl: Sein Text erscheint nur im Terminal, nicht in einer Pipe oder Datei, darum hat die Eingabe hier angehalten."
   command-substitution: Befehlssubstitution (`$(…)`) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
   arithmetic-expansion: Arithmetische Expansion (`$((…))`) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
   parameter-expansion: Diese Form der Parameterexpansion (`${…}` mit mehr als einem Namen) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
@@ -118,6 +120,37 @@ notices:
   file-descriptor: Andere Dateideskriptoren als 0, 1 und 2 (etwa `3>`) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
   reversed-redirection: Umleitungen in diese Richtung (etwa `0>` oder `2<`) simuliert PenguinOps noch nicht, darum hat die Eingabe hier angehalten.
   command-path: Programme über ihren Pfad starten (etwa `./script.sh` oder `/bin/ls`) kann PenguinOps noch nicht, darum hat die Eingabe hier angehalten. Tippe einen Befehl nur mit seinem Namen, etwa `ls`.
+help:
+  overview: |-
+    Du arbeitest in einem Debian-Terminal: Tippe einen Befehl und drücke Enter.
+
+    Spielbefehle:
+    - `help` zeigt diese Übersicht.
+    - `help NAME` erklärt einen Befehl, etwa `help ls`.
+    - `hint` zeigt den nächsten Hinweis zu deinem Ticket, wie F1.
+
+    Tasten: Tab vervollständigt, Pfeil hoch und runter holen frühere Befehle zurück, Strg+C verwirft die Zeile, Strg+L leert den Bildschirm, Esc öffnet das Menü.
+  commands: "Befehle, die du nutzen kannst:"
+  unknown: Den Befehl {topic} kennt PenguinOps nicht. `help` listet die Befehle, die du nutzen kannst.
+help-topics:
+  cat: "`cat DATEI…` gibt den Inhalt von Dateien nacheinander aus. `cat -n` nummeriert die Zeilen."
+  cd: "`cd VERZEICHNIS` wechselt das Arbeitsverzeichnis. `cd` allein bringt dich in dein Home-Verzeichnis, `cd ..` eine Ebene nach oben und `cd -` dorthin zurück, wo du vorher warst."
+  clear: "`clear` leert den Bildschirm. Strg+L macht dasselbe."
+  cp: "`cp QUELLE ZIEL` kopiert eine Datei. `cp -r` kopiert ein Verzeichnis mit allem, was darin ist."
+  echo: "`echo TEXT` gibt seine Argumente aus, getrennt durch Leerzeichen. Mit `>` landet der Text in einer Datei: `echo hallo > notiz.txt`."
+  grep: "`grep MUSTER DATEI…` gibt die Zeilen von Dateien aus, die das Muster enthalten. `grep -i` ignoriert Groß- und Kleinschreibung, `grep -r` durchsucht ganze Verzeichnisse."
+  head: "`head DATEI` gibt die ersten 10 Zeilen einer Datei aus, `head -n 5` die ersten fünf."
+  help: "`help` zeigt die Übersicht der Spielbefehle und Tasten, `help NAME` erklärt einen Befehl, etwa `help ls`."
+  hint: "`hint` zeigt den nächsten Hinweis zu deinem Ticket, wie F1. Jedes Ticket hat drei: einen Tipp, einen konkreten Tipp und die Lösung."
+  history: "`history` listet die Befehle, die du getippt hast, nummeriert auf. `history -c` leert die Liste. Pfeil hoch und runter holen frühere Befehle zurück in die Zeile."
+  ls: "`ls` listet die Dateien in einem Verzeichnis auf, ohne Namen im Arbeitsverzeichnis. `ls -l` zeigt Details, `ls -a` auch die versteckten Dateien, deren Namen mit einem Punkt beginnen."
+  mkdir: "`mkdir NAME` legt ein Verzeichnis an. `mkdir -p` legt auch die fehlenden Verzeichnisse darüber an."
+  mv: "`mv QUELLE ZIEL` verschiebt oder benennt eine Datei oder ein Verzeichnis um."
+  pwd: "`pwd` gibt das Arbeitsverzeichnis aus: wo du gerade bist."
+  rm: "`rm DATEI` löscht Dateien endgültig, einen Papierkorb gibt es nicht. `rm -r` löscht ein Verzeichnis mit allem, was darin ist."
+  tail: "`tail DATEI` gibt die letzten 10 Zeilen einer Datei aus, `tail -n 5` die letzten fünf."
+  touch: "`touch DATEI` legt eine leere Datei an oder setzt die Zeit einer vorhandenen Datei auf jetzt."
+  whoami: "`whoami` gibt den Namen deines Benutzers aus."
 pause:
   title: Pause
   continue: Weiterspielen

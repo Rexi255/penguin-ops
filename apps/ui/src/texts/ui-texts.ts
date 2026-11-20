@@ -158,6 +158,8 @@ export const UI_TEXT_PLACEHOLDERS = {
   "terminal.output": [],
   /** The accessible name of the terminal's input line. */
   "terminal.input": [],
+  /** What the game command `hint` shows once every hint of the ticket is shown (ADR 0103). */
+  "terminal.no-more-hints": [],
   /*
    * The game notices in the terminal (ADR 0102): the input used something the game does not
    * simulate yet, and the input stopped there. `command` is the command name as the player wrote
@@ -171,6 +173,8 @@ export const UI_TEXT_PLACEHOLDERS = {
   "notices.invalid-utf8-not-simulated": ["command"],
   /** The command notice `terminal-input-not-simulated`. */
   "notices.terminal-input-not-simulated": ["command"],
+  /** The command notice `game-output-not-simulated` (ADR 0103). */
+  "notices.game-output-not-simulated": ["command"],
   /** The shell features the game does not simulate yet, one text each, named by the feature. */
   "notices.command-substitution": [],
   "notices.arithmetic-expansion": [],
@@ -207,6 +211,34 @@ export const UI_TEXT_PLACEHOLDERS = {
   "notices.file-descriptor": [],
   "notices.reversed-redirection": [],
   "notices.command-path": [],
+  /** The game command `help` without operands: the game's overview (ADR 0103). */
+  "help.overview": [],
+  /** The label before the list of the commands the game simulates, in `help`'s overview. */
+  "help.commands": [],
+  /** `help NAME` for a name the game does not simulate; `topic` is the name as a code value. */
+  "help.unknown": ["topic"],
+  /*
+   * `help NAME`: what each command the game simulates does, by its name. A test checks that
+   * every command has one (`helpTopicKey`).
+   */
+  "help-topics.cat": [],
+  "help-topics.cd": [],
+  "help-topics.clear": [],
+  "help-topics.cp": [],
+  "help-topics.echo": [],
+  "help-topics.grep": [],
+  "help-topics.head": [],
+  "help-topics.help": [],
+  "help-topics.hint": [],
+  "help-topics.history": [],
+  "help-topics.ls": [],
+  "help-topics.mkdir": [],
+  "help-topics.mv": [],
+  "help-topics.pwd": [],
+  "help-topics.rm": [],
+  "help-topics.tail": [],
+  "help-topics.touch": [],
+  "help-topics.whoami": [],
   /** The title of the pause menu. */
   "pause.title": [],
   /** The pause menu entry that closes the menu and returns to the game. */
@@ -217,6 +249,27 @@ export const UI_TEXT_PLACEHOLDERS = {
 
 /** A key of a UI text. */
 export type UiTextKey = keyof typeof UI_TEXT_PLACEHOLDERS;
+
+/** Whether `key` is the key of a UI text. */
+export function isUiTextKey(key: string): key is UiTextKey {
+  return Object.hasOwn(UI_TEXT_PLACEHOLDERS, key);
+}
+
+/** The key of a command's description for `help NAME` (ADR 0103). */
+export type HelpTopicKey = Extract<UiTextKey, `help-topics.${string}`>;
+
+/**
+ * The key of the description that `help NAME` shows for the command `name` (ADR 0103), or
+ * `undefined` if the UI has none.
+ */
+export function helpTopicKey(name: string): HelpTopicKey | undefined {
+  const key = `help-topics.${name}`;
+  return isUiTextKey(key) && isHelpTopicKey(key) ? key : undefined;
+}
+
+function isHelpTopicKey(key: UiTextKey): key is HelpTopicKey {
+  return key.startsWith("help-topics.");
+}
 
 type PlaceholderName<K extends UiTextKey> = (typeof UI_TEXT_PLACEHOLDERS)[K][number];
 

@@ -1,5 +1,6 @@
-// The simulated commands (ADR 0007, ADR 0053). `COMMANDS` is the list that a game session
-// registers with `createCommandLookup`; ROADMAP M1.8 to M1.10 add to it.
+// The simulated commands (ADR 0007, ADR 0053) and the game commands `help` and `hint`
+// (ADR 0103). `COMMANDS` is the list that a game session registers with `createCommandLookup`;
+// ROADMAP M1.8 to M1.10 add to it.
 
 import type { RegisteredCommand } from "../command-registry";
 import { cat } from "./cat";
@@ -9,6 +10,8 @@ import { cp } from "./cp";
 import { echo } from "./echo";
 import { grep } from "./grep";
 import { head } from "./head";
+import { createHelp } from "./help";
+import { hint } from "./hint";
 import { history } from "./history";
 import { ls } from "./ls";
 import { mkdir } from "./mkdir";
@@ -27,6 +30,7 @@ export {
   echo,
   grep,
   head,
+  hint,
   history,
   ls,
   mkdir,
@@ -38,7 +42,10 @@ export {
   whoami,
 };
 
-/** All simulated commands, sorted by name. */
+/** `help` describes every command of `COMMANDS`, itself included. */
+const help = createHelp((name) => COMMANDS.some((command) => command.name === name));
+
+/** All simulated commands and the game commands, sorted by name. */
 export const COMMANDS: readonly RegisteredCommand[] = [
   cat,
   cd,
@@ -47,6 +54,8 @@ export const COMMANDS: readonly RegisteredCommand[] = [
   echo,
   grep,
   head,
+  help,
+  hint,
   history,
   ls,
   mkdir,

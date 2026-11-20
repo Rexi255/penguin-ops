@@ -90,6 +90,11 @@ export type TerminalEvent =
 
 /** What happened in the game after an input, in this order. */
 export type GameEvent =
+  /**
+   * The player asked for the ticket's next hint with the game command `hint`, once per `hint`
+   * that ran (ADR 0103). The UI counts the hints, as for F1.
+   */
+  | { readonly kind: "hint-requested" }
   /** A step of a multi-step ticket was completed; `say` is the text key of its message. */
   | { readonly kind: "step-completed"; readonly step: string; readonly say?: string }
   /** The ticket was solved. */
@@ -186,7 +191,8 @@ export function startLevel(setup: LevelSetup, clock: GameClock, checkpoint?: str
  * - Any other input runs with `runScript`.
  *
  * Then the rules are evaluated against the world, the shell and the output of the input (see
- * `evaluate`), and the game events are returned.
+ * `evaluate`), and the game events are returned, after a `hint-requested` event for every game
+ * command `hint` that showed its output.
  */
 export function runInput(session: LevelSession, input: string, options: InputOptions): InputResult {
   const parsed = parse(input);
@@ -209,7 +215,10 @@ export function runInput(session: LevelSession, input: string, options: InputOpt
     { ...session, world: ran.world, shell: ran.session },
     terminalOutput(shellEvents),
   );
-  return { kind: "ran", session: evaluated, terminal: ran.events, game };
+  const hints = shellEvents
+    .filter((event) => event.kind === "game-output" && event.output.kind === "hint")
+    .map((): GameEvent => ({ kind: "hint-requested" }));
+  return { kind: "ran", session: evaluated, terminal: ran.events, game: [...hints, ...game] };
 }
 
 /** The primary prompt of the player's shell (Debian 13's `PS1`, see `primaryPrompt`). */

@@ -148,6 +148,7 @@ function unsimulatedFeature(event: TerminalEvent): string | undefined {
   switch (event.kind) {
     case "output":
     case "clear-screen":
+    case "game-output":
       return undefined;
     case "syntax-unsupported":
       return `syntax the game does not simulate (${event.feature})`;
@@ -168,6 +169,8 @@ function describeEvent(event: GameEvent): string {
       return `the extra goal "${event.id}" is reached`;
     case "tip":
       return `the tip "${event.say}" is shown`;
+    case "hint-requested":
+      return "a hint is asked for";
   }
 }
 

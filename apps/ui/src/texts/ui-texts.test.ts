@@ -4,10 +4,11 @@ import {
   messagePlaceholders,
   type UiCatalogs,
 } from "@penguin-ops/content";
+import { COMMAND_NAMES } from "@penguin-ops/gameplay";
 import { describe, expect, test } from "vitest";
 
 import { loadBundledContent } from "../content/bundled-content";
-import { createTexts, UI_TEXT_PLACEHOLDERS, type UiTextKey } from "./ui-texts";
+import { createTexts, helpTopicKey, UI_TEXT_PLACEHOLDERS, type UiTextKey } from "./ui-texts";
 
 const { chapters, uiCatalogs } = loadBundledContent();
 
@@ -52,6 +53,23 @@ describe("the UI catalogs", () => {
       }
     },
   );
+});
+
+describe("helpTopicKey", () => {
+  test("names a description for every command the game simulates and for nothing else", () => {
+    expect(COMMAND_NAMES.map(helpTopicKey)).toEqual(
+      COMMAND_NAMES.map((name) => `help-topics.${name}`),
+    );
+    const topics = Object.keys(UI_TEXT_PLACEHOLDERS).filter((key) =>
+      key.startsWith("help-topics."),
+    );
+    expect(topics.sort()).toEqual(COMMAND_NAMES.map((name) => `help-topics.${name}`).sort());
+  });
+
+  test("names none for a command the game does not simulate", () => {
+    expect(helpTopicKey("nano")).toBeUndefined();
+    expect(helpTopicKey("")).toBeUndefined();
+  });
 });
 
 describe("chapterTitle", () => {

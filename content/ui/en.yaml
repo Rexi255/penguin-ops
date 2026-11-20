@@ -78,11 +78,13 @@ inbox:
 terminal:
   output: Terminal output
   input: Command line
+  no-more-hints: You have seen all three hints for this ticket. They stay in the Tickets tab.
 notices:
   option-not-simulated: PenguinOps does not simulate the option {option} of {command} yet, so the input stopped here.
   variable-not-simulated: PenguinOps does not simulate the effect of the variable {variable} on {command} yet, so the input stopped here.
   invalid-utf8-not-simulated: "{command} would write bytes that are not valid UTF-8 text. Files and the terminal hold only text in PenguinOps, so the input stopped here."
   terminal-input-not-simulated: "{command} would now wait for you to type something. PenguinOps does not simulate typing into a running command yet, so the input stopped here."
+  game-output-not-simulated: "{command} is a game command: its text appears only in the terminal, not in a pipe or a file, so the input stopped here."
   command-substitution: PenguinOps does not simulate command substitution (`$(…)`) yet, so the input stopped here.
   arithmetic-expansion: PenguinOps does not simulate arithmetic expansion (`$((…))`) yet, so the input stopped here.
   parameter-expansion: PenguinOps does not simulate this form of parameter expansion (`${…}` with more than a name) yet, so the input stopped here.
@@ -118,6 +120,37 @@ notices:
   file-descriptor: PenguinOps does not simulate file descriptors other than 0, 1 and 2 (such as `3>`) yet, so the input stopped here.
   reversed-redirection: PenguinOps does not simulate redirections in this direction (such as `0>` or `2<`) yet, so the input stopped here.
   command-path: PenguinOps does not run programs by their path (such as `./script.sh` or `/bin/ls`) yet, so the input stopped here. Type a command by its name alone, such as `ls`.
+help:
+  overview: |-
+    You work in a Debian terminal: type a command and press Enter.
+
+    Game commands:
+    - `help` shows this overview.
+    - `help NAME` explains a command, such as `help ls`.
+    - `hint` shows the next hint for your ticket, like F1.
+
+    Keys: Tab completes, Up and Down bring back earlier commands, Ctrl+C cancels the line, Ctrl+L clears the screen, Esc opens the menu.
+  commands: "Commands you can use:"
+  unknown: PenguinOps does not know the command {topic}. `help` lists the commands you can use.
+help-topics:
+  cat: "`cat FILE…` prints the content of files, one after the other. `cat -n` numbers the lines."
+  cd: "`cd DIRECTORY` changes the working directory. `cd` alone takes you to your home directory, `cd ..` one level up and `cd -` back to where you were before."
+  clear: "`clear` clears the screen. Ctrl+L does the same."
+  cp: "`cp SOURCE TARGET` copies a file. `cp -r` copies a directory with everything in it."
+  echo: "`echo TEXT` prints its arguments, separated by spaces. With `>` the text goes into a file: `echo hello > note.txt`."
+  grep: "`grep PATTERN FILE…` prints the lines of files that contain the pattern. `grep -i` ignores upper and lower case, `grep -r` searches whole directories."
+  head: "`head FILE` prints the first 10 lines of a file, `head -n 5` the first five."
+  help: "`help` shows the overview of the game commands and keys, `help NAME` explains a command, such as `help ls`."
+  hint: "`hint` shows the next hint for your ticket, like F1. Every ticket has three: a tip, a concrete tip and the solution."
+  history: "`history` lists the commands you typed, numbered. `history -c` clears the list. Up and Down bring earlier commands back into the line."
+  ls: "`ls` lists the files in a directory, without a name the working directory. `ls -l` shows details, `ls -a` also the hidden files whose names start with a dot."
+  mkdir: "`mkdir NAME` creates a directory. `mkdir -p` also creates the missing directories above it."
+  mv: "`mv SOURCE TARGET` moves or renames a file or a directory."
+  pwd: "`pwd` prints the working directory: where you are."
+  rm: "`rm FILE` deletes files for good, there is no recycle bin. `rm -r` deletes a directory with everything in it."
+  tail: "`tail FILE` prints the last 10 lines of a file, `tail -n 5` the last five."
+  touch: "`touch FILE` creates an empty file, or sets the time of an existing file to now."
+  whoami: "`whoami` prints the name of your user."
 pause:
   title: Paused
   continue: Continue

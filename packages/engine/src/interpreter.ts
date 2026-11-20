@@ -63,7 +63,26 @@ export interface CommandTerminal extends Terminal {
    * a `clear-screen` event at this point of the output.
    */
   readonly clearScreen: (clearsScrollback: boolean) => void;
+  /**
+   * Shows the text of a game command (`help`, `hint`) at this point of the output. The shell
+   * reports it as a `game-output` event, and the UI writes the text in the player's language
+   * (ADR 0103). Only the terminal has it: the game's texts are not output a pipe or a file could
+   * take.
+   */
+  readonly showGameOutput: (output: GameOutput) => void;
 }
+
+/**
+ * What a game command shows in the terminal (ADR 0103); the UI holds the texts. `help` shows an
+ * overview of the game, `help NAME` a description of a command the game simulates
+ * (`help-topic`) or that it does not know the name (`help-unknown`); `hint` shows the ticket's
+ * next hint.
+ */
+export type GameOutput =
+  | { readonly kind: "help" }
+  | { readonly kind: "help-topic"; readonly topic: string }
+  | { readonly kind: "help-unknown"; readonly topic: string }
+  | { readonly kind: "hint" };
 
 /** What a command gets when it runs. */
 export interface CommandContext {
@@ -136,8 +155,20 @@ export interface TerminalInputNotSimulated {
  * Each key is one message, and the other fields are the values the message shows. Later
  * commands add keys to this union (ADR 0052).
  */
+/**
+ * A game command (`help`, `hint`) whose standard output goes to a pipe or a file: its text is
+ * the game's, in the player's language, and only the terminal shows it (ADR 0103).
+ */
+export interface GameOutputNotSimulated {
+  readonly key: "game-output-not-simulated";
+}
+
 export type CommandNotice =
-  OptionNotSimulated | VariableNotSimulated | InvalidUtf8NotSimulated | TerminalInputNotSimulated;
+  | OptionNotSimulated
+  | VariableNotSimulated
+  | InvalidUtf8NotSimulated
+  | TerminalInputNotSimulated
+  | GameOutputNotSimulated;
 
 /**
  * A command that ran: its exit status (a whole number from 0 to 255), and the changed world and
@@ -198,7 +229,8 @@ export type UnsupportedExecution =
 
 /**
  * What the shell shows while it runs an input, in order: output of commands to the terminal,
- * screen clears, and game notices that the UI renders in the player's language. Consecutive
+ * screen clears, the texts of game commands, and game notices; the UI renders the last two in
+ * the player's language. Consecutive
  * output to the same stream is merged into one event. A game notice is always the last event:
  * it stops the input.
  */
@@ -224,7 +256,9 @@ export type ShellEvent =
       /** The command name as the player wrote it (after expansion). */
       readonly command: string;
       readonly notice: CommandNotice;
-    };
+    }
+  /** A game command showed its text (`CommandTerminal.showGameOutput`). */
+  | { readonly kind: "game-output"; readonly output: GameOutput };
 
 /** What `runScript` needs. */
 export interface ScriptRun {
@@ -610,6 +644,9 @@ class Runner {
       columns: this.terminal.columns,
       clearScreen: (clearsScrollback) => {
         this.events.push({ kind: "clear-screen", clearsScrollback });
+      },
+      showGameOutput: (output) => {
+        this.events.push({ kind: "game-output", output });
       },
     };
   }

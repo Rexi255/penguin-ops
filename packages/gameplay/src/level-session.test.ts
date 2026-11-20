@@ -448,3 +448,36 @@ describe("interruptLevelInput", () => {
     expect(game.clock.now()).toBe(START_TIME + TIME_PER_INPUT);
   });
 });
+
+describe("runInput: the game commands", () => {
+  test("every hint that ran asks for a hint, before the other game events", () => {
+    const game = start(CD_GOAL);
+    expect(play(game, "hint; cd /var/log; hint").game).toEqual([
+      { kind: "hint-requested" },
+      { kind: "hint-requested" },
+      { kind: "solved" },
+    ]);
+  });
+
+  test("a hint that stopped or failed asks for none", () => {
+    const game = start(CD_GOAL);
+    expect(play(game, "hint | cat").game).toEqual([]);
+    expect(play(game, "hint now").game).toEqual([]);
+    expect(play(game, "false && hint").game).toEqual([]);
+  });
+
+  test("help shows its text without a game event, and its text is no output for the rules", () => {
+    const game = start({ goal: { output_contains: "help" } });
+    const { terminal, game: events } = play(game, "help");
+    expect(terminal).toEqual([{ kind: "game-output", output: { kind: "help" } }]);
+    expect(events).toEqual([]);
+  });
+
+  test("Tab completes the game commands like the other commands", () => {
+    const game = start(CD_GOAL);
+    expect(completeInput(game.session, "hi", 2).matches.map((match) => match.name)).toEqual([
+      "hint",
+      "history",
+    ]);
+  });
+});

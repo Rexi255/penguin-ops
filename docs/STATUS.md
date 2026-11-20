@@ -4,6 +4,11 @@ _Last updated: 2026-11-20_
 
 ## Recently completed
 
+- M3.6b Game commands: `help` shows the game's overview (game commands, keys, every simulated
+  command), `help NAME` a short description of each command or that the game does not know it;
+  `hint` shows the ticket's next hint in the terminal and the Tickets tab and counts with F1. Both
+  are builtins of the engine whose text the UI writes; into a pipe or a file they stop with a
+  notice. M3.6 is complete (ADR 0103).
 - M3.6a Game notices: every command notice (an option or variable the game does not simulate,
   invalid UTF-8, input from the terminal) and every unsupported shell feature (35, such as here
   strings or `for` loops) has a text of its own in English and German that names it, with the
@@ -24,22 +29,16 @@ _Last updated: 2026-11-20_
   (pure model `packages/gameplay/src/inbox.ts`). A solved ticket offers the next one and names a
   chapter it opened; every opened ticket keeps its terminal and progress. Chapter titles are UI
   texts `chapters.<id>`, checked by the content loader; the top bar shows the chapter (ADR 0099).
-- M3.5b Hints and explanation: F1 or the footer's "F1 Hint" shows the ticket's next hint (tip,
-  concrete tip, solution) in a "Hints" section of the ticket panel, in its own polite live region,
-  and brings the Tickets tab to the front while the focus stays in the terminal; hints stay after
-  solving. A solved ticket shows "What you learned" with the explanation, its variants as a
-  definition list and a command to try. The hint count is part of the ticket's progress, and the
-  game screen keeps the chosen side panel tab (ADR 0098).
 
 ## In progress
 
-- ROADMAP M3.6b: game commands `help` and `hint`.
+- Nothing.
 
 ## Next 3 steps
 
-1. ROADMAP M3.6b: game commands `help` and `hint`.
-2. ROADMAP M3.7: save system (three slots, autosave, versioned format).
-3. ROADMAP M3.8: settings (language, volumes, fullscreen, font size, colour scheme).
+1. ROADMAP M3.7: save system (three slots, autosave, versioned format).
+2. ROADMAP M3.8: settings (language, volumes, fullscreen, font size, colour scheme).
+3. ROADMAP M3.9: colour schemes and effects.
 
 ## Blockers and open questions
 
@@ -60,6 +59,8 @@ _Last updated: 2026-11-20_
   with `STYLEGUIDE_CHROMIUM_PATH` set to the preinstalled Chromium.
 - Steam release is assumed to be "maybe later" (ADR 0002); confirm with the owner when it
   becomes relevant.
+- A hint asked for with the game command `hint` is announced twice to screen readers, by the
+  terminal's log and the ticket panel (ADR 0103); M3.14 decides which stays quiet.
 - The game lives only in the game screen: the started and solved tickets, each ticket's messages,
   hint count, reached extra goals and terminal. The save system (M3.7) has to keep or rebuild
   them when it resumes a ticket at a checkpoint, and decide how game time runs across tickets,

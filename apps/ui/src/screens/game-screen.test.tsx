@@ -539,6 +539,31 @@ describe("GameScreen", () => {
     expect(hintLabels()).toHaveLength(3);
   });
 
+  test("shows the hint of the game command hint in the terminal and the ticket", async () => {
+    renderGameScreen();
+    await userEvent.click(screen.getByRole("tab", { name: "Mail" }));
+    await userEvent.click(screen.getByRole("textbox", { name: "Command line" }));
+    await userEvent.keyboard("hint{Enter}");
+    expect(screen.getByRole("tab", { name: "Tickets", selected: true })).toBeDefined();
+    expect(hintLabels()).toEqual(["Hint 1 of 3"]);
+    expect(document.querySelector(".terminal__game-label")?.textContent).toBe("Hint 1 of 3");
+    expect(screen.getByRole("textbox", { name: "Command line" })).toBe(document.activeElement);
+  });
+
+  test("counts the hints of F1 and of the game command hint together", async () => {
+    renderGameScreen("de");
+    await userEvent.keyboard("{F1}hint{Enter}");
+    expect(hintLabels()).toEqual(["Hinweis 1 von 3", "Hinweis 2 von 3"]);
+    expect(
+      [...document.querySelectorAll(".terminal__game-label")].map((label) => label.textContent),
+    ).toEqual(["Hinweis 2 von 3"]);
+    await userEvent.keyboard("hint{Enter}{F1}hint{Enter}");
+    expect(hintLabels()).toHaveLength(3);
+    expect(screen.getByRole("log").textContent).toContain(
+      "Du hast alle drei Hinweise zu diesem Ticket gesehen.",
+    );
+  });
+
   test("shows only one hint while F1 is held down", async () => {
     renderGameScreen();
     await userEvent.keyboard("{F1>3/}");
