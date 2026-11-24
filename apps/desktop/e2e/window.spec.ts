@@ -60,20 +60,22 @@ test("runs the renderer without Node.js and exposes only the desktop API", async
     const keys = (value: unknown): string[] =>
       typeof value === "object" && value !== null ? Object.keys(value) : [];
     const desktopApi = scope["penguinOps"];
+    const member = (name: string): unknown =>
+      keys(desktopApi).includes(name) ? Reflect.get(Object(desktopApi), name) : undefined;
     return {
       require: typeof scope["require"],
       process: typeof scope["process"],
       desktopApi: keys(desktopApi),
-      saves: keys(
-        keys(desktopApi).includes("saves") ? Reflect.get(Object(desktopApi), "saves") : undefined,
-      ),
+      saves: keys(member("saves")),
+      settings: keys(member("settings")),
     };
   });
   expect(globals).toEqual({
     require: "undefined",
     process: "undefined",
-    desktopApi: ["getAppInfo", "quit", "setCloseHandler", "saves"],
+    desktopApi: ["getAppInfo", "quit", "setCloseHandler", "saves", "settings"],
     saves: ["readSlots", "writeSlot", "restoreBackup", "deleteSlot", "exportSave", "importSave"],
+    settings: ["read", "write"],
   });
 });
 

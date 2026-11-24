@@ -8,7 +8,8 @@ _Last updated: 2026-11-24_
   global settings (language, volumes, fullscreen, font size, colour scheme, effects, reduce
   motion) with defaults and reads a file setting by setting, so that a broken file never stops
   the game; the main process stores `<userData>/settings.json` atomically through the preload API
-  `settings`; the game takes its language from the settings (ADR 0108).
+  `settings`, which the end-to-end tests check in the preload API inventory too; the game takes
+  its language from the settings (ADR 0108).
 - M3.7d Export and import (M3.7 complete): the slot menu offers Export for a game, Import for
   every slot and Delete; the main process shows the system's file dialogs with the texts the
   renderer passes and writes or reads the file; the renderer refuses a file that is no playable
