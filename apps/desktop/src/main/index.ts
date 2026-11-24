@@ -1,5 +1,5 @@
 // Entry point of the Electron main process. It owns the window and the files of the player (the
-// save slots); the game itself runs in the renderer (docs/ARCHITECTURE.md).
+// save slots and the settings); the game itself runs in the renderer (docs/ARCHITECTURE.md).
 import { join } from "node:path";
 
 import type { AppInfo } from "@penguin-ops/ui";
@@ -14,13 +14,7 @@ import {
 } from "electron";
 
 import { IPC_CHANNELS } from "../shared/ipc-channels";
-import {
-  checkSaveText,
-  checkSlot,
-  createSaveStore,
-  NODE_FILE_SYSTEM,
-  type SaveStore,
-} from "./save-store";
+import { checkSaveText, checkSlot, createSaveStore, type SaveStore } from "./save-store";
 import {
   exportSave,
   importSave,
@@ -28,6 +22,8 @@ import {
   type SaveTransferOptions,
 } from "./save-transfer";
 import { isAllowedRequest, isTrustedSender, type AppLocation } from "./security";
+import { checkSettingsText, createSettingsStore, type SettingsStore } from "./settings-store";
+import { NODE_FILE_SYSTEM } from "./stored-files";
 import { createMainWindow } from "./window";
 
 /** The development server URL is only trusted in a development build, never when installed. */
@@ -123,7 +119,7 @@ function transferOptions(event: IpcMainInvokeEvent): SaveTransferOptions {
   };
 }
 
-function registerIpcHandlers(saves: SaveStore): void {
+function registerIpcHandlers(saves: SaveStore, settings: SettingsStore): void {
   handleFromApp(IPC_CHANNELS.getAppInfo, (): AppInfo => ({
     name: app.getName(),
     version: app.getVersion(),
@@ -149,6 +145,11 @@ function registerIpcHandlers(saves: SaveStore): void {
   handleFromApp(IPC_CHANNELS.importSave, (request, _second, event) =>
     importSave(request, transferOptions(event)),
   );
+  handleFromApp(IPC_CHANNELS.readSettings, () => settings.read());
+  handleFromApp(IPC_CHANNELS.writeSettings, (text) => {
+    checkSettingsText(text);
+    return settings.write(text);
+  });
   // A one-way message: the renderer does not wait for an answer while the app closes.
   ipcMain.on(IPC_CHANNELS.quit, (event) => {
     if (!isFromApp(event)) {
@@ -167,8 +168,10 @@ function fail(error: unknown): void {
 async function start(): Promise<void> {
   await app.whenReady();
   hardenSession();
-  // The saves live in Electron's per-user data folder, on Windows under %APPDATA% (ADR 0013).
-  registerIpcHandlers(createSaveStore(join(app.getPath("userData"), "saves")));
+  // The saves and the settings live in Electron's per-user data folder, on Windows under %APPDATA%
+  // (ADR 0013, ADR 0108).
+  const userData = app.getPath("userData");
+  registerIpcHandlers(createSaveStore(join(userData, "saves")), createSettingsStore(userData));
   await createMainWindow(location);
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {

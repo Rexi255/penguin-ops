@@ -6,6 +6,7 @@ import type {
   DesktopApi,
   DesktopApiGlobalName,
   ImportedFile,
+  StoredFile,
   StoredSlot,
 } from "@penguin-ops/ui";
 import { contextBridge, ipcRenderer } from "electron";
@@ -49,6 +50,12 @@ const api: DesktopApi = {
       ipcRenderer.invoke(IPC_CHANNELS.exportSave, request) as Promise<"saved" | "canceled">,
     importSave: (texts) =>
       ipcRenderer.invoke(IPC_CHANNELS.importSave, texts) as Promise<ImportedFile>,
+  },
+  settings: {
+    read: () => ipcRenderer.invoke(IPC_CHANNELS.readSettings) as Promise<StoredFile>,
+    write: async (text) => {
+      await ipcRenderer.invoke(IPC_CHANNELS.writeSettings, text);
+    },
   },
 };
 

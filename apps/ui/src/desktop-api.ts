@@ -11,7 +11,7 @@ export interface AppInfo {
   readonly version: string;
 }
 
-/** A file of a save slot as the desktop read it. */
+/** A file of a save slot or the settings file as the desktop read it. */
 export type StoredFile =
   | { readonly kind: "missing" }
   /** The file exists but could not be read: it is too large, a folder, or not accessible. */
@@ -68,6 +68,18 @@ export interface SaveFilesApi {
   readonly importSave: (texts: FileDialogTexts) => Promise<ImportedFile>;
 }
 
+/**
+ * The settings file in the per-user data folder (ADR 0013, ADR 0108). The desktop stores the text
+ * without reading it; the UI parses it with the gameplay package. Every write is atomic. The
+ * promises reject when the file cannot be written.
+ */
+export interface SettingsFileApi {
+  /** Reads the settings file. */
+  readonly read: () => Promise<StoredFile>;
+  /** Writes `text` as the settings file. */
+  readonly write: (text: string) => Promise<void>;
+}
+
 /** Functions the desktop shell offers to the renderer. */
 export interface DesktopApi {
   /** Returns the product name and version of the running app. */
@@ -81,6 +93,8 @@ export interface DesktopApi {
   readonly setCloseHandler: (handler: () => Promise<void>) => void;
   /** The save slot files. */
   readonly saves: SaveFilesApi;
+  /** The settings file. */
+  readonly settings: SettingsFileApi;
 }
 
 /** The name of the global under which the preload script exposes the `DesktopApi`. */

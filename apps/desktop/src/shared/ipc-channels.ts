@@ -11,4 +11,6 @@ export const IPC_CHANNELS = {
   deleteSlot: "saves:delete-slot",
   exportSave: "saves:export",
   importSave: "saves:import",
+  readSettings: "settings:read",
+  writeSettings: "settings:write",
 } as const;

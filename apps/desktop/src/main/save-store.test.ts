@@ -9,12 +9,10 @@ import {
   checkSlot,
   createSaveStore,
   MAX_SAVE_TEXT_LENGTH,
-  NODE_FILE_SYSTEM,
-  RENAME_ATTEMPTS,
   SAVE_SLOT_COUNT,
-  type SaveFileSystem,
   slotFileNames,
 } from "./save-store";
+import { NODE_FILE_SYSTEM, RENAME_ATTEMPTS, type StoreFileSystem } from "./stored-files";
 
 let root: string;
 let directory: string;
@@ -152,7 +150,7 @@ describe("createSaveStore", () => {
   });
 
   test("reads a file that cannot be read for another reason as unreadable", async () => {
-    const fileSystem: SaveFileSystem = {
+    const fileSystem: StoreFileSystem = {
       ...NODE_FILE_SYSTEM,
       readFile: () => Promise.reject(fsError("EACCES")),
     };
@@ -177,7 +175,7 @@ describe("createSaveStore", () => {
 
   test("goes on with the next save of a slot after one failed", async () => {
     let failures = 1;
-    const fileSystem: SaveFileSystem = {
+    const fileSystem: StoreFileSystem = {
       ...NODE_FILE_SYSTEM,
       writeFile: (path, value) => {
         if (failures > 0) {
@@ -199,7 +197,7 @@ describe("createSaveStore", () => {
   test("tries a rename again while Windows holds the file and doubles the wait", async () => {
     let failures = 2;
     const waits: number[] = [];
-    const fileSystem: SaveFileSystem = {
+    const fileSystem: StoreFileSystem = {
       ...NODE_FILE_SYSTEM,
       rename: (from, to) => {
         if (failures > 0) {
@@ -219,7 +217,7 @@ describe("createSaveStore", () => {
   test(`gives up after ${String(RENAME_ATTEMPTS)} attempts`, async () => {
     const waits: number[] = [];
     let attempts = 0;
-    const fileSystem: SaveFileSystem = {
+    const fileSystem: StoreFileSystem = {
       ...NODE_FILE_SYSTEM,
       rename: () => {
         attempts += 1;
@@ -234,7 +232,7 @@ describe("createSaveStore", () => {
 
   test("does not try a rename again after another error", async () => {
     const waits: number[] = [];
-    const fileSystem: SaveFileSystem = {
+    const fileSystem: StoreFileSystem = {
       ...NODE_FILE_SYSTEM,
       rename: () => Promise.reject(new Error("no code")),
     };
@@ -245,7 +243,7 @@ describe("createSaveStore", () => {
 
   test("waits with a real timer by default", async () => {
     let failures = 1;
-    const fileSystem: SaveFileSystem = {
+    const fileSystem: StoreFileSystem = {
       ...NODE_FILE_SYSTEM,
       rename: (from, to) => {
         if (failures > 0) {
@@ -260,7 +258,7 @@ describe("createSaveStore", () => {
   });
 
   test("passes on an error other than a missing save while it checks for one", async () => {
-    const fileSystem: SaveFileSystem = {
+    const fileSystem: StoreFileSystem = {
       ...NODE_FILE_SYSTEM,
       stat: () => Promise.reject(fsError("EACCES")),
     };

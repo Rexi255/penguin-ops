@@ -1,7 +1,7 @@
-// Entry point of the renderer, loaded by index.html. It loads the bundled content, picks the
-// language from the operating system's locale (ADR 0012), reads the save slots and renders the
-// app.
-import { reservedUserNames } from "@penguin-ops/gameplay";
+// Entry point of the renderer, loaded by index.html. It loads the bundled content, reads the
+// settings (ADR 0108), takes the language from them or from the operating system's locale
+// (ADR 0012), reads the save slots and renders the app.
+import { gameLanguage, reservedUserNames } from "@penguin-ops/gameplay";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -10,7 +10,7 @@ import { loadBundledContent } from "./content/bundled-content";
 import { getDesktopApi } from "./desktop-bridge";
 import "./fonts/fonts.css";
 import { loadSlots, SAVE_SLOT_COUNT, type SlotState } from "./saves/save-slots";
-import { languageForLocale } from "./texts/language";
+import { loadSettings } from "./settings/settings-file";
 import { createTexts } from "./texts/ui-texts";
 import "./tokens.css";
 import "./styles.css";
@@ -21,15 +21,20 @@ if (container === null) {
 }
 
 const content = loadBundledContent();
+const desktop = getDesktopApi();
+const info = await desktop.getAppInfo();
+
+// The global settings (ADR 0013, ADR 0108). Whatever is wrong with the file, the game starts with
+// the default for every setting it cannot read.
+const settings = await loadSettings(desktop.settings, (message, detail) => {
+  console.warn(message, ...(detail === undefined ? [] : [detail]));
+});
 // Electron sets the renderer's language to the app's locale, which follows the system.
-const language = languageForLocale(navigator.language);
+const language = gameLanguage(settings.language, navigator.language);
 document.documentElement.lang = language;
 const texts = createTexts(content.uiCatalogs, language);
 
 const reserved = reservedUserNames([...content.worlds.values()]);
-
-const desktop = getDesktopApi();
-const info = await desktop.getAppInfo();
 
 function logSaveError(error: unknown): void {
   console.error("PenguinOps could not save:", error);

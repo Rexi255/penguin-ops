@@ -232,6 +232,13 @@ inventing it along the way.
   - [x] M3.7d Export and import of a slot as a file (ADR 0107).
 - [ ] M3.8 Settings: language (OS default), volumes, fullscreen (F11), font size, colour
       scheme, effects, reduce motion; language switch restarts the ticket.
+  - [x] M3.8a Settings model and file: version 1 of the settings format with defaults, read
+        setting by setting, stored atomically in the per-user data folder; the game takes its
+        language from the settings (ADR 0108).
+  - [ ] M3.8b Settings screen from the main menu and the pause menu: language with a
+        confirmation that restarts the ticket, fullscreen with F11.
+  - [ ] M3.8c Font size, reduce motion, volume sliders (they take effect with M3.10), colour
+        scheme and effects (only the default scheme until M3.9).
 - [ ] M3.9 Colour schemes and effects: retro CRT, Solarized and high contrast as value sets
       for the semantic colour tokens of M3.0b (contrast test for every scheme); optional glow
       and scanlines.

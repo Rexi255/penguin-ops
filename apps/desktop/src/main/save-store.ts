@@ -4,10 +4,18 @@
 // (ADR 0006, ADR 0104). The store guarantees that a crash or a full disk while saving never
 // destroys a slot: every file is written to a temporary file first and then renamed over the old
 // one, and the file a save replaces is kept as the slot's backup.
-import * as nodeFs from "node:fs/promises";
 import { join } from "node:path";
 
-import type { StoredFile, StoredSlot } from "@penguin-ops/ui";
+import type { StoredSlot } from "@penguin-ops/ui";
+
+import {
+  createAtomicWriter,
+  errorCode,
+  NODE_FILE_SYSTEM,
+  readStoredFile,
+  realWait,
+  type StoreFileSystem,
+} from "./stored-files";
 
 /** The number of save slots (ADR 0013); the UI's slot screen shows the same number. */
 export const SAVE_SLOT_COUNT = 3;
@@ -18,39 +26,6 @@ export const SAVE_SLOT_COUNT = 3;
  * memory.
  */
 export const MAX_SAVE_TEXT_LENGTH = 1024 * 1024;
-
-/** The file system functions the store uses; tests replace single ones to provoke errors. */
-export interface SaveFileSystem {
-  readonly mkdir: (path: string, options: { recursive: true }) => Promise<unknown>;
-  readonly readFile: (path: string, encoding: "utf8") => Promise<string>;
-  readonly stat: (path: string) => Promise<{ readonly size: number; isFile(): boolean }>;
-  readonly writeFile: (path: string, text: string) => Promise<void>;
-  readonly copyFile: (from: string, to: string) => Promise<void>;
-  readonly rename: (from: string, to: string) => Promise<void>;
-  readonly rm: (path: string, options: { force: true }) => Promise<void>;
-}
-
-/** Writes a file and flushes it to the disk before it is closed. */
-async function writeFileDurably(path: string, text: string): Promise<void> {
-  const handle = await nodeFs.open(path, "w");
-  try {
-    await handle.writeFile(text, "utf8");
-    await handle.sync();
-  } finally {
-    await handle.close();
-  }
-}
-
-/** The real file system of Node.js. */
-export const NODE_FILE_SYSTEM: SaveFileSystem = {
-  mkdir: (path, options) => nodeFs.mkdir(path, options),
-  readFile: (path, encoding) => nodeFs.readFile(path, encoding),
-  stat: (path) => nodeFs.stat(path),
-  writeFile: writeFileDurably,
-  copyFile: (from, to) => nodeFs.copyFile(from, to),
-  rename: (from, to) => nodeFs.rename(from, to),
-  rm: (path, options) => nodeFs.rm(path, options),
-};
 
 /** What the store can do with the save slots; a slot is an index counting from 0. */
 export interface SaveStore {
@@ -70,48 +45,9 @@ export interface SaveStore {
 /** Options of `createSaveStore`. */
 export interface SaveStoreOptions {
   /** The file system; the real one by default. */
-  readonly fileSystem?: SaveFileSystem;
+  readonly fileSystem?: StoreFileSystem;
   /** Waits `milliseconds` before a rename is tried again; a real timer by default. */
   readonly wait?: (milliseconds: number) => Promise<void>;
-}
-
-/**
- * How often a rename is tried before the store gives up. On Windows, a virus scanner or the
- * search indexer can hold a file that was just written for a moment, and renaming over it fails
- * with EPERM, EACCES or EBUSY until it lets go.
- */
-export const RENAME_ATTEMPTS = 5;
-
-/** The wait before the second rename attempt; it doubles with every further attempt. */
-const FIRST_RETRY_DELAY = 20;
-
-const RETRIED_RENAME_ERRORS: ReadonlySet<string> = new Set(["EPERM", "EACCES", "EBUSY"]);
-
-/** The error code of a Node.js file system error, or `undefined` for other errors. */
-function errorCode(error: unknown): string | undefined {
-  if (typeof error === "object" && error !== null && "code" in error) {
-    const { code } = error;
-    return typeof code === "string" ? code : undefined;
-  }
-  return undefined;
-}
-
-/**
- * Reads the save file at `path`: `missing` if there is none, `unreadable` if it is no file, is
- * longer than `MAX_SAVE_TEXT_LENGTH` or cannot be read.
- */
-export async function readStoredFile(fs: SaveFileSystem, path: string): Promise<StoredFile> {
-  try {
-    const stats = await fs.stat(path);
-    // UTF-8 needs at most three bytes for a UTF-16 code unit, so a larger file is too long.
-    if (!stats.isFile() || stats.size > MAX_SAVE_TEXT_LENGTH * 3) {
-      return { kind: "unreadable" };
-    }
-    const text = await fs.readFile(path, "utf8");
-    return text.length > MAX_SAVE_TEXT_LENGTH ? { kind: "unreadable" } : { kind: "text", text };
-  } catch (error) {
-    return errorCode(error) === "ENOENT" ? { kind: "missing" } : { kind: "unreadable" };
-  }
 }
 
 /** Throws a TypeError unless `slot` is the index of a save slot. */
@@ -147,12 +83,7 @@ export function slotFileNames(slot: number): {
 /** Creates the store of the save slots in `directory`, which it creates when it first writes. */
 export function createSaveStore(directory: string, options: SaveStoreOptions = {}): SaveStore {
   const fs = options.fileSystem ?? NODE_FILE_SYSTEM;
-  const wait =
-    options.wait ??
-    ((milliseconds: number) =>
-      new Promise<void>((resolve) => {
-        setTimeout(resolve, milliseconds);
-      }));
+  const { writeAtomically, copyAtomically } = createAtomicWriter(fs, options.wait ?? realWait);
   // The operations on a slot run one after the other, so that two saves never share a temporary
   // file and a backup is never taken of a half-renamed save.
   const queues = new Map<number, Promise<unknown>>();
@@ -172,21 +103,6 @@ export function createSaveStore(directory: string, options: SaveStoreOptions = {
     return { save: join(directory, names.save), backup: join(directory, names.backup) };
   }
 
-  async function renameWithRetry(from: string, to: string): Promise<void> {
-    for (let attempt = 1; ; attempt += 1) {
-      try {
-        await fs.rename(from, to);
-        return;
-      } catch (error) {
-        const code = errorCode(error);
-        if (attempt >= RENAME_ATTEMPTS || code === undefined || !RETRIED_RENAME_ERRORS.has(code)) {
-          throw error;
-        }
-        await wait(FIRST_RETRY_DELAY * 2 ** (attempt - 1));
-      }
-    }
-  }
-
   async function exists(path: string): Promise<boolean> {
     try {
       await fs.stat(path);
@@ -199,19 +115,6 @@ export function createSaveStore(directory: string, options: SaveStoreOptions = {
     }
   }
 
-  /** Copies `from` to `to` so that `to` is always either the old or the complete new file. */
-  async function copyAtomically(from: string, to: string): Promise<void> {
-    const temporary = `${to}.tmp`;
-    await fs.copyFile(from, temporary);
-    await renameWithRetry(temporary, to);
-  }
-
-  async function writeAtomically(path: string, text: string): Promise<void> {
-    const temporary = `${path}.tmp`;
-    await fs.writeFile(temporary, text);
-    await renameWithRetry(temporary, path);
-  }
-
   return {
     readSlots: () =>
       Promise.all(
@@ -219,8 +122,8 @@ export function createSaveStore(directory: string, options: SaveStoreOptions = {
           queued(slot, async (): Promise<StoredSlot> => {
             const { save, backup } = paths(slot);
             return {
-              save: await readStoredFile(fs, save),
-              backup: await readStoredFile(fs, backup),
+              save: await readStoredFile(fs, save, MAX_SAVE_TEXT_LENGTH),
+              backup: await readStoredFile(fs, backup, MAX_SAVE_TEXT_LENGTH),
             };
           }),
         ),

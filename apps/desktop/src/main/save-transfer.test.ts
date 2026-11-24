@@ -4,7 +4,8 @@ import { join } from "node:path";
 
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { MAX_SAVE_TEXT_LENGTH, NODE_FILE_SYSTEM } from "./save-store";
+import { MAX_SAVE_TEXT_LENGTH } from "./save-store";
+import { NODE_FILE_SYSTEM } from "./stored-files";
 import {
   checkExportRequest,
   checkFileDialogTexts,

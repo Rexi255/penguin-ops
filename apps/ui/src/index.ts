@@ -9,6 +9,7 @@ export type {
   FileDialogTexts,
   ImportedFile,
   SaveFilesApi,
+  SettingsFileApi,
   StoredFile,
   StoredSlot,
 } from "./desktop-api";

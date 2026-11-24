@@ -1,0 +1,18 @@
+{
+  "format": "penguin-ops-settings",
+  "version": 1,
+  "language": "de",
+  "volumes": {
+    "master": 65,
+    "music": 0,
+    "effects": 100
+  },
+  "fullscreen": false,
+  "fontSize": 125,
+  "colorScheme": "high-contrast",
+  "effects": {
+    "glow": true,
+    "scanlines": false
+  },
+  "reduceMotion": "on"
+}

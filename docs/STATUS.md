@@ -1,9 +1,14 @@
 # Status
 
-_Last updated: 2026-11-20_
+_Last updated: 2026-11-24_
 
 ## Recently completed
 
+- M3.8a Settings model and file: `packages/gameplay/src/settings.ts` defines version 1 of the
+  global settings (language, volumes, fullscreen, font size, colour scheme, effects, reduce
+  motion) with defaults and reads a file setting by setting, so that a broken file never stops
+  the game; the main process stores `<userData>/settings.json` atomically through the preload API
+  `settings`; the game takes its language from the settings (ADR 0108).
 - M3.7d Export and import (M3.7 complete): the slot menu offers Export for a game, Import for
   every slot and Delete; the main process shows the system's file dialogs with the texts the
   renderer passes and writes or reads the file; the renderer refuses a file that is no playable
@@ -33,10 +38,9 @@ _Last updated: 2026-11-20_
 
 ## Next 3 steps
 
-1. ROADMAP M3.8: settings (language, volumes, fullscreen, font size, colour scheme, effects,
-   reduce motion).
-2. ROADMAP M3.9: colour schemes and effects.
-3. ROADMAP M3.10: UI sounds.
+1. ROADMAP M3.8b: settings screen with language (restarts the ticket) and fullscreen (F11).
+2. ROADMAP M3.8c: font size, reduce motion, volumes, colour scheme and effects in the settings.
+3. ROADMAP M3.9: colour schemes and effects.
 
 ## Blockers and open questions
 
@@ -59,10 +63,8 @@ _Last updated: 2026-11-20_
   becomes relevant.
 - A hint asked for with the game command `hint` is announced twice to screen readers, by the
   terminal's log and the ticket panel (ADR 0103); M3.14 decides which stays quiet.
-- The game still lives only in the game screen until M3.7c: it has to build a game from a save
-  (check the levels, steps and extra goals against the content, decide what happens with a level
-  an update removed, rebuild the ticket messages) and start tickets at the game's one game time
-  instead of the start time (ADR 0104).
+- The window does not know the fullscreen setting yet: the main process cannot parse the
+  settings (ADR 0108), so M3.8b decides how the window learns it before or after it shows.
 - A save whose user name a later world reserves is locked (ADR 0106); the player can only delete
   it or import over it. A way to rename the user is an idea for later. The reserved Debian
   accounts are verified in M6.

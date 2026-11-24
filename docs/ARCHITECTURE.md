@@ -466,7 +466,16 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
   ticket opened for the first time.
 - Campaign, still planned: the playground (ADR 0017).
 - Progress: XP, ranks, achievements (ADR 0018).
-- Settings model (ADR 0013).
+- Settings format (`src/settings.ts`, ADR 0013, ADR 0108): `Settings` holds the global settings
+  (language, volumes, fullscreen, font size, colour scheme, effects, reduce motion) and
+  `DEFAULT_SETTINGS` their defaults. `serializeSettings` writes them as JSON of format version
+  `SETTINGS_FORMAT_VERSION` in a fixed order; `parseSettings` never refuses a file: it migrates
+  an older version with `SETTINGS_MIGRATIONS` (`migrateSettings`), reads every setting on its
+  own and gives the default for each one it cannot read (all defaults for a file that is no JSON,
+  no settings file or too new), with a `SettingsProblem` per problem for the log. Example files of
+  every format version are stored byte for byte in `packages/gameplay/settings-fixtures/`.
+  `gameLanguage` turns the language setting and the system's locale into German or English
+  (ADR 0012).
 
 ## UI (`apps/ui`)
 
@@ -481,8 +490,8 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
 - All texts come from the catalogs; no hard-coded strings.
 
 Current state (ADR 0033): `index.html` (with the strict Content Security Policy) loads
-`src/main.tsx`, which loads the bundled content, picks the language, asks the desktop API for
-the app info, computes the reserved user names of the loaded worlds, reads the save slots
+`src/main.tsx`, which loads the bundled content, asks the desktop API for the app info, reads the
+settings (`loadSettings`), picks the language, computes the reserved user names of the loaded worlds, reads the save slots
 (`loadSlots`) and renders `src/app.tsx`, which shows the current screen (ADR 0091, ADR 0094): it
 holds the screen as React state of the union type `Screen`, whose members carry their slot where
 they need one, and picks the screen component with an exhaustive `switch`; screens get callbacks
@@ -499,11 +508,16 @@ and backup whether it is empty, holds a game (fitted to the content) or is locke
 again; `loadSlots` reads every slot through the desktop API and does those repairs. `readImport`
 reads a file the player imports the same way, and `exportFileName` names an export.
 
+Settings (`src/settings/settings-file.ts`, ADR 0108): `loadSettings` reads the settings file
+through the desktop API at start and parses it with the gameplay package; a missing file gives the
+default settings, and a file that cannot be read or parsed gives defaults with every problem in
+the log (`describeProblem`). The file is not written back at start.
+
 Content and texts (ADR 0090): `src/content/bundled-content.ts` imports every `.yaml` file of
 `content/` as text with `import.meta.glob` at build time and loads it with `sortContentFiles`
 and `loadContent` (zod set to `jitless` for the Content Security Policy); a problem throws a
-`ContentLoadError`. `src/texts/language.ts` turns `navigator.language` into German or English
-(ADR 0012) and `main.tsx` sets the document's `lang`. `src/texts/ui-texts.ts` lists every UI
+`ContentLoadError`. `main.tsx` takes the language from the settings with `gameLanguage`, the
+system's from `navigator.language` (ADR 0012, ADR 0108), and sets the document's `lang`. `src/texts/ui-texts.ts` lists every UI
 text key with its placeholders (`UI_TEXT_PLACEHOLDERS`, checked against both catalogs by a
 test) and `createTexts` gives each text as rich or plain text and each chapter's title (`chapterTitle`,
 ADR 0099); `src/texts/texts-context.tsx`
@@ -626,7 +640,8 @@ ratios. Its layout is
 
 `src/desktop-api.ts` defines
 the preload contract (`DesktopApi`: `getAppInfo`, `quit`, `setCloseHandler`, and `saves`, the
-save slot files as texts, ADR 0105, ADR 0106); `src/index.ts` exports only its types, for `apps/desktop`.
+save slot files as texts, ADR 0105, ADR 0106, and `settings`, the settings file as a text,
+ADR 0108); `src/index.ts` exports only its types, for `apps/desktop`.
 
 ## Desktop (`apps/desktop`)
 
@@ -647,7 +662,7 @@ apps/desktop/
   build/                    app icons that electron-builder reads while packaging (ADR 0040)
   playwright.config.ts      end-to-end tests against the built and the packaged app
   src/main/index.ts         app start, hardening of all web contents and the session, IPC handlers
-                            (app info; quit; save files; export and import), each answering only the app's own page
+                            (app info; quit; save files; export and import; settings file), each answering only the app's own page
                             and validating every argument
   src/main/close-guard.ts   holds the window's close back until the page has saved, at most 5 s
                             (ADR 0106)
@@ -656,7 +671,11 @@ apps/desktop/
                             (ADR 0107)
   src/main/save-store.ts    the save slot files in <userData>/saves as texts: atomic writes with
                             the replaced save as backup, restore, delete, one operation per slot
-                            at a time, rename retries on Windows (ADR 0105)
+                            at a time (ADR 0105)
+  src/main/settings-store.ts  the settings file <userData>/settings.json as a text: atomic
+                            writes without a backup, one operation at a time (ADR 0108)
+  src/main/stored-files.ts  reading a stored text with a size limit, atomic writes and copies
+                            through a temporary file, rename retries on Windows (ADR 0105)
   src/main/window.ts        the main window
   src/main/web-preferences.ts  secure web preferences of every window
   src/main/security.ts      pure checks: allowed request URLs, trusted IPC senders

@@ -7,7 +7,8 @@ import { basename, join } from "node:path";
 
 import type { ExportRequest, FileDialogTexts, ImportedFile } from "@penguin-ops/ui";
 
-import { checkSaveText, readStoredFile, type SaveFileSystem } from "./save-store";
+import { checkSaveText, MAX_SAVE_TEXT_LENGTH } from "./save-store";
+import { readStoredFile, type StoreFileSystem } from "./stored-files";
 
 /** The longest dialog title or file type name the main process accepts. */
 export const MAX_DIALOG_TEXT_LENGTH = 200;
@@ -70,7 +71,7 @@ export interface SaveDialogs {
 /** Where the transfer looks and writes. */
 export interface SaveTransferOptions {
   readonly dialogs: SaveDialogs;
-  readonly fileSystem: SaveFileSystem;
+  readonly fileSystem: StoreFileSystem;
   /** The folder the export dialog starts in, such as the player's documents. */
   readonly exportFolder: string;
 }
@@ -113,5 +114,8 @@ export async function importSave(
   if (path === undefined) {
     return { kind: "canceled" };
   }
-  return { kind: "file", file: await readStoredFile(options.fileSystem, path) };
+  return {
+    kind: "file",
+    file: await readStoredFile(options.fileSystem, path, MAX_SAVE_TEXT_LENGTH),
+  };
 }
