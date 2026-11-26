@@ -13,4 +13,6 @@ export const IPC_CHANNELS = {
   importSave: "saves:import",
   readSettings: "settings:read",
   writeSettings: "settings:write",
+  setFullscreen: "window:set-fullscreen",
+  fullscreenChanged: "window:fullscreen-changed",
 } as const;

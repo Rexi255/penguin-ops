@@ -1,5 +1,6 @@
 // The start screen (ROADMAP M3.1a, M3.1b): the logo, the main menu and the version. The menu
-// holds only entries whose screens exist: Play opens the save slot screen, Quit closes the game.
+// holds only entries whose screens exist: Play opens the save slot screen, Settings the settings
+// screen (ADR 0109), Quit closes the game.
 
 import { useEffect, useRef } from "react";
 
@@ -12,19 +13,31 @@ export interface StartScreenProps {
   readonly version: string;
   /** Opens the save slot screen. */
   readonly onPlay: () => void;
+  /** Opens the settings screen. */
+  readonly onSettings: () => void;
   /** Closes the game. */
   readonly onQuit: () => void;
+  /** The entry that has the focus when the screen appears: Settings on the way back from them. */
+  readonly focusedEntry?: "play" | "settings";
 }
 
-export function StartScreen({ version, onPlay, onQuit }: StartScreenProps) {
+export function StartScreen({
+  version,
+  onPlay,
+  onSettings,
+  onQuit,
+  focusedEntry = "play",
+}: StartScreenProps) {
   const texts = useTexts();
-  const firstEntry = useRef<HTMLButtonElement>(null);
+  const playEntry = useRef<HTMLButtonElement>(null);
+  const settingsEntry = useRef<HTMLButtonElement>(null);
 
   // The keyboard is the main input (PRODUCT.md): the menu has the focus whenever the screen
-  // appears, at the start and on the way back from another screen, so Enter chooses Play.
+  // appears, at the start and on the way back from another screen, so Enter chooses Play; back
+  // from the settings, the focus is where the player left.
   useEffect(() => {
-    firstEntry.current?.focus();
-  }, []);
+    (focusedEntry === "settings" ? settingsEntry : playEntry).current?.focus();
+  }, [focusedEntry]);
 
   return (
     <div className="start-screen">
@@ -36,7 +49,7 @@ export function StartScreen({ version, onPlay, onQuit }: StartScreenProps) {
           <ul className="menu">
             <li>
               <button
-                ref={firstEntry}
+                ref={playEntry}
                 type="button"
                 className="button menu__entry"
                 onClick={() => {
@@ -44,6 +57,18 @@ export function StartScreen({ version, onPlay, onQuit }: StartScreenProps) {
                 }}
               >
                 <InlineText text={texts.rich("start.play")} textKey="start.play" />
+              </button>
+            </li>
+            <li>
+              <button
+                ref={settingsEntry}
+                type="button"
+                className="button menu__entry"
+                onClick={() => {
+                  onSettings();
+                }}
+              >
+                <InlineText text={texts.rich("start.settings")} textKey="start.settings" />
               </button>
             </li>
             <li>

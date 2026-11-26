@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from "vitest";
 
-import { CLOSE_TIMEOUT, guardClose, type GuardedWindow, type GuardTimers } from "./close-guard";
+import { CLOSE_TIMEOUT, guardClose, type GuardedWindow } from "./close-guard";
+import type { Timers } from "./timers";
 
 /** A window whose events the test fires, and timers the test runs by hand. */
 function setup() {
@@ -17,7 +18,7 @@ function setup() {
     },
     close: vi.fn(),
   } satisfies GuardedWindow;
-  const timers: GuardTimers = {
+  const timers: Timers = {
     setTimeout: (callback, milliseconds) => {
       const timeout = { callback, milliseconds, cleared: false };
       timeouts.push(timeout);

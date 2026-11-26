@@ -30,6 +30,8 @@ export const UI_TEXT_PLACEHOLDERS = {
   "start.menu": [],
   /** The menu entry that opens the save slot screen. */
   "start.play": [],
+  /** The menu entry that opens the settings (ADR 0109). */
+  "start.settings": [],
   /** The menu entry that closes the game. */
   "start.quit": [],
   /** The version line of the start screen; `version` is a code value. */
@@ -309,8 +311,42 @@ export const UI_TEXT_PLACEHOLDERS = {
   "pause.title": [],
   /** The pause menu entry that closes the menu and returns to the game. */
   "pause.continue": [],
+  /** The pause menu entry that opens the settings (ADR 0109). */
+  "pause.settings": [],
   /** The pause menu entry that leaves the game for the start screen. */
   "pause.main-menu": [],
+  /** The title of the settings, a screen from the main menu and a dialog in the game. */
+  "settings.title": [],
+  /** The name of the group of the language choice. */
+  "settings.language": [],
+  /** The choice of the system's language; `language` is the name of the language it gives. */
+  "settings.language-system": ["language"],
+  /** The choice of English, named in English in every language. */
+  "settings.language-en": [],
+  /** The choice of German, named in German in every language. */
+  "settings.language-de": [],
+  /** The name of the English language in the player's language. */
+  "languages.en": [],
+  /** The name of the German language in the player's language. */
+  "languages.de": [],
+  /** The name of the group of the display settings. */
+  "settings.display": [],
+  /** The switch of fullscreen. */
+  "settings.fullscreen": [],
+  /** The help line of the fullscreen switch: F11 toggles it everywhere. */
+  "settings.fullscreen-help": [],
+  /** The alert when the settings file could not be written. */
+  "settings.not-saved": [],
+  /** The button that leaves the settings. */
+  "settings.back": [],
+  /** The question before the language changes during a game (ADR 0012). */
+  "settings.restart-title": [],
+  /** What changing the language during a game does: the tickets restart at their checkpoints. */
+  "settings.restart-text": [],
+  /** The dialog button that changes the language and restarts the tickets. */
+  "settings.restart": [],
+  /** The dialog button that keeps the language. */
+  "settings.cancel": [],
 } as const satisfies Readonly<Record<string, readonly string[]>>;
 
 /** A key of a UI text. */

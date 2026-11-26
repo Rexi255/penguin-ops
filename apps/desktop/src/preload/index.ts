@@ -27,6 +27,15 @@ ipcRenderer.on(IPC_CHANNELS.closeRequested, () => {
   }
 });
 
+// Who hears the changes of fullscreen by F11 or the system (`setFullscreenListener`).
+let fullscreenListener: ((on: boolean) => void) | undefined;
+
+ipcRenderer.on(IPC_CHANNELS.fullscreenChanged, (_event, on: unknown) => {
+  if (typeof on === "boolean") {
+    fullscreenListener?.(on);
+  }
+});
+
 const api: DesktopApi = {
   getAppInfo: () => ipcRenderer.invoke(IPC_CHANNELS.getAppInfo) as Promise<AppInfo>,
   quit: () => {
@@ -55,6 +64,14 @@ const api: DesktopApi = {
     read: () => ipcRenderer.invoke(IPC_CHANNELS.readSettings) as Promise<StoredFile>,
     write: async (text) => {
       await ipcRenderer.invoke(IPC_CHANNELS.writeSettings, text);
+    },
+  },
+  display: {
+    setFullscreen: async (on) => {
+      await ipcRenderer.invoke(IPC_CHANNELS.setFullscreen, on);
+    },
+    setFullscreenListener: (listener) => {
+      fullscreenListener = listener;
     },
   },
 };

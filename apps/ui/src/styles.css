@@ -507,6 +507,147 @@ pre {
   background: var(--color-player);
 }
 
+/* The settings screen of the main menu (ADR 0109): the title, the settings and Back in one
+   column of 45 cells, the width of the side panel, in the middle of the ground. */
+.settings-screen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-block-size: 100%;
+  padding: var(--space-8) var(--space-4);
+}
+
+.settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  inline-size: calc(var(--cell-inline) * 45);
+  max-inline-size: 100%;
+}
+
+.settings-page__title {
+  margin: 0;
+  font-size: var(--text-title-size);
+  font-weight: var(--font-weight-heading);
+  line-height: var(--text-title-leading);
+}
+
+.settings-page__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* The settings themselves: a group per topic, named by its heading-sized legend. */
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.settings__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.settings__legend {
+  margin-block-end: var(--space-2);
+  padding: 0;
+  font-size: var(--text-heading-size);
+  font-weight: var(--font-weight-heading);
+  line-height: var(--text-heading-leading);
+}
+
+/* The alert after a failed write of the settings, in the red of real errors; the text says what
+   is wrong. */
+.settings__warning {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+  color: var(--color-cable-incident);
+  font-size: var(--text-hint-size);
+  font-weight: var(--font-weight-control);
+  line-height: var(--text-hint-leading);
+}
+
+/* Without an alert, the line takes no room: the gap before it is taken back. It stays in the
+   page, so that screen readers announce the alert as soon as it appears. */
+.settings__warning:empty {
+  margin-block-start: calc(var(--space-6) * -1);
+}
+
+/* A list of choices: radio buttons or a switch, one row each, with the marker of the mode cards.
+   Not chosen, a row has muted text; it lightens when the pointer is over it. Chosen, its text is
+   full strength and its marker is filled with fibre orange, the player's own choice (the Fibre
+   Rule); the filled marker shows the choice without colour too. */
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-corner);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    background-color var(--motion-duration-state) var(--motion-easing-state),
+    color var(--motion-duration-state) var(--motion-easing-state);
+}
+
+.choice:hover {
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+.choice:has(.choice__input:checked) {
+  color: var(--color-text);
+}
+
+.choice:has(.choice__input:focus-visible) {
+  outline: var(--border-width-focus) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
+}
+
+/* A round marker for a radio button; a square one for a switch. */
+.choice__marker {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: var(--space-3);
+  block-size: var(--space-3);
+  border: var(--border-width-choice) solid var(--color-control-border);
+  border-radius: var(--radius-round);
+}
+
+.choice__marker--box {
+  border-radius: var(--radius-corner);
+}
+
+.choice__marker::after {
+  inline-size: var(--space-1);
+  block-size: var(--space-1);
+  border-radius: inherit;
+  content: "";
+}
+
+.choice:has(.choice__input:checked) .choice__marker {
+  border-color: var(--color-player);
+}
+
+.choice:has(.choice__input:checked) .choice__marker::after {
+  background: var(--color-player);
+}
+
 /* The game screen: the workplace layout of ADR 0020 and DESIGN.md. The top bar and the footer
    lie on the ground, the side panel is 45 columns wide, and the terminal fills the rest. */
 .game-screen {
@@ -1221,6 +1362,22 @@ pre {
   font-size: var(--text-title-size);
   font-weight: var(--font-weight-heading);
   line-height: var(--text-title-leading);
+}
+
+/* The settings in the game: the pause menu's dialog, as wide as the settings screen's column,
+   with its content from the start; it scrolls when a large font size makes it higher than the
+   window. */
+.settings-dialog {
+  align-items: stretch;
+  inline-size: calc(var(--cell-inline) * 45);
+  max-inline-size: 100%;
+  max-block-size: 100%;
+  overflow-y: auto;
+}
+
+.settings-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 /* A question before an action that cannot be undone: a floating dialog like the pause menu, with

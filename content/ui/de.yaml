@@ -7,6 +7,7 @@ keys:
 start:
   menu: Hauptmenü
   play: Spielen
+  settings: Einstellungen
   quit: Beenden
   version: Version {version}
 slots:
@@ -187,7 +188,26 @@ help-topics:
 pause:
   title: Pause
   continue: Weiterspielen
+  settings: Einstellungen
   main-menu: Hauptmenü
+settings:
+  title: Einstellungen
+  language: Sprache
+  language-system: "Systemsprache ({language})"
+  language-en: English
+  language-de: Deutsch
+  display: Anzeige
+  fullscreen: Vollbild
+  fullscreen-help: F11 schaltet den Vollbildmodus auf jedem Bildschirm ein und aus.
+  not-saved: "Die Einstellungen konnten nicht gespeichert werden. Sie gelten, bis du das Spiel beendest."
+  back: Zurück
+  restart-title: Sprache wechseln?
+  restart-text: Deine Tickets beginnen in der neuen Sprache noch einmal ab ihrem letzten Checkpoint. Dein Fortschritt bleibt erhalten.
+  restart: Sprache wechseln
+  cancel: Abbrechen
+languages:
+  en: Englisch
+  de: Deutsch
 chapters:
   first-day: Der erste Tag
   left-behind: Was andere liegen ließen

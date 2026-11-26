@@ -3,6 +3,8 @@
 // save the game being played and closes the window once the renderer says it is done, or after
 // `CLOSE_TIMEOUT` milliseconds, so that a renderer that hangs never keeps the game open.
 
+import { REAL_TIMERS, type Timers } from "./timers";
+
 /** How long the window waits for the renderer to save before it closes anyway. */
 export const CLOSE_TIMEOUT = 5000;
 
@@ -18,21 +20,8 @@ export interface GuardedWindow {
   readonly close: () => void;
 }
 
-/** Timers, replaceable in tests. */
-export interface GuardTimers {
-  readonly setTimeout: (callback: () => void, milliseconds: number) => unknown;
-  readonly clearTimeout: (timer: unknown) => void;
-}
-
-const REAL_TIMERS: GuardTimers = {
-  setTimeout: (callback, milliseconds) => setTimeout(callback, milliseconds),
-  clearTimeout: (timer) => {
-    clearTimeout(timer as ReturnType<typeof setTimeout>);
-  },
-};
-
 /** Holds every close of `window` back until its renderer is ready or the timeout ran out. */
-export function guardClose(window: GuardedWindow, timers: GuardTimers = REAL_TIMERS): void {
+export function guardClose(window: GuardedWindow, timers: Timers = REAL_TIMERS): void {
   let state: "open" | "waiting" | "closing" = "open";
   window.onClose((prevent) => {
     if (state === "closing") {

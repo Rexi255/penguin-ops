@@ -5,11 +5,25 @@ import { expect, test } from "./app";
 import { axeViolations } from "./axe";
 
 const LANGUAGES = [
-  { locale: "en-US", language: "en", menu: "Main menu", play: "Play", quit: "Quit" },
-  { locale: "de-DE", language: "de", menu: "Hauptmenü", play: "Spielen", quit: "Beenden" },
+  {
+    locale: "en-US",
+    language: "en",
+    menu: "Main menu",
+    play: "Play",
+    settings: "Settings",
+    quit: "Quit",
+  },
+  {
+    locale: "de-DE",
+    language: "de",
+    menu: "Hauptmenü",
+    play: "Spielen",
+    settings: "Einstellungen",
+    quit: "Beenden",
+  },
 ] as const;
 
-for (const { locale, language, menu, play, quit } of LANGUAGES) {
+for (const { locale, language, menu, play, settings, quit } of LANGUAGES) {
   test.describe(`with the locale ${locale}`, () => {
     test.use({ appLocale: locale });
 
@@ -17,7 +31,7 @@ for (const { locale, language, menu, play, quit } of LANGUAGES) {
       await expect(page.locator("html")).toHaveAttribute("lang", language);
       await expect(page.getByRole("heading", { level: 1, name: "PenguinOps" })).toBeVisible();
       const nav = page.getByRole("navigation", { name: menu });
-      await expect(nav.getByRole("button")).toHaveText([play, quit]);
+      await expect(nav.getByRole("button")).toHaveText([play, settings, quit]);
       await expect(page.getByRole("contentinfo")).toHaveText(/^Version \d+\.\d+\.\d+/u);
     });
 
@@ -49,6 +63,8 @@ test("gives Play the keyboard focus and quits with Tab and Enter", async ({
   page,
 }) => {
   await expect(page.getByRole("button", { name: "Play" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Settings" })).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(page.getByRole("button", { name: "Quit" })).toBeFocused();
   const closed = electronApp.waitForEvent("close");

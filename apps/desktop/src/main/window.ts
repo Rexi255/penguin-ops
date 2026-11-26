@@ -1,4 +1,5 @@
-// The main window with the security baseline of ADR 0014.
+// The main window with the security baseline of ADR 0014. It starts hidden and appears in the
+// mode of the fullscreen setting once the renderer has read it (ADR 0109).
 import { join } from "node:path";
 
 import { BrowserWindow } from "electron";
@@ -8,7 +9,8 @@ import windowIcon from "../../build/icons/256x256.png?asset";
 
 import { IPC_CHANNELS } from "../shared/ipc-channels";
 import { guardClose } from "./close-guard";
-import type { AppLocation } from "./security";
+import { checkFullscreen, controlDisplay, fullscreenKeyAction } from "./fullscreen";
+import { type AppLocation, isTrustedSender } from "./security";
 import { secureWebPreferences } from "./web-preferences";
 
 /** Same as `--color-background` in apps/ui/src/styles.css; avoids a white flash on start. */
@@ -29,8 +31,49 @@ export async function createMainWindow(location: AppLocation): Promise<BrowserWi
     ...(process.platform === "linux" ? { icon: windowIcon } : {}),
     webPreferences: secureWebPreferences(join(import.meta.dirname, "../preload/index.cjs")),
   });
-  window.once("ready-to-show", () => {
-    window.show();
+  // F11 and the fullscreen setting (ADR 0020, ADR 0109).
+  const display = controlDisplay({
+    setFullScreen: (on) => {
+      window.setFullScreen(on);
+    },
+    show: () => {
+      window.show();
+    },
+    onceReadyToShow: (listener) => {
+      window.once("ready-to-show", listener);
+    },
+    onFullScreenChange: (listener) => {
+      window.on("enter-full-screen", () => {
+        listener(true);
+      });
+      window.on("leave-full-screen", () => {
+        listener(false);
+      });
+    },
+    onToggleKey: (listener) => {
+      // Before the page and the application menu, whose View menu would toggle on F11 as well.
+      window.webContents.on("before-input-event", (event, input) => {
+        const action = fullscreenKeyAction(input);
+        if (action !== "pass") {
+          event.preventDefault();
+        }
+        if (action === "toggle") {
+          listener();
+        }
+      });
+    },
+    reportFullScreen: (on) => {
+      window.webContents.send(IPC_CHANNELS.fullscreenChanged, on);
+    },
+  });
+  // Only this window's own page sets its display; it validates what it gets (ADR 0014).
+  window.webContents.ipc.handle(IPC_CHANNELS.setFullscreen, (event, on: unknown) => {
+    const frameUrl = event.senderFrame?.url;
+    if (frameUrl === undefined || !isTrustedSender(frameUrl, location)) {
+      throw new Error(`Rejected ${IPC_CHANNELS.setFullscreen} from an untrusted sender.`);
+    }
+    checkFullscreen(on);
+    display.setFullscreen(on);
   });
   // The game is saved before the window closes (ADR 0106). The answer comes only from this
   // window's own page.

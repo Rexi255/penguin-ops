@@ -5,6 +5,7 @@ export type {
   AppInfo,
   DesktopApi,
   DesktopApiGlobalName,
+  DisplayApi,
   ExportRequest,
   FileDialogTexts,
   ImportedFile,

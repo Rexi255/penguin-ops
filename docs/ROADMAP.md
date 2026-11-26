@@ -235,8 +235,8 @@ inventing it along the way.
   - [x] M3.8a Settings model and file: version 1 of the settings format with defaults, read
         setting by setting, stored atomically in the per-user data folder; the game takes its
         language from the settings (ADR 0108).
-  - [ ] M3.8b Settings screen from the main menu and the pause menu: language with a
-        confirmation that restarts the ticket, fullscreen with F11.
+  - [x] M3.8b Settings screen from the main menu and the pause menu: language with a
+        confirmation that restarts the ticket, fullscreen with F11 (ADR 0109).
   - [ ] M3.8c Font size, reduce motion, volume sliders (they take effect with M3.10), colour
         scheme and effects (only the default scheme until M3.9).
 - [ ] M3.9 Colour schemes and effects: retro CRT, Solarized and high contrast as value sets
@@ -314,6 +314,9 @@ AppImage runs on Linux, and chapters 0–2 are playable in both languages.
 - Code signing via SignPath Foundation.
 - Key remapping.
 - `.deb` package.
+- Decide whether the game keeps Electron's default application menu, whose shortcuts (Ctrl+R
+  reloads the page, Ctrl+Shift+I opens the developer tools, Ctrl+Plus and Ctrl+Minus zoom) work
+  in the game while the menu bar is hidden (ADR 0109).
 - Set `desktopName` and `linux.syncDesktopName` for electron-builder, so that Linux desktops
   link the running window to the AppImage's desktop entry (electron-builder warns about it,
   ADR 0040).

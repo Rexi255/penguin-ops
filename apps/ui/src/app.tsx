@@ -8,17 +8,26 @@
 // main menu or closes the window. Each save adds the real play time since the game screen appeared
 // and the real time as "last played"; the slot screen shows them. It exports a slot's game to a
 // file and imports a file into a slot through the desktop's file dialogs (ROADMAP M3.7d, ADR 0107).
+//
+// The app root keeps the global settings (ROADMAP M3.8b, ADR 0108, ADR 0109): the settings screen
+// of the main menu and the settings dialog of the game change them, every change is written to
+// the settings file at once, and the game's language and the window's fullscreen follow them. A
+// new language during a game saves the game and starts it again in the new language, every ticket
+// from its checkpoint (ADR 0012). F11 and the system change fullscreen in the desktop, which
+// reports it, and the settings remember it.
 import type { Content } from "@penguin-ops/content";
 import {
+  gameLanguage,
   type NewGame,
   newSaveGame,
   type SaveGame,
   serializeSave,
+  type Settings,
   startingLevelId,
 } from "@penguin-ops/gameplay";
-import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import type { AppInfo, SaveFilesApi } from "./desktop-api";
+import type { AppInfo, DisplayApi, SaveFilesApi, SettingsFileApi } from "./desktop-api";
 import {
   EMPTY_SLOT,
   exportFileName,
@@ -29,18 +38,26 @@ import {
 import { type GameProgress, GameScreen } from "./screens/game-screen";
 import { NewGameScreen } from "./screens/new-game-screen";
 import { type PendingImport, SaveSlotScreen, type SlotMessage } from "./screens/save-slot-screen";
+import { SettingsDialog } from "./screens/settings-dialog";
+import { SettingsScreen } from "./screens/settings-screen";
 import { StartScreen } from "./screens/start-screen";
+import { useSettings } from "./settings/use-settings";
 import { TextsProvider } from "./texts/texts-context";
-import type { Texts } from "./texts/ui-texts";
+import { createTexts } from "./texts/ui-texts";
 
 /** The screens the app can show; a slot is an index counting from 0. */
 export type Screen =
-  | { readonly name: "start" }
+  /** `focusedEntry` has the focus when the screen appears; Play by default. */
+  | { readonly name: "start"; readonly focusedEntry?: "play" | "settings" }
+  | { readonly name: "settings" }
   /** `focusedSlot` has the focus when the screen appears. */
   | { readonly name: "save-slots"; readonly focusedSlot: number }
   | { readonly name: "new-game"; readonly slot: number }
-  /** `save` is the game's save when the game screen appeared. */
-  | { readonly name: "game"; readonly slot: number; readonly save: SaveGame };
+  /**
+   * `save` is the game's save when the game screen appeared; `run` counts the times a game
+   * appeared, so that a game started again gets a new game screen.
+   */
+  | { readonly name: "game"; readonly slot: number; readonly save: SaveGame; readonly run: number };
 
 /** The game being played: its slot, its save when the game screen appeared, and since when. */
 interface PlayedGame {
@@ -56,7 +73,19 @@ export interface AppProps {
   readonly info: AppInfo;
   /** The loaded content: the levels a game plays. */
   readonly content: Content;
-  readonly texts: Texts;
+  /**
+   * The operating system's locale, a BCP 47 tag such as `de-DE`: the language of the language
+   * setting `system` (ADR 0012).
+   */
+  readonly locale: string;
+  /** The settings when the app starts (`loadSettings`). */
+  readonly settings: Settings;
+  /** Where the settings are written. */
+  readonly settingsFile: Pick<SettingsFileApi, "write">;
+  /** The window's fullscreen. */
+  readonly display: DisplayApi;
+  /** Gets every write of the settings that failed, for the log. */
+  readonly onSettingsError: (error: unknown) => void;
   /** The user names a player cannot take (`reservedUserNames` of the loaded worlds). */
   readonly reservedUserNames: ReadonlySet<string>;
   /** What each save slot holds when the app starts (`loadSlots`). */
@@ -79,7 +108,11 @@ export interface AppProps {
 export function App({
   info,
   content,
-  texts,
+  locale,
+  settings: initialSettings,
+  settingsFile,
+  display,
+  onSettingsError,
   reservedUserNames,
   slots: initialSlots,
   saveFiles,
@@ -94,6 +127,18 @@ export function App({
   const [saveFailed, setSaveFailed] = useState(false);
   const [pendingImport, setPendingImport] = useState<PendingImport | undefined>(undefined);
   const played = useRef<PlayedGame | undefined>(undefined);
+  // How many times a game appeared, so that each gets a game screen of its own.
+  const runs = useRef(0);
+  const {
+    settings,
+    update,
+    saveFailed: settingsSaveFailed,
+  } = useSettings(initialSettings, settingsFile, onSettingsError);
+  const language = gameLanguage(settings.language, locale);
+  const texts = useMemo(
+    () => createTexts(content.uiCatalogs, language),
+    [content.uiCatalogs, language],
+  );
   // The saves being written, one after the other, so that the latest one always wins.
   const writing = useRef<Promise<void>>(Promise.resolve());
 
@@ -158,8 +203,9 @@ export function App({
   const play = useCallback(
     (slot: number, save: SaveGame) => {
       played.current = { slot, save, since: now(), progress: undefined };
+      runs.current += 1;
       setSaveFailed(false);
-      setScreen({ name: "game", slot, save });
+      setScreen({ name: "game", slot, save, run: runs.current });
     },
     [now],
   );
@@ -176,6 +222,39 @@ export function App({
       }
     },
     [saveGame],
+  );
+
+  // The page speaks the game's language, for screen readers and the browser's hyphenation.
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
+
+  // The window follows the fullscreen setting; the first call shows the window (ADR 0109). The
+  // value the desktop has, so that a change it reported is not sent back to it.
+  const windowFullscreen = useRef<boolean | undefined>(undefined);
+  useEffect(() => {
+    if (windowFullscreen.current === settings.fullscreen) {
+      return;
+    }
+    windowFullscreen.current = settings.fullscreen;
+    display.setFullscreen(settings.fullscreen).catch((error: unknown) => {
+      console.error("PenguinOps could not change fullscreen:", error);
+    });
+  }, [display, settings.fullscreen]);
+
+  // F11 and the system change fullscreen in the desktop; the settings remember it.
+  useEffect(() => {
+    display.setFullscreenListener((on) => {
+      windowFullscreen.current = on;
+      update((current) => ({ ...current, fullscreen: on }));
+    });
+  }, [display, update]);
+
+  const changeSettings = useCallback(
+    (next: Settings) => {
+      update(() => next);
+    },
+    [update],
   );
 
   // Before the window closes, the game being played is saved, and the app waits for every save.
@@ -196,7 +275,24 @@ export function App({
             setSlotMessage(undefined);
             setScreen({ name: "save-slots", focusedSlot: 0 });
           }}
+          onSettings={() => {
+            setScreen({ name: "settings" });
+          }}
           onQuit={onQuit}
+          focusedEntry={screen.focusedEntry ?? "play"}
+        />
+      );
+      break;
+    case "settings":
+      shown = (
+        <SettingsScreen
+          settings={settings}
+          locale={locale}
+          onChange={changeSettings}
+          saveFailed={settingsSaveFailed}
+          onBack={() => {
+            setScreen({ name: "start", focusedEntry: "settings" });
+          }}
         />
       );
       break;
@@ -316,7 +412,7 @@ export function App({
       const { slot } = screen;
       shown = (
         <GameScreen
-          key={slot}
+          key={screen.run}
           content={content}
           save={screen.save}
           onProgress={onProgress}
@@ -329,6 +425,24 @@ export function App({
             played.current = undefined;
             setScreen({ name: "start" });
           }}
+          settingsDialog={(onBack) => (
+            <SettingsDialog
+              settings={settings}
+              locale={locale}
+              onChange={changeSettings}
+              onRestart={(next) => {
+                // The game is saved in the old language and starts again in the new one.
+                const save = saveGame();
+                changeSettings(next);
+                if (save !== undefined) {
+                  setSlot(slot, { kind: "game", save });
+                  play(slot, save);
+                }
+              }}
+              saveFailed={settingsSaveFailed}
+              onBack={onBack}
+            />
+          )}
         />
       );
       break;

@@ -68,14 +68,16 @@ test("runs the renderer without Node.js and exposes only the desktop API", async
       desktopApi: keys(desktopApi),
       saves: keys(member("saves")),
       settings: keys(member("settings")),
+      display: keys(member("display")),
     };
   });
   expect(globals).toEqual({
     require: "undefined",
     process: "undefined",
-    desktopApi: ["getAppInfo", "quit", "setCloseHandler", "saves", "settings"],
+    desktopApi: ["getAppInfo", "quit", "setCloseHandler", "saves", "settings", "display"],
     saves: ["readSlots", "writeSlot", "restoreBackup", "deleteSlot", "exportSave", "importSave"],
     settings: ["read", "write"],
+    display: ["setFullscreen", "setFullscreenListener"],
   });
 });
 

@@ -3,7 +3,7 @@
 // terminal that has the focus and plays the level, the ticket in the tickets panel and the top
 // bar that follow the player's progress (ADR 0097), the hints that F1 or its key hint shows and the
 // explanation after solving (ADR 0098), and the pause menu that Esc or the key hint opens and
-// closes.
+// closes, with the settings dialog in its place (ADR 0109).
 import { MANDATORY_LANGUAGES, type MandatoryLanguage } from "@penguin-ops/content";
 import {
   GAME_START_TIME,
@@ -91,10 +91,26 @@ function renderGameScreen(
         onProgress={onProgress}
         saveFailed={saveFailed}
         onMainMenu={onMainMenu}
+        settingsDialog={settingsStub}
       />
     </TextsProvider>,
   );
   return { onMainMenu, onProgress, view };
+}
+
+/** A stand-in for the app's settings dialog: the dialog itself has tests of its own. */
+function settingsStub(onBack: () => void) {
+  return (
+    <div role="dialog" aria-label="Settings stub">
+      <button type="button" onClick={onBack}>
+        Back from the stub
+      </button>
+    </div>
+  );
+}
+
+function settingsDialog() {
+  return screen.queryByRole("dialog", { name: "Settings stub" });
 }
 
 function pauseMenu() {
@@ -389,6 +405,47 @@ describe("GameScreen", () => {
     await userEvent.keyboard("{Escape}");
     await userEvent.click(screen.getByRole("button", { name: "Main menu" }));
     expect(onMainMenu).toHaveBeenCalledExactlyOnceWith();
+  });
+
+  test("shows the settings in place of the pause menu and keeps the game inert", async () => {
+    renderGameScreen();
+    await userEvent.keyboard("{Escape}");
+    await userEvent.click(screen.getByRole("button", { name: "Settings" }));
+    expect(settingsDialog()).not.toBeNull();
+    expect(pauseMenu()).toBeNull();
+    expect(frame().hasAttribute("inert")).toBe(true);
+  });
+
+  test("returns from the settings to the pause menu with the focus on Settings", async () => {
+    renderGameScreen();
+    await userEvent.keyboard("{Escape}");
+    await userEvent.click(screen.getByRole("button", { name: "Settings" }));
+    await userEvent.click(screen.getByRole("button", { name: "Back from the stub" }));
+    expect(settingsDialog()).toBeNull();
+    expect(screen.getByRole("button", { name: "Settings" })).toBe(document.activeElement);
+    // Esc from there returns to the game, where the player was.
+    await userEvent.keyboard("{Escape}");
+    expect(pauseMenu()).toBeNull();
+    expect(commandLine()).toBe(document.activeElement);
+  });
+
+  test("leaves Esc to the settings while they are open", async () => {
+    renderGameScreen();
+    await userEvent.keyboard("{Escape}");
+    await userEvent.click(screen.getByRole("button", { name: "Settings" }));
+    await userEvent.keyboard("{Escape}");
+    expect(settingsDialog()).not.toBeNull();
+    expect(pauseMenu()).toBeNull();
+  });
+
+  test("focuses Continue when the pause menu opens again after the settings", async () => {
+    renderGameScreen();
+    await userEvent.keyboard("{Escape}");
+    await userEvent.click(screen.getByRole("button", { name: "Settings" }));
+    await userEvent.click(screen.getByRole("button", { name: "Back from the stub" }));
+    await userEvent.keyboard("{Escape}");
+    await userEvent.keyboard("{Escape}");
+    expect(screen.getByRole("button", { name: "Continue" })).toBe(document.activeElement);
   });
 
   test("never leaves the game with Esc alone", async () => {

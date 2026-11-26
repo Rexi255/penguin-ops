@@ -1,6 +1,6 @@
 // The game screen (ROADMAP M3.1c): the frame of the workplace layout of ADR 0020 with a top bar,
 // the side panel, the terminal and the key-hint footer, and the pause menu that Esc opens
-// (ADR 0092). The terminal (M3.3, ADR 0095) plays the level it gets and has the focus. The side
+// (ADR 0092), with the settings dialog in its place when the player opens it (ADR 0109). The terminal (M3.3, ADR 0095) plays the level it gets and has the focus. The side
 // panel holds the tabs of the tickets, the mail and the handbook (M3.4, ADR 0096); the tickets
 // panel shows the ticket being played (M3.5a, ADR 0097) or the chapter inbox (M3.5c, ADR 0099),
 // M3.11 fills the others. The footer shows the key hints of the keys that work. The top bar names
@@ -36,7 +36,15 @@ import {
   type TicketRecord,
   ticketState,
 } from "@penguin-ops/gameplay";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { Icon } from "../icons/icon";
 import { Terminal } from "../terminal/terminal";
@@ -80,7 +88,15 @@ export interface GameScreenProps {
   readonly saveFailed?: boolean;
   /** Leaves the game for the start screen. */
   readonly onMainMenu: () => void;
+  /**
+   * The settings dialog that the pause menu opens; `onBack` returns from it to the pause menu.
+   * The app supplies it, because the settings belong to the whole game.
+   */
+  readonly settingsDialog: (onBack: () => void) => ReactNode;
 }
+
+/** What floats over the game: nothing, the pause menu, or the settings in its place. */
+type GameMenu = "none" | "pause" | "settings";
 
 /** The extra goals of a level without any, one value so that the ticket panel keeps its props. */
 const NO_EXTRA_GOALS: readonly ExtraGoal[] = [];
@@ -117,12 +133,16 @@ export function GameScreen({
   onProgress,
   saveFailed = false,
   onMainMenu,
+  settingsDialog,
 }: GameScreenProps) {
   const texts = useTexts();
   const { language } = texts;
   const { chapters } = content;
   const { mode, userName } = save;
-  const [paused, setPaused] = useState(false);
+  const [menu, setMenu] = useState<GameMenu>("none");
+  // The pause menu's entry with the focus: Settings when the player comes back from them.
+  const [pauseFocus, setPauseFocus] = useState<"continue" | "settings">("continue");
+  const paused = menu !== "none";
   // The texts of every ticket in the player's language.
   const tickets = useMemo(
     () =>
@@ -200,11 +220,21 @@ export function GameScreen({
   const openPauseMenu = useCallback(() => {
     const active = document.activeElement;
     focusBeforePause.current = active instanceof HTMLElement ? active : null;
-    setPaused(true);
+    setPauseFocus("continue");
+    setMenu("pause");
   }, []);
 
   const closePauseMenu = useCallback(() => {
-    setPaused(false);
+    setMenu("none");
+  }, []);
+
+  const openSettings = useCallback(() => {
+    setMenu("settings");
+  }, []);
+
+  const closeSettings = useCallback(() => {
+    setPauseFocus("settings");
+    setMenu("pause");
   }, []);
 
   const onGameEvents = useCallback(
@@ -463,7 +493,15 @@ export function GameScreen({
           </p>
         </footer>
       </div>
-      {paused && <PauseMenu onContinue={closePauseMenu} onMainMenu={onMainMenu} />}
+      {menu === "pause" && (
+        <PauseMenu
+          onContinue={closePauseMenu}
+          onSettings={openSettings}
+          onMainMenu={onMainMenu}
+          focusedEntry={pauseFocus}
+        />
+      )}
+      {menu === "settings" && settingsDialog(closeSettings)}
     </div>
   );
 }

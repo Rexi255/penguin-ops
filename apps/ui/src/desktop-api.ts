@@ -80,6 +80,21 @@ export interface SettingsFileApi {
   readonly write: (text: string) => Promise<void>;
 }
 
+/**
+ * The window's display (ADR 0020, ADR 0109). The window starts hidden and appears with the first
+ * call of `setFullscreen`, or a few seconds after its first paint if the page never calls it.
+ * F11 belongs to the desktop: it toggles fullscreen without the page seeing the key.
+ */
+export interface DisplayApi {
+  /** Makes the window fill the screen or not, and shows it if it is still hidden. */
+  readonly setFullscreen: (on: boolean) => Promise<void>;
+  /**
+   * Sets the listener of every change of fullscreen that the page did not ask for, by F11 or by
+   * the system's window manager; it replaces the listener before.
+   */
+  readonly setFullscreenListener: (listener: (on: boolean) => void) => void;
+}
+
 /** Functions the desktop shell offers to the renderer. */
 export interface DesktopApi {
   /** Returns the product name and version of the running app. */
@@ -95,6 +110,8 @@ export interface DesktopApi {
   readonly saves: SaveFilesApi;
   /** The settings file. */
   readonly settings: SettingsFileApi;
+  /** The window's display. */
+  readonly display: DisplayApi;
 }
 
 /** The name of the global under which the preload script exposes the `DesktopApi`. */

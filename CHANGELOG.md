@@ -9,8 +9,16 @@ project uses [Semantic Versioning](https://semver.org/).
 ### Added
 
 - The game opens on a start screen with the PenguinOps logo, a main menu and the version. The
-  menu has Play and Quit; Play has the keyboard focus, so Enter works at once. The game is in
-  German when the system's language is German and in English otherwise.
+  menu has Play, Settings and Quit; Play has the keyboard focus, so Enter works at once. The game
+  is in German when the system's language is German and in English otherwise, until you choose a
+  language in the settings.
+- Settings, in the main menu and in the pause menu, let you choose the language (your system's
+  language, English or Deutsch) and switch fullscreen on and off. Every change applies at once
+  and is remembered for the next start. Changing the language during a game asks first: your
+  tickets then start again in the new language from their last checkpoint, and your progress is
+  kept.
+- The game starts in fullscreen, or in a window if you switched fullscreen off. F11 switches
+  fullscreen on and off on every screen, and the settings remember it.
 - Play opens the save slot screen with three save slots. An empty slot starts a new game; a slot
   with a game shows your name, the mode, how many tickets you have solved, how long you have
   played and when you last played, and continues the game. Back or Esc returns to the start
@@ -63,7 +71,7 @@ project uses [Semantic Versioning](https://semver.org/).
   the chosen card is framed in orange. The save slot then shows your name and the mode until
   you quit the game (saving comes later).
 - Esc in the game, or a click on the "Esc Menu" hint, opens the pause menu: Continue (or Esc
-  again) returns to the game, Main menu returns to the start screen.
+  again) returns to the game, Settings opens the settings, Main menu returns to the start screen.
 - The game ships its own fonts and works the same on Windows and Linux: Inter for the
   interface, JetBrains Mono for the terminal and Barlow Condensed for label tape. The start
   screen uses them; their licenses are in the installed app's `resources/licenses/fonts` folder.

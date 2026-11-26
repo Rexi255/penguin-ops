@@ -7,26 +7,27 @@
 // game at once, after every change of the progress, when the player leaves the game and before
 // the window closes, with the play time and the time last played; it deletes a slot after the
 // player confirmed it (ADR 0106).
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { act, cleanup, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, beforeAll, describe, expect, test, vi } from "vitest";
 
 import {
+  DEFAULT_SETTINGS,
   GAME_START_TIME,
   newSaveGame,
   parseSave,
+  parseSettings,
   type SaveGame,
   serializeSave,
+  type Settings,
 } from "@penguin-ops/gameplay";
 
 import { App } from "./app";
 import { loadBundledContent } from "./content/bundled-content";
-import type { SaveFilesApi } from "./desktop-api";
+import type { DisplayApi, SaveFilesApi, SettingsFileApi } from "./desktop-api";
 import { EMPTY_SLOT, type SlotState } from "./saves/save-slots";
-import { createTexts } from "./texts/ui-texts";
 
 const content = loadBundledContent();
-const { uiCatalogs } = content;
 
 /** Matches an accessible name that starts with `start`, for slots named by their details too. */
 function startsWith(start: string): (name: string) => boolean {
@@ -51,22 +52,77 @@ function fakeSaveFiles() {
   };
 }
 
+/** A fake of the desktop's settings file that keeps the texts written, the latest last. */
+function fakeSettingsFile() {
+  const written: string[] = [];
+  return {
+    written,
+    write: vi.fn<SettingsFileApi["write"]>((text) => {
+      written.push(text);
+      return Promise.resolve();
+    }),
+  };
+}
+
+/** A fake of the window's display; `pressF11` reports a change as the desktop does. */
+function fakeDisplay() {
+  let listener: ((on: boolean) => void) | undefined;
+  return {
+    setFullscreen: vi.fn<DisplayApi["setFullscreen"]>(() => Promise.resolve()),
+    setFullscreenListener: vi.fn<DisplayApi["setFullscreenListener"]>((next) => {
+      listener = next;
+    }),
+    report: (on: boolean) => {
+      if (listener === undefined) {
+        throw new Error("The app set no fullscreen listener.");
+      }
+      listener(on);
+    },
+  };
+}
+
+/** The settings in the latest text the app wrote to the settings file. */
+function writtenSettings(settingsFile: ReturnType<typeof fakeSettingsFile>): Settings {
+  const text = settingsFile.written.at(-1);
+  if (text === undefined) {
+    throw new Error("No settings were written.");
+  }
+  const { settings, problems } = parseSettings(text);
+  expect(problems).toEqual([]);
+  return settings;
+}
+
 const EMPTY: readonly SlotState[] = [EMPTY_SLOT, EMPTY_SLOT, EMPTY_SLOT];
 
 /** The real time the fake clock starts at: 2026-11-20, 10:00 UTC. */
 const START = 1_795_168_800_000;
 
-function renderApp(slots: readonly SlotState[] = EMPTY) {
+/** Options of `renderApp`. */
+interface AppOptions {
+  /** The settings at the start; English and windowed by default. */
+  readonly settings?: Settings;
+  /** The operating system's locale; `en-US` by default. */
+  readonly locale?: string;
+}
+
+function renderApp(slots: readonly SlotState[] = EMPTY, options: AppOptions = {}) {
   const onQuit = vi.fn<() => void>();
   const onSaveError = vi.fn<(error: unknown) => void>();
+  const onSettingsError = vi.fn<(error: unknown) => void>();
   const saveFiles = fakeSaveFiles();
+  const settingsFile = fakeSettingsFile();
+  const display = fakeDisplay();
   const clock = { time: START };
   let closeHandler: (() => Promise<void>) | undefined;
   render(
     <App
       info={{ name: "PenguinOps", version: "1.2.3" }}
       content={content}
-      texts={createTexts(uiCatalogs, "en")}
+      locale={options.locale ?? "en-US"}
+      settings={options.settings ?? { ...DEFAULT_SETTINGS, language: "en", fullscreen: false }}
+      settingsFile={settingsFile}
+      display={display}
+      onSettingsError={onSettingsError}
       reservedUserNames={new Set(["root"])}
       slots={slots}
       saveFiles={saveFiles}
@@ -84,7 +140,16 @@ function renderApp(slots: readonly SlotState[] = EMPTY) {
     }
     await closeHandler();
   };
-  return { onQuit, onSaveError, saveFiles, clock, close };
+  return {
+    onQuit,
+    onSaveError,
+    onSettingsError,
+    saveFiles,
+    settingsFile,
+    display,
+    clock,
+    close,
+  };
 }
 
 /** The save in the text that the app wrote to `slot`. */
@@ -234,7 +299,8 @@ describe("App", () => {
     expect(gameTitle()).not.toBeNull();
     await userEvent.keyboard("{Escape}");
     expect(screen.getByRole("dialog", { name: "Paused" })).toBeDefined();
-    // Continue has the focus; one Tab reaches Main menu.
+    // Continue has the focus; two Tabs reach Main menu, past Settings.
+    await userEvent.tab();
     await userEvent.tab();
     expect(screen.getByRole("button", { name: "Main menu" })).toBe(document.activeElement);
     await userEvent.keyboard("{Enter}");
@@ -600,5 +666,193 @@ describe("App: export and import (ADR 0107)", () => {
     });
     expect(onSaveError).toHaveBeenCalledWith(new Error("broken"));
     expect(screen.getByRole("button", { name: "Slot 1 New game" })).toBeDefined();
+  });
+});
+
+describe("App: settings (ADR 0109)", () => {
+  /** Opens the settings screen from the start screen. */
+  async function openSettings(name = "Settings") {
+    await userEvent.click(screen.getByRole("button", { name }));
+  }
+
+  function settingsTitle(name = "Settings") {
+    return screen.queryByRole("heading", { level: 1, name });
+  }
+
+  test("opens the settings from the main menu with the chosen language focused", async () => {
+    renderApp();
+    await openSettings();
+    expect(settingsTitle()).not.toBeNull();
+    expect(screen.getByRole("radio", { name: "English" })).toBe(document.activeElement);
+  });
+
+  test.each([
+    ["Back", () => userEvent.click(screen.getByRole("button", { name: "Back" }))],
+    ["Esc", () => userEvent.keyboard("{Escape}")],
+  ])("returns from the settings to the main menu with %s", async (_name, leave) => {
+    renderApp();
+    await openSettings();
+    await leave();
+    expect(startScreenTitle()).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Settings" })).toBe(document.activeElement);
+  });
+
+  test("switches the language at once outside a game and writes the settings", async () => {
+    const { settingsFile } = renderApp();
+    await openSettings();
+    await userEvent.click(screen.getByRole("radio", { name: "Deutsch" }));
+    expect(settingsTitle("Einstellungen")).not.toBeNull();
+    expect(document.documentElement.lang).toBe("de");
+    expect(screen.getByRole("radio", { name: "Deutsch" })).toBe(document.activeElement);
+    await vi.waitFor(() => {
+      expect(writtenSettings(settingsFile).language).toBe("de");
+    });
+    await userEvent.click(screen.getByRole("button", { name: "Zurück" }));
+    expect(screen.getByRole("button", { name: "Spielen" })).toBeDefined();
+  });
+
+  test("names the system's language in the player's language", async () => {
+    renderApp(EMPTY, { locale: "de-AT" });
+    await openSettings();
+    expect(screen.getByRole("radio", { name: "System language (German)" })).toBeDefined();
+    await userEvent.click(screen.getByRole("radio", { name: "System language (German)" }));
+    expect(screen.getByRole("radio", { name: "Systemsprache (Deutsch)" })).toBeDefined();
+  });
+
+  test("shows the window in the mode of the setting when the app starts", () => {
+    const { display } = renderApp(EMPTY, { settings: { ...DEFAULT_SETTINGS, language: "en" } });
+    expect(display.setFullscreen).toHaveBeenCalledExactlyOnceWith(true);
+  });
+
+  test("switches fullscreen with its switch and writes the settings", async () => {
+    const { display, settingsFile } = renderApp();
+    expect(display.setFullscreen).toHaveBeenCalledExactlyOnceWith(false);
+    await openSettings();
+    const fullscreen = screen.getByRole("checkbox", { name: "Fullscreen" });
+    expect(fullscreen).toHaveProperty("checked", false);
+    await userEvent.click(fullscreen);
+    expect(fullscreen).toHaveProperty("checked", true);
+    expect(display.setFullscreen).toHaveBeenLastCalledWith(true);
+    await vi.waitFor(() => {
+      expect(writtenSettings(settingsFile).fullscreen).toBe(true);
+    });
+  });
+
+  test("remembers fullscreen that F11 or the system changed, without sending it back", async () => {
+    const { display, settingsFile } = renderApp();
+    await openSettings();
+    act(() => {
+      display.report(true);
+    });
+    expect(screen.getByRole("checkbox", { name: "Fullscreen" })).toHaveProperty("checked", true);
+    expect(display.setFullscreen).toHaveBeenCalledTimes(1);
+    await vi.waitFor(() => {
+      expect(writtenSettings(settingsFile).fullscreen).toBe(true);
+    });
+  });
+
+  test("writes nothing when a report changes nothing", () => {
+    const { display, settingsFile } = renderApp();
+    act(() => {
+      display.report(false);
+    });
+    expect(settingsFile.write).not.toHaveBeenCalled();
+  });
+
+  test("says that the settings are not saved while writing fails, and logs the error", async () => {
+    const { settingsFile, onSettingsError } = renderApp();
+    settingsFile.write.mockRejectedValueOnce(new Error("disk full"));
+    await openSettings();
+    await userEvent.click(screen.getByRole("checkbox", { name: "Fullscreen" }));
+    await vi.waitFor(() => {
+      expect(screen.getByRole("alert").textContent).toBe(
+        "The settings could not be saved. They apply until you close the game.",
+      );
+    });
+    expect(onSettingsError).toHaveBeenCalledWith(new Error("disk full"));
+    // The setting applies all the same, and the next write that works clears the alert.
+    expect(screen.getByRole("checkbox", { name: "Fullscreen" })).toHaveProperty("checked", true);
+    await userEvent.click(screen.getByRole("checkbox", { name: "Fullscreen" }));
+    await vi.waitFor(() => {
+      expect(screen.getByRole("alert").textContent).toBe("");
+    });
+  });
+
+  /** Opens the settings dialog in the game. */
+  async function openSettingsInGame() {
+    await userEvent.keyboard("{Escape}");
+    await userEvent.click(screen.getByRole("button", { name: "Settings" }));
+  }
+
+  test("opens the settings in the game as a dialog over the paused game", async () => {
+    renderApp();
+    await startNewGame();
+    await openSettingsInGame();
+    const dialog = screen.getByRole("dialog", { name: "Settings" });
+    expect(within(dialog).getByRole("radio", { name: "English" })).toBe(document.activeElement);
+    await userEvent.keyboard("{Escape}");
+    expect(screen.getByRole("dialog", { name: "Paused" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Settings" })).toBe(document.activeElement);
+  });
+
+  test("restarts the game in the new language after the player confirmed it", async () => {
+    const { saveFiles, settingsFile } = renderApp();
+    await startNewGame();
+    await userEvent.keyboard("cd welcome{Enter}");
+    await openSettingsInGame();
+    await userEvent.click(screen.getByRole("radio", { name: "Deutsch" }));
+    const question = screen.getByRole("alertdialog", { name: "Switch the language?" });
+    expect(within(question).getByRole("button", { name: "Cancel" })).toBe(document.activeElement);
+    expect(settingsFile.write).not.toHaveBeenCalled();
+    await userEvent.click(within(question).getByRole("button", { name: "Switch language" }));
+    // The game appears again in German, with the progress it had, and the terminal has the focus.
+    expect(screen.getByRole("heading", { level: 1, name: "Arbeitsplatz" })).toBeDefined();
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.getByRole("banner").textContent).toContain("Gelöst");
+    expect(screen.getByRole("textbox", { name: "Befehlszeile" })).toBe(document.activeElement);
+    expect(document.documentElement.lang).toBe("de");
+    await vi.waitFor(() => {
+      expect(writtenSettings(settingsFile).language).toBe("de");
+    });
+    expect(writtenSave(saveFiles, 0).tickets[0]?.solved).toBe(true);
+  });
+
+  test("keeps the language when the player cancels the restart", async () => {
+    const { settingsFile } = renderApp();
+    await startNewGame();
+    await openSettingsInGame();
+    await userEvent.click(screen.getByRole("radio", { name: "Deutsch" }));
+    await userEvent.keyboard("{Escape}");
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    const dialog = screen.getByRole("dialog", { name: "Settings" });
+    expect(within(dialog).getByRole("radio", { name: "English" })).toHaveProperty("checked", true);
+    expect(within(dialog).getByRole("radio", { name: "English" })).toBe(document.activeElement);
+    expect(settingsFile.write).not.toHaveBeenCalled();
+    // Esc belongs to the settings again and returns to the pause menu.
+    await userEvent.keyboard("{Escape}");
+    expect(screen.getByRole("dialog", { name: "Paused" })).toBeDefined();
+  });
+
+  test("changes a language setting that keeps the game's language without asking", async () => {
+    const { settingsFile } = renderApp();
+    await startNewGame();
+    await openSettingsInGame();
+    await userEvent.click(screen.getByRole("radio", { name: "System language (English)" }));
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(screen.getByRole("dialog", { name: "Settings" })).toBeDefined();
+    await vi.waitFor(() => {
+      expect(writtenSettings(settingsFile).language).toBe("system");
+    });
+  });
+
+  test("switches fullscreen in the game without restarting it", async () => {
+    const { display } = renderApp();
+    await startNewGame();
+    await userEvent.keyboard("pwd{Enter}");
+    await openSettingsInGame();
+    await userEvent.click(screen.getByRole("checkbox", { name: "Fullscreen" }));
+    expect(display.setFullscreen).toHaveBeenLastCalledWith(true);
+    await userEvent.keyboard("{Escape}{Escape}");
+    expect(screen.getByRole("log", { name: "Terminal output" }).textContent).toContain("pwd");
   });
 });

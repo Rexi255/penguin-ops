@@ -14,19 +14,29 @@ import { StartScreen } from "./start-screen";
 const { uiCatalogs } = loadBundledContent();
 
 const MENU: Readonly<Record<MandatoryLanguage, { name: string; entries: string[] }>> = {
-  en: { name: "Main menu", entries: ["Play", "Quit"] },
-  de: { name: "Hauptmenü", entries: ["Spielen", "Beenden"] },
+  en: { name: "Main menu", entries: ["Play", "Settings", "Quit"] },
+  de: { name: "Hauptmenü", entries: ["Spielen", "Einstellungen", "Beenden"] },
 };
 
-function renderStartScreen(language: MandatoryLanguage) {
+function renderStartScreen(
+  language: MandatoryLanguage,
+  focusedEntry: "play" | "settings" = "play",
+) {
   const onPlay = vi.fn<() => void>();
+  const onSettings = vi.fn<() => void>();
   const onQuit = vi.fn<() => void>();
   render(
     <TextsProvider texts={createTexts(uiCatalogs, language)}>
-      <StartScreen version="1.2.3" onPlay={onPlay} onQuit={onQuit} />
+      <StartScreen
+        version="1.2.3"
+        onPlay={onPlay}
+        onSettings={onSettings}
+        onQuit={onQuit}
+        focusedEntry={focusedEntry}
+      />
     </TextsProvider>,
   );
-  return { onPlay, onQuit };
+  return { onPlay, onSettings, onQuit };
 }
 
 afterEach(() => {
@@ -75,8 +85,22 @@ describe("StartScreen", () => {
     expect(onPlay).not.toHaveBeenCalled();
   });
 
+  test("opens the settings when the player chooses Settings", async () => {
+    const { onPlay, onSettings, onQuit } = renderStartScreen("en");
+    await userEvent.click(screen.getByRole("button", { name: "Settings" }));
+    expect(onSettings).toHaveBeenCalledExactlyOnceWith();
+    expect(onPlay).not.toHaveBeenCalled();
+    expect(onQuit).not.toHaveBeenCalled();
+  });
+
+  test("gives Settings the focus on the way back from them", () => {
+    renderStartScreen("de", "settings");
+    expect(screen.getByRole("button", { name: "Einstellungen" })).toBe(document.activeElement);
+  });
+
   test("quits when the player moves to Quit with Tab and presses Enter", async () => {
     const { onPlay, onQuit } = renderStartScreen("de");
+    await userEvent.tab();
     await userEvent.tab();
     expect(screen.getByRole("button", { name: "Beenden" })).toBe(document.activeElement);
     await userEvent.keyboard("{Enter}");
@@ -95,7 +119,14 @@ describe("StartScreen", () => {
     // React reports the error of a component on the console as well.
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
     expect(() =>
-      render(<StartScreen version="1.2.3" onPlay={() => undefined} onQuit={() => undefined} />),
+      render(
+        <StartScreen
+          version="1.2.3"
+          onPlay={() => undefined}
+          onSettings={() => undefined}
+          onQuit={() => undefined}
+        />,
+      ),
     ).toThrow("useTexts needs a TextsProvider above the component.");
     consoleError.mockRestore();
   });

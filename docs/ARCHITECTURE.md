@@ -1,7 +1,8 @@
 # Architecture
 
 > **Status: skeleton.** The workspaces exist with strict TypeScript configs (ROADMAP M0.2);
-> the Electron app has its start, save slot, new game and game screens with the pause menu,
+> the Electron app has its start, save slot, new game, settings and game screens with the pause
+> menu,
 > the terminal, the workplace layout, the ticket panel with hints, explanation and extra goals,
 > the chapter inbox and the bundled content (M3.1–M3.5), and
 > the engine has the core types of the
@@ -491,8 +492,8 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
 
 Current state (ADR 0033): `index.html` (with the strict Content Security Policy) loads
 `src/main.tsx`, which loads the bundled content, asks the desktop API for the app info, reads the
-settings (`loadSettings`), picks the language, computes the reserved user names of the loaded worlds, reads the save slots
-(`loadSlots`) and renders `src/app.tsx`, which shows the current screen (ADR 0091, ADR 0094): it
+settings (`loadSettings`), computes the reserved user names of the loaded worlds, reads the save
+slots (`loadSlots`) and renders `src/app.tsx`, which shows the current screen (ADR 0091, ADR 0094): it
 holds the screen as React state of the union type `Screen`, whose members carry their slot where
 they need one, and picks the screen component with an exhaustive `switch`; screens get callbacks
 such as `onPlay` and `onBack` and do not know each other. The app root also holds what each of
@@ -501,6 +502,12 @@ autosave the game screen asks for, the game when the player leaves it and, throu
 close handler, before the window closes; each save adds the real play time since the game screen
 appeared and the real time as "last played" from the injected clock `now`, and the saves are
 written one after the other. A failed save is logged and shown in the game screen's footer.
+The app root keeps the global settings too (ADR 0109): it takes the game's language from them and
+the system's locale (`gameLanguage`), creates the UI texts of that language and sets the
+document's `lang`; it asks the desktop to set the window's fullscreen whenever the setting
+changes (the first request shows the window) and stores a change that F11 or the system made,
+which the desktop reports. A new language during a game saves the game and starts it again with a
+new game screen (`run` in the `Screen` member `game`), every ticket from its checkpoint.
 
 Saves (`src/saves/save-slots.ts`, ADR 0105, ADR 0106): `readSlot` decides from a slot's stored save
 and backup whether it is empty, holds a game (fitted to the content) or is locked (`damaged`,
@@ -511,13 +518,16 @@ reads a file the player imports the same way, and `exportFileName` names an expo
 Settings (`src/settings/settings-file.ts`, ADR 0108): `loadSettings` reads the settings file
 through the desktop API at start and parses it with the gameplay package; a missing file gives the
 default settings, and a file that cannot be read or parsed gives defaults with every problem in
-the log (`describeProblem`). The file is not written back at start.
+the log (`describeProblem`). The file is not written back at start. `src/settings/use-settings.ts`
+keeps the settings while the game runs (`useSettings`, ADR 0109): a change applies at once and is
+written as the whole file, one write after the other; a change that changes nothing writes
+nothing, and a failed write is logged and reported until a write works again.
 
 Content and texts (ADR 0090): `src/content/bundled-content.ts` imports every `.yaml` file of
 `content/` as text with `import.meta.glob` at build time and loads it with `sortContentFiles`
 and `loadContent` (zod set to `jitless` for the Content Security Policy); a problem throws a
-`ContentLoadError`. `main.tsx` takes the language from the settings with `gameLanguage`, the
-system's from `navigator.language` (ADR 0012, ADR 0108), and sets the document's `lang`. `src/texts/ui-texts.ts` lists every UI
+`ContentLoadError`. The app root takes the language from the settings with `gameLanguage`, the
+system's from `navigator.language`, which `main.tsx` passes as `locale` (ADR 0012, ADR 0108). `src/texts/ui-texts.ts` lists every UI
 text key with its placeholders (`UI_TEXT_PLACEHOLDERS`, checked against both catalogs by a
 test) and `createTexts` gives each text as rich or plain text and each chapter's title (`chapterTitle`,
 ADR 0099); `src/texts/texts-context.tsx`
@@ -526,7 +536,8 @@ hands the texts to every component (`TextsProvider`, `useTexts`),
 `src/texts/rich-text.tsx` draws a text of several paragraphs and lists (ADR 0073).
 
 Screens: `src/screens/start-screen.tsx` shows the logo (`assets/brand/svg/`) as the level 1 heading,
-the main menu (Play and Quit) with the keyboard focus on Play, and the version as code in the
+the main menu (Play, Settings and Quit) with the keyboard focus on Play (on Settings on the way
+back from them), and the version as code in the
 footer. `src/screens/save-slot-screen.tsx` shows the title, the three save slots, a status line
 for messages about a slot and Back; every slot is a button: an empty one opens the new game screen
 for it, one with a game shows the player's name, the mode, the solved tickets, the play time and
@@ -562,8 +573,13 @@ ticket, step or state) show (ADR 0097). F1 or its key hint adds the next hint to
 (ADR 0098), and so does the game command `hint`, whose `hint-requested` event also brings the
 Tickets tab to the front (ADR 0103). The Tickets tab shows the ticket below "Back to the inbox", with the next ticket after
 solving, or the chapter inbox (ADR 0099). Esc opens
-`src/screens/pause-menu.tsx`, a modal dialog (Continue, Main menu) over the game, whose frame is
-`inert` while it is open; the pause state lives in the game screen (ADR 0092). The styles of all
+`src/screens/pause-menu.tsx`, a modal dialog (Continue, Settings, Main menu) over the game, whose
+frame is `inert` while it is open; the pause state lives in the game screen (ADR 0092), which shows
+the settings dialog that the app supplies (`settingsDialog`) in place of the menu.
+`src/screens/settings-form.tsx` holds the settings themselves (the language and fullscreen,
+ADR 0109); `src/screens/settings-screen.tsx` shows them as a screen of the main menu and
+`src/screens/settings-dialog.tsx` as a dialog in the game, which asks before a new language
+restarts the tickets. The styles of all
 screens are in `src/styles.css`. The visual world is "Label Tape & Patch Cable" (ADR 0081,
 `DESIGN.md`); the workplace screen's direction contract is the impeccable surface brief
 `.impeccable/surfaces/src-app-tsx.md`, and `.impeccable/design.json` is impeccable's sidecar to
@@ -640,8 +656,8 @@ ratios. Its layout is
 
 `src/desktop-api.ts` defines
 the preload contract (`DesktopApi`: `getAppInfo`, `quit`, `setCloseHandler`, and `saves`, the
-save slot files as texts, ADR 0105, ADR 0106, and `settings`, the settings file as a text,
-ADR 0108); `src/index.ts` exports only its types, for `apps/desktop`.
+save slot files as texts, ADR 0105, ADR 0106, `settings`, the settings file as a text,
+ADR 0108, and `display`, the window's fullscreen, ADR 0109); `src/index.ts` exports only its types, for `apps/desktop`.
 
 ## Desktop (`apps/desktop`)
 
@@ -666,6 +682,10 @@ apps/desktop/
                             and validating every argument
   src/main/close-guard.ts   holds the window's close back until the page has saved, at most 5 s
                             (ADR 0106)
+  src/main/fullscreen.ts    shows the hidden window with the renderer's first fullscreen request
+                            (or 5 s after its first paint), toggles fullscreen on F11 before the
+                            page and the menu see it, and reports changes to the renderer
+                            (ADR 0109)
   src/main/save-transfer.ts  export and import of a slot through the system's file dialogs:
                             checks the request, writes the text or reads the chosen file
                             (ADR 0107)
@@ -676,7 +696,9 @@ apps/desktop/
                             writes without a backup, one operation at a time (ADR 0108)
   src/main/stored-files.ts  reading a stored text with a size limit, atomic writes and copies
                             through a temporary file, rename retries on Windows (ADR 0105)
-  src/main/window.ts        the main window
+  src/main/timers.ts        replaceable timers for the guards' timeouts
+  src/main/window.ts        the main window, hidden until the renderer sets fullscreen; it
+                            answers the fullscreen requests of its own page
   src/main/web-preferences.ts  secure web preferences of every window
   src/main/security.ts      pure checks: allowed request URLs, trusted IPC senders
   src/preload/index.ts      exposes DesktopApi as window.penguinOps (built as CommonJS)

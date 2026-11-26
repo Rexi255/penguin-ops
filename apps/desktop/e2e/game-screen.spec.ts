@@ -219,10 +219,41 @@ test("keeps the focus inside the pause menu", async ({ page }) => {
   await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "Continue" })).toBeFocused();
   await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Settings" })).toBeFocused();
+  await page.keyboard.press("Tab");
   await expect(page.getByRole("button", { name: "Main menu" })).toBeFocused();
   // The game behind the menu is inert, so Tab wraps around to the first entry.
   await page.keyboard.press("Tab");
   await expect(page.getByRole("button", { name: "Continue" })).toBeFocused();
+});
+
+test("opens the settings from the pause menu and returns to it", async ({ page }) => {
+  await startGame(page);
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Settings" }).click();
+  await expect(page.getByRole("dialog", { name: "Settings" })).toBeVisible();
+  await expect(page.getByRole("radio", { name: "English" })).toBeFocused();
+  expect(await axeViolations(page)).toEqual([]);
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog", { name: "Paused" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Settings" })).toBeFocused();
+});
+
+test("restarts the game in the new language after the player confirmed it", async ({ page }) => {
+  await startGame(page);
+  await page.keyboard.type("cd welcome");
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("banner")).toContainText("Solved");
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Settings" }).click();
+  await page.keyboard.press("ArrowDown");
+  const question = page.getByRole("alertdialog", { name: "Switch the language?" });
+  await expect(question.getByRole("button", { name: "Cancel" })).toBeFocused();
+  expect(await axeViolations(page)).toEqual([]);
+  await question.getByRole("button", { name: "Switch language" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Arbeitsplatz" })).toBeAttached();
+  await expect(page.getByRole("banner")).toContainText("Gelöst");
+  await expect(page.getByRole("textbox", { name: "Befehlszeile" })).toBeFocused();
 });
 
 test("returns to the start screen from the pause menu", async ({ page }) => {
