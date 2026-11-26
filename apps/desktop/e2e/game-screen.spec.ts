@@ -232,7 +232,8 @@ test("opens the settings from the pause menu and returns to it", async ({ page }
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Settings" }).click();
   await expect(page.getByRole("dialog", { name: "Settings" })).toBeVisible();
-  await expect(page.getByRole("radio", { name: "English" })).toBeFocused();
+  // A new game follows the system's language until the player chooses one.
+  await expect(page.getByRole("radio", { name: "System language (English)" })).toBeFocused();
   expect(await axeViolations(page)).toEqual([]);
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog", { name: "Paused" })).toBeVisible();
@@ -246,6 +247,9 @@ test("restarts the game in the new language after the player confirmed it", asyn
   await expect(page.getByRole("banner")).toContainText("Solved");
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Settings" }).click();
+  // English keeps the game's language, so the game does not ask; German does.
+  await page.keyboard.press("ArrowDown");
+  await expect(page.getByRole("radio", { name: "English", exact: true })).toBeChecked();
   await page.keyboard.press("ArrowDown");
   const question = page.getByRole("alertdialog", { name: "Switch the language?" });
   await expect(question.getByRole("button", { name: "Cancel" })).toBeFocused();

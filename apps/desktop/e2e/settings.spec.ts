@@ -7,6 +7,7 @@ import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 import type { SettingsFileApi } from "@penguin-ops/ui";
+import type { ElectronApplication } from "@playwright/test";
 
 import { expect, test } from "./app";
 import { axeViolations } from "./axe";
@@ -122,8 +123,12 @@ test("switches the language in the settings screen and stores it", async ({
   userDataDir,
 }) => {
   await page.getByRole("button", { name: "Settings" }).click();
-  await expect(page.getByRole("radio", { name: "English" })).toBeFocused();
+  // Without a settings file, the game follows the system's language.
+  await expect(page.getByRole("radio", { name: "System language (English)" })).toBeFocused();
   expect(await axeViolations(page)).toEqual([]);
+  await page.keyboard.press("ArrowDown");
+  await expect(page.getByRole("radio", { name: "English", exact: true })).toBeChecked();
+  await expect.poll(() => storedSettings(userDataDir)).toMatchObject({ language: "en" });
   await page.keyboard.press("ArrowDown");
   await expect(page.getByRole("heading", { level: 1, name: "Einstellungen" })).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("lang", "de");
@@ -151,7 +156,21 @@ test("leaves fullscreen with the switch in the settings and stores it", async ({
     .toBe(false);
 });
 
+/**
+ * Presses F11 as the system does. Playwright's keyboard sends its keys through the DevTools
+ * protocol, which Electron's `before-input-event` does not see; `sendInputEvent` takes the way
+ * of a real key press.
+ */
+async function pressF11(electronApp: ElectronApplication): Promise<void> {
+  await electronApp.evaluate(({ BrowserWindow }) => {
+    const contents = BrowserWindow.getAllWindows()[0]?.webContents;
+    contents?.sendInputEvent({ type: "keyDown", keyCode: "F11" });
+    contents?.sendInputEvent({ type: "keyUp", keyCode: "F11" });
+  });
+}
+
 test("toggles fullscreen with F11 without the page seeing the key, and stores it", async ({
+  electronApp,
   page,
   userDataDir,
 }) => {
@@ -163,11 +182,11 @@ test("toggles fullscreen with F11 without the page seeing the key, and stores it
       seen.push(event.key);
     });
   });
-  await page.keyboard.press("F11");
+  await pressF11(electronApp);
   await expect.poll(() => storedSettings(userDataDir)).toMatchObject({ fullscreen: false });
   await page.getByRole("button", { name: "Settings" }).click();
   await expect(page.getByRole("checkbox", { name: "Fullscreen" })).not.toBeChecked();
-  await page.keyboard.press("F11");
+  await pressF11(electronApp);
   await expect(page.getByRole("checkbox", { name: "Fullscreen" })).toBeChecked();
   await expect.poll(() => storedSettings(userDataDir)).toMatchObject({ fullscreen: true });
   expect(await page.evaluate(() => Reflect.get(window, "seenKeys") as unknown)).not.toContain(

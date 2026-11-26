@@ -59,7 +59,9 @@ _Last updated: 2026-11-26_
 - Electron does not start in the cloud container (the end-to-end tests hang there); cloud
   sessions take UI screenshots of the built renderer in Playwright's Chromium with a stub of the
   desktop API. CI still runs the real end-to-end tests. The styleguide tests run in the cloud
-  with `STYLEGUIDE_CHROMIUM_PATH` set to the preinstalled Chromium.
+  with `STYLEGUIDE_CHROMIUM_PATH` set to the preinstalled Chromium. Playwright's keyboard does
+  not reach Electron's `before-input-event`, so the end-to-end tests press F11 with
+  `sendInputEvent`.
 - Steam release is assumed to be "maybe later" (ADR 0002); confirm with the owner when it
   becomes relevant.
 - A hint asked for with the game command `hint` is announced twice to screen readers, by the
