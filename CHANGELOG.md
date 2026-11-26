@@ -19,6 +19,9 @@ project uses [Semantic Versioning](https://semver.org/).
   kept.
 - The game starts in fullscreen, or in a window if you switched fullscreen off. F11 switches
   fullscreen on and off on every screen, and the settings remember it.
+- The settings have a font size slider from 80 % to 200 %, which makes the whole interface
+  larger or smaller, the terminal included, and a "Reduce motion" choice: like your system, on or
+  off.
 - Play opens the save slot screen with three save slots. An empty slot starts a new game; a slot
   with a game shows your name, the mode, how many tickets you have solved, how long you have
   played and when you last played, and continues the game. Back or Esc returns to the start

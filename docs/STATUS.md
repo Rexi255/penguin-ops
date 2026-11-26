@@ -4,6 +4,11 @@ _Last updated: 2026-11-26_
 
 ## Recently completed
 
+- M3.8c Font size and reduce motion (M3.8 complete): a font size slider from 80 to 200 percent
+  sets the root font size, so the whole interface scales; the game screen's side panel takes at
+  most 45 % of the width. Reduce motion (like the system, on, off) is the root's
+  `data-reduce-motion`, which tokens.css reads. The volume sliders move to M3.10, the colour
+  scheme and effects to M3.9, so that the settings offer only what works (ADR 0110).
 - M3.8b Settings screen: Settings in the main menu (a screen) and the pause menu (a dialog in its
   place) with the language and fullscreen; every change applies at once and is written to the
   settings file; a new language during a game asks first, then saves the game and starts it again
@@ -20,18 +25,6 @@ _Last updated: 2026-11-26_
   every slot and Delete; the main process shows the system's file dialogs with the texts the
   renderer passes and writes or reads the file; the renderer refuses a file that is no playable
   save with a message and asks before an import replaces a game (ADR 0107).
-- M3.7c Saving and resuming: the slots are read at start (backup restored, migrated saves written
-  again, damaged, too new or taken user names locked); every save is fitted to the content and
-  resumed at its tickets' checkpoints with one game time; autosave on a new game, every progress
-  change, the main menu and the window's close (the main process waits for the page, at most
-  5 s); the slot shows solved tickets, play time and last played; a menu button per slot with
-  Delete and a confirmation; a failed save shows an alert in the footer (ADR 0106).
-- M3.7b Save files: the main process stores each slot's save as a text in
-  `<userData>/saves/slot-N.json`, written atomically (temporary file, flushed, renamed) with the
-  replaced save as `slot-N.backup.json`; restore, delete, one operation per slot at a time and
-  rename retries for Windows. The preload API `saves` validates slot and size in the main
-  process; the renderer parses the texts. End-to-end tests run with an empty user data folder of
-  their own (ADR 0105).
 
 ## In progress
 
@@ -39,9 +32,9 @@ _Last updated: 2026-11-26_
 
 ## Next 3 steps
 
-1. ROADMAP M3.8c: font size and reduce motion in the settings.
-2. ROADMAP M3.9: colour schemes and effects.
-3. ROADMAP M3.10: UI sounds with volume control.
+1. ROADMAP M3.9: colour schemes and effects, with their choices in the settings.
+2. ROADMAP M3.10: UI sounds with the volume sliders in the settings.
+3. ROADMAP M3.11: mail panel with toasts and the handbook panel.
 
 ## Blockers and open questions
 
@@ -66,6 +59,8 @@ _Last updated: 2026-11-26_
   becomes relevant.
 - A hint asked for with the game command `hint` is announced twice to screen readers, by the
   terminal's log and the ticket panel (ADR 0103); M3.14 decides which stays quiet.
+- At a large font size in a small window the game screen is cramped (at 200 % in 960 × 600 px
+  the terminal has about 27 columns); a layout for large font sizes belongs to M3.14 (ADR 0110).
 - Electron's default application menu stays, hidden: Ctrl+R reloads the page and Ctrl+Plus or
   Ctrl+Minus zoom in the game (ROADMAP ideas). Whether the game keeps it needs a decision.
 - A save whose user name a later world reserves is locked (ADR 0106); the player can only delete

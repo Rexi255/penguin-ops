@@ -522,6 +522,9 @@ the log (`describeProblem`). The file is not written back at start. `src/setting
 keeps the settings while the game runs (`useSettings`, ADR 0109): a change applies at once and is
 written as the whole file, one write after the other; a change that changes nothing writes
 nothing, and a failed write is logged and reported until a write works again.
+`src/settings/document-settings.ts` applies the font size (the root element's font size in
+percent, which scales every rem) and "reduce motion" (the root's `data-reduce-motion`, which
+`tokens.css` reads) to the page (`applyDocumentSettings`, ADR 0110).
 
 Content and texts (ADR 0090): `src/content/bundled-content.ts` imports every `.yaml` file of
 `content/` as text with `import.meta.glob` at build time and loads it with `sortContentFiles`
@@ -576,8 +579,8 @@ solving, or the chapter inbox (ADR 0099). Esc opens
 `src/screens/pause-menu.tsx`, a modal dialog (Continue, Settings, Main menu) over the game, whose
 frame is `inert` while it is open; the pause state lives in the game screen (ADR 0092), which shows
 the settings dialog that the app supplies (`settingsDialog`) in place of the menu.
-`src/screens/settings-form.tsx` holds the settings themselves (the language and fullscreen,
-ADR 0109); `src/screens/settings-screen.tsx` shows them as a screen of the main menu and
+`src/screens/settings-form.tsx` holds the settings themselves (the language, fullscreen, the
+font size and reduce motion, ADR 0109, ADR 0110); `src/screens/settings-screen.tsx` shows them as a screen of the main menu and
 `src/screens/settings-dialog.tsx` as a dialog in the game, which asks before a new language
 restarts the tickets. The styles of all
 screens are in `src/styles.css`. The visual world is "Label Tape & Patch Cable" (ADR 0081,

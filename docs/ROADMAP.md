@@ -230,19 +230,24 @@ inventing it along the way.
   - [x] M3.7c Saving and resuming: autosave, slot metadata on the slot screen, resuming at the
         checkpoint with the game time running on across tickets; slot menu with Delete (ADR 0106).
   - [x] M3.7d Export and import of a slot as a file (ADR 0107).
-- [ ] M3.8 Settings: language (OS default), volumes, fullscreen (F11), font size, colour
-      scheme, effects, reduce motion; language switch restarts the ticket.
+- [x] M3.8 Settings: language (OS default), volumes, fullscreen (F11), font size, colour
+      scheme, effects, reduce motion; language switch restarts the ticket. The volumes, colour
+      schemes and effects join the settings screen with their effect in M3.9 and M3.10
+      (ADR 0110).
   - [x] M3.8a Settings model and file: version 1 of the settings format with defaults, read
         setting by setting, stored atomically in the per-user data folder; the game takes its
         language from the settings (ADR 0108).
   - [x] M3.8b Settings screen from the main menu and the pause menu: language with a
         confirmation that restarts the ticket, fullscreen with F11 (ADR 0109).
-  - [ ] M3.8c Font size, reduce motion, volume sliders (they take effect with M3.10), colour
-        scheme and effects (only the default scheme until M3.9).
+  - [x] M3.8c Font size and reduce motion; the volume sliders move to M3.10 and the colour
+        scheme and effects to M3.9, so that the settings offer only what takes effect
+        (ADR 0110).
 - [ ] M3.9 Colour schemes and effects: retro CRT, Solarized and high contrast as value sets
       for the semantic colour tokens of M3.0b (contrast test for every scheme); optional glow
-      and scanlines.
-- [ ] M3.10 UI sounds via Web Audio with volume control.
+      and scanlines; their choices in the settings, with reduce motion turning the effects off
+      (ADR 0110).
+- [ ] M3.10 UI sounds via Web Audio with volume control: the volume sliders (master, music,
+      effects) in the settings (ADR 0110).
 - [ ] M3.11 Mail panel with toasts; handbook panel (searchable, grows with learned commands).
 - [ ] M3.12 Ranks, XP and achievements framework; promotions as story moments.
 - [ ] M3.13 Sandbox free play unlock rules.

@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
-// Tests of the settings screen and its form in both languages (ADR 0109): the title, the
-// language choice with every language named in itself and the system's language named in the
-// player's language, the fullscreen switch with its help line, the focus on the chosen language,
+// Tests of the settings screen and its form in both languages (ADR 0109, ADR 0110): the title,
+// the language choice with every language named in itself and the system's language named in the
+// player's language, the fullscreen switch with its help line, the font size slider, the "reduce
+// motion" choice, the focus on the chosen language,
 // each control changing its setting at once, the alert after a failed write, and Back and Esc.
 import { MANDATORY_LANGUAGES, type MandatoryLanguage } from "@penguin-ops/content";
 import { DEFAULT_SETTINGS, type Settings } from "@penguin-ops/gameplay";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
@@ -28,6 +29,11 @@ const EXPECTED: Readonly<
       help: string;
       back: string;
       notSaved: string;
+      fontSize: string;
+      fontSizeValue: string;
+      reduceMotion: string;
+      reduceMotionChoices: string[];
+      reduceMotionHelp: string;
     }
   >
 > = {
@@ -40,6 +46,11 @@ const EXPECTED: Readonly<
     help: "F11 switches fullscreen on and off on every screen.",
     back: "Back",
     notSaved: "The settings could not be saved. They apply until you close the game.",
+    fontSize: "Font size",
+    fontSizeValue: "120%",
+    reduceMotion: "Reduce motion",
+    reduceMotionChoices: ["Like the system", "On", "Off"],
+    reduceMotionHelp: "Shows every change at once, without animations and effects.",
   },
   de: {
     title: "Einstellungen",
@@ -51,6 +62,11 @@ const EXPECTED: Readonly<
     back: "Zurück",
     notSaved:
       "Die Einstellungen konnten nicht gespeichert werden. Sie gelten, bis du das Spiel beendest.",
+    fontSize: "Schriftgröße",
+    fontSizeValue: "120 %",
+    reduceMotion: "Bewegung reduzieren",
+    reduceMotionChoices: ["Wie im System", "An", "Aus"],
+    reduceMotionHelp: "Zeigt jede Änderung sofort, ohne Animationen und Effekte.",
   },
 };
 
@@ -137,6 +153,50 @@ describe("SettingsScreen", () => {
     screen.getByRole("checkbox", { name: "Fullscreen" }).focus();
     await userEvent.keyboard(" ");
     expect(onChange).toHaveBeenCalledExactlyOnceWith({ ...settings, fullscreen: false });
+  });
+
+  test.each(MANDATORY_LANGUAGES)("shows the font size as a slider in %s", (language) => {
+    renderSettingsScreen(language, { ...DEFAULT_SETTINGS, language, fontSize: 120 });
+    const slider = screen.getByRole("slider", { name: EXPECTED[language].fontSize });
+    expect(slider.getAttribute("min")).toBe("80");
+    expect(slider.getAttribute("max")).toBe("200");
+    expect(slider.getAttribute("step")).toBe("10");
+    expect(slider).toHaveProperty("value", "120");
+    expect(slider.getAttribute("aria-valuetext")).toBe(EXPECTED[language].fontSizeValue);
+    expect(screen.getByRole("status").textContent).toBe(EXPECTED[language].fontSizeValue);
+  });
+
+  // jsdom does not move a slider with the keyboard; the end-to-end tests press the keys.
+  test.each([80, 110, 200])("changes the font size to %i percent", (fontSize) => {
+    const settings: Settings = { ...DEFAULT_SETTINGS, language: "en" };
+    const { onChange } = renderSettingsScreen("en", settings);
+    fireEvent.change(screen.getByRole("slider", { name: "Font size" }), {
+      target: { value: String(fontSize) },
+    });
+    expect(onChange).toHaveBeenCalledExactlyOnceWith({ ...settings, fontSize });
+  });
+
+  test.each(MANDATORY_LANGUAGES)("offers the choices of reduce motion in %s", (language) => {
+    renderSettingsScreen(language);
+    const group = screen.getByRole("group", { name: EXPECTED[language].reduceMotion });
+    const choices = within(group).getAllByRole("radio");
+    expect(choices.map((choice) => choice.closest("label")?.textContent)).toEqual(
+      EXPECTED[language].reduceMotionChoices,
+    );
+    expect(choices.map((choice) => (choice as HTMLInputElement).checked)).toEqual([
+      true,
+      false,
+      false,
+    ]);
+    const help = group.getAttribute("aria-describedby") ?? "";
+    expect(document.getElementById(help)?.textContent).toBe(EXPECTED[language].reduceMotionHelp);
+  });
+
+  test("changes reduce motion", async () => {
+    const settings: Settings = { ...DEFAULT_SETTINGS, language: "en" };
+    const { onChange } = renderSettingsScreen("en", settings);
+    await userEvent.click(screen.getByRole("radio", { name: "Off" }));
+    expect(onChange).toHaveBeenCalledExactlyOnceWith({ ...settings, reduceMotion: "off" });
   });
 
   test.each(MANDATORY_LANGUAGES)("says so when the settings were not saved in %s", (language) => {

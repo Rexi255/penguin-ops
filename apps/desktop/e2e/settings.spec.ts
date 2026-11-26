@@ -3,6 +3,7 @@
 // text, and the game takes its language from the settings instead of the system's locale. A
 // broken settings file does not stop the game from starting. The settings screen changes the
 // language and fullscreen and stores them; F11 toggles fullscreen in the main process (ADR 0109).
+// The font size scales the interface and reduce motion overrides the system's setting (ADR 0110).
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
@@ -192,4 +193,53 @@ test("toggles fullscreen with F11 without the page seeing the key, and stores it
   expect(await page.evaluate(() => Reflect.get(window, "seenKeys") as unknown)).not.toContain(
     "F11",
   );
+});
+
+// Font size and reduce motion (ROADMAP M3.8c, ADR 0110).
+
+test("scales the interface with the font size slider and stores it", async ({
+  page,
+  userDataDir,
+}) => {
+  await page.getByRole("button", { name: "Settings" }).click();
+  const slider = page.getByRole("slider", { name: "Font size" });
+  await expect(slider).toHaveAttribute("aria-valuetext", "100%");
+  await slider.focus();
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("ArrowRight");
+  await expect(slider).toHaveAttribute("aria-valuetext", "120%");
+  expect(await page.evaluate(() => getComputedStyle(document.documentElement).fontSize)).toBe(
+    "19.2px",
+  );
+  await expect.poll(() => storedSettings(userDataDir)).toMatchObject({ fontSize: 120 });
+  expect(await axeViolations(page)).toEqual([]);
+});
+
+test("turns motion off with reduce motion and stores it", async ({ page, userDataDir }) => {
+  const stateDuration = () =>
+    page.evaluate(() =>
+      getComputedStyle(document.documentElement).getPropertyValue("--motion-duration-state"),
+    );
+  expect(await stateDuration()).toBe("120ms");
+  await page.getByRole("button", { name: "Settings" }).click();
+  await page.getByRole("group", { name: "Reduce motion" }).getByText("On", { exact: true }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-reduce-motion", "on");
+  expect(await stateDuration()).toBe("0ms");
+  await expect.poll(() => storedSettings(userDataDir)).toMatchObject({ reduceMotion: "on" });
+});
+
+test("follows a system that reduces motion unless reduce motion is off", async ({ page }) => {
+  await expect(page.getByRole("button", { name: "Play" })).toBeFocused();
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const stateDuration = () =>
+    page.evaluate(() =>
+      getComputedStyle(document.documentElement).getPropertyValue("--motion-duration-state"),
+    );
+  expect(await stateDuration()).toBe("0ms");
+  await page.getByRole("button", { name: "Settings" }).click();
+  await page
+    .getByRole("group", { name: "Reduce motion" })
+    .getByText("Off", { exact: true })
+    .click();
+  expect(await stateDuration()).toBe("120ms");
 });

@@ -7,7 +7,7 @@
 // game at once, after every change of the progress, when the player leaves the game and before
 // the window closes, with the play time and the time last played; it deletes a slot after the
 // player confirmed it (ADR 0106).
-import { act, cleanup, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, beforeAll, describe, expect, test, vi } from "vitest";
 
@@ -775,6 +775,28 @@ describe("App: settings (ADR 0109)", () => {
     await userEvent.click(screen.getByRole("checkbox", { name: "Fullscreen" }));
     await vi.waitFor(() => {
       expect(screen.getByRole("alert").textContent).toBe("");
+    });
+  });
+
+  test("applies the font size and reduce motion of the settings to the page at start", () => {
+    renderApp(EMPTY, {
+      settings: { ...DEFAULT_SETTINGS, language: "en", fontSize: 150, reduceMotion: "on" },
+    });
+    expect(document.documentElement.style.fontSize).toBe("150%");
+    expect(document.documentElement.dataset["reduceMotion"]).toBe("on");
+  });
+
+  test("changes the font size and reduce motion at once and writes them", async () => {
+    const { settingsFile } = renderApp();
+    await openSettings();
+    fireEvent.change(screen.getByRole("slider", { name: "Font size" }), {
+      target: { value: "110" },
+    });
+    expect(document.documentElement.style.fontSize).toBe("110%");
+    await userEvent.click(screen.getByRole("radio", { name: "Off" }));
+    expect(document.documentElement.dataset["reduceMotion"]).toBe("off");
+    await vi.waitFor(() => {
+      expect(writtenSettings(settingsFile)).toMatchObject({ fontSize: 110, reduceMotion: "off" });
     });
   });
 

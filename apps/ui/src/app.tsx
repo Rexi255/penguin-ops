@@ -14,7 +14,8 @@
 // the settings file at once, and the game's language and the window's fullscreen follow them. A
 // new language during a game saves the game and starts it again in the new language, every ticket
 // from its checkpoint (ADR 0012). F11 and the system change fullscreen in the desktop, which
-// reports it, and the settings remember it.
+// reports it, and the settings remember it. The font size and "reduce motion" act on the whole
+// page (ROADMAP M3.8c, ADR 0110).
 import type { Content } from "@penguin-ops/content";
 import {
   gameLanguage,
@@ -25,7 +26,15 @@ import {
   type Settings,
   startingLevelId,
 } from "@penguin-ops/gameplay";
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import type { AppInfo, DisplayApi, SaveFilesApi, SettingsFileApi } from "./desktop-api";
 import {
@@ -41,6 +50,7 @@ import { type PendingImport, SaveSlotScreen, type SlotMessage } from "./screens/
 import { SettingsDialog } from "./screens/settings-dialog";
 import { SettingsScreen } from "./screens/settings-screen";
 import { StartScreen } from "./screens/start-screen";
+import { applyDocumentSettings } from "./settings/document-settings";
 import { useSettings } from "./settings/use-settings";
 import { TextsProvider } from "./texts/texts-context";
 import { createTexts } from "./texts/ui-texts";
@@ -228,6 +238,12 @@ export function App({
   useEffect(() => {
     document.documentElement.lang = language;
   }, [language]);
+
+  // The font size and "reduce motion" act on the whole page (ADR 0110), before it is painted.
+  const { fontSize, reduceMotion } = settings;
+  useLayoutEffect(() => {
+    applyDocumentSettings(document.documentElement, { fontSize, reduceMotion });
+  }, [fontSize, reduceMotion]);
 
   // The window follows the fullscreen setting; the first call shows the window (ADR 0109). The
   // value the desktop has, so that a change it reported is not sent back to it.

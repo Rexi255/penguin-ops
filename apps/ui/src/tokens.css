@@ -131,9 +131,16 @@
   color-scheme: dark;
 }
 
-/* "Reduce motion" shows every change at once. The game's own setting follows in M3.8. */
+/* "Reduce motion" shows every change at once (ADR 0110). The game's setting is the root's
+   `data-reduce-motion`: `on` always reduces motion, `off` never does, and `system` (or no
+   attribute, as on the styleguide page) follows the operating system's setting. */
+:root[data-reduce-motion="on"] {
+  --motion-duration-print: 0ms;
+  --motion-duration-state: 0ms;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  :root {
+  :root:not([data-reduce-motion="off"]) {
     --motion-duration-print: 0ms;
     --motion-duration-state: 0ms;
   }

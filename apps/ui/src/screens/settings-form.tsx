@@ -1,12 +1,18 @@
-// The settings themselves (ROADMAP M3.8b, ADR 0109), the same on the settings screen of the main
-// menu and in the settings dialog of the pause menu: the language and the display. Each control
-// changes its setting at once; the screen or dialog around it decides what a change of the
-// language needs first. The form offers only settings that take effect (ADR 0108).
+// The settings themselves (ROADMAP M3.8b, M3.8c, ADR 0109, ADR 0110), the same on the settings
+// screen of the main menu and in the settings dialog of the pause menu: the language, the display
+// (fullscreen and the font size) and "reduce motion". Each control changes its setting at once;
+// the screen or dialog around it decides what a change of the language needs first. The form
+// offers only settings that take effect (ADR 0108): the colour schemes and effects come with
+// ROADMAP M3.9, the volumes with M3.10.
 
 import {
+  FONT_SIZE_MAX,
+  FONT_SIZE_MIN,
   gameLanguage,
   LANGUAGE_SETTINGS,
   type LanguageSetting,
+  REDUCE_MOTION_SETTINGS,
+  type ReduceMotionSetting,
   type Settings,
 } from "@penguin-ops/gameplay";
 import { type Ref, useId } from "react";
@@ -15,6 +21,9 @@ import { Icon } from "../icons/icon";
 import { InlineText } from "../texts/inline-text";
 import { useTexts } from "../texts/texts-context";
 import type { UiTextKey } from "../texts/ui-texts";
+
+/** The font size slider moves in steps of 10 percent, from 80 to 200. */
+const FONT_SIZE_STEP = 10;
 
 export interface SettingsFormProps {
   readonly settings: Settings;
@@ -38,6 +47,9 @@ export function SettingsForm({
   const texts = useTexts();
   const id = useId();
   const fullscreenHelpId = `${id}-fullscreen-help`;
+  const fontSizeId = `${id}-font-size`;
+  const reduceMotionHelpId = `${id}-reduce-motion-help`;
+  const fontSizeText = texts.plain("settings.font-size-value", { percent: settings.fontSize });
   const systemLanguage = gameLanguage("system", locale);
 
   return (
@@ -108,6 +120,65 @@ export function SettingsForm({
             textKey="settings.fullscreen-help"
           />
         </p>
+        <div className="slider">
+          <div className="slider__head">
+            <label className="slider__label" htmlFor={fontSizeId}>
+              <InlineText text={texts.rich("settings.font-size")} textKey="settings.font-size" />
+            </label>
+            <output className="slider__value" htmlFor={fontSizeId}>
+              {fontSizeText}
+            </output>
+          </div>
+          <input
+            id={fontSizeId}
+            className="slider__input"
+            type="range"
+            min={FONT_SIZE_MIN}
+            max={FONT_SIZE_MAX}
+            step={FONT_SIZE_STEP}
+            value={settings.fontSize}
+            aria-valuetext={fontSizeText}
+            onChange={(event) => {
+              onChange({ ...settings, fontSize: Number(event.target.value) });
+            }}
+          />
+        </div>
+      </fieldset>
+
+      <fieldset className="settings__group" aria-describedby={reduceMotionHelpId}>
+        <legend className="settings__legend">
+          <InlineText
+            text={texts.rich("settings.reduce-motion")}
+            textKey="settings.reduce-motion"
+          />
+        </legend>
+        <div className="choices">
+          {REDUCE_MOTION_SETTINGS.map((reduceMotion) => {
+            const key = reduceMotionKey(reduceMotion);
+            return (
+              <label key={reduceMotion} className="choice">
+                <input
+                  className="choice__input visually-hidden"
+                  type="radio"
+                  name={`${id}-reduce-motion`}
+                  value={reduceMotion}
+                  checked={settings.reduceMotion === reduceMotion}
+                  onChange={() => {
+                    onChange({ ...settings, reduceMotion });
+                  }}
+                />
+                <span className="choice__marker" aria-hidden="true" />
+                <InlineText text={texts.rich(key)} textKey={key} />
+              </label>
+            );
+          })}
+        </div>
+        <p id={reduceMotionHelpId} className="field__help">
+          <InlineText
+            text={texts.rich("settings.reduce-motion-help")}
+            textKey="settings.reduce-motion-help"
+          />
+        </p>
       </fieldset>
 
       {/* An alert, so that the player hears it at once; it stays until a write works again. */}
@@ -121,6 +192,20 @@ export function SettingsForm({
       </p>
     </div>
   );
+}
+
+/** The catalog key of a "reduce motion" choice. */
+function reduceMotionKey(
+  setting: ReduceMotionSetting,
+): "settings.reduce-motion-system" | "settings.reduce-motion-on" | "settings.reduce-motion-off" {
+  switch (setting) {
+    case "system":
+      return "settings.reduce-motion-system";
+    case "on":
+      return "settings.reduce-motion-on";
+    case "off":
+      return "settings.reduce-motion-off";
+  }
 }
 
 /** The catalog key of a language choice. */

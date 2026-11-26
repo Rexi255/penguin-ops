@@ -335,6 +335,20 @@ export const UI_TEXT_PLACEHOLDERS = {
   "settings.fullscreen": [],
   /** The help line of the fullscreen switch: F11 toggles it everywhere. */
   "settings.fullscreen-help": [],
+  /** The label of the font size slider. */
+  "settings.font-size": [],
+  /** The font size as the slider shows it; `percent` is a whole number. */
+  "settings.font-size-value": ["percent"],
+  /** The name of the group of the "reduce motion" choice. */
+  "settings.reduce-motion": [],
+  /** What "reduce motion" does. */
+  "settings.reduce-motion-help": [],
+  /** The choice that follows the operating system's "reduce motion" setting. */
+  "settings.reduce-motion-system": [],
+  /** The choice that reduces motion whatever the system says. */
+  "settings.reduce-motion-on": [],
+  /** The choice that shows motion whatever the system says. */
+  "settings.reduce-motion-off": [],
   /** The alert when the settings file could not be written. */
   "settings.not-saved": [],
   /** The button that leaves the settings. */

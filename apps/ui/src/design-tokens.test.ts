@@ -159,14 +159,24 @@ describe("the type scale", () => {
 });
 
 describe("reduce motion", () => {
-  const reducedRules = tokenRules.filter((rule) =>
-    rule.conditions.includes("@media (prefers-reduced-motion: reduce)"),
+  // The game's setting is the root's data-reduce-motion (ADR 0110): `on` always reduces motion,
+  // the system's setting does unless the game's setting is `off`.
+  const reducedRules = tokenRules.filter(
+    (rule) => rule.selector !== ":root" || rule.conditions.length > 0,
   );
+
+  test("reduces motion for the setting on and for the system's setting unless it is off", () => {
+    expect(reducedRules.map((rule) => [rule.selector, rule.conditions])).toEqual([
+      [':root[data-reduce-motion="on"]', []],
+      [':root:not([data-reduce-motion="off"])', ["@media (prefers-reduced-motion: reduce)"]],
+    ]);
+  });
 
   test("sets every motion duration to 0ms and changes nothing else", () => {
     const durations = [...tokens.keys()].filter((name) => name.startsWith("--motion-duration-"));
     expect(durations.length).toBeGreaterThan(0);
-    expect(reducedRules.map((rule) => rule.selector)).toEqual([":root"]);
-    expect(reducedRules[0]?.declarations).toEqual(new Map(durations.map((name) => [name, "0ms"])));
+    for (const rule of reducedRules) {
+      expect(rule.declarations).toEqual(new Map(durations.map((name) => [name, "0ms"])));
+    }
   });
 });

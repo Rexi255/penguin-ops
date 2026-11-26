@@ -649,7 +649,9 @@ pre {
 }
 
 /* The game screen: the workplace layout of ADR 0020 and DESIGN.md. The top bar and the footer
-   lie on the ground, the side panel is 45 columns wide, and the terminal fills the rest. */
+   lie on the ground, the side panel is 45 columns wide, and the terminal fills the rest. With a
+   large font size in a small window, the side panel takes at most 45 % of the width, so that the
+   terminal keeps a useful width (ADR 0110); at the default font size, 45 columns always fit. */
 .game-screen {
   height: 100%;
 }
@@ -662,7 +664,7 @@ pre {
     "footer footer";
   /* The middle row may shrink below its content, so the terminal scrolls instead of growing. */
   grid-template-rows: auto minmax(0, 1fr) auto;
-  grid-template-columns: calc(var(--cell-inline) * 45) minmax(0, 1fr);
+  grid-template-columns: min(calc(var(--cell-inline) * 45), 45%) minmax(0, 1fr);
   height: 100%;
 }
 
@@ -721,9 +723,11 @@ pre {
   block-size: 100%;
 }
 
-/* The tabs keep a gap to the panel's edge, so the focus ring of the first tab stays on screen. */
+/* The tabs keep a gap to the panel's edge, so the focus ring of the first tab stays on screen.
+   They wrap into a second row when a large font size makes them wider than the panel. */
 .side-panel__tabs {
   display: flex;
+  flex-wrap: wrap;
   padding: 0 var(--space-2);
   border-block-end: var(--border-width-rule) solid var(--color-rule);
 }
@@ -1362,6 +1366,38 @@ pre {
   font-size: var(--text-title-size);
   font-weight: var(--font-weight-heading);
   line-height: var(--text-title-leading);
+}
+
+/* A slider, such as the font size: its label and its value on one line, the slider below across
+   the column. The slider's filled part and thumb are fibre orange, the player's current choice
+   (the Fibre Rule); the value is written out too. */
+.slider {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-block-start: var(--space-2);
+}
+
+.slider__head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.slider__label {
+  color: var(--color-text);
+}
+
+.slider__value {
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.slider__input {
+  inline-size: 100%;
+  margin: 0;
+  accent-color: var(--color-player);
+  cursor: pointer;
 }
 
 /* The settings in the game: the pause menu's dialog, as wide as the settings screen's column,

@@ -199,6 +199,13 @@ settings:
   display: Anzeige
   fullscreen: Vollbild
   fullscreen-help: F11 schaltet den Vollbildmodus auf jedem Bildschirm ein und aus.
+  font-size: Schriftgröße
+  font-size-value: "{percent} %"
+  reduce-motion: Bewegung reduzieren
+  reduce-motion-help: Zeigt jede Änderung sofort, ohne Animationen und Effekte.
+  reduce-motion-system: Wie im System
+  reduce-motion-on: An
+  reduce-motion-off: Aus
   not-saved: "Die Einstellungen konnten nicht gespeichert werden. Sie gelten, bis du das Spiel beendest."
   back: Zurück
   restart-title: Sprache wechseln?
