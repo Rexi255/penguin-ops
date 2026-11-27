@@ -26,6 +26,7 @@ _Last updated: 2026-11-27_
   the game; the main process stores `<userData>/settings.json` atomically through the preload API
   `settings`, which the end-to-end tests check in the preload API inventory too; the game takes
   its language from the settings (ADR 0108).
+
 ## In progress
 
 - Nothing.
