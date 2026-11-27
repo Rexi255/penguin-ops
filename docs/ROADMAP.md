@@ -242,6 +242,9 @@ inventing it along the way.
   - [x] M3.8c Font size and reduce motion; the volume sliders move to M3.10 and the colour
         scheme and effects to M3.9, so that the settings offer only what takes effect
         (ADR 0110).
+  - [x] M3.8d Settings layout: the settings fill the whole window with a category list
+        (General, Display, Sound), a top bar and a footer with Back that is always on screen
+        (ADR 0114).
 - [x] M3.9 Colour schemes and effects: retro CRT, Solarized and high contrast as value sets
       for the semantic colour tokens of M3.0b (contrast test for every scheme); optional glow
       and scanlines; their choices in the settings, with reduce motion turning the effects off

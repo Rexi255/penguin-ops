@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
-// Tests of the settings dialog of the game in both languages (ADR 0012, ADR 0109): a modal dialog
-// named by its title, Back and Esc returning to the pause menu, and the question before a new
+// Tests of the settings dialog of the game in both languages (ADR 0012, ADR 0109, ADR 0114): a
+// modal dialog named by its title that holds the settings form, Back and Esc returning to the
+// pause menu, and the question before a new
 // language restarts the tickets, which a language setting that keeps the game's language does not
 // ask.
 import { MANDATORY_LANGUAGES, type MandatoryLanguage } from "@penguin-ops/content";
@@ -87,6 +88,17 @@ describe("SettingsDialog", () => {
     );
   });
 
+  test("holds the categories and a footer with Back inside the dialog", () => {
+    renderSettingsDialog("en");
+    const inside = within(dialog("en"));
+    expect(inside.getAllByRole("tab").map((tab) => tab.textContent)).toEqual([
+      "General",
+      "Display",
+      "Sound",
+    ]);
+    expect(inside.getByRole("button", { name: "Back" }).closest("footer")).not.toBeNull();
+  });
+
   test.each(MANDATORY_LANGUAGES)("returns to the pause menu with Back in %s", async (language) => {
     const { onBack } = renderSettingsDialog(language);
     await userEvent.click(screen.getByRole("button", { name: EXPECTED[language].back }));
@@ -101,6 +113,7 @@ describe("SettingsDialog", () => {
 
   test("changes a setting other than the language at once", async () => {
     const { settings, onChange, onRestart } = renderSettingsDialog("en");
+    await userEvent.click(screen.getByRole("tab", { name: "Display" }));
     await userEvent.click(screen.getByRole("checkbox", { name: "Fullscreen" }));
     expect(onChange).toHaveBeenCalledExactlyOnceWith({ ...settings, fullscreen: false });
     expect(onRestart).not.toHaveBeenCalled();

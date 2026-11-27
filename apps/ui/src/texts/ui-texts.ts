@@ -329,7 +329,7 @@ export const UI_TEXT_PLACEHOLDERS = {
   "languages.en": [],
   /** The name of the German language in the player's language. */
   "languages.de": [],
-  /** The name of the group of the display settings. */
+  /** The name of the group of the screen settings: fullscreen and the font size. */
   "settings.display": [],
   /** The switch of fullscreen. */
   "settings.fullscreen": [],
@@ -383,6 +383,14 @@ export const UI_TEXT_PLACEHOLDERS = {
   "settings.not-saved": [],
   /** The button that leaves the settings. */
   "settings.back": [],
+  /** The accessible name of the list of the settings' categories (ADR 0114). */
+  "settings.categories": [],
+  /** The category with the language and "reduce motion" (ADR 0114). */
+  "settings.category-general": [],
+  /** The category with the screen, the colour scheme and the effects (ADR 0114). */
+  "settings.category-display": [],
+  /** The category with the volumes (ADR 0114). */
+  "settings.category-sound": [],
   /** The question before the language changes during a game (ADR 0012). */
   "settings.restart-title": [],
   /** What changing the language during a game does: the tickets restart at their checkpoints. */

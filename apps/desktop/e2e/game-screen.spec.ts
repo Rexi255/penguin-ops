@@ -235,6 +235,10 @@ test("opens the settings from the pause menu and returns to it", async ({ page }
   // A new game follows the system's language until the player chooses one.
   await expect(page.getByRole("radio", { name: "System language (English)" })).toBeFocused();
   expect(await axeViolations(page)).toEqual([]);
+  // The settings cover the whole window, so Back is on screen without scrolling.
+  await expect(page.getByRole("button", { name: "Back", exact: true })).toBeInViewport({
+    ratio: 1,
+  });
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog", { name: "Paused" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Settings" })).toBeFocused();

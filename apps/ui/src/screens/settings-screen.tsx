@@ -1,5 +1,6 @@
-// The settings screen of the main menu (ROADMAP M3.8b, ADR 0109): the settings form under the
-// screen's title, and Back, which Esc chooses too. Outside a game, a new language takes effect at
+// The settings screen of the main menu (ROADMAP M3.8b, ADR 0109, ADR 0114): the settings form,
+// which fills the window, with the screen's title in its top bar and Back in its footer; Esc
+// chooses Back too. Outside a game, a new language takes effect at
 // once: no ticket is open that would have to restart.
 
 import type { Settings } from "@penguin-ops/gameplay";
@@ -52,29 +53,19 @@ export function SettingsScreen({
 
   return (
     <main className="settings-screen">
-      <div className="settings-page">
-        <h1 className="settings-page__title">
-          <InlineText text={texts.rich("settings.title")} textKey="settings.title" />
-        </h1>
-        <SettingsForm
-          settings={settings}
-          locale={locale}
-          onChange={onChange}
-          saveFailed={saveFailed}
-          languageInput={languageInput}
-        />
-        <div className="settings-page__actions">
-          <button
-            type="button"
-            className="button"
-            onClick={() => {
-              onBack();
-            }}
-          >
-            <InlineText text={texts.rich("settings.back")} textKey="settings.back" />
-          </button>
-        </div>
-      </div>
+      <SettingsForm
+        settings={settings}
+        locale={locale}
+        onChange={onChange}
+        saveFailed={saveFailed}
+        heading={
+          <h1 className="settings-frame__title">
+            <InlineText text={texts.rich("settings.title")} textKey="settings.title" />
+          </h1>
+        }
+        onBack={onBack}
+        languageInput={languageInput}
+      />
     </main>
   );
 }

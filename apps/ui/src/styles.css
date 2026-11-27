@@ -507,41 +507,128 @@ pre {
   background: var(--color-player);
 }
 
-/* The settings screen of the main menu (ADR 0109): the title, the settings and Back in one
-   column of 45 cells, the width of the side panel, in the middle of the ground. */
+/* The settings (ADR 0114) fill the whole window, like the game screen: a top bar with the title, a
+   list of categories on the left, the chosen category's settings on the right, and a footer with
+   Back. Only the settings scroll, so the footer and Back stay on screen at every window size and
+   font size. */
 .settings-screen {
+  block-size: 100%;
+}
+
+.settings-frame {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  block-size: 100%;
+  background: var(--color-surface-ground);
+  color: var(--color-text);
+}
+
+.settings-frame__top-bar {
   display: flex;
-  justify-content: center;
   align-items: center;
-  min-block-size: 100%;
-  padding: var(--space-8) var(--space-4);
+  min-block-size: calc(var(--cell-block) * 3);
+  padding: 0 var(--space-8);
+  border-block-end: var(--border-width-rule) solid var(--color-rule);
 }
 
-.settings-page {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-  inline-size: calc(var(--cell-inline) * 45);
-  max-inline-size: 100%;
-}
-
-.settings-page__title {
+.settings-frame__title {
   margin: 0;
   font-size: var(--text-title-size);
   font-weight: var(--font-weight-heading);
   line-height: var(--text-title-leading);
 }
 
-.settings-page__actions {
+/* The list takes 30 columns of the width, at most 40 % of it, and lies on the panel's surface like
+   the game's side panel; the settings lie on the ground. */
+.settings-frame__body {
+  display: grid;
+  grid-template-columns: min(calc(var(--cell-inline) * 30), 40%) minmax(0, 1fr);
+  min-block-size: 0;
+}
+
+/* The panel is the containing block of the visually hidden inputs of its choices, so that they
+   scroll with it instead of stretching the page. */
+.settings-frame__panel {
+  position: relative;
+  min-block-size: 0;
+  padding: var(--space-6) var(--space-8);
+  overflow-y: auto;
+}
+
+.settings-frame__panel[hidden] {
+  display: none;
+}
+
+.settings-frame__footer {
   display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-block-size: calc(var(--cell-block) * 3);
+  padding: var(--space-2) var(--space-8);
+  border-block-start: var(--border-width-rule) solid var(--color-rule);
+}
+
+/* The footer's Back button shows its key on a cap, like the key hints of the game's footer. */
+.settings-frame__back {
+  display: flex;
+  align-items: center;
   gap: var(--space-2);
 }
 
-/* The settings themselves: a group per topic, named by its heading-sized legend. */
-.settings {
+.settings-frame__back .key-hint__key {
+  background: var(--color-surface-raised);
+}
+
+/* The list of categories: a vertical row of tabs. The chosen one stands out three ways, so colour
+   is never the only sign: the raised surface, the full text colour and a bar at its start in the
+   text colour (a category is no kind of work, so it takes no cable colour). */
+.settings-nav {
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-2);
+  background: var(--color-surface-panel);
+  overflow-y: auto;
+}
+
+.settings-nav__tab {
+  padding: var(--space-2) var(--space-4) var(--space-2)
+    calc(var(--space-4) - var(--border-width-cable));
+  border: none;
+  border-inline-start: var(--border-width-cable) solid transparent;
+  border-radius: var(--radius-corner);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: var(--font-ui);
+  font-size: var(--text-heading-size);
+  font-weight: var(--font-weight-control);
+  line-height: var(--text-heading-leading);
+  text-align: start;
+  cursor: pointer;
+  transition:
+    color var(--motion-duration-state) var(--motion-easing-state),
+    background-color var(--motion-duration-state) var(--motion-easing-state);
+}
+
+.settings-nav__tab:hover {
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+.settings-nav__tab[aria-selected="true"] {
+  border-inline-start-color: var(--color-text);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+/* The settings of a category: the groups side by side in columns of at least 45 cells, as many as
+   fit, up to 3; the width stops there, so that rows do not stretch across a very wide window. */
+.settings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(var(--cell-inline) * 45)), 1fr));
+  align-items: start;
+  gap: var(--space-8);
+  max-inline-size: calc(var(--cell-inline) * 160);
 }
 
 .settings__group {
@@ -549,36 +636,19 @@ pre {
   flex-direction: column;
   gap: var(--space-2);
   min-inline-size: 0;
+  max-inline-size: calc(var(--cell-inline) * 60);
   margin: 0;
   padding: 0;
   border: none;
 }
 
+/* A group is named by its heading-sized legend. */
 .settings__legend {
   margin-block-end: var(--space-2);
   padding: 0;
   font-size: var(--text-heading-size);
   font-weight: var(--font-weight-heading);
   line-height: var(--text-heading-leading);
-}
-
-/* The alert after a failed write of the settings, in the red of real errors; the text says what
-   is wrong. */
-.settings__warning {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  margin: 0;
-  color: var(--color-cable-incident);
-  font-size: var(--text-hint-size);
-  font-weight: var(--font-weight-control);
-  line-height: var(--text-hint-leading);
-}
-
-/* Without an alert, the line takes no room: the gap before it is taken back. It stays in the
-   page, so that screen readers announce the alert as soon as it appears. */
-.settings__warning:empty {
-  margin-block-start: calc(var(--space-6) * -1);
 }
 
 /* A list of choices: radio buttons or a switch, one row each, with the marker of the mode cards.
@@ -589,6 +659,12 @@ pre {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+}
+
+/* Choices that are few and short, such as the colour schemes, stand in two columns. */
+.choices--grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .choice {
@@ -1415,20 +1491,16 @@ pre {
   cursor: pointer;
 }
 
-/* The settings in the game: the pause menu's dialog, as wide as the settings screen's column,
-   with its content from the start; it scrolls when a large font size makes it higher than the
-   window. */
-.settings-dialog {
-  align-items: stretch;
-  inline-size: calc(var(--cell-inline) * 45);
-  max-inline-size: 100%;
-  max-block-size: 100%;
-  overflow-y: auto;
+/* The settings in the game (ADR 0114): a dialog that covers the whole window, in place of the pause
+   menu. The ground is solid, so the game behind it does not show through. */
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--color-surface-ground);
 }
 
-.settings-dialog__actions {
-  display: flex;
-  justify-content: flex-end;
+.settings-dialog {
+  block-size: 100%;
 }
 
 /* A question before an action that cannot be undone: a floating dialog like the pause menu, with

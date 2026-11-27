@@ -14,9 +14,13 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 import { loadBundledContent } from "../content/bundled-content";
 import { TextsProvider } from "../texts/texts-context";
 import { createTexts } from "../texts/ui-texts";
+import { categoryAfterKey, SETTINGS_CATEGORIES } from "./settings-form";
 import { SettingsScreen } from "./settings-screen";
 
 const { uiCatalogs } = loadBundledContent();
+
+/** The categories of the settings, which the list shows in this order. */
+type Category = "general" | "display" | "sound";
 
 const EXPECTED: Readonly<
   Record<
@@ -26,6 +30,7 @@ const EXPECTED: Readonly<
       language: string;
       system: string;
       display: string;
+      categories: Record<Category, string>;
       fullscreen: string;
       help: string;
       back: string;
@@ -51,7 +56,8 @@ const EXPECTED: Readonly<
     title: "Settings",
     language: "Language",
     system: "System language (German)",
-    display: "Display",
+    display: "Screen",
+    categories: { general: "General", display: "Display", sound: "Sound" },
     fullscreen: "Fullscreen",
     help: "F11 switches fullscreen on and off on every screen.",
     back: "Back",
@@ -76,7 +82,8 @@ const EXPECTED: Readonly<
     title: "Einstellungen",
     language: "Sprache",
     system: "Systemsprache (Deutsch)",
-    display: "Anzeige",
+    display: "Bildschirm",
+    categories: { general: "Allgemein", display: "Anzeige", sound: "Ton" },
     fullscreen: "Vollbild",
     help: "F11 schaltet den Vollbildmodus auf jedem Bildschirm ein und aus.",
     back: "Zurück",
@@ -125,6 +132,11 @@ afterEach(() => {
   cleanup();
 });
 
+/** Chooses a category in the list, which shows its settings. */
+function openCategory(language: MandatoryLanguage, category: Category) {
+  fireEvent.click(screen.getByRole("tab", { name: EXPECTED[language].categories[category] }));
+}
+
 /** The text of the label of `control`. */
 function labelOf(control: HTMLElement): string | null | undefined {
   return document.querySelector(`label[for="${control.id}"]`)?.textContent;
@@ -141,7 +153,85 @@ describe("SettingsScreen", () => {
     const expected = EXPECTED[language];
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(expected.title);
     expect(screen.getByRole("group", { name: expected.language })).toBeDefined();
+    expect(screen.getByRole("group", { name: expected.reduceMotion })).toBeDefined();
+    openCategory(language, "display");
     expect(screen.getByRole("group", { name: expected.display })).toBeDefined();
+    expect(screen.getByRole("group", { name: expected.colorScheme })).toBeDefined();
+    expect(screen.getByRole("group", { name: expected.effects })).toBeDefined();
+    openCategory(language, "sound");
+    expect(screen.getByRole("group", { name: expected.sound })).toBeDefined();
+  });
+
+  test.each(MANDATORY_LANGUAGES)("lists the categories, General chosen, in %s", (language) => {
+    renderSettingsScreen(language);
+    const list = screen.getByRole("tablist");
+    expect(list.getAttribute("aria-orientation")).toBe("vertical");
+    const tabs = within(list).getAllByRole("tab");
+    const { categories } = EXPECTED[language];
+    expect(tabs.map((tab) => tab.textContent)).toEqual([
+      categories.general,
+      categories.display,
+      categories.sound,
+    ]);
+    expect(tabs.map((tab) => tab.getAttribute("aria-selected"))).toEqual([
+      "true",
+      "false",
+      "false",
+    ]);
+    expect(tabs.map((tab) => tab.tabIndex)).toEqual([0, -1, -1]);
+    expect(screen.getByRole("tabpanel", { name: categories.general })).toBeDefined();
+  });
+
+  test("shows only the chosen category's settings", async () => {
+    renderSettingsScreen("en");
+    expect(screen.queryByRole("group", { name: "Colour scheme" })).toBeNull();
+    await userEvent.click(screen.getByRole("tab", { name: "Display" }));
+    expect(screen.getByRole("tab", { name: "Display" }).getAttribute("aria-selected")).toBe("true");
+    expect(screen.getByRole("tab", { name: "General" }).getAttribute("aria-selected")).toBe(
+      "false",
+    );
+    expect(screen.getByRole("group", { name: "Colour scheme" })).toBeDefined();
+    expect(screen.queryByRole("group", { name: "Language" })).toBeNull();
+    expect(screen.getByRole("tabpanel").textContent).not.toContain("Language");
+  });
+
+  test("moves between the categories with the arrow keys, Home and End", async () => {
+    renderSettingsScreen("en");
+    screen.getByRole("tab", { name: "General" }).focus();
+    await userEvent.keyboard("{ArrowDown}");
+    expect(screen.getByRole("tab", { name: "Display" })).toBe(document.activeElement);
+    expect(screen.getByRole("tab", { name: "Display" }).getAttribute("aria-selected")).toBe("true");
+    await userEvent.keyboard("{End}");
+    expect(screen.getByRole("tab", { name: "Sound" })).toBe(document.activeElement);
+    await userEvent.keyboard("{ArrowDown}");
+    expect(screen.getByRole("tab", { name: "General" })).toBe(document.activeElement);
+    await userEvent.keyboard("{ArrowUp}");
+    expect(screen.getByRole("tab", { name: "Sound" })).toBe(document.activeElement);
+    await userEvent.keyboard("{Home}");
+    expect(screen.getByRole("tab", { name: "General" })).toBe(document.activeElement);
+    expect(screen.getByRole("tab", { name: "General" }).getAttribute("aria-selected")).toBe("true");
+  });
+
+  test("leaves keys with a modifier and other keys to the browser", async () => {
+    renderSettingsScreen("en");
+    screen.getByRole("tab", { name: "General" }).focus();
+    await userEvent.keyboard("{Shift>}{ArrowDown}{/Shift}");
+    await userEvent.keyboard("a");
+    expect(screen.getByRole("tab", { name: "General" })).toBe(document.activeElement);
+    expect(screen.getByRole("tab", { name: "General" }).getAttribute("aria-selected")).toBe("true");
+  });
+
+  test("keeps Back in the footer, named Back, with Esc as its shortcut", () => {
+    renderSettingsScreen("en");
+    const back = screen.getByRole("button", { name: "Back" });
+    expect(back.closest("footer")).not.toBeNull();
+    expect(back.getAttribute("aria-keyshortcuts")).toBe("Escape");
+    expect(back.textContent).toContain("Esc");
+  });
+
+  test("keeps the alert in the footer", () => {
+    renderSettingsScreen("en", { ...DEFAULT_SETTINGS, language: "en" }, true);
+    expect(screen.getByRole("alert").closest("footer")).not.toBeNull();
   });
 
   test.each(MANDATORY_LANGUAGES)("names every language in itself in %s", (language) => {
@@ -160,6 +250,7 @@ describe("SettingsScreen", () => {
 
   test.each(MANDATORY_LANGUAGES)("explains F11 at the fullscreen switch in %s", (language) => {
     renderSettingsScreen(language);
+    openCategory(language, "display");
     const fullscreen = screen.getByRole("checkbox", { name: EXPECTED[language].fullscreen });
     const help = fullscreen.getAttribute("aria-describedby") ?? "";
     expect(document.getElementById(help)?.textContent).toBe(EXPECTED[language].help);
@@ -172,6 +263,7 @@ describe("SettingsScreen", () => {
       true,
     );
     expect(screen.getByRole("radio", { name: "English" })).toHaveProperty("checked", false);
+    openCategory("en", "display");
     expect(screen.getByRole("checkbox", { name: "Fullscreen" })).toHaveProperty("checked", false);
   });
 
@@ -190,6 +282,7 @@ describe("SettingsScreen", () => {
   test("switches fullscreen with Space", async () => {
     const settings: Settings = { ...DEFAULT_SETTINGS, language: "en", fullscreen: true };
     const { onChange } = renderSettingsScreen("en", settings);
+    openCategory("en", "display");
     screen.getByRole("checkbox", { name: "Fullscreen" }).focus();
     await userEvent.keyboard(" ");
     expect(onChange).toHaveBeenCalledExactlyOnceWith({ ...settings, fullscreen: false });
@@ -197,6 +290,7 @@ describe("SettingsScreen", () => {
 
   test.each(MANDATORY_LANGUAGES)("shows the font size as a slider in %s", (language) => {
     renderSettingsScreen(language, { ...DEFAULT_SETTINGS, language, fontSize: 120 });
+    openCategory(language, "display");
     const slider = screen.getByRole("slider", { name: EXPECTED[language].fontSize });
     expect(slider.getAttribute("min")).toBe("80");
     expect(slider.getAttribute("max")).toBe("200");
@@ -210,6 +304,7 @@ describe("SettingsScreen", () => {
   test.each([80, 110, 200])("changes the font size to %i percent", (fontSize) => {
     const settings: Settings = { ...DEFAULT_SETTINGS, language: "en" };
     const { onChange } = renderSettingsScreen("en", settings);
+    openCategory("en", "display");
     fireEvent.change(screen.getByRole("slider", { name: "Font size" }), {
       target: { value: String(fontSize) },
     });
@@ -219,6 +314,7 @@ describe("SettingsScreen", () => {
   test.each(MANDATORY_LANGUAGES)("shows the volumes as sliders in %s", (language) => {
     const volumes = { master: 35, music: 60, effects: 0 };
     renderSettingsScreen(language, { ...DEFAULT_SETTINGS, language, volumes });
+    openCategory(language, "sound");
     const expected = EXPECTED[language];
     const group = screen.getByRole("group", { name: expected.sound });
     const sliders = within(group).getAllByRole("slider");
@@ -238,6 +334,7 @@ describe("SettingsScreen", () => {
     "says at the music volume that there is no music yet in %s",
     (language) => {
       renderSettingsScreen(language);
+      openCategory(language, "sound");
       const expected = EXPECTED[language];
       const music = screen.getByRole("slider", { name: expected.volumes[1] });
       const help = music.getAttribute("aria-describedby") ?? "";
@@ -255,6 +352,7 @@ describe("SettingsScreen", () => {
   ] as const)("changes the %s", (name, change) => {
     const settings: Settings = { ...DEFAULT_SETTINGS, language: "en" };
     const { onChange } = renderSettingsScreen("en", settings);
+    openCategory("en", "sound");
     const value = Object.values(change)[0];
     fireEvent.change(screen.getByRole("slider", { name }), {
       target: { value: String(value) },
@@ -267,6 +365,7 @@ describe("SettingsScreen", () => {
 
   test.each(MANDATORY_LANGUAGES)("offers the colour schemes in %s", (language) => {
     renderSettingsScreen(language, { ...DEFAULT_SETTINGS, language, colorScheme: "solarized" });
+    openCategory(language, "display");
     const group = screen.getByRole("group", { name: EXPECTED[language].colorScheme });
     const choices = within(group).getAllByRole("radio");
     expect(choices.map((choice) => choice.closest("label")?.textContent)).toEqual(
@@ -287,18 +386,21 @@ describe("SettingsScreen", () => {
   ] as const)("changes the colour scheme to %s", async (name, colorScheme) => {
     const settings: Settings = { ...DEFAULT_SETTINGS, language: "en", colorScheme: "solarized" };
     const { onChange } = renderSettingsScreen("en", settings);
+    openCategory("en", "display");
     await userEvent.click(screen.getByRole("radio", { name }));
     expect(onChange).toHaveBeenCalledExactlyOnceWith({ ...settings, colorScheme });
   });
 
   test("keeps the colour scheme when the chosen one is clicked again", async () => {
     const { onChange } = renderSettingsScreen("en");
+    openCategory("en", "display");
     await userEvent.click(screen.getByRole("radio", { name: "Default" }));
     expect(onChange).not.toHaveBeenCalled();
   });
 
   test.each(MANDATORY_LANGUAGES)("offers the effects, both off by default, in %s", (language) => {
     renderSettingsScreen(language);
+    openCategory(language, "display");
     const group = screen.getByRole("group", { name: EXPECTED[language].effects });
     const switches = within(group).getAllByRole("checkbox");
     expect(switches.map((choice) => choice.closest("label")?.textContent)).toEqual(
@@ -315,6 +417,7 @@ describe("SettingsScreen", () => {
       language: "en",
       effects: { glow: false, scanlines: true },
     });
+    openCategory("en", "display");
     expect(screen.getByRole("checkbox", { name: "Glow" })).toHaveProperty("checked", false);
     expect(screen.getByRole("checkbox", { name: "Scanlines" })).toHaveProperty("checked", true);
   });
@@ -325,6 +428,7 @@ describe("SettingsScreen", () => {
   ] as const)("turns %s on and keeps the other effect", async (name, effects) => {
     const settings: Settings = { ...DEFAULT_SETTINGS, language: "en" };
     const { onChange } = renderSettingsScreen("en", settings);
+    openCategory("en", "display");
     await userEvent.click(screen.getByRole("checkbox", { name }));
     expect(onChange).toHaveBeenCalledExactlyOnceWith({ ...settings, effects });
   });
@@ -336,6 +440,7 @@ describe("SettingsScreen", () => {
       effects: { glow: true, scanlines: true },
     };
     const { onChange } = renderSettingsScreen("en", settings);
+    openCategory("en", "display");
     screen.getByRole("checkbox", { name: "Glow" }).focus();
     await userEvent.keyboard(" ");
     expect(onChange).toHaveBeenCalledExactlyOnceWith({
@@ -394,5 +499,26 @@ describe("SettingsScreen", () => {
     view.unmount();
     await userEvent.keyboard("{Escape}");
     expect(onBack).not.toHaveBeenCalled();
+  });
+});
+
+describe("categoryAfterKey", () => {
+  test.each([
+    ["ArrowDown", 0, "display"],
+    ["ArrowDown", 2, "general"],
+    ["ArrowUp", 0, "sound"],
+    ["ArrowUp", 2, "display"],
+    ["Home", 2, "general"],
+    ["End", 0, "sound"],
+  ] as const)("moves from the category at %s, %i to %s", (key, index, expected) => {
+    expect(categoryAfterKey(key, index)).toBe(expected);
+  });
+
+  test.each(["ArrowLeft", "ArrowRight", "Enter", "a"])("leaves %s alone", (key) => {
+    expect(categoryAfterKey(key, 1)).toBeUndefined();
+  });
+
+  test("knows the three categories in the order of the list", () => {
+    expect(SETTINGS_CATEGORIES).toEqual(["general", "display", "sound"]);
   });
 });

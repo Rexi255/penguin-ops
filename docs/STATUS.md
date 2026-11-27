@@ -4,6 +4,11 @@ _Last updated: 2026-11-27_
 
 ## Recently completed
 
+- M3.8d Settings layout: the settings fill the whole window instead of one narrow column: a top
+  bar with the title, a vertical list of categories (General: language and reduce motion; Display:
+  screen, colour scheme, effects; Sound), the chosen category's settings in columns, and a footer
+  with Back and the save alert that is always on screen. Only the settings scroll. The same frame
+  is the settings dialog in the game, covering the whole window (ADR 0114).
 - M3.10 UI sounds: four sounds generated with Web Audio from recipes of tones (click,
   notification, extra goal, solved), played at `(master × effects)²` on a context that opens with
   the first sound. Buttons, choices and sliders click through a listener on the document; the game
@@ -26,12 +31,6 @@ _Last updated: 2026-11-27_
   most 45 % of the width. Reduce motion (like the system, on, off) is the root's
   `data-reduce-motion`, which tokens.css reads. The volume sliders move to M3.10, the colour
   scheme and effects to M3.9, so that the settings offer only what works (ADR 0110).
-- M3.8b Settings screen: Settings in the main menu (a screen) and the pause menu (a dialog in its
-  place) with the language and fullscreen; every change applies at once and is written to the
-  settings file; a new language during a game asks first, then saves the game and starts it again
-  from the checkpoints. The window starts hidden and appears in the mode of the setting with the
-  renderer's first request; F11 toggles fullscreen in the main process, which reports it and the
-  system's changes to the renderer (preload API `display`, ADR 0109).
 
 ## In progress
 

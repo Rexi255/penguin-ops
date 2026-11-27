@@ -26,6 +26,10 @@ project uses [Semantic Versioning](https://semver.org/).
   Solarized (dark) and High contrast. A scheme applies at once to every screen and is remembered.
 - Two optional effects for the terminal in the settings: a soft glow around its text and
   scanlines like an old monitor. Both are off by default, and "Reduce motion" turns them off.
+- The settings fill the whole window like the game itself: a list of categories (General,
+  Display, Sound) on the left, the settings of the chosen category next to it, and a footer with
+  Back, which is always on screen, also at a large font size. Esc still goes back. In the game,
+  the settings cover the whole window as well.
 - Sounds: a quiet click for buttons, choices and sliders in the menus and dialogs, a soft
   notification when a ticket shows a new hint, tip or finished step, a rising figure for a
   reached extra goal and a small fanfare when you solve a ticket. Typing stays silent.

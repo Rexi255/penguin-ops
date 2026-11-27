@@ -145,6 +145,7 @@ test("leaves fullscreen with the switch in the settings and stores it", async ({
   userDataDir,
 }) => {
   await page.getByRole("button", { name: "Settings" }).click();
+  await page.getByRole("tab", { name: "Display" }).click();
   const fullscreen = page.getByRole("checkbox", { name: "Fullscreen" });
   await expect(fullscreen).toBeChecked();
   await fullscreen.focus();
@@ -187,6 +188,7 @@ test("toggles fullscreen with F11 without the page seeing the key, and stores it
   await pressF11(electronApp);
   await expect.poll(() => storedSettings(userDataDir)).toMatchObject({ fullscreen: false });
   await page.getByRole("button", { name: "Settings" }).click();
+  await page.getByRole("tab", { name: "Display" }).click();
   await expect(page.getByRole("checkbox", { name: "Fullscreen" })).not.toBeChecked();
   await pressF11(electronApp);
   await expect(page.getByRole("checkbox", { name: "Fullscreen" })).toBeChecked();
@@ -203,6 +205,7 @@ test("scales the interface with the font size slider and stores it", async ({
   userDataDir,
 }) => {
   await page.getByRole("button", { name: "Settings" }).click();
+  await page.getByRole("tab", { name: "Display" }).click();
   const slider = page.getByRole("slider", { name: "Font size" });
   await expect(slider).toHaveAttribute("aria-valuetext", "100%");
   await slider.focus();
@@ -220,6 +223,7 @@ test("scales the interface with the font size slider and stores it", async ({
 
 test("changes a volume with its slider and stores it", async ({ page, userDataDir }) => {
   await page.getByRole("button", { name: "Settings" }).click();
+  await page.getByRole("tab", { name: "Sound" }).click();
   const group = page.getByRole("group", { name: "Sound" });
   await expect(group.getByRole("slider")).toHaveCount(3);
   const effects = group.getByRole("slider", { name: "Sound effects" });
@@ -277,6 +281,7 @@ test("turns the effects on, stores them and lets reduce motion turn them off", a
   expect(await effect("--effect-glow")).toBe("none");
   expect(await effect("--effect-scanlines")).toBe("none");
   await page.getByRole("button", { name: "Settings" }).click();
+  await page.getByRole("tab", { name: "Display" }).click();
   const effects = page.getByRole("group", { name: "Effects" });
   await effects.getByText("Glow", { exact: true }).click();
   await effects.getByText("Scanlines", { exact: true }).click();
@@ -288,9 +293,50 @@ test("turns the effects on, stores them and lets reduce motion turn them off", a
     .poll(() => storedSettings(userDataDir))
     .toMatchObject({ effects: { glow: true, scanlines: true } });
 
+  await page.getByRole("tab", { name: "General" }).click();
   await page.getByRole("group", { name: "Reduce motion" }).getByText("On", { exact: true }).click();
+  await page.getByRole("tab", { name: "Display" }).click();
   expect(await effect("--effect-glow")).toBe("none");
   expect(await effect("--effect-scanlines")).toBe("none");
   await expect(effects.getByRole("checkbox", { name: "Glow" })).toBeChecked();
+  expect(await axeViolations(page)).toEqual([]);
+});
+
+// The settings fill the window and keep Back on screen (ROADMAP M3.8d, ADR 0114).
+
+test("keeps Back on screen at the largest font size in a small window", async ({
+  electronApp,
+  page,
+}) => {
+  await electronApp.evaluate(({ BrowserWindow }) => {
+    const window = BrowserWindow.getAllWindows()[0];
+    window?.setFullScreen(false);
+    window?.setContentSize(960, 600);
+  });
+  await page.getByRole("button", { name: "Settings" }).click();
+  await page.getByRole("tab", { name: "Display" }).click();
+  const slider = page.getByRole("slider", { name: "Font size" });
+  await slider.focus();
+  await page.keyboard.press("End");
+  await expect(slider).toHaveAttribute("aria-valuetext", "200%");
+  const back = page.getByRole("button", { name: "Back" });
+  await expect(back).toBeInViewport({ ratio: 1 });
+  // Only the settings scroll: the page itself does not.
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollHeight <= document.documentElement.clientHeight,
+    ),
+  ).toBe(true);
+  await back.click();
+  await expect(page.getByRole("button", { name: "Settings" })).toBeFocused();
+});
+
+test("changes the category with the arrow keys of the list", async ({ page }) => {
+  await page.getByRole("button", { name: "Settings" }).click();
+  await page.getByRole("tab", { name: "General" }).focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(page.getByRole("tab", { name: "Display" })).toBeFocused();
+  await expect(page.getByRole("group", { name: "Colour scheme" })).toBeVisible();
+  await expect(page.getByRole("group", { name: "Language" })).toBeHidden();
   expect(await axeViolations(page)).toEqual([]);
 });

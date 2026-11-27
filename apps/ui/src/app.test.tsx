@@ -352,6 +352,11 @@ const JOERG: SaveGame = {
 };
 
 /** Starts a new game of Max in slot 1 with the keyboard alone. */
+/** Chooses a category of the settings in their list. */
+async function chooseCategory(name: "General" | "Display" | "Sound") {
+  await userEvent.click(screen.getByRole("tab", { name }));
+}
+
 async function startNewGame() {
   await userEvent.keyboard("{Enter}");
   await userEvent.keyboard("{Enter}");
@@ -734,6 +739,7 @@ describe("App: settings (ADR 0109)", () => {
     const { display, settingsFile } = renderApp();
     expect(display.setFullscreen).toHaveBeenCalledExactlyOnceWith(false);
     await openSettings();
+    await chooseCategory("Display");
     const fullscreen = screen.getByRole("checkbox", { name: "Fullscreen" });
     expect(fullscreen).toHaveProperty("checked", false);
     await userEvent.click(fullscreen);
@@ -747,6 +753,7 @@ describe("App: settings (ADR 0109)", () => {
   test("remembers fullscreen that F11 or the system changed, without sending it back", async () => {
     const { display, settingsFile } = renderApp();
     await openSettings();
+    await chooseCategory("Display");
     act(() => {
       display.report(true);
     });
@@ -769,6 +776,7 @@ describe("App: settings (ADR 0109)", () => {
     const { settingsFile, onSettingsError } = renderApp();
     settingsFile.write.mockRejectedValueOnce(new Error("disk full"));
     await openSettings();
+    await chooseCategory("Display");
     await userEvent.click(screen.getByRole("checkbox", { name: "Fullscreen" }));
     await vi.waitFor(() => {
       expect(screen.getByRole("alert").textContent).toBe(
@@ -795,10 +803,12 @@ describe("App: settings (ADR 0109)", () => {
   test("changes the font size and reduce motion at once and writes them", async () => {
     const { settingsFile } = renderApp();
     await openSettings();
+    await chooseCategory("Display");
     fireEvent.change(screen.getByRole("slider", { name: "Font size" }), {
       target: { value: "110" },
     });
     expect(document.documentElement.style.fontSize).toBe("110%");
+    await chooseCategory("General");
     await userEvent.click(screen.getByRole("radio", { name: "Off" }));
     expect(document.documentElement.dataset["reduceMotion"]).toBe("off");
     await vi.waitFor(() => {
@@ -816,6 +826,7 @@ describe("App: settings (ADR 0109)", () => {
   test("changes the colour scheme at once and writes it", async () => {
     const { settingsFile } = renderApp();
     await openSettings();
+    await chooseCategory("Display");
     expect(document.documentElement.dataset["colorScheme"]).toBe("default");
     await userEvent.click(screen.getByRole("radio", { name: "Retro CRT" }));
     expect(document.documentElement.dataset["colorScheme"]).toBe("retro-crt");
@@ -835,6 +846,7 @@ describe("App: settings (ADR 0109)", () => {
   test("turns the effects on at once and writes them", async () => {
     const { settingsFile } = renderApp();
     await openSettings();
+    await chooseCategory("Display");
     expect(document.documentElement.dataset["scanlines"]).toBe("off");
     await userEvent.click(screen.getByRole("checkbox", { name: "Scanlines" }));
     expect(document.documentElement.dataset["scanlines"]).toBe("on");
@@ -918,6 +930,7 @@ describe("App: settings (ADR 0109)", () => {
     await startNewGame();
     await userEvent.keyboard("pwd{Enter}");
     await openSettingsInGame();
+    await chooseCategory("Display");
     await userEvent.click(screen.getByRole("checkbox", { name: "Fullscreen" }));
     expect(display.setFullscreen).toHaveBeenLastCalledWith(true);
     await userEvent.keyboard("{Escape}{Escape}");
@@ -943,6 +956,7 @@ describe("App: sounds (ADR 0113)", () => {
   test("clicks once for a choice in the settings", async () => {
     const { sounds } = renderWithVolumes();
     await userEvent.click(screen.getByRole("button", { name: "Settings" }));
+    await chooseCategory("Display");
     sounds.play.mockClear();
     await userEvent.click(screen.getByRole("radio", { name: "Retro CRT" }));
     expect(sounds.play).toHaveBeenCalledExactlyOnceWith("click", VOLUMES);
@@ -954,6 +968,7 @@ describe("App: sounds (ADR 0113)", () => {
   ] as const)("clicks the %s slider at its new volume", async (name, change) => {
     const { sounds } = renderWithVolumes();
     await userEvent.click(screen.getByRole("button", { name: "Settings" }));
+    await chooseCategory("Sound");
     sounds.play.mockClear();
     fireEvent.input(screen.getByRole("slider", { name }), {
       target: { value: String(Object.values(change)[0]) },

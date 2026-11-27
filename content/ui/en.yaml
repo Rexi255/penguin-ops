@@ -196,7 +196,7 @@ settings:
   language-system: "System language ({language})"
   language-en: English
   language-de: Deutsch
-  display: Display
+  display: Screen
   fullscreen: Fullscreen
   fullscreen-help: F11 switches fullscreen on and off on every screen.
   font-size: Font size
@@ -223,6 +223,10 @@ settings:
   music-help: There is no music yet. Its volume applies as soon as it arrives.
   not-saved: "The settings could not be saved. They apply until you close the game."
   back: Back
+  categories: Settings categories
+  category-general: General
+  category-display: Display
+  category-sound: Sound
   restart-title: Switch the language?
   restart-text: Your tickets start again in the new language from their last checkpoint. Your progress is kept.
   restart: Switch language

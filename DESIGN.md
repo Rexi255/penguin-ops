@@ -251,6 +251,16 @@ the line: 6, 12, 18, 24, 36 and 48 px, so gaps line up with the terminal's lines
 is 45 columns wide (432 px). Density is medium: tight space within a group (6 to 12 px), generous
 space between groups (24 px) and between areas (48 px).
 
+### Settings
+
+The settings use the whole window, like the workplace (ADR 0114): a top bar with the title, a
+vertical list of categories on a panel-coloured strip at the left (30 columns wide, at most 40 %
+of the window), the chosen category's settings on the ground, and a footer with Back. The groups
+of a category stand side by side in columns of at least 45 columns, each group at most 60
+columns wide; only the settings scroll, so Back never leaves the screen. The chosen category is
+marked by the raised surface, the full text colour and a bar in the text colour, not by a cable
+colour, because a category is no kind of work.
+
 ## Elevation & Depth
 
 Flat. Depth comes from tonal steps of the rack-metal neutrals (terminal, ground, panel, raised)

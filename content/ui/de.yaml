@@ -196,7 +196,7 @@ settings:
   language-system: "Systemsprache ({language})"
   language-en: English
   language-de: Deutsch
-  display: Anzeige
+  display: Bildschirm
   fullscreen: Vollbild
   fullscreen-help: F11 schaltet den Vollbildmodus auf jedem Bildschirm ein und aus.
   font-size: Schriftgröße
@@ -223,6 +223,10 @@ settings:
   music-help: Musik gibt es noch nicht. Ihre Lautstärke gilt, sobald sie da ist.
   not-saved: "Die Einstellungen konnten nicht gespeichert werden. Sie gelten, bis du das Spiel beendest."
   back: Zurück
+  categories: Einstellungskategorien
+  category-general: Allgemein
+  category-display: Anzeige
+  category-sound: Ton
   restart-title: Sprache wechseln?
   restart-text: Deine Tickets beginnen in der neuen Sprache noch einmal ab ihrem letzten Checkpoint. Dein Fortschritt bleibt erhalten.
   restart: Sprache wechseln

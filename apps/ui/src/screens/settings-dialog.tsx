@@ -1,6 +1,6 @@
-// The settings in the game (ROADMAP M3.8b, ADR 0012, ADR 0109): a modal dialog in place of the
-// pause menu, with the settings form and Back, which Esc chooses too and which returns to the
-// pause menu. A new language changes the texts of the open tickets and their files, so the game
+// The settings in the game (ROADMAP M3.8b, ADR 0012, ADR 0109, ADR 0114): a modal dialog in place
+// of the pause menu that covers the whole window with the settings form, whose footer has Back;
+// Esc chooses Back too, and both return to the pause menu. A new language changes the texts of the open tickets and their files, so the game
 // asks first: the tickets then start again in the new language from their checkpoints. A language
 // setting that keeps the game's language, such as the system's language when it is the one being
 // played, needs no question.
@@ -70,17 +70,14 @@ export function SettingsDialog({
   }, [asking, onBack]);
 
   return (
-    <div className="pause-menu">
+    <div className="settings-overlay">
       <div
-        className="pause-menu__dialog settings-dialog"
+        className="settings-dialog"
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         inert={asking}
       >
-        <h2 id={titleId} className="pause-menu__title">
-          <InlineText text={texts.rich("settings.title")} textKey="settings.title" />
-        </h2>
         <SettingsForm
           settings={settings}
           locale={locale}
@@ -92,19 +89,14 @@ export function SettingsDialog({
             }
           }}
           saveFailed={saveFailed}
+          heading={
+            <h2 id={titleId} className="settings-frame__title">
+              <InlineText text={texts.rich("settings.title")} textKey="settings.title" />
+            </h2>
+          }
+          onBack={onBack}
           languageInput={languageInput}
         />
-        <div className="settings-dialog__actions">
-          <button
-            type="button"
-            className="button"
-            onClick={() => {
-              onBack();
-            }}
-          >
-            <InlineText text={texts.rich("settings.back")} textKey="settings.back" />
-          </button>
-        </div>
       </div>
       {pending !== undefined && (
         <ConfirmDialog

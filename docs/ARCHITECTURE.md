@@ -483,6 +483,10 @@ Details and reasons: ADR 0005, ADR 0031, ADR 0032.
 - React screens: start, save slots, new game, game, pause menu, settings, credits.
 - Workplace layout: top bar, side panel tabs (Tickets, Mail, Handbook), terminal area, footer
   (ADR 0020).
+- Settings layout (ADR 0114): `SettingsForm` is a full-window frame of top bar, body and footer,
+  the same on the settings screen and in the settings dialog. The body is a vertical list of tabs
+  (General, Display, Sound) and the panel of the chosen category, which alone scrolls; the footer
+  holds Back and the alert after a failed write, so that Back is always on screen.
 - Terminal component: input line, coloured output, history, completion, key handling like
   bash; full-screen programs take over the area.
 - Design tokens (colours, spacing, radii, shadows, motion, type scale) defined before the
