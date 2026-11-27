@@ -19,6 +19,11 @@ export interface SettingsKeeper {
   readonly update: (change: (current: Settings) => Settings) => void;
   /** Whether the latest write failed; a write that works again clears it. */
   readonly saveFailed: boolean;
+  /**
+   * The latest settings, also right after a change that React has not rendered yet: for event
+   * listeners outside React, such as the sounds of the controls (ADR 0113).
+   */
+  readonly current: () => Settings;
 }
 
 /**
@@ -61,5 +66,7 @@ export function useSettings(
     [file, onError],
   );
 
-  return { settings, update, saveFailed };
+  const current = useCallback(() => latest.current, []);
+
+  return { settings, update, saveFailed, current };
 }

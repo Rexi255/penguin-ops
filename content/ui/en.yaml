@@ -215,6 +215,12 @@ settings:
   reduce-motion-system: Like the system
   reduce-motion-on: "On"
   reduce-motion-off: "Off"
+  sound: Sound
+  volume-master: Master volume
+  volume-music: Music
+  volume-effects: Sound effects
+  volume-value: "{percent}%"
+  music-help: There is no music yet. Its volume applies as soon as it arrives.
   not-saved: "The settings could not be saved. They apply until you close the game."
   back: Back
   restart-title: Switch the language?

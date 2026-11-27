@@ -1,7 +1,8 @@
 // Entry point of the renderer, loaded by index.html. It loads the bundled content, reads the
 // settings (ADR 0108), takes the language from them or from the operating system's locale
 // (ADR 0012), reads the save slots and renders the app. The app keeps the settings from there on
-// and shows the window in the mode of the fullscreen setting (ADR 0109).
+// and shows the window in the mode of the fullscreen setting (ADR 0109). It also makes the player
+// of the UI sounds (ADR 0113).
 import { reservedUserNames } from "@penguin-ops/gameplay";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
@@ -12,6 +13,7 @@ import { getDesktopApi } from "./desktop-bridge";
 import "./fonts/fonts.css";
 import { loadSlots, SAVE_SLOT_COUNT, type SlotState } from "./saves/save-slots";
 import { loadSettings } from "./settings/settings-file";
+import { createSoundPlayer } from "./sounds/sound-player";
 import "./tokens.css";
 import "./styles.css";
 
@@ -34,6 +36,14 @@ const reserved = reservedUserNames([...content.worlds.values()]);
 function logSettingsError(error: unknown): void {
   console.error("PenguinOps could not save the settings:", error);
 }
+
+// The UI sounds (ADR 0113); the audio context opens with the first sound that is heard.
+const sounds = createSoundPlayer(
+  () => new AudioContext(),
+  (error: unknown) => {
+    console.error("PenguinOps could not play a sound:", error);
+  },
+);
 
 function logSaveError(error: unknown): void {
   console.error("PenguinOps could not save:", error);
@@ -59,6 +69,7 @@ createRoot(container).render(
       settingsFile={desktop.settings}
       display={desktop.display}
       onSettingsError={logSettingsError}
+      sounds={sounds}
       reservedUserNames={reserved}
       slots={slots}
       saveFiles={desktop.saves}

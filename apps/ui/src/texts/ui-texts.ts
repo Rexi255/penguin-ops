@@ -367,6 +367,18 @@ export const UI_TEXT_PLACEHOLDERS = {
   "settings.reduce-motion-on": [],
   /** The choice that shows motion whatever the system says. */
   "settings.reduce-motion-off": [],
+  /** The name of the group of the volumes (ADR 0113). */
+  "settings.sound": [],
+  /** The label of the master volume slider, which scales every sound. */
+  "settings.volume-master": [],
+  /** The label of the music volume slider. */
+  "settings.volume-music": [],
+  /** The label of the volume slider of the UI sounds. */
+  "settings.volume-effects": [],
+  /** A volume as its slider shows it; `percent` is a whole number. */
+  "settings.volume-value": ["percent"],
+  /** The help line of the music volume: there is no music yet. */
+  "settings.music-help": [],
   /** The alert when the settings file could not be written. */
   "settings.not-saved": [],
   /** The button that leaves the settings. */

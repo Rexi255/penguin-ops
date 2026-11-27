@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
-// Tests of the settings screen and its form in both languages (ADR 0109, ADR 0110): the title,
-// the language choice with every language named in itself and the system's language named in the
-// player's language, the fullscreen switch with its help line, the font size slider, the colour
-// scheme choice, the "reduce motion" choice, the focus on the chosen language,
-// each control changing its setting at once, the alert after a failed write, and Back and Esc.
+// Tests of the settings screen and its form in both languages (ADR 0109, ADR 0110, ADR 0113): the
+// title, the language choice with every language named in itself and the system's language named
+// in the player's language, the fullscreen switch with its help line, the font size slider, the
+// colour scheme choice, the "reduce motion" choice, the volume sliders with the music's help line,
+// the focus on the chosen language, each control changing its setting at once, the alert after a
+// failed write, and Back and Esc.
 import { MANDATORY_LANGUAGES, type MandatoryLanguage } from "@penguin-ops/content";
 import { DEFAULT_SETTINGS, type Settings } from "@penguin-ops/gameplay";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
@@ -39,6 +40,10 @@ const EXPECTED: Readonly<
       reduceMotion: string;
       reduceMotionChoices: string[];
       reduceMotionHelp: string;
+      sound: string;
+      volumes: readonly [master: string, music: string, effects: string];
+      volumeValue: string;
+      musicHelp: string;
     }
   >
 > = {
@@ -62,6 +67,10 @@ const EXPECTED: Readonly<
     reduceMotion: "Reduce motion",
     reduceMotionChoices: ["Like the system", "On", "Off"],
     reduceMotionHelp: "Shows every change at once, without animations and effects.",
+    sound: "Sound",
+    volumes: ["Master volume", "Music", "Sound effects"],
+    volumeValue: "35%",
+    musicHelp: "There is no music yet. Its volume applies as soon as it arrives.",
   },
   de: {
     title: "Einstellungen",
@@ -84,6 +93,10 @@ const EXPECTED: Readonly<
     reduceMotion: "Bewegung reduzieren",
     reduceMotionChoices: ["Wie im System", "An", "Aus"],
     reduceMotionHelp: "Zeigt jede Änderung sofort, ohne Animationen und Effekte.",
+    sound: "Ton",
+    volumes: ["Gesamtlautstärke", "Musik", "Soundeffekte"],
+    volumeValue: "35 %",
+    musicHelp: "Musik gibt es noch nicht. Ihre Lautstärke gilt, sobald sie da ist.",
   },
 };
 
@@ -111,6 +124,16 @@ function renderSettingsScreen(
 afterEach(() => {
   cleanup();
 });
+
+/** The text of the label of `control`. */
+function labelOf(control: HTMLElement): string | null | undefined {
+  return document.querySelector(`label[for="${control.id}"]`)?.textContent;
+}
+
+/** The value that the slider's output shows next to its label. */
+function valueShownFor(slider: HTMLElement): string | null | undefined {
+  return document.querySelector(`output[for="${slider.id}"]`)?.textContent;
+}
 
 describe("SettingsScreen", () => {
   test.each(MANDATORY_LANGUAGES)("names the screen and its groups in %s", (language) => {
@@ -180,7 +203,7 @@ describe("SettingsScreen", () => {
     expect(slider.getAttribute("step")).toBe("10");
     expect(slider).toHaveProperty("value", "120");
     expect(slider.getAttribute("aria-valuetext")).toBe(EXPECTED[language].fontSizeValue);
-    expect(screen.getByRole("status").textContent).toBe(EXPECTED[language].fontSizeValue);
+    expect(valueShownFor(slider)).toBe(EXPECTED[language].fontSizeValue);
   });
 
   // jsdom does not move a slider with the keyboard; the end-to-end tests press the keys.
@@ -191,6 +214,55 @@ describe("SettingsScreen", () => {
       target: { value: String(fontSize) },
     });
     expect(onChange).toHaveBeenCalledExactlyOnceWith({ ...settings, fontSize });
+  });
+
+  test.each(MANDATORY_LANGUAGES)("shows the volumes as sliders in %s", (language) => {
+    const volumes = { master: 35, music: 60, effects: 0 };
+    renderSettingsScreen(language, { ...DEFAULT_SETTINGS, language, volumes });
+    const expected = EXPECTED[language];
+    const group = screen.getByRole("group", { name: expected.sound });
+    const sliders = within(group).getAllByRole("slider");
+    expect(sliders.map((slider) => labelOf(slider))).toEqual(expected.volumes);
+    for (const slider of sliders) {
+      expect(slider.getAttribute("min")).toBe("0");
+      expect(slider.getAttribute("max")).toBe("100");
+      expect(slider.getAttribute("step")).toBe("5");
+    }
+    expect(sliders.map((slider) => (slider as HTMLInputElement).value)).toEqual(["35", "60", "0"]);
+    const master = screen.getByRole("slider", { name: expected.volumes[0] });
+    expect(master.getAttribute("aria-valuetext")).toBe(expected.volumeValue);
+    expect(valueShownFor(master)).toBe(expected.volumeValue);
+  });
+
+  test.each(MANDATORY_LANGUAGES)(
+    "says at the music volume that there is no music yet in %s",
+    (language) => {
+      renderSettingsScreen(language);
+      const expected = EXPECTED[language];
+      const music = screen.getByRole("slider", { name: expected.volumes[1] });
+      const help = music.getAttribute("aria-describedby") ?? "";
+      expect(document.getElementById(help)?.textContent).toBe(expected.musicHelp);
+      for (const name of [expected.volumes[0], expected.volumes[2]]) {
+        expect(screen.getByRole("slider", { name }).hasAttribute("aria-describedby")).toBe(false);
+      }
+    },
+  );
+
+  test.each([
+    ["Master volume", { master: 0 }],
+    ["Music", { music: 100 }],
+    ["Sound effects", { effects: 45 }],
+  ] as const)("changes the %s", (name, change) => {
+    const settings: Settings = { ...DEFAULT_SETTINGS, language: "en" };
+    const { onChange } = renderSettingsScreen("en", settings);
+    const value = Object.values(change)[0];
+    fireEvent.change(screen.getByRole("slider", { name }), {
+      target: { value: String(value) },
+    });
+    expect(onChange).toHaveBeenCalledExactlyOnceWith({
+      ...settings,
+      volumes: { ...settings.volumes, ...change },
+    });
   });
 
   test.each(MANDATORY_LANGUAGES)("offers the colour schemes in %s", (language) => {

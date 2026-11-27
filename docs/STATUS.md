@@ -4,6 +4,12 @@ _Last updated: 2026-11-27_
 
 ## Recently completed
 
+- M3.10 UI sounds: four sounds generated with Web Audio from recipes of tones (click,
+  notification, extra goal, solved), played at `(master × effects)²` on a context that opens with
+  the first sound. Buttons, choices and sliders click through a listener on the document; the game
+  screen plays the biggest moment of every change in the open ticket. The settings have a Sound
+  group with the master, music and effects sliders; the music slider says that music comes later.
+  The terminal's bell stays silent (ADR 0113).
 - M3.9b Effects (M3.9 complete): glow and scanlines are effect tokens in tokens.css that the
   root's `data-glow` and `data-scanlines` turn on and "reduce motion" turns off; only the
   terminal reads them. The glow lights only the terminal's text colour, checked in every scheme
@@ -26,12 +32,6 @@ _Last updated: 2026-11-27_
   from the checkpoints. The window starts hidden and appears in the mode of the setting with the
   renderer's first request; F11 toggles fullscreen in the main process, which reports it and the
   system's changes to the renderer (preload API `display`, ADR 0109).
-- M3.8a Settings model and file: `packages/gameplay/src/settings.ts` defines version 1 of the
-  global settings (language, volumes, fullscreen, font size, colour scheme, effects, reduce
-  motion) with defaults and reads a file setting by setting, so that a broken file never stops
-  the game; the main process stores `<userData>/settings.json` atomically through the preload API
-  `settings`, which the end-to-end tests check in the preload API inventory too; the game takes
-  its language from the settings (ADR 0108).
 
 ## In progress
 
@@ -39,12 +39,14 @@ _Last updated: 2026-11-27_
 
 ## Next 3 steps
 
-1. ROADMAP M3.10: UI sounds with the volume sliders in the settings.
-2. ROADMAP M3.11: mail panel with toasts and the handbook panel.
-3. ROADMAP M3.12: ranks, XP and achievements framework.
+1. ROADMAP M3.11: mail panel with toasts and the handbook panel.
+2. ROADMAP M3.12: ranks, XP and achievements framework.
+3. ROADMAP M3.13: sandbox free play unlock rules.
 
 ## Blockers and open questions
 
+- The owner has not heard the UI sounds yet (Claude cannot listen); their recipes in
+  `apps/ui/src/sounds/ui-sounds.ts` may need tuning after the first game on Windows (ADR 0113).
 - The start, save slot, new game, settings and game screens, the pause menu, the slot menu and
   dialogs, the terminal, the ticket panel and the inbox have no screenshot tests yet; the
   screenshot test setup for all screens, languages and the four colour schemes (and the two

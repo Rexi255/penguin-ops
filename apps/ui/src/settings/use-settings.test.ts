@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 // Tests of the settings while the game runs (ADR 0109): a change applies at once and is written
 // as the whole settings file, the writes run in order, a change that changes nothing writes
-// nothing, and a failed write is logged and reported until a write works again.
+// nothing, the latest settings are there before React renders them, and a failed write is logged
+// and reported until a write works again.
 import { DEFAULT_SETTINGS, serializeSettings, type Settings } from "@penguin-ops/gameplay";
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, test, vi } from "vitest";
@@ -51,6 +52,19 @@ describe("useSettings", () => {
         [serializeSettings(both)],
       ]);
     });
+  });
+
+  test("gives the latest settings right after a change, before React rendered it", () => {
+    const { hook } = setup();
+    const { current, update } = hook.result.current;
+    expect(current()).toBe(DEFAULT_SETTINGS);
+    let seen: Settings | undefined;
+    act(() => {
+      update((settings) => ({ ...settings, language: "de" }));
+      seen = current();
+    });
+    expect(seen).toEqual(GERMAN);
+    expect(hook.result.current.current()).toEqual(GERMAN);
   });
 
   test("writes one change after the other, so that the latest one wins", async () => {

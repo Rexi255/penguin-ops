@@ -215,6 +215,12 @@ settings:
   reduce-motion-system: Wie im System
   reduce-motion-on: An
   reduce-motion-off: Aus
+  sound: Ton
+  volume-master: Gesamtlautstärke
+  volume-music: Musik
+  volume-effects: Soundeffekte
+  volume-value: "{percent} %"
+  music-help: Musik gibt es noch nicht. Ihre Lautstärke gilt, sobald sie da ist.
   not-saved: "Die Einstellungen konnten nicht gespeichert werden. Sie gelten, bis du das Spiel beendest."
   back: Zurück
   restart-title: Sprache wechseln?

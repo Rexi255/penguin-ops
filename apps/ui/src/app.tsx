@@ -16,6 +16,10 @@
 // from its checkpoint (ADR 0012). F11 and the system change fullscreen in the desktop, which
 // reports it, and the settings remember it. The font size and "reduce motion" act on the whole
 // page (ROADMAP M3.8c, ADR 0110).
+//
+// The app root plays the UI sounds (ROADMAP M3.10, ADR 0113) at the volumes of the latest
+// settings: it gives the screens the function that plays them, and it listens on the whole page
+// for the controls that click when they are worked.
 import type { Content } from "@penguin-ops/content";
 import {
   gameLanguage,
@@ -52,6 +56,9 @@ import { SettingsScreen } from "./screens/settings-screen";
 import { StartScreen } from "./screens/start-screen";
 import { applyDocumentSettings } from "./settings/document-settings";
 import { useSettings } from "./settings/use-settings";
+import type { SoundPlayer } from "./sounds/sound-player";
+import { CONTROL_SOUND_EVENTS, controlSound, SoundsProvider } from "./sounds/sounds-context";
+import type { UiSound } from "./sounds/ui-sounds";
 import { TextsProvider } from "./texts/texts-context";
 import { createTexts } from "./texts/ui-texts";
 
@@ -96,6 +103,8 @@ export interface AppProps {
   readonly display: DisplayApi;
   /** Gets every write of the settings that failed, for the log. */
   readonly onSettingsError: (error: unknown) => void;
+  /** Plays the UI sounds. */
+  readonly sounds: SoundPlayer;
   /** The user names a player cannot take (`reservedUserNames` of the loaded worlds). */
   readonly reservedUserNames: ReadonlySet<string>;
   /** What each save slot holds when the app starts (`loadSlots`). */
@@ -123,6 +132,7 @@ export function App({
   settingsFile,
   display,
   onSettingsError,
+  sounds,
   reservedUserNames,
   slots: initialSlots,
   saveFiles,
@@ -143,7 +153,15 @@ export function App({
     settings,
     update,
     saveFailed: settingsSaveFailed,
+    current: currentSettings,
   } = useSettings(initialSettings, settingsFile, onSettingsError);
+  // The volumes of the latest settings, so that a volume slider clicks at its new volume.
+  const playSound = useCallback(
+    (sound: UiSound) => {
+      sounds.play(sound, currentSettings().volumes);
+    },
+    [sounds, currentSettings],
+  );
   const language = gameLanguage(settings.language, locale);
   const texts = useMemo(
     () => createTexts(content.uiCatalogs, language),
@@ -251,6 +269,25 @@ export function App({
       effects: { glow, scanlines },
     });
   }, [fontSize, reduceMotion, colorScheme, glow, scanlines]);
+
+  // The controls click when they are worked (ADR 0113). The listeners on the document run after
+  // React's, so a change of a volume already holds when its slider clicks.
+  useEffect(() => {
+    const listener = (event: Event) => {
+      const sound = controlSound(event);
+      if (sound !== undefined) {
+        playSound(sound);
+      }
+    };
+    for (const type of CONTROL_SOUND_EVENTS) {
+      document.addEventListener(type, listener);
+    }
+    return () => {
+      for (const type of CONTROL_SOUND_EVENTS) {
+        document.removeEventListener(type, listener);
+      }
+    };
+  }, [playSound]);
 
   // The window follows the fullscreen setting; the first call shows the window (ADR 0109). The
   // value the desktop has, so that a change it reported is not sent back to it.
@@ -471,7 +508,11 @@ export function App({
       break;
     }
   }
-  return <TextsProvider texts={texts}>{shown}</TextsProvider>;
+  return (
+    <TextsProvider texts={texts}>
+      <SoundsProvider play={playSound}>{shown}</SoundsProvider>
+    </TextsProvider>
+  );
 }
 
 /** The message key of an import problem (ADR 0107). */

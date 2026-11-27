@@ -534,6 +534,18 @@ which the design token test and the styleguide's scheme switch use, and checks t
 the ground its glow lights at most (`checkGlowContrast`, `GLOW_PEAK_COVERAGE`), a bound that the
 styleguide's browser test measures.
 
+Sounds (`src/sounds/`, ADR 0113): `ui-sounds.ts` describes the UI sounds (`click`,
+`notification`, `goal`, `solved`) as recipes of tones, data that the tests check. `sound-player.ts`
+plays them on a Web Audio context that opens with the first sound heard (`createSoundPlayer`,
+made in `src/main.tsx` and given to the app as `sounds`), at the gain
+`(master/100 × effects/100)²` (`effectsGain`), skipping a click that follows the last one within
+`MIN_CLICK_GAP`; errors are only logged. `sounds-context.tsx` gives the screens the function that
+plays a sound at the latest volumes (`SoundsProvider`, `useSounds`), and `controlSound` names the
+click of a pressed button, a changed radio button or checkbox and a moved slider; the app root
+listens for those events on the document, after React, and reads the volumes from
+`SettingsKeeper.current`. `ticket-sound.ts` picks the sound of a change in the open ticket's
+progress (`ticketSound`), which the game screen plays.
+
 Content and texts (ADR 0090): `src/content/bundled-content.ts` imports every `.yaml` file of
 `content/` as text with `import.meta.glob` at build time and loads it with `sortContentFiles`
 and `loadContent` (zod set to `jitless` for the Content Security Policy); a problem throws a

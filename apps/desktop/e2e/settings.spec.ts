@@ -4,6 +4,7 @@
 // broken settings file does not stop the game from starting. The settings screen changes the
 // language and fullscreen and stores them; F11 toggles fullscreen in the main process (ADR 0109).
 // The font size scales the interface and reduce motion overrides the system's setting (ADR 0110).
+// The volume sliders change and store the volumes (ADR 0113).
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
@@ -212,6 +213,24 @@ test("scales the interface with the font size slider and stores it", async ({
     "19.2px",
   );
   await expect.poll(() => storedSettings(userDataDir)).toMatchObject({ fontSize: 120 });
+  expect(await axeViolations(page)).toEqual([]);
+});
+
+// The volumes (ROADMAP M3.10, ADR 0113).
+
+test("changes a volume with its slider and stores it", async ({ page, userDataDir }) => {
+  await page.getByRole("button", { name: "Settings" }).click();
+  const group = page.getByRole("group", { name: "Sound" });
+  await expect(group.getByRole("slider")).toHaveCount(3);
+  const effects = group.getByRole("slider", { name: "Sound effects" });
+  await expect(effects).toHaveAttribute("aria-valuetext", "80%");
+  await effects.focus();
+  await page.keyboard.press("ArrowLeft");
+  await page.keyboard.press("ArrowLeft");
+  await expect(effects).toHaveAttribute("aria-valuetext", "70%");
+  await expect
+    .poll(() => storedSettings(userDataDir))
+    .toMatchObject({ volumes: { master: 80, music: 50, effects: 70 } });
   expect(await axeViolations(page)).toEqual([]);
 });
 

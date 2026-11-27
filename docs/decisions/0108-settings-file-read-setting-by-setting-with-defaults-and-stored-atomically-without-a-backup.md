@@ -1,6 +1,8 @@
 # 0108. Settings file read setting by setting with defaults and stored atomically without a backup
 
-- Status: Accepted
+- Status: Accepted; partly superseded by
+  [0113](0113-ui-sounds-generated-with-web-audio-and-the-music-volume-offered-before-the-music.md)
+  (the rule that a setting is offered once it takes effect, as far as the music volume goes)
 - Date: 2026-11-24
 - Supersedes: –
 

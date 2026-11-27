@@ -6,7 +6,8 @@
 // The game screen plays the first level as the player's Linux user (ADR 0095). The app saves a new
 // game at once, after every change of the progress, when the player leaves the game and before
 // the window closes, with the play time and the time last played; it deletes a slot after the
-// player confirmed it (ADR 0106).
+// player confirmed it (ADR 0106). The controls click at the volumes of the latest settings, and
+// typing is silent (ADR 0113).
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, beforeAll, describe, expect, test, vi } from "vitest";
@@ -26,6 +27,7 @@ import { App } from "./app";
 import { loadBundledContent } from "./content/bundled-content";
 import type { DisplayApi, SaveFilesApi, SettingsFileApi } from "./desktop-api";
 import { EMPTY_SLOT, type SlotState } from "./saves/save-slots";
+import type { SoundPlayer } from "./sounds/sound-player";
 
 const content = loadBundledContent();
 
@@ -112,9 +114,10 @@ function renderApp(slots: readonly SlotState[] = EMPTY, options: AppOptions = {}
   const saveFiles = fakeSaveFiles();
   const settingsFile = fakeSettingsFile();
   const display = fakeDisplay();
+  const sounds = { play: vi.fn<SoundPlayer["play"]>() };
   const clock = { time: START };
   let closeHandler: (() => Promise<void>) | undefined;
-  render(
+  const view = render(
     <App
       info={{ name: "PenguinOps", version: "1.2.3" }}
       content={content}
@@ -123,6 +126,7 @@ function renderApp(slots: readonly SlotState[] = EMPTY, options: AppOptions = {}
       settingsFile={settingsFile}
       display={display}
       onSettingsError={onSettingsError}
+      sounds={sounds}
       reservedUserNames={new Set(["root"])}
       slots={slots}
       saveFiles={saveFiles}
@@ -147,8 +151,10 @@ function renderApp(slots: readonly SlotState[] = EMPTY, options: AppOptions = {}
     saveFiles,
     settingsFile,
     display,
+    sounds,
     clock,
     close,
+    view,
   };
 }
 
@@ -916,5 +922,62 @@ describe("App: settings (ADR 0109)", () => {
     expect(display.setFullscreen).toHaveBeenLastCalledWith(true);
     await userEvent.keyboard("{Escape}{Escape}");
     expect(screen.getByRole("log", { name: "Terminal output" }).textContent).toContain("pwd");
+  });
+});
+
+describe("App: sounds (ADR 0113)", () => {
+  const VOLUMES = { master: 70, music: 50, effects: 60 };
+
+  function renderWithVolumes() {
+    return renderApp(EMPTY, {
+      settings: { ...DEFAULT_SETTINGS, language: "en", fullscreen: false, volumes: VOLUMES },
+    });
+  }
+
+  test("clicks a pressed button at the volumes of the settings", async () => {
+    const { sounds } = renderWithVolumes();
+    await userEvent.click(screen.getByRole("button", { name: "Play" }));
+    expect(sounds.play).toHaveBeenCalledExactlyOnceWith("click", VOLUMES);
+  });
+
+  test("clicks once for a choice in the settings", async () => {
+    const { sounds } = renderWithVolumes();
+    await userEvent.click(screen.getByRole("button", { name: "Settings" }));
+    sounds.play.mockClear();
+    await userEvent.click(screen.getByRole("radio", { name: "Retro CRT" }));
+    expect(sounds.play).toHaveBeenCalledExactlyOnceWith("click", VOLUMES);
+  });
+
+  test.each([
+    ["Sound effects", { effects: 25 }],
+    ["Master volume", { master: 15 }],
+  ] as const)("clicks the %s slider at its new volume", async (name, change) => {
+    const { sounds } = renderWithVolumes();
+    await userEvent.click(screen.getByRole("button", { name: "Settings" }));
+    sounds.play.mockClear();
+    fireEvent.input(screen.getByRole("slider", { name }), {
+      target: { value: String(Object.values(change)[0]) },
+    });
+    expect(sounds.play).toHaveBeenCalledExactlyOnceWith("click", { ...VOLUMES, ...change });
+  });
+
+  test("keeps typing in the terminal silent", async () => {
+    const { sounds } = renderWithVolumes();
+    await userEvent.click(screen.getByRole("button", { name: "Play" }));
+    await userEvent.click(screen.getByRole("button", { name: "Slot 1 New game" }));
+    await userEvent.type(screen.getByRole("textbox", { name: "Your name" }), "Ada");
+    await userEvent.click(screen.getByRole("button", { name: "Start game" }));
+    expect(screen.getByRole("textbox", { name: "Command line" })).toBe(document.activeElement);
+    sounds.play.mockClear();
+    await userEvent.keyboard("ls -a");
+    expect(sounds.play).not.toHaveBeenCalled();
+  });
+
+  test("stops listening when the app is gone", async () => {
+    const { sounds, view } = renderWithVolumes();
+    view.unmount();
+    render(<button type="button">Elsewhere</button>);
+    await userEvent.click(screen.getByRole("button", { name: "Elsewhere" }));
+    expect(sounds.play).not.toHaveBeenCalled();
   });
 });

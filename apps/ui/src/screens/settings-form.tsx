@@ -1,9 +1,9 @@
-// The settings themselves (ROADMAP M3.8b, M3.8c, M3.9, ADR 0109 to ADR 0112), the same
+// The settings themselves (ROADMAP M3.8b, M3.8c, M3.9, M3.10, ADR 0109 to ADR 0113), the same
 // on the settings screen of the main menu and in the settings dialog of the pause menu: the
-// language, the display (fullscreen and the font size), the colour scheme, the effects (ADR 0112)
-// and "reduce motion". Each control changes its setting at once; the screen or dialog around it
-// decides what a change of the language needs first. The form offers only settings that take
-// effect (ADR 0108): the volumes come with ROADMAP M3.10.
+// language, the display (fullscreen and the font size), the colour scheme, the effects (ADR 0112),
+// "reduce motion" and the volumes (ADR 0113). Each control changes its setting at once; the screen
+// or dialog around it decides what a change of the language needs first. The music volume is
+// offered before there is music, with a help line that says so (ADR 0113).
 
 import {
   COLOR_SCHEMES,
@@ -17,8 +17,11 @@ import {
   REDUCE_MOTION_SETTINGS,
   type ReduceMotionSetting,
   type Settings,
+  VOLUME_MAX,
+  VOLUME_MIN,
+  type Volumes,
 } from "@penguin-ops/gameplay";
-import { type Ref, useId } from "react";
+import { Fragment, type Ref, useId } from "react";
 
 import { Icon } from "../icons/icon";
 import { InlineText } from "../texts/inline-text";
@@ -27,6 +30,9 @@ import type { UiTextKey } from "../texts/ui-texts";
 
 /** The font size slider moves in steps of 10 percent, from 80 to 200. */
 const FONT_SIZE_STEP = 10;
+
+/** The volume sliders move in steps of 5 percent, from 0 to 100. */
+const VOLUME_STEP = 5;
 
 export interface SettingsFormProps {
   readonly settings: Settings;
@@ -50,10 +56,9 @@ export function SettingsForm({
   const texts = useTexts();
   const id = useId();
   const fullscreenHelpId = `${id}-fullscreen-help`;
-  const fontSizeId = `${id}-font-size`;
   const effectsHelpId = `${id}-effects-help`;
   const reduceMotionHelpId = `${id}-reduce-motion-help`;
-  const fontSizeText = texts.plain("settings.font-size-value", { percent: settings.fontSize });
+  const musicHelpId = `${id}-music-help`;
   const systemLanguage = gameLanguage("system", locale);
 
   return (
@@ -124,29 +129,18 @@ export function SettingsForm({
             textKey="settings.fullscreen-help"
           />
         </p>
-        <div className="slider">
-          <div className="slider__head">
-            <label className="slider__label" htmlFor={fontSizeId}>
-              <InlineText text={texts.rich("settings.font-size")} textKey="settings.font-size" />
-            </label>
-            <output className="slider__value" htmlFor={fontSizeId}>
-              {fontSizeText}
-            </output>
-          </div>
-          <input
-            id={fontSizeId}
-            className="slider__input"
-            type="range"
-            min={FONT_SIZE_MIN}
-            max={FONT_SIZE_MAX}
-            step={FONT_SIZE_STEP}
-            value={settings.fontSize}
-            aria-valuetext={fontSizeText}
-            onChange={(event) => {
-              onChange({ ...settings, fontSize: Number(event.target.value) });
-            }}
-          />
-        </div>
+        <Slider
+          id={`${id}-font-size`}
+          labelKey="settings.font-size"
+          valueText={texts.plain("settings.font-size-value", { percent: settings.fontSize })}
+          min={FONT_SIZE_MIN}
+          max={FONT_SIZE_MAX}
+          step={FONT_SIZE_STEP}
+          value={settings.fontSize}
+          onChange={(fontSize) => {
+            onChange({ ...settings, fontSize });
+          }}
+        />
       </fieldset>
 
       <fieldset className="settings__group">
@@ -243,6 +237,40 @@ export function SettingsForm({
         </p>
       </fieldset>
 
+      <fieldset className="settings__group">
+        <legend className="settings__legend">
+          <InlineText text={texts.rich("settings.sound")} textKey="settings.sound" />
+        </legend>
+        {VOLUMES.map((volume) => (
+          <Fragment key={volume}>
+            <Slider
+              id={`${id}-volume-${volume}`}
+              labelKey={volumeKey(volume)}
+              valueText={texts.plain("settings.volume-value", {
+                percent: settings.volumes[volume],
+              })}
+              min={VOLUME_MIN}
+              max={VOLUME_MAX}
+              step={VOLUME_STEP}
+              value={settings.volumes[volume]}
+              describedBy={volume === "music" ? musicHelpId : undefined}
+              onChange={(value) => {
+                onChange({ ...settings, volumes: { ...settings.volumes, [volume]: value } });
+              }}
+            />
+            {/* The help line stands right under the slider it belongs to. */}
+            {volume === "music" && (
+              <p id={musicHelpId} className="field__help">
+                <InlineText
+                  text={texts.rich("settings.music-help")}
+                  textKey="settings.music-help"
+                />
+              </p>
+            )}
+          </Fragment>
+        ))}
+      </fieldset>
+
       {/* An alert, so that the player hears it at once; it stays until a write works again. */}
       <p className="settings__warning" role="alert">
         {saveFailed && (
@@ -254,6 +282,78 @@ export function SettingsForm({
       </p>
     </div>
   );
+}
+
+interface SliderProps {
+  readonly id: string;
+  readonly labelKey: "settings.font-size" | ReturnType<typeof volumeKey>;
+  /** The value as the slider shows it next to its label and tells screen readers. */
+  readonly valueText: string;
+  readonly min: number;
+  readonly max: number;
+  readonly step: number;
+  readonly value: number;
+  /** The ID of the slider's help line, if it has one. */
+  readonly describedBy?: string | undefined;
+  readonly onChange: (value: number) => void;
+}
+
+/** A slider with its label and its value written out next to it. */
+function Slider({
+  id,
+  labelKey,
+  valueText,
+  min,
+  max,
+  step,
+  value,
+  describedBy,
+  onChange,
+}: SliderProps) {
+  const texts = useTexts();
+  return (
+    <div className="slider">
+      <div className="slider__head">
+        <label className="slider__label" htmlFor={id}>
+          <InlineText text={texts.rich(labelKey)} textKey={labelKey} />
+        </label>
+        <output className="slider__value" htmlFor={id}>
+          {valueText}
+        </output>
+      </div>
+      <input
+        id={id}
+        className="slider__input"
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        aria-valuetext={valueText}
+        aria-describedby={describedBy}
+        onChange={(event) => {
+          onChange(Number(event.target.value));
+        }}
+      />
+    </div>
+  );
+}
+
+/** The volumes, in the order the form shows them. */
+const VOLUMES: readonly (keyof Volumes)[] = ["master", "music", "effects"];
+
+/** The catalog key of a volume's slider. */
+function volumeKey(
+  volume: keyof Volumes,
+): "settings.volume-master" | "settings.volume-music" | "settings.volume-effects" {
+  switch (volume) {
+    case "master":
+      return "settings.volume-master";
+    case "music":
+      return "settings.volume-music";
+    case "effects":
+      return "settings.volume-effects";
+  }
 }
 
 /** The effects, in the order the form shows them. */

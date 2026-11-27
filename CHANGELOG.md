@@ -26,6 +26,12 @@ project uses [Semantic Versioning](https://semver.org/).
   Solarized (dark) and High contrast. A scheme applies at once to every screen and is remembered.
 - Two optional effects for the terminal in the settings: a soft glow around its text and
   scanlines like an old monitor. Both are off by default, and "Reduce motion" turns them off.
+- Sounds: a quiet click for buttons, choices and sliders in the menus and dialogs, a soft
+  notification when a ticket shows a new hint, tip or finished step, a rising figure for a
+  reached extra goal and a small fanfare when you solve a ticket. Typing stays silent.
+- The settings have a Sound group with sliders for the master volume, the music and the sound
+  effects. A slider clicks at its new volume while you move it. There is no music yet; its volume
+  is kept for when it arrives.
 - Play opens the save slot screen with three save slots. An empty slot starts a new game; a slot
   with a game shows your name, the mode, how many tickets you have solved, how long you have
   played and when you last played, and continues the game. Back or Esc returns to the start

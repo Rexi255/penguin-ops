@@ -19,6 +19,10 @@
 // checkpoint, with one game time that runs on across the tickets (ADR 0104), and reports the game
 // as a save keeps it whenever it changes. A change of the progress or of the open ticket asks for
 // an autosave; a game time that only moved on does not.
+//
+// The game screen plays the sound of every change in the open ticket (M3.10, ADR 0113): a
+// fanfare when it is solved, a rising figure for a reached extra goal, and a notification for a
+// completed step, a message or a hint.
 
 import type { Content, ExtraGoal, RichTextInline } from "@penguin-ops/content";
 import { createGameClock } from "@penguin-ops/engine";
@@ -47,6 +51,8 @@ import {
 } from "react";
 
 import { Icon } from "../icons/icon";
+import { useSounds } from "../sounds/sounds-context";
+import { ticketSound } from "../sounds/ticket-sound";
 import { Terminal } from "../terminal/terminal";
 import { createTerminal, type TerminalState } from "../terminal/terminal-model";
 import { InlineText, Inlines } from "../texts/inline-text";
@@ -216,6 +222,23 @@ export function GameScreen({
   const extraGoals = level?.extraGoals ?? NO_EXTRA_GOALS;
   const started = useMemo(() => new Set(progress.keys()), [progress]);
   const solved = useMemo(() => levelsWhere(progress, (entry) => entry.solved), [progress]);
+  const playSound = useSounds();
+  // The open ticket's progress as the player last heard it (ADR 0113).
+  const heard = useRef({ levelId, ticket: ticketProgress });
+
+  // A change of the open ticket's progress plays the sound of its biggest moment. Opening a
+  // ticket, resuming a game and starting it again in another language are silent.
+  useEffect(() => {
+    const before = heard.current;
+    heard.current = { levelId, ticket: ticketProgress };
+    if (before.levelId !== levelId) {
+      return;
+    }
+    const sound = ticketSound(before.ticket, ticketProgress);
+    if (sound !== undefined) {
+      playSound(sound);
+    }
+  }, [levelId, ticketProgress, playSound]);
 
   const openPauseMenu = useCallback(() => {
     const active = document.activeElement;

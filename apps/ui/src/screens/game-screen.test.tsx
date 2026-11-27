@@ -3,7 +3,8 @@
 // terminal that has the focus and plays the level, the ticket in the tickets panel and the top
 // bar that follow the player's progress (ADR 0097), the hints that F1 or its key hint shows and the
 // explanation after solving (ADR 0098), and the pause menu that Esc or the key hint opens and
-// closes, with the settings dialog in its place (ADR 0109).
+// closes, with the settings dialog in its place (ADR 0109). It plays the sound of every change in
+// the open ticket (ADR 0113).
 import { MANDATORY_LANGUAGES, type MandatoryLanguage } from "@penguin-ops/content";
 import {
   GAME_START_TIME,
@@ -18,6 +19,7 @@ import { userEvent } from "@testing-library/user-event";
 import { afterEach, beforeAll, describe, expect, test, vi } from "vitest";
 
 import { loadBundledContent } from "../content/bundled-content";
+import { type PlaySound, SoundsProvider } from "../sounds/sounds-context";
 import { TextsProvider } from "../texts/texts-context";
 import { createTexts } from "../texts/ui-texts";
 import { type GameProgress, GameScreen } from "./game-screen";
@@ -83,19 +85,22 @@ function renderGameScreen(
 ) {
   const onMainMenu = vi.fn<() => void>();
   const onProgress = vi.fn<(progress: GameProgress, autosave: boolean) => void>();
+  const play = vi.fn<PlaySound>();
   const view = render(
     <TextsProvider texts={createTexts(uiCatalogs, language)}>
-      <GameScreen
-        content={content}
-        save={save}
-        onProgress={onProgress}
-        saveFailed={saveFailed}
-        onMainMenu={onMainMenu}
-        settingsDialog={settingsStub}
-      />
+      <SoundsProvider play={play}>
+        <GameScreen
+          content={content}
+          save={save}
+          onProgress={onProgress}
+          saveFailed={saveFailed}
+          onMainMenu={onMainMenu}
+          settingsDialog={settingsStub}
+        />
+      </SoundsProvider>
     </TextsProvider>,
   );
-  return { onMainMenu, onProgress, view };
+  return { onMainMenu, onProgress, play, view };
 }
 
 /** A stand-in for the app's settings dialog: the dialog itself has tests of its own. */
@@ -1093,5 +1098,64 @@ describe("GameScreen: saves (ADR 0106)", () => {
   test("keeps the alert empty while saving works", () => {
     renderGameScreen();
     expect(screen.getByRole("alert").textContent).toBe("");
+  });
+});
+
+describe("GameScreen: sounds (ADR 0113)", () => {
+  test("is silent when the game appears and while inputs change nothing", async () => {
+    const { play } = renderGameScreen();
+    await userEvent.keyboard("pwd{Enter}ls{Enter}");
+    expect(play).not.toHaveBeenCalled();
+  });
+
+  test("plays the fanfare once when the ticket is solved", async () => {
+    const { play } = renderGameScreen();
+    await solve("first-steps");
+    expect(play).toHaveBeenCalledExactlyOnceWith("solved");
+    await userEvent.keyboard("pwd{Enter}");
+    expect(play).toHaveBeenCalledOnce();
+  });
+
+  test("plays the notification for a completed step and for a tip", async () => {
+    const { play } = renderGameScreen("en", "project-folders");
+    await userEvent.keyboard("mkdir ~/docs{Enter}");
+    expect(play.mock.calls).toEqual([["notification"]]);
+    await userEvent.keyboard("mkdir -p ~/projects/relaunch/docs ~/projects/relaunch/drafts{Enter}");
+    expect(play.mock.calls).toEqual([["notification"], ["notification"]]);
+  });
+
+  test("plays the goal sound for an extra goal, and the fanfare when it comes with solving", async () => {
+    const { play } = renderGameScreen("en", "project-folders");
+    await userEvent.keyboard("mkdir -p ~/projects/relaunch/docs ~/projects/relaunch/drafts{Enter}");
+    await userEvent.keyboard("touch ~/projects/relaunch/README.txt{Enter}");
+    expect(play.mock.calls).toEqual([["notification"], ["goal"]]);
+    await userEvent.keyboard("touch ~/projects/relaunch/docs/notes.txt{Enter}");
+    expect(play.mock.calls.at(-1)).toEqual(["solved"]);
+  });
+
+  test("plays the notification for every new hint of F1 or the game command hint", async () => {
+    const { play } = renderGameScreen();
+    await userEvent.keyboard("{F1}");
+    await userEvent.keyboard("hint{Enter}");
+    await userEvent.keyboard("{F1}");
+    expect(play.mock.calls).toEqual([["notification"], ["notification"], ["notification"]]);
+    // Every hint is shown: one more F1 adds nothing.
+    await userEvent.keyboard("{F1}");
+    expect(play).toHaveBeenCalledTimes(3);
+  });
+
+  test("is silent when the player opens another ticket or resumes a solved one", async () => {
+    const save: SaveGame = {
+      ...newGame("first-steps", "sandbox"),
+      tickets: [
+        ticketRecord("first-steps", { solved: true, hintsShown: 2 }),
+        ticketRecord("project-folders", { checkpoint: "folders" }),
+      ],
+    };
+    const { play } = renderGameScreen("en", "first-steps", "sandbox", save);
+    await userEvent.click(screen.getByRole("button", { name: "Back to the inbox" }));
+    await userEvent.click(screen.getByRole("button", { name: /^New project folders/u }));
+    expect(guideWords().textContent).toContain("Step 2 of 2");
+    expect(play).not.toHaveBeenCalled();
   });
 });
