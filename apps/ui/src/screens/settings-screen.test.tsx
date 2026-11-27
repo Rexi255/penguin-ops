@@ -33,6 +33,9 @@ const EXPECTED: Readonly<
       fontSizeValue: string;
       colorScheme: string;
       colorSchemeChoices: string[];
+      effects: string;
+      effectChoices: string[];
+      effectsHelp: string;
       reduceMotion: string;
       reduceMotionChoices: string[];
       reduceMotionHelp: string;
@@ -52,6 +55,10 @@ const EXPECTED: Readonly<
     fontSizeValue: "120%",
     colorScheme: "Colour scheme",
     colorSchemeChoices: ["Default", "Retro CRT", "Solarized", "High contrast"],
+    effects: "Effects",
+    effectChoices: ["Glow", "Scanlines"],
+    effectsHelp:
+      "Only in the terminal. Reduce motion turns them off, also when the system asks for it.",
     reduceMotion: "Reduce motion",
     reduceMotionChoices: ["Like the system", "On", "Off"],
     reduceMotionHelp: "Shows every change at once, without animations and effects.",
@@ -70,6 +77,10 @@ const EXPECTED: Readonly<
     fontSizeValue: "120 %",
     colorScheme: "Farbschema",
     colorSchemeChoices: ["Standard", "Retro-CRT", "Solarized", "Hoher Kontrast"],
+    effects: "Effekte",
+    effectChoices: ["Leuchten", "Scanlines"],
+    effectsHelp:
+      "Nur im Terminal. „Bewegung reduzieren“ schaltet sie ab, auch wenn das System es verlangt.",
     reduceMotion: "Bewegung reduzieren",
     reduceMotionChoices: ["Wie im System", "An", "Aus"],
     reduceMotionHelp: "Zeigt jede Änderung sofort, ohne Animationen und Effekte.",
@@ -212,6 +223,53 @@ describe("SettingsScreen", () => {
     const { onChange } = renderSettingsScreen("en");
     await userEvent.click(screen.getByRole("radio", { name: "Default" }));
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  test.each(MANDATORY_LANGUAGES)("offers the effects, both off by default, in %s", (language) => {
+    renderSettingsScreen(language);
+    const group = screen.getByRole("group", { name: EXPECTED[language].effects });
+    const switches = within(group).getAllByRole("checkbox");
+    expect(switches.map((choice) => choice.closest("label")?.textContent)).toEqual(
+      EXPECTED[language].effectChoices,
+    );
+    expect(switches.map((choice) => (choice as HTMLInputElement).checked)).toEqual([false, false]);
+    const help = group.getAttribute("aria-describedby") ?? "";
+    expect(document.getElementById(help)?.textContent).toBe(EXPECTED[language].effectsHelp);
+  });
+
+  test("shows the effects that are on as checked", () => {
+    renderSettingsScreen("en", {
+      ...DEFAULT_SETTINGS,
+      language: "en",
+      effects: { glow: false, scanlines: true },
+    });
+    expect(screen.getByRole("checkbox", { name: "Glow" })).toHaveProperty("checked", false);
+    expect(screen.getByRole("checkbox", { name: "Scanlines" })).toHaveProperty("checked", true);
+  });
+
+  test.each([
+    ["Glow", { glow: true, scanlines: false }],
+    ["Scanlines", { glow: false, scanlines: true }],
+  ] as const)("turns %s on and keeps the other effect", async (name, effects) => {
+    const settings: Settings = { ...DEFAULT_SETTINGS, language: "en" };
+    const { onChange } = renderSettingsScreen("en", settings);
+    await userEvent.click(screen.getByRole("checkbox", { name }));
+    expect(onChange).toHaveBeenCalledExactlyOnceWith({ ...settings, effects });
+  });
+
+  test("turns an effect off with the keyboard", async () => {
+    const settings: Settings = {
+      ...DEFAULT_SETTINGS,
+      language: "en",
+      effects: { glow: true, scanlines: true },
+    };
+    const { onChange } = renderSettingsScreen("en", settings);
+    screen.getByRole("checkbox", { name: "Glow" }).focus();
+    await userEvent.keyboard(" ");
+    expect(onChange).toHaveBeenCalledExactlyOnceWith({
+      ...settings,
+      effects: { glow: false, scanlines: true },
+    });
   });
 
   test.each(MANDATORY_LANGUAGES)("offers the choices of reduce motion in %s", (language) => {

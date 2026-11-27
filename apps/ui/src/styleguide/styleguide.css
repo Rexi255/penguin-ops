@@ -516,3 +516,16 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* The effects demo: a few lines of the game's terminal, on its ground. */
+.sg-effects-demo {
+  display: grid;
+  gap: var(--space-2);
+  margin-block-end: var(--space-4);
+}
+
+/* As high as its lines, so that the terminal never scrolls, also on a narrow window. */
+.sg-effects-demo__terminal {
+  max-inline-size: calc(var(--cell-inline) * 48);
+  background: var(--color-surface-terminal);
+}

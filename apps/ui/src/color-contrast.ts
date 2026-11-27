@@ -62,3 +62,20 @@ export function contrastRatio(first: RgbColor, second: RgbColor): number {
   const b = relativeLuminance(second);
   return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
 }
+
+/**
+ * The colour of `over` laid on `base` with the opacity `weight` (0 to 1), mixed channel by
+ * channel in gamma-encoded sRGB, as browsers blend a translucent colour over another. The
+ * channels are not rounded.
+ */
+export function blendColors(base: RgbColor, over: RgbColor, weight: number): RgbColor {
+  if (!(weight >= 0 && weight <= 1)) {
+    throw new RangeError(`The weight ${String(weight)} is not between 0 and 1.`);
+  }
+  const blend = (from: number, to: number): number => from + (to - from) * weight;
+  return {
+    red: blend(base.red, over.red),
+    green: blend(base.green, over.green),
+    blue: blend(base.blue, over.blue),
+  };
+}

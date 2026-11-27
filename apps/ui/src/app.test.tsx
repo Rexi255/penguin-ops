@@ -818,6 +818,28 @@ describe("App: settings (ADR 0109)", () => {
     });
   });
 
+  test("applies the effects of the settings to the page at start", () => {
+    renderApp(EMPTY, {
+      settings: { ...DEFAULT_SETTINGS, language: "en", effects: { glow: true, scanlines: false } },
+    });
+    expect(document.documentElement.dataset["glow"]).toBe("on");
+    expect(document.documentElement.dataset["scanlines"]).toBe("off");
+  });
+
+  test("turns the effects on at once and writes them", async () => {
+    const { settingsFile } = renderApp();
+    await openSettings();
+    expect(document.documentElement.dataset["scanlines"]).toBe("off");
+    await userEvent.click(screen.getByRole("checkbox", { name: "Scanlines" }));
+    expect(document.documentElement.dataset["scanlines"]).toBe("on");
+    expect(document.documentElement.dataset["glow"]).toBe("off");
+    await vi.waitFor(() => {
+      expect(writtenSettings(settingsFile)).toMatchObject({
+        effects: { glow: false, scanlines: true },
+      });
+    });
+  });
+
   /** Opens the settings dialog in the game. */
   async function openSettingsInGame() {
     await userEvent.keyboard("{Escape}");

@@ -24,6 +24,8 @@ project uses [Semantic Versioning](https://semver.org/).
   off.
 - Four colour schemes in the settings: the default one, Retro CRT (green phosphor on dark glass),
   Solarized (dark) and High contrast. A scheme applies at once to every screen and is remembered.
+- Two optional effects for the terminal in the settings: a soft glow around its text and
+  scanlines like an old monitor. Both are off by default, and "Reduce motion" turns them off.
 - Play opens the save slot screen with three save slots. An empty slot starts a new game; a slot
   with a game shows your name, the mode, how many tickets you have solved, how long you have
   played and when you last played, and continues the game. Back or Esc returns to the start

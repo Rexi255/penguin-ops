@@ -6,7 +6,17 @@ import { readCssRules, rootCustomProperties } from "../css-rules";
 
 /** How the styleguide shows the tokens of a section. */
 export type TokenKind =
-  "color" | "cell" | "space" | "radius" | "line" | "shadow" | "motion" | "font" | "weight" | "type";
+  | "color"
+  | "cell"
+  | "space"
+  | "radius"
+  | "line"
+  | "shadow"
+  | "motion"
+  | "effect"
+  | "font"
+  | "weight"
+  | "type";
 
 /** A section of the styleguide and the token name prefixes it collects. */
 export interface TokenSection {
@@ -50,6 +60,7 @@ export const TOKEN_SECTIONS: readonly TokenSection[] = [
   },
   { id: "elevation", title: "Elevation", kind: "shadow", prefixes: ["--shadow-"] },
   { id: "motion", title: "Motion", kind: "motion", prefixes: ["--motion-"] },
+  { id: "effects", title: "Effects", kind: "effect", prefixes: ["--effect-"] },
   {
     id: "fonts",
     title: "Fonts",

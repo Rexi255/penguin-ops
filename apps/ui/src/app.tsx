@@ -239,12 +239,18 @@ export function App({
     document.documentElement.lang = language;
   }, [language]);
 
-  // The font size, "reduce motion" and the colour scheme act on the whole page (ADR 0110,
-  // ADR 0111), before it is painted.
-  const { fontSize, reduceMotion, colorScheme } = settings;
+  // The font size, "reduce motion", the colour scheme and the effects act on the whole page
+  // (ADR 0110, ADR 0111, ADR 0112), before it is painted.
+  const { fontSize, reduceMotion, colorScheme, effects } = settings;
+  const { glow, scanlines } = effects;
   useLayoutEffect(() => {
-    applyDocumentSettings(document.documentElement, { fontSize, reduceMotion, colorScheme });
-  }, [fontSize, reduceMotion, colorScheme]);
+    applyDocumentSettings(document.documentElement, {
+      fontSize,
+      reduceMotion,
+      colorScheme,
+      effects: { glow, scanlines },
+    });
+  }, [fontSize, reduceMotion, colorScheme, glow, scanlines]);
 
   // The window follows the fullscreen setting; the first call shows the window (ADR 0109). The
   // value the desktop has, so that a change it reported is not sent back to it.

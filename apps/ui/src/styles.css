@@ -1178,6 +1178,21 @@ pre {
   font-variant-ligatures: none;
   tab-size: 8;
   cursor: text;
+  /* The optional effects (ADR 0112): a glow around the text and scanlines behind it, which stay
+     in place while the text scrolls over them, like the lines of a tube. */
+  text-shadow: var(--effect-glow);
+  background-image: var(--effect-scanlines);
+}
+
+/* The glow lights only the terminal's text colour: the prompt's colours, the game's notices, the
+   character under the filled cursor and selected text would fall below their contrast minimum on
+   a lit ground (ADR 0112). */
+.terminal__prompt-user,
+.terminal__prompt-directory,
+.terminal__notice,
+.terminal__cursor:focus-within,
+.terminal ::selection {
+  text-shadow: none;
 }
 
 .terminal__page {

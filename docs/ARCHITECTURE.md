@@ -524,11 +524,15 @@ written as the whole file, one write after the other; a change that changes noth
 nothing, and a failed write is logged and reported until a write works again.
 `src/settings/document-settings.ts` applies the font size (the root element's font size in
 percent, which scales every rem), "reduce motion" (the root's `data-reduce-motion`, which
-`tokens.css` reads) and the colour scheme (the root's `data-color-scheme`, whose rule in
-`tokens.css` redefines every colour token) to the page (`applyDocumentSettings`, ADR 0110,
-ADR 0111). `src/token-contrast.ts` gives the contrast pairs and minimums of every scheme
-(`contrastPairs`, `contrastMinimums`, `schemeTokens`), which the design token test and the
-styleguide's scheme switch use.
+`tokens.css` reads), the colour scheme (the root's `data-color-scheme`, whose rule in
+`tokens.css` redefines every colour token) and the effects (the root's `data-glow` and
+`data-scanlines`, which turn on the effect tokens `--effect-glow` and `--effect-scanlines` that
+`.terminal` reads, unless "reduce motion" sets them to `none`) to the page
+(`applyDocumentSettings`, ADR 0110, ADR 0111, ADR 0112). `src/token-contrast.ts` gives the
+contrast pairs and minimums of every scheme (`contrastPairs`, `contrastMinimums`, `schemeTokens`),
+which the design token test and the styleguide's scheme switch use, and checks the glowing text on
+the ground its glow lights at most (`checkGlowContrast`, `GLOW_PEAK_COVERAGE`), a bound that the
+styleguide's browser test measures.
 
 Content and texts (ADR 0090): `src/content/bundled-content.ts` imports every `.yaml` file of
 `content/` as text with `import.meta.glob` at build time and loads it with `sortContentFiles`

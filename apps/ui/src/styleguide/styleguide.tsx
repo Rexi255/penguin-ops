@@ -1,6 +1,6 @@
 // The styleguide page (ROADMAP M3.0c, ADR 0083): every design token of tokens.css, rendered with
 // the real stylesheets, and the game's icons (ADR 0087). A switch shows the page in every colour
-// scheme (ADR 0111). It is a page for the people who build the game, so its texts are English and
+// scheme (ADR 0111), two more turn the terminal's effects on (ADR 0112). It is a page for the people who build the game, so its texts are English and
 // not translated. It is never part of the packaged app; `npm run styleguide` serves it.
 import { COLOR_SCHEMES, type ColorScheme } from "@penguin-ops/gameplay";
 import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
@@ -234,6 +234,7 @@ function TokenSample({ kind, token }: { readonly kind: TokenKind; readonly token
     case "shadow":
       return <span className="sg-floating" style={{ boxShadow: value }} />;
     case "motion":
+    case "effect":
       return null;
     case "font":
       return <FontSample token={token} />;
@@ -282,6 +283,10 @@ const SECTION_INTROS: Readonly<Record<TokenKind, string>> = {
   motion:
     "The tape strip printing out is the only thing that moves on its own. State changes answer " +
     "quickly. With reduce motion on, both durations are 0 ms.",
+  effect:
+    "Optional effects of the terminal, off by default: a glow around its text colour and " +
+    "scanlines behind it. The switches turn them on as the settings do; reduce motion turns " +
+    "them off.",
   font:
     "The three bundled faces, each for one role: Inter for the interface, JetBrains Mono for " +
     "the terminal and real code, always without ligatures, Barlow Condensed for tape, in caps.",
@@ -308,6 +313,78 @@ function CellGrid() {
   );
 }
 
+/** The effects the page can turn on, with the root attribute that turns each on (ADR 0112). */
+const EFFECTS = [
+  { name: "Glow", attribute: "glow" },
+  { name: "Scanlines", attribute: "scanlines" },
+] as const;
+
+/**
+ * Switches for the effects, which set the root's attributes as the game's settings do, and a
+ * terminal with the game's own classes to show them. Its second line has dense characters, where
+ * the glow is brightest; the browser test measures it there.
+ */
+function EffectsDemo() {
+  const [on, setOn] = useState<ReadonlySet<string>>(new Set());
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    for (const { attribute } of EFFECTS) {
+      root.dataset[attribute] = on.has(attribute) ? "on" : "off";
+    }
+  }, [on]);
+  return (
+    <div className="sg-effects-demo">
+      <fieldset className="settings__group">
+        <legend className="sg-schemes__legend">Effects</legend>
+        <div className="choices sg-schemes__choices">
+          {EFFECTS.map(({ name, attribute }) => (
+            <label key={attribute} className="choice">
+              <input
+                className="choice__input visually-hidden"
+                type="checkbox"
+                checked={on.has(attribute)}
+                onChange={(event) => {
+                  const { checked } = event.target;
+                  setOn((current) => {
+                    const next = new Set(current);
+                    if (checked) {
+                      next.add(attribute);
+                    } else {
+                      next.delete(attribute);
+                    }
+                    return next;
+                  });
+                }}
+              />
+              <span className="choice__marker choice__marker--box" aria-hidden="true" />
+              {name}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      <div
+        className="sg-effects-demo__terminal"
+        role="img"
+        aria-label="A terminal with the effects"
+      >
+        <div className="terminal">
+          <div className="terminal__page">
+            <div className="terminal__line">
+              <span className="terminal__prompt-user">max@itdesk</span>:
+              <span className="terminal__prompt-directory">~</span>$ grep -c &apos;#&apos;
+              /etc/hosts
+            </div>
+            <div className="terminal__line sg-effects-demo__dense">
+              {"### @@@ MMM WWW %%% &&& 888 $$$"}
+            </div>
+            <div className="terminal__line">3</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function FocusDemo() {
   return (
     <div className="sg-focus-demo">
@@ -329,6 +406,7 @@ function TokenSectionView({ entry }: { readonly entry: CatalogSection }) {
       <p className="sg-section__intro">{SECTION_INTROS[section.kind]}</p>
       {section.kind === "cell" ? <CellGrid /> : null}
       {section.kind === "motion" ? <TapeDemo /> : null}
+      {section.kind === "effect" ? <EffectsDemo /> : null}
       {section.kind === "line" ? <FocusDemo /> : null}
       <ul className="sg-tokens">
         {tokens.map((token) => (

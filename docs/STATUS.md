@@ -4,6 +4,12 @@ _Last updated: 2026-11-27_
 
 ## Recently completed
 
+- M3.9b Effects (M3.9 complete): glow and scanlines are effect tokens in tokens.css that the
+  root's `data-glow` and `data-scanlines` turn on and "reduce motion" turns off; only the
+  terminal reads them. The glow lights only the terminal's text colour, checked in every scheme
+  against a measured bound that the styleguide's browser test measures; the scanlines' stripes are
+  the new colour token `--color-terminal-scanline` with contrast pairs. The settings offer both
+  switches; the styleguide has an Effects section (ADR 0112).
 - M3.9a Colour schemes: Retro CRT, Solarized (dark) and High contrast are each one
   `:root[data-color-scheme]` rule in tokens.css that redefines every colour token; the design
   token test checks every scheme's contrast pairs (7:1 text and visible dividers in High
@@ -33,16 +39,16 @@ _Last updated: 2026-11-27_
 
 ## Next 3 steps
 
-1. ROADMAP M3.9b: glow and scanlines, with their switches in the settings and reduce motion
-   turning them off.
-2. ROADMAP M3.10: UI sounds with the volume sliders in the settings.
-3. ROADMAP M3.11: mail panel with toasts and the handbook panel.
+1. ROADMAP M3.10: UI sounds with the volume sliders in the settings.
+2. ROADMAP M3.11: mail panel with toasts and the handbook panel.
+3. ROADMAP M3.12: ranks, XP and achievements framework.
 
 ## Blockers and open questions
 
 - The start, save slot, new game, settings and game screens, the pause menu, the slot menu and
   dialogs, the terminal, the ticket panel and the inbox have no screenshot tests yet; the
-  screenshot test setup for all screens, languages and the four colour schemes is ROADMAP M3.15.
+  screenshot test setup for all screens, languages and the four colour schemes (and the two
+  effects, ADR 0112) is ROADMAP M3.15.
 - The texts of the five prototype levels, the three chapter titles and the office world's host
   name `itdesk` were written as test content without the owner's review (the prototype's source
   is not in the repository, so levels 2 to 5 follow the titles in `docs/CURRICULUM.md`); the

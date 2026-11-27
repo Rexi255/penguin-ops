@@ -36,6 +36,11 @@
      its cursor by default. Its own token, so that a colour scheme can change it. */
   --color-terminal-cursor: #e8e6e1;
 
+  /* The stripes of the optional scanlines behind the terminal's text (ROADMAP M3.9b, ADR 0112).
+     They lie under the text, so every colour shown on the terminal must meet its minimum on them
+     too; a scheme makes them lighter or darker than its terminal, whichever keeps that. */
+  --color-terminal-scanline: #1b1e24;
+
   /* Debian's colour prompt (ADR 0095): `user@host` in bold green and the working directory in
      bold blue (`01;32` and `01;34` of `/etc/skel/.bashrc`), in the bright Tango colours that
      GNOME Terminal shows for bold text. They appear only in the terminal's prompt. */
@@ -98,6 +103,11 @@
   --motion-duration-state: 120ms;
   --motion-easing-state: cubic-bezier(0.16, 1, 0.3, 1);
 
+  /* The optional effects of the terminal (ROADMAP M3.9b, ADR 0112): `none` unless the player
+     turns them on, which sets the root's `data-glow` or `data-scanlines` to `on` (see below). */
+  --effect-glow: none; /* the text shadow of the terminal's text */
+  --effect-scanlines: none; /* the background image of the terminal */
+
   /* Fonts (ADR 0084, ADR 0085): each family names its bundled face from fonts/fonts.css first;
      the system faces behind it only stand in if a file cannot be read. The monospace face is
      always set with `font-variant-ligatures: none`, so the player sees every character. */
@@ -150,6 +160,7 @@
   --color-text-muted: #7fbf8e;
   --color-player: #ffb040; /* amber, the other phosphor */
   --color-terminal-cursor: #66ff85; /* a bright phosphor block */
+  --color-terminal-scanline: #0f1a12; /* a lighter line of glass */
   --color-prompt-user: #7dff8f;
   --color-prompt-directory: #6fe0d0; /* cyan, so that it stays apart from the user */
   --color-focus: #b6f5c3;
@@ -177,6 +188,7 @@
   --color-text-muted: #93a1a1; /* base1 */
   --color-player: #ec7b4c; /* orange, lighter */
   --color-terminal-cursor: #93a1a1; /* base1 */
+  --color-terminal-scanline: #00161d; /* darker, so that the prompt keeps its contrast */
   --color-prompt-user: #859900; /* green */
   --color-prompt-directory: #268bd2; /* blue */
   --color-focus: #eee8d5; /* base2 */
@@ -202,6 +214,7 @@
   --color-text-muted: #d6d6d6;
   --color-player: #ff9a3c;
   --color-terminal-cursor: #ffffff;
+  --color-terminal-scanline: #141414;
   --color-prompt-user: #9cff57;
   --color-prompt-directory: #8cc4ff;
   --color-focus: #ffffff;
@@ -214,17 +227,43 @@
   --color-cable-incident: #ff887a;
 }
 
-/* "Reduce motion" shows every change at once (ADR 0110). The game's setting is the root's
-   `data-reduce-motion`: `on` always reduces motion, `off` never does, and `system` (or no
-   attribute, as on the styleguide page) follows the operating system's setting. */
+/* The effects (ROADMAP M3.9b, ADR 0112), each switched on by its setting on the root.
+
+   The glow is a soft shadow in the text's own colour. At its strongest point, between the
+   strokes of dense characters such as `#` and `@`, it covers the ground with at most
+   `GLOW_PEAK_COVERAGE` of its 60 percent (token-contrast.ts); the design token test checks that
+   the terminal's text keeps its contrast minimum on the ground lit that much, and the styleguide's
+   browser test measures the real glow. The terminal shows it only on its text colour (styles.css).
+
+   The scanlines are stripes of `--color-terminal-scanline`, 0.125rem high every 0.25rem, behind
+   the terminal's text: six to a terminal line, so that every line has the same stripes. */
+:root[data-glow="on"] {
+  --effect-glow: 0 0 0.375rem color-mix(in srgb, currentColor 60%, transparent);
+}
+
+:root[data-scanlines="on"] {
+  --effect-scanlines: repeating-linear-gradient(
+    transparent 0 0.125rem,
+    var(--color-terminal-scanline) 0.125rem 0.25rem
+  );
+}
+
+/* "Reduce motion" shows every change at once and turns the effects off (ADR 0110, ADR 0112).
+   The game's setting is the root's `data-reduce-motion`: `on` always reduces motion, `off` never
+   does, and `system` (or no attribute, as on the styleguide page) follows the operating system's
+   setting. These rules come after the effects, so that they win over them. */
 :root[data-reduce-motion="on"] {
   --motion-duration-print: 0ms;
   --motion-duration-state: 0ms;
+  --effect-glow: none;
+  --effect-scanlines: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
   :root:not([data-reduce-motion="off"]) {
     --motion-duration-print: 0ms;
     --motion-duration-state: 0ms;
+    --effect-glow: none;
+    --effect-scanlines: none;
   }
 }

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { contrastRatio, parseHexColor, relativeLuminance } from "./color-contrast";
+import { blendColors, contrastRatio, parseHexColor, relativeLuminance } from "./color-contrast";
 
 describe("parseHexColor", () => {
   test("reads the three channels of #rrggbb in either case", () => {
@@ -50,5 +50,27 @@ describe("contrastRatio", () => {
     // Commonly cited reference values: #767676 is the lightest grey that passes 4.5:1 on white.
     expect(contrastRatio(parseHexColor("#777777"), parseHexColor("#ffffff"))).toBeCloseTo(4.48, 2);
     expect(contrastRatio(parseHexColor("#767676"), parseHexColor("#ffffff"))).toBeCloseTo(4.54, 2);
+  });
+});
+
+describe("blendColors", () => {
+  const black = parseHexColor("#000000");
+  const white = parseHexColor("#ffffff");
+
+  test("keeps the base at weight 0 and gives the colour on top at weight 1", () => {
+    expect(blendColors(black, white, 0)).toEqual(black);
+    expect(blendColors(black, white, 1)).toEqual(white);
+  });
+
+  test("mixes every channel in gamma-encoded sRGB without rounding", () => {
+    expect(blendColors(parseHexColor("#0010ff"), parseHexColor("#ff1000"), 0.25)).toEqual({
+      red: 63.75,
+      green: 16,
+      blue: 191.25,
+    });
+  });
+
+  test.each([-0.1, 1.1, Number.NaN])("refuses the weight %s", (weight) => {
+    expect(() => blendColors(black, white, weight)).toThrow(RangeError);
   });
 });

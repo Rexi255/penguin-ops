@@ -15,6 +15,7 @@ colors:
   prompt-user: "#8ae234"
   prompt-directory: "#729fcf"
   terminal-cursor: "#e8e6e1"
+  terminal-scanline: "#1b1e24"
   focus: "#e8e6e1"
   tape-primary: "#f2c230"
   tape-secondary: "#f1ede4"
@@ -157,6 +158,9 @@ would not meet 4.5:1 on the terminal ground.
 - **Terminal Cursor** (`terminal-cursor`): the block cursor in the terminal's text colour, with
   the character under it in the terminal ground's colour, as GNOME Terminal draws it by default
   (ADR 0101).
+- **Terminal Scanline** (`terminal-scanline`): the stripes of the optional scanlines behind the
+  terminal's text, lighter than the terminal ground in most schemes and darker in Solarized; every
+  colour shown on the terminal meets its minimum on them (ADR 0112).
 
 ### Neutral
 
@@ -185,6 +189,12 @@ decorates.
 (retro CRT, Solarized, high contrast; ADR 0111) only swap values, pass the same contrast pairs and
 never require a screen change. Each scheme is one `:root[data-color-scheme]` rule in `tokens.css`
 that redefines every colour token. High contrast needs 7:1 for text and visible dividers.
+
+**The Optional Effects Rule.** Glow and scanlines (ADR 0112) are off by default, only in the
+terminal, and "reduce motion" turns them off. They are effect tokens that the root's `data-glow`
+and `data-scanlines` turn on. The glow lights only the terminal's text colour, and the text keeps
+its contrast minimum on the ground the glow lights; the scanlines' stripes are a colour token with
+contrast pairs for everything shown on the terminal.
 
 **The Pair Rule.** A new colour token comes with the pairs it appears in, or with the reason why
 it is decorative.
@@ -307,6 +317,7 @@ where it marks a kind of work or a state, such as a ticket row's kind or a solve
   real system's, not a costume, and stays on `user@host`.
 - **Don't** fall back to the category standard of charcoal rounded cards with one blue accent.
 - **Don't** put tape on running text, buttons or every row; tape is for names and IDs.
-- **Don't** use gradients, glass, glow or hard offset shadows.
+- **Don't** use gradients, glass, glow or hard offset shadows; the optional glow and scanlines of
+  the terminal are the only exceptions (ADR 0112).
 - **Don't** write a colour, a gap or a duration directly in a component.
 - **Don't** convey a state by colour alone; every cable colour comes with a label or icon.

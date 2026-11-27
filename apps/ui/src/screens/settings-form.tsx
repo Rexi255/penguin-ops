@@ -1,13 +1,14 @@
-// The settings themselves (ROADMAP M3.8b, M3.8c, M3.9a, ADR 0109, ADR 0110, ADR 0111), the same
+// The settings themselves (ROADMAP M3.8b, M3.8c, M3.9, ADR 0109 to ADR 0112), the same
 // on the settings screen of the main menu and in the settings dialog of the pause menu: the
-// language, the display (fullscreen and the font size), the colour scheme and "reduce motion".
-// Each control changes its setting at once; the screen or dialog around it decides what a change
-// of the language needs first. The form offers only settings that take effect (ADR 0108): the
-// effects come with ROADMAP M3.9b, the volumes with M3.10.
+// language, the display (fullscreen and the font size), the colour scheme, the effects (ADR 0112)
+// and "reduce motion". Each control changes its setting at once; the screen or dialog around it
+// decides what a change of the language needs first. The form offers only settings that take
+// effect (ADR 0108): the volumes come with ROADMAP M3.10.
 
 import {
   COLOR_SCHEMES,
   type ColorScheme,
+  type Effects,
   FONT_SIZE_MAX,
   FONT_SIZE_MIN,
   gameLanguage,
@@ -50,6 +51,7 @@ export function SettingsForm({
   const id = useId();
   const fullscreenHelpId = `${id}-fullscreen-help`;
   const fontSizeId = `${id}-font-size`;
+  const effectsHelpId = `${id}-effects-help`;
   const reduceMotionHelpId = `${id}-reduce-motion-help`;
   const fontSizeText = texts.plain("settings.font-size-value", { percent: settings.fontSize });
   const systemLanguage = gameLanguage("system", locale);
@@ -174,6 +176,37 @@ export function SettingsForm({
         </div>
       </fieldset>
 
+      <fieldset className="settings__group" aria-describedby={effectsHelpId}>
+        <legend className="settings__legend">
+          <InlineText text={texts.rich("settings.effects")} textKey="settings.effects" />
+        </legend>
+        <div className="choices">
+          {EFFECTS.map((effect) => {
+            const key = effectKey(effect);
+            return (
+              <label key={effect} className="choice">
+                <input
+                  className="choice__input visually-hidden"
+                  type="checkbox"
+                  checked={settings.effects[effect]}
+                  onChange={(event) => {
+                    onChange({
+                      ...settings,
+                      effects: { ...settings.effects, [effect]: event.target.checked },
+                    });
+                  }}
+                />
+                <span className="choice__marker choice__marker--box" aria-hidden="true" />
+                <InlineText text={texts.rich(key)} textKey={key} />
+              </label>
+            );
+          })}
+        </div>
+        <p id={effectsHelpId} className="field__help">
+          <InlineText text={texts.rich("settings.effects-help")} textKey="settings.effects-help" />
+        </p>
+      </fieldset>
+
       <fieldset className="settings__group" aria-describedby={reduceMotionHelpId}>
         <legend className="settings__legend">
           <InlineText
@@ -221,6 +254,19 @@ export function SettingsForm({
       </p>
     </div>
   );
+}
+
+/** The effects, in the order the form shows them. */
+const EFFECTS: readonly (keyof Effects)[] = ["glow", "scanlines"];
+
+/** The catalog key of an effect's switch. */
+function effectKey(effect: keyof Effects): "settings.effects-glow" | "settings.effects-scanlines" {
+  switch (effect) {
+    case "glow":
+      return "settings.effects-glow";
+    case "scanlines":
+      return "settings.effects-scanlines";
+  }
 }
 
 /** The catalog key of a colour scheme choice. */

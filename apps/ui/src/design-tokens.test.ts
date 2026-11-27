@@ -15,6 +15,7 @@ import styleguideCss from "./styleguide/styleguide.css?raw";
 import stylesCss from "./styles.css?raw";
 import {
   checkContrast,
+  checkGlowContrast,
   CONTRAST_PAIRS,
   contrastMinimums,
   contrastPairs,
@@ -202,13 +203,87 @@ describe("the type scale", () => {
   });
 });
 
+describe("the effects", () => {
+  // Each effect is a token that is `none` unless its setting on the root turns it on (ADR 0112).
+  const effectTokens = [...tokens.keys()].filter((name) => name.startsWith("--effect-"));
+  const schemes = colorSchemeCustomProperties(tokenRules);
+  const GLOW = /^0 0 (\d+(?:\.\d+)?)rem color-mix\(in srgb, currentColor (\d+)%, transparent\)$/;
+
+  function ruleOf(selector: string) {
+    const rule = tokenRules.find(
+      (candidate) => candidate.selector === selector && candidate.conditions.length === 0,
+    );
+    if (rule === undefined) {
+      throw new Error(`tokens.css has no rule ${selector}.`);
+    }
+    return rule;
+  }
+
+  /** The glow's opacity, from 0 to 1, read from the rule that turns it on. */
+  function glowStrength(): number {
+    const value = ruleOf(':root[data-glow="on"]').declarations.get("--effect-glow") ?? "";
+    const match = GLOW.exec(value);
+    if (match?.[2] === undefined) {
+      throw new Error(`The glow is not one soft shadow in the text's colour: ${value}`);
+    }
+    return Number(match[2]) / 100;
+  }
+
+  test("are the glow and the scanlines, both off by default", () => {
+    expect(effectTokens).toEqual(["--effect-glow", "--effect-scanlines"]);
+    expect(effectTokens.map((name) => tokens.get(name))).toEqual(["none", "none"]);
+  });
+
+  test("are each turned on by one rule that sets only its own token", () => {
+    expect([...ruleOf(':root[data-glow="on"]').declarations.keys()]).toEqual(["--effect-glow"]);
+    expect([...ruleOf(':root[data-scanlines="on"]').declarations.keys()]).toEqual([
+      "--effect-scanlines",
+    ]);
+  });
+
+  test("glow as one soft shadow in the text's own colour", () => {
+    expect(glowStrength()).toBeGreaterThan(0);
+    expect(glowStrength()).toBeLessThanOrEqual(1);
+  });
+
+  test.each(COLOR_SCHEMES)("keep the glowing text at its contrast minimum in %s", (scheme) => {
+    const failing = checkGlowContrast(
+      schemeTokens(tokens, schemes, scheme),
+      glowStrength(),
+      contrastMinimums(scheme),
+    )
+      .filter((result) => !result.passes)
+      .map(describeContrast);
+    expect(failing).toEqual([]);
+  });
+
+  test("draw the scanlines in their colour token on a transparent ground", () => {
+    const value = ruleOf(':root[data-scanlines="on"]').declarations.get("--effect-scanlines");
+    expect(value).toMatch(/^repeating-linear-gradient\( ?transparent /);
+    expect(usedCustomProperties(`a { b: ${value ?? ""} }`)).toEqual(["--color-terminal-scanline"]);
+  });
+
+  test("come before the rules of reduce motion, which win over them", () => {
+    const index = (selector: string) => tokenRules.findIndex((rule) => rule.selector === selector);
+    const lastEffect = Math.max(
+      index(':root[data-glow="on"]'),
+      index(':root[data-scanlines="on"]'),
+    );
+    expect(lastEffect).toBeLessThan(index(':root[data-reduce-motion="on"]'));
+    expect(lastEffect).toBeLessThan(index(':root:not([data-reduce-motion="off"])'));
+  });
+});
+
 describe("reduce motion", () => {
   // The game's setting is the root's data-reduce-motion (ADR 0110): `on` always reduces motion,
-  // the system's setting does unless the game's setting is `off`.
+  // the system's setting does unless the game's setting is `off`. It turns the effects off too
+  // (ADR 0112).
   const reducedRules = tokenRules.filter(
     (rule) =>
       (rule.selector !== ":root" || rule.conditions.length > 0) &&
-      !rule.selector.startsWith(":root[data-color-scheme="),
+      !rule.selector.startsWith(":root[data-color-scheme=") &&
+      rule.selector !== ':root[data-glow="on"]' &&
+      rule.selector !== ':root[data-scanlines="on"]',
   );
 
   test("reduces motion for the setting on and for the system's setting unless it is off", () => {
@@ -218,11 +293,18 @@ describe("reduce motion", () => {
     ]);
   });
 
-  test("sets every motion duration to 0ms and changes nothing else", () => {
+  test("sets every motion duration to 0ms, turns every effect off and changes nothing else", () => {
     const durations = [...tokens.keys()].filter((name) => name.startsWith("--motion-duration-"));
+    const effects = [...tokens.keys()].filter((name) => name.startsWith("--effect-"));
     expect(durations.length).toBeGreaterThan(0);
+    expect(effects.length).toBeGreaterThan(0);
     for (const rule of reducedRules) {
-      expect(rule.declarations).toEqual(new Map(durations.map((name) => [name, "0ms"])));
+      expect(rule.declarations).toEqual(
+        new Map([
+          ...durations.map((name): [string, string] => [name, "0ms"]),
+          ...effects.map((name): [string, string] => [name, "none"]),
+        ]),
+      );
     }
   });
 });

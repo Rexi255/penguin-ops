@@ -243,3 +243,35 @@ test("follows a system that reduces motion unless reduce motion is off", async (
     .click();
   expect(await stateDuration()).toBe("120ms");
 });
+
+// Effects (ROADMAP M3.9b, ADR 0112).
+
+test("turns the effects on, stores them and lets reduce motion turn them off", async ({
+  page,
+  userDataDir,
+}) => {
+  const effect = (name: string) =>
+    page.evaluate(
+      (property) => getComputedStyle(document.documentElement).getPropertyValue(property).trim(),
+      name,
+    );
+  expect(await effect("--effect-glow")).toBe("none");
+  expect(await effect("--effect-scanlines")).toBe("none");
+  await page.getByRole("button", { name: "Settings" }).click();
+  const effects = page.getByRole("group", { name: "Effects" });
+  await effects.getByText("Glow", { exact: true }).click();
+  await effects.getByText("Scanlines", { exact: true }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-glow", "on");
+  await expect(page.locator("html")).toHaveAttribute("data-scanlines", "on");
+  expect(await effect("--effect-glow")).not.toBe("none");
+  expect(await effect("--effect-scanlines")).not.toBe("none");
+  await expect
+    .poll(() => storedSettings(userDataDir))
+    .toMatchObject({ effects: { glow: true, scanlines: true } });
+
+  await page.getByRole("group", { name: "Reduce motion" }).getByText("On", { exact: true }).click();
+  expect(await effect("--effect-glow")).toBe("none");
+  expect(await effect("--effect-scanlines")).toBe("none");
+  await expect(effects.getByRole("checkbox", { name: "Glow" })).toBeChecked();
+  expect(await axeViolations(page)).toEqual([]);
+});

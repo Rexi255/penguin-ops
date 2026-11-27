@@ -3,7 +3,13 @@
 // Every colour scheme passes the same pairs; the high contrast scheme asks for more (ADR 0111).
 import type { ColorScheme } from "@penguin-ops/gameplay";
 
-import { contrastRatio, MINIMUM_CONTRAST, parseHexColor, type ContrastUse } from "./color-contrast";
+import {
+  blendColors,
+  contrastRatio,
+  MINIMUM_CONTRAST,
+  parseHexColor,
+  type ContrastUse,
+} from "./color-contrast";
 
 /** A foreground token that is shown on a background token. */
 export interface ContrastPair {
@@ -111,7 +117,60 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     "non-text",
     "the boundary of a text field with a problem",
   ),
+  ...allOn(
+    ["--color-text", "--color-text-muted", "--color-prompt-user", "--color-prompt-directory"],
+    ["--color-terminal-scanline"],
+    "text",
+    "the terminal's text, notices and prompt on the stripes of the scanlines",
+  ),
+  ...allOn(
+    ["--color-terminal-cursor"],
+    ["--color-terminal-scanline"],
+    "non-text",
+    "the frame of the terminal's cursor on the stripes of the scanlines",
+  ),
 ];
+
+/**
+ * The share of the glow's colour that reaches the ground at the glow's brightest point, between
+ * the strokes of dense characters such as `#` and `@` (ADR 0112). Measured in Chromium at about
+ * 0.41 for a blur of 0.375rem; the styleguide's browser test checks that the real glow stays below
+ * it.
+ */
+export const GLOW_PEAK_COVERAGE = 0.45;
+
+/**
+ * The pairs the glow lights (ADR 0112): the terminal shows it only on its text colour, on the
+ * terminal and on the stripes of the scanlines.
+ */
+export const GLOW_PAIRS: readonly ContrastPair[] = allOn(
+  ["--color-text"],
+  ["--color-surface-terminal", "--color-terminal-scanline"],
+  "text",
+  "the terminal's text with the glow, on the ground it lights",
+);
+
+/**
+ * Checks every glow pair with its ground lit by the glow at its brightest: the text colour laid on
+ * the background with `strength` (the glow's opacity, 0 to 1) times `GLOW_PEAK_COVERAGE`.
+ */
+export function checkGlowContrast(
+  tokens: ReadonlyMap<string, string>,
+  strength: number,
+  minimums: Readonly<Record<ContrastUse, number>> = MINIMUM_CONTRAST,
+): ContrastResult[] {
+  return GLOW_PAIRS.map((pair) => {
+    const foreground = parseHexColor(tokenValue(tokens, pair.foreground));
+    const ground = blendColors(
+      parseHexColor(tokenValue(tokens, pair.background)),
+      foreground,
+      strength * GLOW_PEAK_COVERAGE,
+    );
+    const ratio = contrastRatio(foreground, ground);
+    const minimum = minimums[pair.use];
+    return { pair, ratio, minimum, passes: ratio >= minimum };
+  });
+}
 
 /** Colour tokens without a contrast minimum, with the reason. */
 export const DECORATIVE_COLOR_TOKENS: Readonly<Record<string, string>> = {

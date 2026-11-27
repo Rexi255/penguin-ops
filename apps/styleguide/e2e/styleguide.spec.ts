@@ -257,6 +257,107 @@ test("prints the tape at the print speed, and at once with reduce motion", async
   await expect(page.locator(".sg-tape--printing")).toHaveCount(1);
 });
 
+/** Turns an effect on with its switch, by clicking its card like a player would. */
+async function turnOn(page: Page, name: string): Promise<void> {
+  const group = page.getByRole("group", { name: "Effects" });
+  await group.getByText(name, { exact: true }).click();
+  await expect(group.getByRole("checkbox", { name })).toBeChecked();
+}
+
+/** The colour channels of every pixel of a PNG screenshot, decoded by the browser in `page`. */
+async function pixels(page: Page, png: Buffer): Promise<number[]> {
+  return page.evaluate(async (base64) => {
+    const image = new Image();
+    image.src = `data:image/png;base64,${base64}`;
+    await image.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const context = canvas.getContext("2d");
+    if (context === null) {
+      throw new Error("The browser has no 2D canvas.");
+    }
+    context.drawImage(image, 0, 0);
+    return [...context.getImageData(0, 0, image.width, image.height).data];
+  }, png.toString("base64"));
+}
+
+test("turns the terminal's effects on with their switches and off with reduce motion", async ({
+  page,
+}) => {
+  await openStyleguide(page);
+  const terminal = page.locator(".sg-effects-demo__terminal .terminal");
+  await expect(terminal).toHaveCSS("text-shadow", "none");
+  await expect(terminal).toHaveCSS("background-image", "none");
+
+  await turnOn(page, "Glow");
+  await turnOn(page, "Scanlines");
+  await expect(page.locator("html")).toHaveAttribute("data-glow", "on");
+  await expect(terminal).toHaveCSS("text-shadow", /0px 0px 6px/);
+  await expect(terminal).toHaveCSS("background-image", /^repeating-linear-gradient\(/);
+  // The glow lights only the terminal's text colour (ADR 0112).
+  await expect(terminal.locator(".terminal__prompt-user")).toHaveCSS("text-shadow", "none");
+  await expect(terminal.locator(".terminal__prompt-directory")).toHaveCSS("text-shadow", "none");
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(terminal).toHaveCSS("text-shadow", "none");
+  await expect(terminal).toHaveCSS("background-image", "none");
+  await page.evaluate(() => {
+    document.documentElement.dataset["reduceMotion"] = "off";
+  });
+  await expect(terminal).toHaveCSS("background-image", /^repeating-linear-gradient\(/);
+});
+
+test("glows no brighter than the contrast check of the design token test assumes", async ({
+  page,
+}) => {
+  // The design token test checks the glowing text on its ground lit with the glow's opacity times
+  // GLOW_PEAK_COVERAGE (token-contrast.ts, ADR 0112). This measures the real glow around dense
+  // characters on the terminal's ground: no pixel outside the characters may be lit more.
+  const strength = Number(
+    /--effect-glow: 0 0 [\d.]+rem color-mix\(in srgb, currentColor (\d+)%, transparent\)/.exec(
+      TOKENS_CSS,
+    )?.[1],
+  );
+  const peak = Number(
+    /GLOW_PEAK_COVERAGE = ([\d.]+);/.exec(
+      readFileSync(join(import.meta.dirname, "../../ui/src/token-contrast.ts"), "utf8"),
+    )?.[1],
+  );
+  expect(strength).toBeGreaterThan(0);
+  expect(peak).toBeGreaterThan(0);
+
+  await openStyleguide(page);
+  const line = page.locator(".sg-effects-demo__dense");
+  const dark = await pixels(page, await line.screenshot());
+  await turnOn(page, "Glow");
+  await expect(page.locator(".sg-effects-demo__terminal .terminal")).not.toHaveCSS(
+    "text-shadow",
+    "none",
+  );
+  const lit = await pixels(page, await line.screenshot());
+  expect(lit.length).toBe(dark.length);
+
+  const [groundRed, groundGreen, groundBlue] = [1, 3, 5].map((start) =>
+    parseInt((definedTokens().get("--color-surface-terminal") ?? "").slice(start, start + 2), 16),
+  );
+  const textGreen = parseInt((definedTokens().get("--color-text") ?? "").slice(3, 5), 16);
+  let brightest = 0;
+  for (let index = 0; index < dark.length; index += 4) {
+    // Only the ground between the characters: a pixel of a character keeps its own colour.
+    const isGround =
+      dark[index] === groundRed &&
+      dark[index + 1] === groundGreen &&
+      dark[index + 2] === groundBlue;
+    if (isGround) {
+      const share = ((lit[index + 1] ?? 0) - (groundGreen ?? 0)) / (textGreen - (groundGreen ?? 0));
+      brightest = Math.max(brightest, share);
+    }
+  }
+  expect(brightest).toBeGreaterThan(0);
+  expect(brightest).toBeLessThanOrEqual((strength / 100) * peak);
+});
+
 test("shows every icon file at one cell, in the colour of its text, hidden from screen readers", async ({
   page,
 }) => {

@@ -206,6 +206,10 @@ settings:
   color-scheme-retro-crt: Retro CRT
   color-scheme-solarized: Solarized
   color-scheme-high-contrast: High contrast
+  effects: Effects
+  effects-help: Only in the terminal. Reduce motion turns them off, also when the system asks for it.
+  effects-glow: Glow
+  effects-scanlines: Scanlines
   reduce-motion: Reduce motion
   reduce-motion-help: Shows every change at once, without animations and effects.
   reduce-motion-system: Like the system

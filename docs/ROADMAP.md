@@ -242,15 +242,15 @@ inventing it along the way.
   - [x] M3.8c Font size and reduce motion; the volume sliders move to M3.10 and the colour
         scheme and effects to M3.9, so that the settings offer only what takes effect
         (ADR 0110).
-- [ ] M3.9 Colour schemes and effects: retro CRT, Solarized and high contrast as value sets
+- [x] M3.9 Colour schemes and effects: retro CRT, Solarized and high contrast as value sets
       for the semantic colour tokens of M3.0b (contrast test for every scheme); optional glow
       and scanlines; their choices in the settings, with reduce motion turning the effects off
       (ADR 0110).
   - [x] M3.9a Colour schemes: the three value sets as rules on the root's `data-color-scheme`,
         the contrast test for every scheme (7:1 text in high contrast), the choice in the
         settings and a scheme switch on the styleguide page (ADR 0111).
-  - [ ] M3.9b Effects: optional glow and scanlines over the terminal, their switches in the
-        settings, turned off by reduce motion.
+  - [x] M3.9b Effects: optional glow and scanlines over the terminal, their switches in the
+        settings, turned off by reduce motion (ADR 0112).
 - [ ] M3.10 UI sounds via Web Audio with volume control: the volume sliders (master, music,
       effects) in the settings (ADR 0110).
 - [ ] M3.11 Mail panel with toasts; handbook panel (searchable, grows with learned commands).

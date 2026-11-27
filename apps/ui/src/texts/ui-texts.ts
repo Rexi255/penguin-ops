@@ -349,6 +349,14 @@ export const UI_TEXT_PLACEHOLDERS = {
   "settings.color-scheme-solarized": [],
   /** The colour scheme with the strongest contrast. */
   "settings.color-scheme-high-contrast": [],
+  /** The name of the group of the effects' switches (ADR 0112). */
+  "settings.effects": [],
+  /** What the effects show on, and that "reduce motion" turns them off. */
+  "settings.effects-help": [],
+  /** The switch of the glow around the terminal's text. */
+  "settings.effects-glow": [],
+  /** The switch of the scanlines over the terminal, as on an old monitor. */
+  "settings.effects-scanlines": [],
   /** The name of the group of the "reduce motion" choice. */
   "settings.reduce-motion": [],
   /** What "reduce motion" does. */

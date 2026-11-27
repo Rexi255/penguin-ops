@@ -206,6 +206,10 @@ settings:
   color-scheme-retro-crt: Retro-CRT
   color-scheme-solarized: Solarized
   color-scheme-high-contrast: Hoher Kontrast
+  effects: Effekte
+  effects-help: Nur im Terminal. „Bewegung reduzieren“ schaltet sie ab, auch wenn das System es verlangt.
+  effects-glow: Leuchten
+  effects-scanlines: Scanlines
   reduce-motion: Bewegung reduzieren
   reduce-motion-help: Zeigt jede Änderung sofort, ohne Animationen und Effekte.
   reduce-motion-system: Wie im System
