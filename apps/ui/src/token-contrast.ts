@@ -1,6 +1,8 @@
 // The colour token pairs that must meet WCAG AA contrast (ADR 0082). Every colour token of
-// tokens.css is in at least one pair or listed as decorative; the design token test checks both
-// for the default scheme, and the colour schemes of ROADMAP M3.9 must pass the same pairs.
+// tokens.css is in at least one pair or listed as decorative; the design token test checks both.
+// Every colour scheme passes the same pairs; the high contrast scheme asks for more (ADR 0111).
+import type { ColorScheme } from "@penguin-ops/gameplay";
+
 import { contrastRatio, MINIMUM_CONTRAST, parseHexColor, type ContrastUse } from "./color-contrast";
 
 /** A foreground token that is shown on a background token. */
@@ -118,6 +120,59 @@ export const DECORATIVE_COLOR_TOKENS: Readonly<Record<string, string>> = {
     "does not apply to decoration)",
 };
 
+/** WCAG AAA for text (1.4.6), the high contrast scheme's minimum; non-text has no AAA level. */
+const HIGH_CONTRAST_MINIMUMS: Readonly<Record<ContrastUse, number>> = {
+  text: 7,
+  "non-text": 3,
+};
+
+/** The minimum contrast of each use in a colour scheme. */
+export function contrastMinimums(scheme: ColorScheme): Readonly<Record<ContrastUse, number>> {
+  switch (scheme) {
+    case "default":
+    case "retro-crt":
+    case "solarized":
+      return MINIMUM_CONTRAST;
+    case "high-contrast":
+      return HIGH_CONTRAST_MINIMUMS;
+  }
+}
+
+/**
+ * The pairs a colour scheme must pass: the pairs of every scheme and, in the high contrast
+ * scheme, the dividers too, which are decorative elsewhere but must be seen there.
+ */
+export function contrastPairs(scheme: ColorScheme): readonly ContrastPair[] {
+  switch (scheme) {
+    case "default":
+    case "retro-crt":
+    case "solarized":
+      return CONTRAST_PAIRS;
+    case "high-contrast":
+      return [
+        ...CONTRAST_PAIRS,
+        ...allOn(
+          ["--color-rule"],
+          SURFACES,
+          "non-text",
+          "the dividers between areas, visible in the high contrast scheme",
+        ),
+      ];
+  }
+}
+
+/**
+ * The token values of a colour scheme: the default values with the scheme's own on top. The
+ * default scheme has no values of its own.
+ */
+export function schemeTokens(
+  defaults: ReadonlyMap<string, string>,
+  schemes: ReadonlyMap<string, ReadonlyMap<string, string>>,
+  scheme: ColorScheme,
+): ReadonlyMap<string, string> {
+  return new Map([...defaults, ...(schemes.get(scheme) ?? [])]);
+}
+
 function tokenValue(tokens: ReadonlyMap<string, string>, name: string): string {
   const value = tokens.get(name);
   if (value === undefined) {
@@ -126,17 +181,21 @@ function tokenValue(tokens: ReadonlyMap<string, string>, name: string): string {
   return value;
 }
 
-/** Checks every pair against the given token values (name to `#rrggbb`). */
+/**
+ * Checks every pair against the given token values (name to `#rrggbb`) and the minimum of its use,
+ * WCAG AA unless other minimums are given.
+ */
 export function checkContrast(
   tokens: ReadonlyMap<string, string>,
   pairs: readonly ContrastPair[],
+  minimums: Readonly<Record<ContrastUse, number>> = MINIMUM_CONTRAST,
 ): ContrastResult[] {
   return pairs.map((pair) => {
     const ratio = contrastRatio(
       parseHexColor(tokenValue(tokens, pair.foreground)),
       parseHexColor(tokenValue(tokens, pair.background)),
     );
-    const minimum = MINIMUM_CONTRAST[pair.use];
+    const minimum = minimums[pair.use];
     return { pair, ratio, minimum, passes: ratio >= minimum };
   });
 }

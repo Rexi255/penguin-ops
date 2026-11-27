@@ -182,8 +182,9 @@ Grounds, panels and text stay neutral. If a colour appears somewhere else, it ne
 decorates.
 
 **The Scheme Rule.** Every colour is a semantic token named by its purpose, so the colour schemes
-of ROADMAP M3.9 (retro CRT, Solarized, high contrast) only swap values, pass the same contrast
-pairs and never require a screen change.
+(retro CRT, Solarized, high contrast; ADR 0111) only swap values, pass the same contrast pairs and
+never require a screen change. Each scheme is one `:root[data-color-scheme]` rule in `tokens.css`
+that redefines every colour token. High contrast needs 7:1 for text and visible dividers.
 
 **The Pair Rule.** A new colour token comes with the pairs it appears in, or with the reason why
 it is decorative.

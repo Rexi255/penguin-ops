@@ -523,8 +523,12 @@ keeps the settings while the game runs (`useSettings`, ADR 0109): a change appli
 written as the whole file, one write after the other; a change that changes nothing writes
 nothing, and a failed write is logged and reported until a write works again.
 `src/settings/document-settings.ts` applies the font size (the root element's font size in
-percent, which scales every rem) and "reduce motion" (the root's `data-reduce-motion`, which
-`tokens.css` reads) to the page (`applyDocumentSettings`, ADR 0110).
+percent, which scales every rem), "reduce motion" (the root's `data-reduce-motion`, which
+`tokens.css` reads) and the colour scheme (the root's `data-color-scheme`, whose rule in
+`tokens.css` redefines every colour token) to the page (`applyDocumentSettings`, ADR 0110,
+ADR 0111). `src/token-contrast.ts` gives the contrast pairs and minimums of every scheme
+(`contrastPairs`, `contrastMinimums`, `schemeTokens`), which the design token test and the
+styleguide's scheme switch use.
 
 Content and texts (ADR 0090): `src/content/bundled-content.ts` imports every `.yaml` file of
 `content/` as text with `import.meta.glob` at build time and loads it with `sortContentFiles`

@@ -1,7 +1,8 @@
 // The styleguide page (ROADMAP M3.0c, ADR 0083): every design token of tokens.css, rendered with
-// the real stylesheets, and the game's icons (ADR 0087). It is a page for the people who build
-// the game, so its texts are English and not translated. It is never part of the packaged app;
-// `npm run styleguide` serves it.
+// the real stylesheets, and the game's icons (ADR 0087). A switch shows the page in every colour
+// scheme (ADR 0111). It is a page for the people who build the game, so its texts are English and
+// not translated. It is never part of the packaged app; `npm run styleguide` serves it.
+import { COLOR_SCHEMES, type ColorScheme } from "@penguin-ops/gameplay";
 import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 
 // The logo files of the brand package (ADR 0088). `no-inline` keeps Vite from turning the small
@@ -10,13 +11,63 @@ import logoHorizontalDark from "../../../../assets/brand/svg/logo-horizontal-dar
 import logoHorizontalLight from "../../../../assets/brand/svg/logo-horizontal-light.svg?no-inline";
 import logoSignet from "../../../../assets/brand/svg/logo-signet.svg?no-inline";
 import { Icon, ICON_NAMES, type IconName } from "../icons/icon";
-import { checkContrast, CONTRAST_PAIRS, type ContrastResult } from "../token-contrast";
-import type { CatalogSection, Token, TokenCatalog, TokenKind } from "./token-catalog";
+import {
+  checkContrast,
+  contrastMinimums,
+  contrastPairs,
+  type ContrastResult,
+  schemeTokens,
+} from "../token-contrast";
+import { catalogTokens, type CatalogSection, type Token, type TokenKind } from "./token-catalog";
 
 export interface StyleguideProps {
-  readonly catalog: TokenCatalog;
-  /** The token values by name, for the contrast table. */
-  readonly tokens: ReadonlyMap<string, string>;
+  /** The default token values by name, from the `:root` rule of tokens.css. */
+  readonly defaults: ReadonlyMap<string, string>;
+  /** The colour values of every colour scheme but the default, by the scheme's name. */
+  readonly schemes: ReadonlyMap<string, ReadonlyMap<string, string>>;
+  /** The note next to every token in tokens.css, by token name. */
+  readonly notes: ReadonlyMap<string, string>;
+}
+
+/** The names of the colour schemes on this English-only page. */
+const SCHEME_NAMES: Readonly<Record<ColorScheme, string>> = {
+  default: "Default",
+  "retro-crt": "Retro CRT",
+  solarized: "Solarized",
+  "high-contrast": "High contrast",
+};
+
+/** The radio buttons that choose the page's colour scheme. */
+function SchemeSwitch({
+  scheme,
+  onChange,
+}: {
+  readonly scheme: ColorScheme;
+  readonly onChange: (scheme: ColorScheme) => void;
+}) {
+  return (
+    <fieldset className="settings__group sg-schemes">
+      <legend className="sg-schemes__legend">Colour scheme</legend>
+      <div className="choices sg-schemes__choices">
+        {COLOR_SCHEMES.map((candidate) => (
+          <label key={candidate} className="choice">
+            <input
+              className="choice__input visually-hidden"
+              type="radio"
+              name="sg-color-scheme"
+              value={candidate}
+              checked={scheme === candidate}
+              onChange={() => {
+                onChange(candidate);
+              }}
+            />
+            <span className="choice__marker" aria-hidden="true" />
+            {SCHEME_NAMES[candidate]}
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
 }
 
 function tokenVar(name: string): string {
@@ -431,16 +482,24 @@ function ContrastRow({ result }: { readonly result: ContrastResult }) {
   );
 }
 
-function ContrastSection({ tokens }: { readonly tokens: ReadonlyMap<string, string> }) {
-  const results = checkContrast(tokens, CONTRAST_PAIRS);
+function ContrastSection({
+  tokens,
+  scheme,
+}: {
+  readonly tokens: ReadonlyMap<string, string>;
+  readonly scheme: ColorScheme;
+}) {
+  const results = checkContrast(tokens, contrastPairs(scheme), contrastMinimums(scheme));
   return (
     <section className="sg-section" aria-labelledby="sg-heading-contrast" data-section="contrast">
       <h2 id="sg-heading-contrast" className="sg-section__title">
         Contrast pairs
       </h2>
       <p className="sg-section__intro">
-        Every text and background pair must meet WCAG AA: 4.5:1 for text, 3:1 for the focus ring.
-        The design token test checks the same pairs.
+        Every text and background pair must meet WCAG AA in every colour scheme: 4.5:1 for text, 3:1
+        for the focus ring. The high contrast scheme needs 7:1 for text and visible dividers. The
+        design token test checks the same pairs. These are the pairs of the {SCHEME_NAMES[scheme]}{" "}
+        scheme.
       </p>
       <div className="sg-table-scroll" role="region" aria-label="Contrast pairs table" tabIndex={0}>
         <table className="sg-table">
@@ -468,7 +527,14 @@ function ContrastSection({ tokens }: { readonly tokens: ReadonlyMap<string, stri
   );
 }
 
-export function Styleguide({ catalog, tokens }: StyleguideProps) {
+export function Styleguide({ defaults, schemes, notes }: StyleguideProps) {
+  const [scheme, setScheme] = useState<ColorScheme>("default");
+  // The page's colour scheme is the root's attribute, as in the game (ADR 0111).
+  useLayoutEffect(() => {
+    document.documentElement.dataset["colorScheme"] = scheme;
+  }, [scheme]);
+  const tokens = schemeTokens(defaults, schemes, scheme);
+  const catalog = catalogTokens(tokens, notes);
   return (
     <>
       <header className="sg-header">
@@ -497,6 +563,7 @@ export function Styleguide({ catalog, tokens }: StyleguideProps) {
             </li>
           </ul>
         </nav>
+        <SchemeSwitch scheme={scheme} onChange={setScheme} />
       </header>
       <main className="sg-main">
         {catalog.sections.map((entry) => (
@@ -504,7 +571,7 @@ export function Styleguide({ catalog, tokens }: StyleguideProps) {
         ))}
         <IconSection />
         <LogoSection />
-        <ContrastSection tokens={tokens} />
+        <ContrastSection tokens={tokens} scheme={scheme} />
         {catalog.unsorted.length === 0 ? null : (
           <section className="sg-section" aria-labelledby="sg-heading-unsorted">
             <h2 id="sg-heading-unsorted" className="sg-section__title">

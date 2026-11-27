@@ -1,10 +1,11 @@
 /* Design tokens of the visual world "Label Tape & Patch Cable" (DESIGN.md, ADR 0081, ADR 0082).
 
-   Every name says what a token is for, never what it looks like, so that the colour schemes of
-   ROADMAP M3.9 only redefine the values. Components and screens use only these variables and
-   never write a colour of their own. `design-tokens.test.ts` checks that, that every variable
-   they use is defined here, and that every text and background pair of `token-contrast.ts`
-   meets WCAG AA contrast. Colours are written as #rrggbb. */
+   Every name says what a token is for, never what it looks like, so that the colour schemes
+   (ADR 0111) only redefine the values. Components and screens use only these variables and never
+   write a colour of their own. `design-tokens.test.ts` checks that, that every variable they use
+   is defined here, that every colour scheme redefines every colour token and nothing else, and
+   that every text and background pair of `token-contrast.ts` meets WCAG AA contrast in every
+   scheme. Colours are written as #rrggbb. */
 
 :root {
   /* Surfaces: matte rack-metal neutrals. Depth comes from these tonal steps, not shadows. */
@@ -129,6 +130,88 @@
   --text-display-leading: 3rem; /* 48 px, two cells */
 
   color-scheme: dark;
+}
+
+/* The colour schemes (ROADMAP M3.9, ADR 0111). The game's setting is the root's
+   `data-color-scheme`; without it, or with `default`, the values above apply. Every scheme
+   redefines every colour token and nothing else, and passes the same contrast pairs. */
+
+/* Retro CRT: green phosphor on dark glass, with amber for the player's colour. The cables keep
+   four hues, so that the kinds of work stay apart. */
+:root[data-color-scheme="retro-crt"] {
+  --color-surface-ground: #0b120d;
+  --color-surface-panel: #0f1812;
+  --color-surface-raised: #15211a;
+  --color-surface-terminal: #060a07; /* the dark glass of the tube */
+  --color-surface-selection: #1f3a27;
+  --color-rule: #1c2a20;
+  --color-control-border: #5e8c69;
+  --color-text: #b6f5c3; /* green phosphor */
+  --color-text-muted: #7fbf8e;
+  --color-player: #ffb040; /* amber, the other phosphor */
+  --color-terminal-cursor: #66ff85; /* a bright phosphor block */
+  --color-prompt-user: #7dff8f;
+  --color-prompt-directory: #6fe0d0; /* cyan, so that it stays apart from the user */
+  --color-focus: #b6f5c3;
+  --color-tape-primary: #ffb040;
+  --color-tape-secondary: #d8f5dc; /* pale green tape */
+  --color-tape-ink: #0a120c;
+  --color-cable-ticket: #4fc3e0;
+  --color-cable-mail: #b494f0;
+  --color-cable-handbook: #5fd06f;
+  --color-cable-incident: #ff6a5a;
+}
+
+/* Solarized (dark), after Ethan Schoonover's palette (MIT, THIRD-PARTY-LICENSES.md). Its accents
+   are too dark for text on its own surfaces, so they keep their hue and are lightened until they
+   meet WCAG AA; base0 is too dark for body text, so the text is base2 and base1. */
+:root[data-color-scheme="solarized"] {
+  --color-surface-ground: #002b36; /* base03 */
+  --color-surface-panel: #04303c;
+  --color-surface-raised: #073642; /* base02 */
+  --color-surface-terminal: #00212b; /* one step darker than base03 */
+  --color-surface-selection: #0a3945;
+  --color-rule: #0e4652;
+  --color-control-border: #839496; /* base0 */
+  --color-text: #eee8d5; /* base2 */
+  --color-text-muted: #93a1a1; /* base1 */
+  --color-player: #ec7b4c; /* orange, lighter */
+  --color-terminal-cursor: #93a1a1; /* base1 */
+  --color-prompt-user: #859900; /* green */
+  --color-prompt-directory: #268bd2; /* blue */
+  --color-focus: #eee8d5; /* base2 */
+  --color-tape-primary: #b58900; /* yellow */
+  --color-tape-secondary: #eee8d5; /* base2 */
+  --color-tape-ink: #002b36; /* base03 */
+  --color-cable-ticket: #4aa1de; /* blue, lighter */
+  --color-cable-mail: #9296d3; /* violet, lighter */
+  --color-cable-handbook: #90a600; /* green, lighter */
+  --color-cable-incident: #e87977; /* red, lighter */
+}
+
+/* High contrast: white text on black, and every text pair at least 7:1 (WCAG AAA, 1.4.6). */
+:root[data-color-scheme="high-contrast"] {
+  --color-surface-ground: #000000;
+  --color-surface-panel: #0a0a0a;
+  --color-surface-raised: #1f1f1f;
+  --color-surface-terminal: #000000;
+  --color-surface-selection: #3a3a3a;
+  --color-rule: #8a8a8a; /* visible, unlike in the other schemes */
+  --color-control-border: #b0b0b0;
+  --color-text: #ffffff; /* white on black */
+  --color-text-muted: #d6d6d6;
+  --color-player: #ff9a3c;
+  --color-terminal-cursor: #ffffff;
+  --color-prompt-user: #9cff57;
+  --color-prompt-directory: #8cc4ff;
+  --color-focus: #ffffff;
+  --color-tape-primary: #ffd400;
+  --color-tape-secondary: #ffffff;
+  --color-tape-ink: #000000;
+  --color-cable-ticket: #6cb6ff;
+  --color-cable-mail: #d0a8ff;
+  --color-cable-handbook: #5fe07a;
+  --color-cable-incident: #ff887a;
 }
 
 /* "Reduce motion" shows every change at once (ADR 0110). The game's setting is the root's

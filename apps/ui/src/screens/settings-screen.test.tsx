@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 // Tests of the settings screen and its form in both languages (ADR 0109, ADR 0110): the title,
 // the language choice with every language named in itself and the system's language named in the
-// player's language, the fullscreen switch with its help line, the font size slider, the "reduce
-// motion" choice, the focus on the chosen language,
+// player's language, the fullscreen switch with its help line, the font size slider, the colour
+// scheme choice, the "reduce motion" choice, the focus on the chosen language,
 // each control changing its setting at once, the alert after a failed write, and Back and Esc.
 import { MANDATORY_LANGUAGES, type MandatoryLanguage } from "@penguin-ops/content";
 import { DEFAULT_SETTINGS, type Settings } from "@penguin-ops/gameplay";
@@ -31,6 +31,8 @@ const EXPECTED: Readonly<
       notSaved: string;
       fontSize: string;
       fontSizeValue: string;
+      colorScheme: string;
+      colorSchemeChoices: string[];
       reduceMotion: string;
       reduceMotionChoices: string[];
       reduceMotionHelp: string;
@@ -48,6 +50,8 @@ const EXPECTED: Readonly<
     notSaved: "The settings could not be saved. They apply until you close the game.",
     fontSize: "Font size",
     fontSizeValue: "120%",
+    colorScheme: "Colour scheme",
+    colorSchemeChoices: ["Default", "Retro CRT", "Solarized", "High contrast"],
     reduceMotion: "Reduce motion",
     reduceMotionChoices: ["Like the system", "On", "Off"],
     reduceMotionHelp: "Shows every change at once, without animations and effects.",
@@ -64,6 +68,8 @@ const EXPECTED: Readonly<
       "Die Einstellungen konnten nicht gespeichert werden. Sie gelten, bis du das Spiel beendest.",
     fontSize: "Schriftgröße",
     fontSizeValue: "120 %",
+    colorScheme: "Farbschema",
+    colorSchemeChoices: ["Standard", "Retro-CRT", "Solarized", "Hoher Kontrast"],
     reduceMotion: "Bewegung reduzieren",
     reduceMotionChoices: ["Wie im System", "An", "Aus"],
     reduceMotionHelp: "Zeigt jede Änderung sofort, ohne Animationen und Effekte.",
@@ -174,6 +180,38 @@ describe("SettingsScreen", () => {
       target: { value: String(fontSize) },
     });
     expect(onChange).toHaveBeenCalledExactlyOnceWith({ ...settings, fontSize });
+  });
+
+  test.each(MANDATORY_LANGUAGES)("offers the colour schemes in %s", (language) => {
+    renderSettingsScreen(language, { ...DEFAULT_SETTINGS, language, colorScheme: "solarized" });
+    const group = screen.getByRole("group", { name: EXPECTED[language].colorScheme });
+    const choices = within(group).getAllByRole("radio");
+    expect(choices.map((choice) => choice.closest("label")?.textContent)).toEqual(
+      EXPECTED[language].colorSchemeChoices,
+    );
+    expect(choices.map((choice) => (choice as HTMLInputElement).checked)).toEqual([
+      false,
+      false,
+      true,
+      false,
+    ]);
+  });
+
+  test.each([
+    ["Retro CRT", "retro-crt"],
+    ["High contrast", "high-contrast"],
+    ["Default", "default"],
+  ] as const)("changes the colour scheme to %s", async (name, colorScheme) => {
+    const settings: Settings = { ...DEFAULT_SETTINGS, language: "en", colorScheme: "solarized" };
+    const { onChange } = renderSettingsScreen("en", settings);
+    await userEvent.click(screen.getByRole("radio", { name }));
+    expect(onChange).toHaveBeenCalledExactlyOnceWith({ ...settings, colorScheme });
+  });
+
+  test("keeps the colour scheme when the chosen one is clicked again", async () => {
+    const { onChange } = renderSettingsScreen("en");
+    await userEvent.click(screen.getByRole("radio", { name: "Default" }));
+    expect(onChange).not.toHaveBeenCalled();
   });
 
   test.each(MANDATORY_LANGUAGES)("offers the choices of reduce motion in %s", (language) => {

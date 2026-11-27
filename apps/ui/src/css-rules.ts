@@ -185,6 +185,33 @@ export function rootCustomProperties(rules: readonly CssRule[]): ReadonlyMap<str
   return new Map([...root.declarations].filter(([property]) => property.startsWith("--")));
 }
 
+const COLOR_SCHEME_SELECTOR = /^:root\[data-color-scheme="([a-z][a-z0-9-]*)"\]$/;
+
+/**
+ * The custom properties of every colour scheme rule outside at-rules
+ * (`:root[data-color-scheme="…"]`, ADR 0111), by the scheme's name. A scheme with more than one
+ * rule is rejected, so that a scheme's values are in one place.
+ */
+export function colorSchemeCustomProperties(
+  rules: readonly CssRule[],
+): ReadonlyMap<string, ReadonlyMap<string, string>> {
+  const schemes = new Map<string, ReadonlyMap<string, string>>();
+  for (const rule of rules) {
+    const scheme = COLOR_SCHEME_SELECTOR.exec(rule.selector)?.[1];
+    if (scheme === undefined || rule.conditions.length > 0) {
+      continue;
+    }
+    if (schemes.has(scheme)) {
+      throw new CssReadError(`The colour scheme "${scheme}" has more than one rule.`);
+    }
+    schemes.set(
+      scheme,
+      new Map([...rule.declarations].filter(([property]) => property.startsWith("--"))),
+    );
+  }
+  return schemes;
+}
+
 /** Every custom property a stylesheet reads with `var()`, without duplicates. */
 export function usedCustomProperties(css: string): string[] {
   const names = new Set<string>();

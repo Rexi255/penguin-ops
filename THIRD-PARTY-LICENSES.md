@@ -21,4 +21,30 @@ licenses: [ADR 0005](docs/decisions/0005-mit-license-and-dependency-allowlist.md
 | Inter 4.1 | Font | https://github.com/rsms/inter (release `v4.1`, `web/InterVariable.woff2`) | OFL-1.1 | Interface (ADR 0084, ADR 0085) | Variable font for weights 100 to 900, unchanged, in `apps/ui/src/fonts/inter/` with its license text `ofl.txt`; © 2016 The Inter Project Authors |
 | JetBrains Mono 2.304 | Font | https://github.com/JetBrains/JetBrainsMono (release `v2.304`, `fonts/webfonts/`) | OFL-1.1 | Terminal and real code (ADR 0084, ADR 0085) | Regular and Bold, unchanged, in `apps/ui/src/fonts/jetbrains-mono/` with its license text `ofl.txt`; © 2020 The JetBrains Mono Project Authors |
 | Mulberry32 | Code (algorithm, adapted) | https://gist.github.com/tommyettinger/46a874533244883189143505d203312c | CC0-1.0 | Seeded random generator of the engine | `packages/engine/src/random.ts`; dedicated to the public domain by Tommy Ettinger |
+| Solarized | Colour values (palette) | https://github.com/altercation/solarized (`LICENSE`) | MIT | The Solarized colour scheme (ADR 0111) | Values of base03, base02, base0, base1, base2 and the accent hues in the `solarized` rule of `apps/ui/src/tokens.css`; the accents are lightened to meet WCAG AA. Copyright (c) 2011 Ethan Schoonover; the license notice is below |
 
+## License notices
+
+### Solarized
+
+```text
+Copyright (c) 2011 Ethan Schoonover
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+```

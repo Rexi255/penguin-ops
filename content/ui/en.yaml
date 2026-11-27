@@ -201,6 +201,11 @@ settings:
   fullscreen-help: F11 switches fullscreen on and off on every screen.
   font-size: Font size
   font-size-value: "{percent}%"
+  color-scheme: Colour scheme
+  color-scheme-default: Default
+  color-scheme-retro-crt: Retro CRT
+  color-scheme-solarized: Solarized
+  color-scheme-high-contrast: High contrast
   reduce-motion: Reduce motion
   reduce-motion-help: Shows every change at once, without animations and effects.
   reduce-motion-system: Like the system

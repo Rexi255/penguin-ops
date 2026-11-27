@@ -51,6 +51,22 @@
   color: var(--color-text);
 }
 
+/* The colour scheme switch (ADR 0111): the settings' choice cards, side by side. */
+.sg-schemes {
+  margin-block-start: var(--space-4);
+}
+
+.sg-schemes__legend {
+  margin-block-end: var(--space-1);
+  padding: 0;
+  color: var(--color-text-muted);
+}
+
+.sg-schemes__choices {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
 .sg-main {
   padding-block-end: var(--space-8);
 }

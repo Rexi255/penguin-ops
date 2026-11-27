@@ -22,6 +22,8 @@ project uses [Semantic Versioning](https://semver.org/).
 - The settings have a font size slider from 80 % to 200 %, which makes the whole interface
   larger or smaller, the terminal included, and a "Reduce motion" choice: like your system, on or
   off.
+- Four colour schemes in the settings: the default one, Retro CRT (green phosphor on dark glass),
+  Solarized (dark) and High contrast. A scheme applies at once to every screen and is remembered.
 - Play opens the save slot screen with three save slots. An empty slot starts a new game; a slot
   with a game shows your name, the mode, how many tickets you have solved, how long you have
   played and when you last played, and continues the game. Back or Esc returns to the start

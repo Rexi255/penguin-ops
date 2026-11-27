@@ -339,6 +339,16 @@ export const UI_TEXT_PLACEHOLDERS = {
   "settings.font-size": [],
   /** The font size as the slider shows it; `percent` is a whole number. */
   "settings.font-size-value": ["percent"],
+  /** The name of the group of the colour scheme choice (ADR 0111). */
+  "settings.color-scheme": [],
+  /** The game's own colour scheme. */
+  "settings.color-scheme-default": [],
+  /** The colour scheme of green phosphor on dark glass. */
+  "settings.color-scheme-retro-crt": [],
+  /** The colour scheme after the Solarized palette; the palette's name is not translated. */
+  "settings.color-scheme-solarized": [],
+  /** The colour scheme with the strongest contrast. */
+  "settings.color-scheme-high-contrast": [],
   /** The name of the group of the "reduce motion" choice. */
   "settings.reduce-motion": [],
   /** What "reduce motion" does. */

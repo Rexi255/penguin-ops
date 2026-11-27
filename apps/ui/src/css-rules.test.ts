@@ -4,6 +4,7 @@ import {
   CssReadError,
   findLiteralColors,
   readCssRules,
+  colorSchemeCustomProperties,
   rootCustomProperties,
   usedCustomProperties,
 } from "./css-rules";
@@ -98,6 +99,38 @@ describe("readCssRules", () => {
   ])("rejects %s", (css, message) => {
     expect(() => readCssRules(css)).toThrow(CssReadError);
     expect(() => readCssRules(css)).toThrow(message);
+  });
+});
+
+describe("colorSchemeCustomProperties", () => {
+  test("returns the custom properties of every colour scheme rule by the scheme's name", () => {
+    const rules = readCssRules(`
+      :root { --color-text: #e8e6e1; }
+      :root[data-color-scheme="retro-crt"] { --color-text: #b6f5c3; color-scheme: dark; }
+      :root[data-color-scheme="high-contrast"] { --color-text: #ffffff; }
+      :root[data-reduce-motion="on"] { --motion-duration-state: 0ms; }
+      @media print { :root[data-color-scheme="print"] { --color-text: #000000; } }
+    `);
+    expect(colorSchemeCustomProperties(rules)).toEqual(
+      new Map([
+        ["retro-crt", new Map([["--color-text", "#b6f5c3"]])],
+        ["high-contrast", new Map([["--color-text", "#ffffff"]])],
+      ]),
+    );
+  });
+
+  test("returns no schemes for a stylesheet without scheme rules", () => {
+    expect(colorSchemeCustomProperties(readCssRules(":root { --a: 1px; }"))).toEqual(new Map());
+  });
+
+  test("rejects a scheme with two rules", () => {
+    const rules = readCssRules(`
+      :root[data-color-scheme="solarized"] { --a: #000000; }
+      :root[data-color-scheme="solarized"] { --b: #ffffff; }
+    `);
+    expect(() => colorSchemeCustomProperties(rules)).toThrow(
+      'The colour scheme "solarized" has more than one rule.',
+    );
   });
 });
 

@@ -25,6 +25,28 @@ function definedTokens(): Map<string, string> {
   );
 }
 
+/** The colour schemes with values of their own (ADR 0111) and their names on the page. */
+const SCHEMES = [
+  ["retro-crt", "Retro CRT"],
+  ["solarized", "Solarized"],
+  ["high-contrast", "High contrast"],
+] as const;
+
+/**
+ * The colour tokens of a scheme: the default values with the declarations of the scheme's
+ * `:root[data-color-scheme="…"]` block on top, read with a plain pattern like `definedTokens`.
+ */
+function schemeColors(scheme: string): Map<string, string> {
+  const css = TOKENS_CSS.replace(/\/\*[\s\S]*?\*\//g, "");
+  const block = new RegExp(`:root\\[data-color-scheme="${scheme}"\\]\\s*\\{([^}]*)\\}`).exec(css);
+  const own = [...(block?.[1] ?? "").matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)].map(
+    ([, name = "", value = ""]) => [name, value.trim()] as const,
+  );
+  expect(own.length, scheme).toBeGreaterThan(0);
+  const colors = [...definedTokens()].filter(([name]) => name.startsWith("--color-"));
+  return new Map([...colors, ...own]);
+}
+
 /** `#rrggbb` as the `rgb(r, g, b)` that getComputedStyle reports. */
 function hexToRgb(hex: string): string {
   const channels = [1, 3, 5].map((start) => parseInt(hex.slice(start, start + 2), 16));
@@ -41,6 +63,13 @@ async function runAxe(page: Page): Promise<AxeResults> {
     const { axe } = globalThis as unknown as { axe: typeof import("axe-core") };
     return axe.run(document, { runOnly: { type: "tag", values: tags } });
   }, AXE_TAGS);
+}
+
+/** Chooses a colour scheme with the switch, by clicking its card like a player would. */
+async function chooseScheme(page: Page, name: string): Promise<void> {
+  const group = page.getByRole("group", { name: "Colour scheme" });
+  await group.getByText(name, { exact: true }).click();
+  await expect(group.getByRole("radio", { name })).toBeChecked();
 }
 
 async function openStyleguide(page: Page): Promise<void> {
@@ -93,6 +122,53 @@ test("lists contrast pairs that all pass", async ({ page }) => {
   const results = page.locator("[data-section=contrast] tbody tr td:last-child");
   expect(await results.count()).toBeGreaterThan(0);
   expect(new Set(await results.allTextContents())).toEqual(new Set(["Passes"]));
+});
+
+for (const [scheme, name] of SCHEMES) {
+  test(`switches to the ${name} scheme: swatches, values and contrast pairs`, async ({ page }) => {
+    await openStyleguide(page);
+    await chooseScheme(page, name);
+    await expect(page.locator("html")).toHaveAttribute("data-color-scheme", scheme);
+    for (const [token, value] of schemeColors(scheme)) {
+      const row = page.locator(`[data-token="${token}"]`);
+      await expect(row.locator(".sg-swatch"), token).toHaveCSS("background-color", hexToRgb(value));
+      await expect(row.locator(".sg-token__value"), token).toHaveText(value);
+    }
+    await expect(page.locator("body")).toHaveCSS(
+      "background-color",
+      hexToRgb(schemeColors(scheme).get("--color-surface-ground") ?? ""),
+    );
+    const results = page.locator("[data-section=contrast] tbody tr td:last-child");
+    expect(await results.count()).toBeGreaterThan(0);
+    expect(new Set(await results.allTextContents())).toEqual(new Set(["Passes"]));
+  });
+
+  test(`has no accessibility violations in the ${name} scheme`, async ({ page }) => {
+    await openStyleguide(page);
+    await chooseScheme(page, name);
+    const results = await runAxe(page);
+    expect(results.violations.map((violation) => violation.id)).toEqual([]);
+  });
+}
+
+test("asks for 7:1 text and visible dividers in the high contrast scheme", async ({ page }) => {
+  await openStyleguide(page);
+  const table = page.locator("[data-section=contrast] tbody");
+  await expect(table.getByText("--color-rule")).toHaveCount(0);
+  await chooseScheme(page, "High contrast");
+  await expect(table.locator("tr", { hasText: "--color-rule" })).toHaveCount(4);
+  await expect(table.locator("tr", { hasText: "--color-text-muted" }).first()).toContainText("7:1");
+});
+
+test("goes back to the default scheme", async ({ page }) => {
+  await openStyleguide(page);
+  await chooseScheme(page, "Solarized");
+  await chooseScheme(page, "Default");
+  const text = definedTokens().get("--color-text") ?? "";
+  await expect(page.locator('[data-token="--color-text"] .sg-swatch')).toHaveCSS(
+    "background-color",
+    hexToRgb(text),
+  );
 });
 
 test("measures the spacing tokens in steps of a quarter cell", async ({ page }) => {

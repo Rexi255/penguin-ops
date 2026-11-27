@@ -29,7 +29,7 @@ export const LANGUAGE_SETTINGS = ["system", ...MANDATORY_LANGUAGES] as const;
 
 export type LanguageSetting = (typeof LANGUAGE_SETTINGS)[number];
 
-/** The colour schemes of ADR 0020; ROADMAP M3.9 gives them their token values. */
+/** The colour schemes of ADR 0020; tokens.css gives each its token values (ADR 0111). */
 export const COLOR_SCHEMES = ["default", "retro-crt", "solarized", "high-contrast"] as const;
 
 export type ColorScheme = (typeof COLOR_SCHEMES)[number];

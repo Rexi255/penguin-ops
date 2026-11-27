@@ -1,9 +1,14 @@
 # Status
 
-_Last updated: 2026-11-26_
+_Last updated: 2026-11-27_
 
 ## Recently completed
 
+- M3.9a Colour schemes: Retro CRT, Solarized (dark) and High contrast are each one
+  `:root[data-color-scheme]` rule in tokens.css that redefines every colour token; the design
+  token test checks every scheme's contrast pairs (7:1 text and visible dividers in High
+  contrast). The settings offer the four schemes; the styleguide has a scheme switch. Solarized's
+  accents are lightened to meet WCAG AA (ADR 0111).
 - M3.8c Font size and reduce motion (M3.8 complete): a font size slider from 80 to 200 percent
   sets the root font size, so the whole interface scales; the game screen's side panel takes at
   most 45 % of the width. Reduce motion (like the system, on, off) is the root's
@@ -21,18 +26,14 @@ _Last updated: 2026-11-26_
   the game; the main process stores `<userData>/settings.json` atomically through the preload API
   `settings`, which the end-to-end tests check in the preload API inventory too; the game takes
   its language from the settings (ADR 0108).
-- M3.7d Export and import (M3.7 complete): the slot menu offers Export for a game, Import for
-  every slot and Delete; the main process shows the system's file dialogs with the texts the
-  renderer passes and writes or reads the file; the renderer refuses a file that is no playable
-  save with a message and asks before an import replaces a game (ADR 0107).
-
 ## In progress
 
 - Nothing.
 
 ## Next 3 steps
 
-1. ROADMAP M3.9: colour schemes and effects, with their choices in the settings.
+1. ROADMAP M3.9b: glow and scanlines, with their switches in the settings and reduce motion
+   turning them off.
 2. ROADMAP M3.10: UI sounds with the volume sliders in the settings.
 3. ROADMAP M3.11: mail panel with toasts and the handbook panel.
 
@@ -40,7 +41,7 @@ _Last updated: 2026-11-26_
 
 - The start, save slot, new game, settings and game screens, the pause menu, the slot menu and
   dialogs, the terminal, the ticket panel and the inbox have no screenshot tests yet; the
-  screenshot test setup for all screens, languages and colour schemes is ROADMAP M3.15.
+  screenshot test setup for all screens, languages and the four colour schemes is ROADMAP M3.15.
 - The texts of the five prototype levels, the three chapter titles and the office world's host
   name `itdesk` were written as test content without the owner's review (the prototype's source
   is not in the repository, so levels 2 to 5 follow the titles in `docs/CURRICULUM.md`); the

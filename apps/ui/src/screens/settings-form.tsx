@@ -1,11 +1,13 @@
-// The settings themselves (ROADMAP M3.8b, M3.8c, ADR 0109, ADR 0110), the same on the settings
-// screen of the main menu and in the settings dialog of the pause menu: the language, the display
-// (fullscreen and the font size) and "reduce motion". Each control changes its setting at once;
-// the screen or dialog around it decides what a change of the language needs first. The form
-// offers only settings that take effect (ADR 0108): the colour schemes and effects come with
-// ROADMAP M3.9, the volumes with M3.10.
+// The settings themselves (ROADMAP M3.8b, M3.8c, M3.9a, ADR 0109, ADR 0110, ADR 0111), the same
+// on the settings screen of the main menu and in the settings dialog of the pause menu: the
+// language, the display (fullscreen and the font size), the colour scheme and "reduce motion".
+// Each control changes its setting at once; the screen or dialog around it decides what a change
+// of the language needs first. The form offers only settings that take effect (ADR 0108): the
+// effects come with ROADMAP M3.9b, the volumes with M3.10.
 
 import {
+  COLOR_SCHEMES,
+  type ColorScheme,
   FONT_SIZE_MAX,
   FONT_SIZE_MIN,
   gameLanguage,
@@ -145,6 +147,33 @@ export function SettingsForm({
         </div>
       </fieldset>
 
+      <fieldset className="settings__group">
+        <legend className="settings__legend">
+          <InlineText text={texts.rich("settings.color-scheme")} textKey="settings.color-scheme" />
+        </legend>
+        <div className="choices">
+          {COLOR_SCHEMES.map((colorScheme) => {
+            const key = colorSchemeKey(colorScheme);
+            return (
+              <label key={colorScheme} className="choice">
+                <input
+                  className="choice__input visually-hidden"
+                  type="radio"
+                  name={`${id}-color-scheme`}
+                  value={colorScheme}
+                  checked={settings.colorScheme === colorScheme}
+                  onChange={() => {
+                    onChange({ ...settings, colorScheme });
+                  }}
+                />
+                <span className="choice__marker" aria-hidden="true" />
+                <InlineText text={texts.rich(key)} textKey={key} />
+              </label>
+            );
+          })}
+        </div>
+      </fieldset>
+
       <fieldset className="settings__group" aria-describedby={reduceMotionHelpId}>
         <legend className="settings__legend">
           <InlineText
@@ -192,6 +221,20 @@ export function SettingsForm({
       </p>
     </div>
   );
+}
+
+/** The catalog key of a colour scheme choice. */
+function colorSchemeKey(scheme: ColorScheme): UiTextKey & `settings.color-scheme-${string}` {
+  switch (scheme) {
+    case "default":
+      return "settings.color-scheme-default";
+    case "retro-crt":
+      return "settings.color-scheme-retro-crt";
+    case "solarized":
+      return "settings.color-scheme-solarized";
+    case "high-contrast":
+      return "settings.color-scheme-high-contrast";
+  }
 }
 
 /** The catalog key of a "reduce motion" choice. */

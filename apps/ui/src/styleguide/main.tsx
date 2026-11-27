@@ -3,14 +3,16 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
-import { readCssRules, rootCustomProperties } from "../css-rules";
+import { colorSchemeCustomProperties, readCssRules, rootCustomProperties } from "../css-rules";
 import "../fonts/fonts.css";
 import "../tokens.css";
 import tokensCss from "../tokens.css?raw";
 import "../styles.css";
 import { Styleguide } from "./styleguide";
 import "./styleguide.css";
-import { readTokenCatalog } from "./token-catalog";
+import { readTokenNotes } from "./token-catalog";
+
+const tokenRules = readCssRules(tokensCss);
 
 const container = document.getElementById("root");
 if (container === null) {
@@ -20,8 +22,9 @@ if (container === null) {
 createRoot(container).render(
   <StrictMode>
     <Styleguide
-      catalog={readTokenCatalog(tokensCss)}
-      tokens={rootCustomProperties(readCssRules(tokensCss))}
+      defaults={rootCustomProperties(tokenRules)}
+      schemes={colorSchemeCustomProperties(tokenRules)}
+      notes={readTokenNotes(tokensCss)}
     />
   </StrictMode>,
 );

@@ -246,6 +246,11 @@ inventing it along the way.
       for the semantic colour tokens of M3.0b (contrast test for every scheme); optional glow
       and scanlines; their choices in the settings, with reduce motion turning the effects off
       (ADR 0110).
+  - [x] M3.9a Colour schemes: the three value sets as rules on the root's `data-color-scheme`,
+        the contrast test for every scheme (7:1 text in high contrast), the choice in the
+        settings and a scheme switch on the styleguide page (ADR 0111).
+  - [ ] M3.9b Effects: optional glow and scanlines over the terminal, their switches in the
+        settings, turned off by reduce motion.
 - [ ] M3.10 UI sounds via Web Audio with volume control: the volume sliders (master, music,
       effects) in the settings (ADR 0110).
 - [ ] M3.11 Mail panel with toasts; handbook panel (searchable, grows with learned commands).
@@ -308,6 +313,8 @@ AppImage runs on Linux, and chapters 0–2 are playable in both languages.
 
 - Rename the Linux user of a save that a later world locks because its user name is now
   reserved, instead of only deleting or replacing it (ADR 0106).
+- A light colour scheme, such as Solarized light, with its own design pass (ADR 0111).
+- A small preview of each colour scheme next to its choice in the settings (ADR 0111).
 - Pictures or symbols on the mode cards of the new game screen, such as a trainee badge on
   Career and a sandbox on Sandbox (ADR 0094).
 - A small simulated internet beyond the company network (ADR 0009).

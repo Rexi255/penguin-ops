@@ -201,6 +201,11 @@ settings:
   fullscreen-help: F11 schaltet den Vollbildmodus auf jedem Bildschirm ein und aus.
   font-size: Schriftgröße
   font-size-value: "{percent} %"
+  color-scheme: Farbschema
+  color-scheme-default: Standard
+  color-scheme-retro-crt: Retro-CRT
+  color-scheme-solarized: Solarized
+  color-scheme-high-contrast: Hoher Kontrast
   reduce-motion: Bewegung reduzieren
   reduce-motion-help: Zeigt jede Änderung sofort, ohne Animationen und Effekte.
   reduce-motion-system: Wie im System

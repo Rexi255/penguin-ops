@@ -1,7 +1,10 @@
-// Checks the real stylesheets against the design token rules of ADR 0082.
+// Checks the real stylesheets against the design token rules of ADR 0082 and the colour schemes
+// of ADR 0111.
+import { COLOR_SCHEMES } from "@penguin-ops/gameplay";
 import { describe, expect, test } from "vitest";
 
 import {
+  colorSchemeCustomProperties,
   findLiteralColors,
   readCssRules,
   rootCustomProperties,
@@ -13,8 +16,11 @@ import stylesCss from "./styles.css?raw";
 import {
   checkContrast,
   CONTRAST_PAIRS,
+  contrastMinimums,
+  contrastPairs,
   DECORATIVE_COLOR_TOKENS,
   describeContrast,
+  schemeTokens,
 } from "./token-contrast";
 import tokensCss from "./tokens.css?raw";
 
@@ -45,6 +51,44 @@ describe("the colour tokens", () => {
   test("have no duplicate pairs", () => {
     const keys = CONTRAST_PAIRS.map((pair) => `${pair.foreground} on ${pair.background}`);
     expect(keys.filter((key, index) => keys.indexOf(key) !== index)).toEqual([]);
+  });
+});
+
+describe("the colour schemes", () => {
+  const schemes = colorSchemeCustomProperties(tokenRules);
+  const ownSchemes = COLOR_SCHEMES.filter((scheme) => scheme !== "default");
+
+  test("have a rule for every scheme of the settings but the default, and no others", () => {
+    expect([...schemes.keys()].toSorted()).toEqual(ownSchemes.toSorted());
+  });
+
+  test.each(ownSchemes)("%s redefines every colour token and nothing else", (scheme) => {
+    expect([...(schemes.get(scheme)?.keys() ?? [])].toSorted()).toEqual(colorTokens.toSorted());
+  });
+
+  test.each(ownSchemes)("%s changes only custom properties", (scheme) => {
+    const rule = tokenRules.find(
+      (candidate) => candidate.selector === `:root[data-color-scheme="${scheme}"]`,
+    );
+    expect([...(rule?.declarations.keys() ?? [])].filter((name) => !name.startsWith("--"))).toEqual(
+      [],
+    );
+  });
+
+  test.each(COLOR_SCHEMES)("%s meets its contrast minimum in every pair", (scheme) => {
+    const failing = checkContrast(
+      schemeTokens(tokens, schemes, scheme),
+      contrastPairs(scheme),
+      contrastMinimums(scheme),
+    )
+      .filter((result) => !result.passes)
+      .map(describeContrast);
+    expect(failing).toEqual([]);
+  });
+
+  test("high-contrast checks its text at 7:1 and its dividers", () => {
+    expect(contrastMinimums("high-contrast").text).toBe(7);
+    expect(contrastPairs("high-contrast").map((pair) => pair.foreground)).toContain("--color-rule");
   });
 });
 
@@ -162,7 +206,9 @@ describe("reduce motion", () => {
   // The game's setting is the root's data-reduce-motion (ADR 0110): `on` always reduces motion,
   // the system's setting does unless the game's setting is `off`.
   const reducedRules = tokenRules.filter(
-    (rule) => rule.selector !== ":root" || rule.conditions.length > 0,
+    (rule) =>
+      (rule.selector !== ":root" || rule.conditions.length > 0) &&
+      !rule.selector.startsWith(":root[data-color-scheme="),
   );
 
   test("reduces motion for the setting on and for the system's setting unless it is off", () => {

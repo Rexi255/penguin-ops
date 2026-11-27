@@ -1,6 +1,14 @@
 import { describe, expect, test } from "vitest";
 
-import { checkContrast, type ContrastPair, describeContrast } from "./token-contrast";
+import {
+  checkContrast,
+  CONTRAST_PAIRS,
+  contrastMinimums,
+  contrastPairs,
+  type ContrastPair,
+  describeContrast,
+  schemeTokens,
+} from "./token-contrast";
 
 const TOKENS = new Map([
   ["--ink", "#000000"],
@@ -44,6 +52,67 @@ describe("checkContrast", () => {
     expect(() => checkContrast(tokens, [pair("--space", "--paper", "text")])).toThrow(
       '"6px" is not a colour of the form #rrggbb.',
     );
+  });
+});
+
+describe("checkContrast with other minimums", () => {
+  test("applies the given minimum of the pair's use", () => {
+    const [result] = checkContrast(TOKENS, [pair("--grey-dark", "--paper", "text")], {
+      text: 7,
+      "non-text": 3,
+    });
+    expect(result?.minimum).toBe(7);
+    expect(result?.passes).toBe(false);
+  });
+});
+
+describe("contrastMinimums", () => {
+  test.each(["default", "retro-crt", "solarized"] as const)("asks for WCAG AA in %s", (scheme) => {
+    expect(contrastMinimums(scheme)).toEqual({ text: 4.5, "non-text": 3 });
+  });
+
+  test("asks for WCAG AAA text in the high contrast scheme", () => {
+    expect(contrastMinimums("high-contrast")).toEqual({ text: 7, "non-text": 3 });
+  });
+});
+
+describe("contrastPairs", () => {
+  test.each(["default", "retro-crt", "solarized"] as const)(
+    "are the common pairs in %s",
+    (scheme) => {
+      expect(contrastPairs(scheme)).toBe(CONTRAST_PAIRS);
+    },
+  );
+
+  test("add the dividers on every surface in the high contrast scheme", () => {
+    const extra = contrastPairs("high-contrast").slice(CONTRAST_PAIRS.length);
+    expect(extra.map((entry) => [entry.foreground, entry.background, entry.use])).toEqual([
+      ["--color-rule", "--color-surface-ground", "non-text"],
+      ["--color-rule", "--color-surface-panel", "non-text"],
+      ["--color-rule", "--color-surface-raised", "non-text"],
+      ["--color-rule", "--color-surface-terminal", "non-text"],
+    ]);
+  });
+});
+
+describe("schemeTokens", () => {
+  const defaults = new Map([
+    ["--ink", "#000000"],
+    ["--paper", "#ffffff"],
+  ]);
+  const schemes = new Map([["solarized", new Map([["--paper", "#fdf6e3"]])]]);
+
+  test("lays a scheme's values over the defaults", () => {
+    expect(schemeTokens(defaults, schemes, "solarized")).toEqual(
+      new Map([
+        ["--ink", "#000000"],
+        ["--paper", "#fdf6e3"],
+      ]),
+    );
+  });
+
+  test("keeps the defaults for a scheme without values of its own", () => {
+    expect(schemeTokens(defaults, schemes, "default")).toEqual(defaults);
   });
 });
 

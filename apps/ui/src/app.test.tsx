@@ -800,6 +800,24 @@ describe("App: settings (ADR 0109)", () => {
     });
   });
 
+  test("applies the colour scheme of the settings to the page at start", () => {
+    renderApp(EMPTY, {
+      settings: { ...DEFAULT_SETTINGS, language: "en", colorScheme: "high-contrast" },
+    });
+    expect(document.documentElement.dataset["colorScheme"]).toBe("high-contrast");
+  });
+
+  test("changes the colour scheme at once and writes it", async () => {
+    const { settingsFile } = renderApp();
+    await openSettings();
+    expect(document.documentElement.dataset["colorScheme"]).toBe("default");
+    await userEvent.click(screen.getByRole("radio", { name: "Retro CRT" }));
+    expect(document.documentElement.dataset["colorScheme"]).toBe("retro-crt");
+    await vi.waitFor(() => {
+      expect(writtenSettings(settingsFile)).toMatchObject({ colorScheme: "retro-crt" });
+    });
+  });
+
   /** Opens the settings dialog in the game. */
   async function openSettingsInGame() {
     await userEvent.keyboard("{Escape}");
